@@ -1,0 +1,198 @@
+[project]
+name = "jev-client"
+version = "0.1.0"
+description = "Typed client, CLI and MCP server for TypeSafe's Jev (System One) judgment model"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Alberto-Codes", email = "alberto.codes.dev@gmail.com" }]
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+dependencies = [
+    "httpx>=0.28",
+    "pydantic-settings>=2.4",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+# The MCP server is an inbound adapter, not core. Scripts and CI import the
+# library without pulling an MCP runtime.
+mcp = ["mcp>=1.2"]
+
+[project.scripts]
+jev = "jev_client.adapters.inbound.cli:app"
+
+[project.urls]
+Source = "https://github.com/Alberto-Codes/jev-client"
+Issues = "https://github.com/Alberto-Codes/jev-client/issues"
+
+[build-system]
+requires = ["uv_build>=0.11.20,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "docvet>=1.16.0",
+    "import-linter>=2.15",
+    "pre-commit>=4.6.2",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.8",
+    "ty>=0.0.82",
+]
+
+# --------------------------------------------------------------------------- #
+# Ruff — automarket's set (its ADR-0004, inherited from quantfit).
+# --------------------------------------------------------------------------- #
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = [".venv", "__pycache__", "*.egg-info"]
+
+[tool.ruff.lint]
+extend-select = [
+    "E402",
+    "E501",
+    "I",
+    "D",
+    "B",
+    "SIM",
+    "UP",
+    "RUF",
+    "PL",
+    "C901",
+    "TRY",
+    "PERF",
+    "S",
+    "G",
+]
+ignore = [
+    "TRY003",  # long messages in raises — validation errors carry context
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.pylint]
+max-args = 7
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 100
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "PLR2004",  # magic values are the point of test assertions
+]
+"src/jev_client/adapters/inbound/cli.py" = [
+    "PLR0913",  # typer commands take one arg per CLI option by design
+    "PLR0917",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["jev_client"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+# --------------------------------------------------------------------------- #
+# Pytest
+# --------------------------------------------------------------------------- #
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: fast, isolated",
+    "contract: verified-fake port suites — fake and real adapter proven equivalent on fixtures",
+    "live: touches the live Jev API; needs TYPESAFE_API_KEY; never in CI",
+]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--showlocals",
+    "-m",
+    "not live",
+]
+
+# --------------------------------------------------------------------------- #
+# Coverage
+# --------------------------------------------------------------------------- #
+[tool.coverage.run]
+source = ["jev_client"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+
+# --------------------------------------------------------------------------- #
+# import-linter — the hex map. Inbound drives, outbound implements ports,
+# domain stays pure.
+# --------------------------------------------------------------------------- #
+[tool.importlinter]
+root_package = "jev_client"
+include_external_packages = true
+exclude_type_checking_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Hexagonal layers"
+type = "layers"
+layers = [
+    "jev_client.adapters.inbound",
+    "jev_client.adapters.outbound",
+    "jev_client.ports",
+    "jev_client.domain",
+]
+
+[[tool.importlinter.contracts]]
+# The domain is pure: no IO, no serialization, no CLI or server framework.
+name = "Domain is IO-free"
+type = "forbidden"
+source_modules = ["jev_client.domain"]
+forbidden_modules = [
+    "json",
+    "pathlib",
+    "os",
+    "io",
+    "logging",
+    "httpx",
+    "typer",
+    "mcp",
+]
+
+[[tool.importlinter.contracts]]
+# The MCP runtime is an optional extra. Nothing outside its own adapter may
+# import it, so the library and CLI install without it.
+name = "MCP stays in its adapter"
+type = "forbidden"
+source_modules = [
+    "jev_client.domain",
+    "jev_client.ports",
+    "jev_client.adapters.outbound",
+]
+forbidden_modules = ["mcp"]
+
+# --------------------------------------------------------------------------- #
+# docvet
+# --------------------------------------------------------------------------- #
+[tool.docvet]
+fail-on = ["enrichment", "freshness", "coverage", "griffe", "presence"]
+exclude = ["tests"]
+
+[tool.docvet.presence]
+min-coverage = 100.0
