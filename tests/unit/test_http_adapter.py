@@ -22,12 +22,6 @@ class TestHTTPSystemOneAdapter:
         adapter = HTTPSystemOneAdapter(api_key="test-key")
         assert adapter is not None
 
-    def test_init_with_env_var(self) -> None:
-        """Test initialization with API key from environment."""
-        with patch.dict("os.environ", {"TYPESAFE_API_KEY": "env-key"}):
-            adapter = HTTPSystemOneAdapter()
-            assert adapter is not None
-
     def test_init_raises_without_key(self) -> None:
         """Test that initialization raises ValueError without API key."""
         with (

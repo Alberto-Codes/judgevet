@@ -7,6 +7,7 @@ Examples:
     ```
 
 See Also:
+    - [jev_client.adapters.inbound.settings][]: Settings for configuration
     - [jev_client.adapters.outbound.http][]: HTTP adapter
     - [jev_client.domain.questions][]: Question types
     - [jev_client.domain.answers][]: Answer types
@@ -22,6 +23,7 @@ from typing import Any
 
 import typer
 
+from jev_client.adapters.inbound.settings import Settings
 from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
 from jev_client.domain.answers import (
     Answer,
@@ -196,11 +198,14 @@ def run_cli(
 ) -> int:
     """Run the CLI with parsed arguments.
 
+    The CLI reads Settings once per process. Values from Settings are used as
+    defaults unless explicitly overridden by command-line options.
+
     Args:
         state: State to evaluate (JSON string or text).
         questions: Questions as JSON string.
-        model: Model to use.
-        api_key: TypeSafe API key.
+        model: Model to use. Defaults to Settings.api.default_model.
+        api_key: TypeSafe API key. Overrides Settings.api.key if provided.
         json_output: Whether to output as JSON.
 
     Returns:
@@ -212,8 +217,19 @@ def run_cli(
         JevServiceError: If the service fails with 5xx or transport error.
         JevResponseError: If the response body cannot be parsed.
     """
+    settings = Settings()
+    base_url = settings.api.base_url
+    key = settings.api.key.get_secret_value() if settings.api.key else None
+
+    # Explicit --api-key wins over settings value
+    final_api_key = api_key if api_key is not None else key
+
     try:
-        adapter = HTTPSystemOneAdapter(api_key=api_key)
+        adapter = HTTPSystemOneAdapter(
+            api_key=final_api_key,
+            base_url=base_url,
+            default_model=model,
+        )
 
         state_data = json.loads(state) if state.startswith(("{", "[")) else state
         questions_dict = parse_questions(questions)

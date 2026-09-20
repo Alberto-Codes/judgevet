@@ -34,7 +34,6 @@ Raises:
 
 from __future__ import annotations
 
-import os
 from collections.abc import Mapping
 from typing import Any, Self
 
@@ -83,20 +82,18 @@ class HTTPSystemOneAdapter(SystemOnePort):
         """Initialize the HTTP adapter.
 
         Args:
-            api_key: TypeSafe API key. Defaults to TYPESAFE_API_KEY env var.
+            api_key: TypeSafe API key.
             base_url: API base URL. Defaults to https://api.typesafe.ai.
             default_model: Default model to use. Defaults to jev-latest.
 
         Raises:
-            ValueError: If no API key is provided or set in the environment.
+            ValueError: If no API key is provided.
         """
-        self._api_key = api_key or os.environ.get("TYPESAFE_API_KEY")
+        self._api_key = api_key
         if self._api_key is None:
-            raise ValueError("API key must be provided or set in TYPESAFE_API_KEY")
+            raise ValueError("API key must be provided")
 
-        self._base_url = base_url or os.environ.get(
-            "TYPESAFE_BASE_URL", "https://api.typesafe.ai"
-        )
+        self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
         self._client = httpx.Client(
             base_url=self._base_url,
