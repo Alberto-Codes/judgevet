@@ -2,9 +2,15 @@
 
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 
 from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
+from jev_client.domain.errors import (
+    JevAuthError,
+    JevRequestError,
+    JevServiceError,
+)
 
 
 class TestHTTPSystemOneAdapter:
@@ -63,3 +69,88 @@ class TestHTTPSystemOneAdapter:
             call_kwargs = mock_post.call_args
             assert call_kwargs[0][0] == "/v1/systemone"
             assert call_kwargs[1]["json"]["model"] == "test-model"
+
+    def test_system_one_translates_401_to_jev_auth_error(self) -> None:
+        """Test that 401 is translated to JevAuthError."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key")
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 401
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Unauthorized",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(JevAuthError, match=r"Unauthorized.*status 401"):
+                adapter.system_one(state="test", questions={})
+
+    def test_system_one_translates_403_to_jev_auth_error(self) -> None:
+        """Test that 403 is translated to JevAuthError."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key")
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 403
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Forbidden",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(JevAuthError, match=r"Forbidden.*status 403"):
+                adapter.system_one(state="test", questions={})
+
+    def test_system_one_translates_400_to_jev_request_error(self) -> None:
+        """Test that 400 is translated to JevRequestError."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key")
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 400
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Bad Request",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(JevRequestError, match=r"Bad Request.*status 400"):
+                adapter.system_one(state="test", questions={})
+
+    def test_system_one_translates_500_to_jev_service_error(self) -> None:
+        """Test that 500 is translated to JevServiceError."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key")
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 500
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Internal Server Error",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(
+                JevServiceError, match=r"Internal Server Error.*status 500"
+            ):
+                adapter.system_one(state="test", questions={})
+
+    def test_system_one_translates_request_error_to_jev_service_error(self) -> None:
+        """Test that transport errors are translated to JevServiceError."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key")
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_post.side_effect = httpx.RequestError(
+                message="Connection timeout",
+                request=MagicMock(),
+            )
+
+            with pytest.raises(JevServiceError, match="Connection timeout") as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            assert exc_info.value.status_code is None

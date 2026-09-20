@@ -54,6 +54,12 @@ code proving it.
   report. Adding a docstring to satisfy ruff `D` earns a docvet `enrichment`
   finding unless it carries the `Args:`, `Returns:`, `Raises:` and
   `Attributes:` sections the case needs.
+- **Every new module needs its docstring sections on the first pass.** docvet
+  fails on `enrichment`, so a module docstring needs an `Examples:` block with
+  runnable code and a `See Also:` list of `[jev_client.module.path][]`
+  cross-references. A class needs `Attributes:`, a function that returns needs
+  `Returns:`, one that raises needs `Raises:`. Writing them afterwards has cost
+  three extra sessions already.
 
 ## Architecture
 

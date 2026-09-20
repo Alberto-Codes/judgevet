@@ -1,4 +1,30 @@
-"""HTTP outbound adapter implementation."""
+"""HTTP outbound adapter implementation.
+
+Examples:
+    ```python
+    from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
+
+    adapter = HTTPSystemOneAdapter(api_key="your-api-key")
+    try:
+        response = adapter.system_one(
+            state="Your content here",
+            questions={
+                "q1": {
+                    "type": "noul",
+                    "instructions": "Is this correct?",
+                }
+            },
+        )
+        print(response)
+    finally:
+        adapter.close()
+    ```
+
+See Also:
+    - [jev_client.ports.SystemOnePort][]: Protocol definition
+    - [jev_client.domain.errors][]: Error types
+    - [jev_client.adapters.inbound.cli][]: CLI adapter
+"""
 
 from __future__ import annotations
 
@@ -8,6 +34,12 @@ from typing import Any, Self
 
 import httpx
 
+from jev_client.domain.errors import (
+    JevAuthError,
+    JevError,
+    JevRequestError,
+    JevServiceError,
+)
 from jev_client.ports import SystemOnePort
 
 
@@ -15,6 +47,24 @@ class HTTPSystemOneAdapter(SystemOnePort):
     """HTTP implementation of the SystemOnePort using httpx.
 
     See: https://api.typesafe.ai/v1/systemone
+
+    Attributes:
+        api_key (str | None): The TypeSafe API key.
+        base_url (str): The API base URL.
+        default_model (str): The default model to use.
+
+    Examples:
+        ```python
+        adapter = HTTPSystemOneAdapter(api_key="your-api-key")
+        try:
+            response = adapter.system_one(
+                state="Your content here",
+                questions={"q1": {"type": "noul", "instructions": "Is this correct?"}},
+            )
+            print(response)
+        finally:
+            adapter.close()
+        ```
     """
 
     def __init__(
@@ -29,6 +79,9 @@ class HTTPSystemOneAdapter(SystemOnePort):
             api_key: TypeSafe API key. Defaults to TYPESAFE_API_KEY env var.
             base_url: API base URL. Defaults to https://api.typesafe.ai.
             default_model: Default model to use. Defaults to jev-latest.
+
+        Raises:
+            ValueError: If no API key is provided or set in the environment.
         """
         self._api_key = api_key or os.environ.get("TYPESAFE_API_KEY")
         if self._api_key is None:
@@ -63,8 +116,10 @@ class HTTPSystemOneAdapter(SystemOnePort):
             Raw API response dictionary.
 
         Raises:
-            httpx.HTTPStatusError: If the API returns an error status.
-            httpx.RequestError: If the request fails.
+            JevAuthError: If the API returns 401 or 403.
+            JevRequestError: If the API returns 4xx (except 401/403).
+            JevServiceError: If the API returns 5xx or a transport error occurs.
+            JevResponseError: If the API returns 2xx with unparseable body.
         """
         payload = {
             "state": state,
@@ -72,9 +127,28 @@ class HTTPSystemOneAdapter(SystemOnePort):
             "model": model or self._default_model,
         }
 
-        response = self._client.post("/v1/systemone", json=payload)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = self._client.post("/v1/systemone", json=payload)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            status_code = exc.response.status_code
+            if status_code in (
+                JevError.HTTP_STATUS_401_UNAUTHORIZED,
+                JevError.HTTP_STATUS_403_FORBIDDEN,
+            ):
+                raise JevAuthError(str(exc), status_code) from exc
+            elif (
+                JevError.HTTP_STATUS_400_MIN
+                <= status_code
+                < JevError.HTTP_STATUS_500_MIN
+            ):
+                raise JevRequestError(str(exc), status_code) from exc
+            elif status_code >= JevError.HTTP_STATUS_500_MIN:
+                raise JevServiceError(str(exc), status_code) from exc
+            raise
+        except httpx.RequestError as exc:
+            raise JevServiceError(str(exc), None) from exc
 
     def close(self) -> None:
         """Close the HTTP client."""

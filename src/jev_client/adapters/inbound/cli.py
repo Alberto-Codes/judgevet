@@ -10,6 +10,7 @@ See Also:
     - [jev_client.adapters.outbound.http][]: HTTP adapter
     - [jev_client.domain.questions][]: Question types
     - [jev_client.domain.answers][]: Answer types
+    - [jev_client.domain.errors][]: Error types
 """
 
 from __future__ import annotations
@@ -19,7 +20,6 @@ import json
 import sys
 from typing import Any
 
-import httpx
 import typer
 
 from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
@@ -28,6 +28,12 @@ from jev_client.domain.answers import (
     ChoiceAnswer,
     NoulAnswer,
     ScoreAnswer,
+)
+from jev_client.domain.errors import (
+    JevAuthError,
+    JevRequestError,
+    JevResponseError,
+    JevServiceError,
 )
 from jev_client.domain.questions import Choice, Noul, Score
 
@@ -199,6 +205,12 @@ def run_cli(
 
     Returns:
         Exit code: 0 for success, 1 for error.
+
+    Raises:
+        JevAuthError: If authentication fails.
+        JevRequestError: If the request fails with 4xx.
+        JevServiceError: If the service fails with 5xx or transport error.
+        JevResponseError: If the response body cannot be parsed.
     """
     try:
         adapter = HTTPSystemOneAdapter(api_key=api_key)
@@ -219,7 +231,10 @@ def run_cli(
         json.JSONDecodeError,
         TypeError,
         KeyError,
-        httpx.HTTPError,
+        JevAuthError,
+        JevRequestError,
+        JevResponseError,
+        JevServiceError,
     ) as e:
         if json_output:
             print(json.dumps({"error": str(e)}), file=sys.stderr)

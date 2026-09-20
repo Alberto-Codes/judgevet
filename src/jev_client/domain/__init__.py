@@ -1,10 +1,70 @@
-"""Domain layer - pure types and business logic."""
+"""Domain layer - pure types and business logic.
+
+Examples:
+    ```python
+    from jev_client.domain import Noul, Choice, Score
+    from jev_client.domain.answers import NoulAnswer, ChoiceAnswer, ScoreAnswer
+
+    # Create a yes/no question
+    noul = Noul(
+        instructions="Is this a valid question?",
+        criteria={"yes": "It is valid", "no": "It is not valid"},
+    )
+
+    # Create a choice question
+    choice = Choice(
+        criteria={"yes": "Yes option", "no": "No option"},
+        instructions="Choose one:",
+    )
+
+    # Create a score question
+    score = Score(
+        criteria=["Poor", "Fair", "Good", "Excellent"],
+        instructions="Rate the response:",
+    )
+
+    # Answer a question
+    answer = NoulAnswer(noul=0.75)
+    assert 0.0 <= answer.noul <= 1.0
+    ```
+
+See Also:
+    - [jev_client.domain.answers][]: Answer types
+    - [jev_client.domain.errors][]: Error types
+    - [jev_client.domain.questions][]: Question types
+    - [jev_client.domain.response][]: Response container
+    - [jev_client.domain.usage][]: Usage tracking
+
+Attributes:
+    Answer (type): Union type of all answer types.
+    Choice (type): Question type for multiple choice.
+    ChoiceAnswer (type): Answer type for multiple choice.
+    JevAuthError (type): 401/403 authentication errors.
+    JevError (type): Base exception for all Jev errors.
+    JevRequestError (type): 4xx client request errors.
+    JevResponseError (type): 2xx with unparseable body.
+    JevServiceError (type): 5xx or transport errors.
+    Noul (type): Question type for yes/no.
+    NoulAnswer (type): Answer type for yes/no.
+    Question (type): Base question type.
+    Score (type): Question type for numeric rating.
+    ScoreAnswer (type): Answer type for numeric rating.
+    SystemOneResponse (type): API response container.
+    Usage (type): API usage tracking.
+"""
 
 from jev_client.domain.answers import (
     Answer,
     ChoiceAnswer,
     NoulAnswer,
     ScoreAnswer,
+)
+from jev_client.domain.errors import (
+    JevAuthError,
+    JevError,
+    JevRequestError,
+    JevResponseError,
+    JevServiceError,
 )
 from jev_client.domain.questions import Choice, Noul, Question, Score
 from jev_client.domain.response import SystemOneResponse
@@ -14,6 +74,11 @@ __all__ = [
     "Answer",
     "Choice",
     "ChoiceAnswer",
+    "JevAuthError",
+    "JevError",
+    "JevRequestError",
+    "JevResponseError",
+    "JevServiceError",
     "Noul",
     "NoulAnswer",
     "Question",
