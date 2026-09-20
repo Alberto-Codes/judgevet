@@ -9,6 +9,7 @@ from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
 from jev_client.domain.errors import (
     JevAuthError,
     JevRequestError,
+    JevResponseError,
     JevServiceError,
 )
 
@@ -154,3 +155,134 @@ class TestHTTPSystemOneAdapter:
                 adapter.system_one(state="test", questions={})
 
             assert exc_info.value.status_code is None
+
+    def test_api_key_not_in_error_messages_401(self) -> None:
+        """Test that API key does not appear in 401 error messages."""
+        fake_key = "FAKE-KEY-TEST-12345"
+        adapter = HTTPSystemOneAdapter(api_key=fake_key)
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 401
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Unauthorized",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(JevAuthError) as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            error = exc_info.value
+            assert fake_key not in str(error)
+            assert fake_key not in repr(error)
+            assert error.status_code == 401
+
+    def test_api_key_not_in_error_messages_403(self) -> None:
+        """Test that API key does not appear in 403 error messages."""
+        fake_key = "FAKE-KEY-TEST-12345"
+        adapter = HTTPSystemOneAdapter(api_key=fake_key)
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 403
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Forbidden",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(JevAuthError) as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            error = exc_info.value
+            assert fake_key not in str(error)
+            assert fake_key not in repr(error)
+            assert error.status_code == 403
+
+    def test_api_key_not_in_error_messages_400(self) -> None:
+        """Test that API key does not appear in 400 error messages."""
+        fake_key = "FAKE-KEY-TEST-12345"
+        adapter = HTTPSystemOneAdapter(api_key=fake_key)
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 400
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Bad Request",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(JevRequestError) as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            error = exc_info.value
+            assert fake_key not in str(error)
+            assert fake_key not in repr(error)
+            assert error.status_code == 400
+
+    def test_api_key_not_in_error_messages_500(self) -> None:
+        """Test that API key does not appear in 500 error messages."""
+        fake_key = "FAKE-KEY-TEST-12345"
+        adapter = HTTPSystemOneAdapter(api_key=fake_key)
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 500
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Internal Server Error",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(JevServiceError) as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            error = exc_info.value
+            assert fake_key not in str(error)
+            assert fake_key not in repr(error)
+            assert error.status_code == 500
+
+    def test_api_key_not_in_error_messages_transport_failure(self) -> None:
+        """Test that API key does not appear in transport error messages."""
+        fake_key = "FAKE-KEY-TEST-12345"
+        adapter = HTTPSystemOneAdapter(api_key=fake_key)
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_post.side_effect = httpx.RequestError(
+                message="Connection timeout",
+                request=MagicMock(),
+            )
+
+            with pytest.raises(JevServiceError) as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            error = exc_info.value
+            assert fake_key not in str(error)
+            assert fake_key not in repr(error)
+            assert exc_info.value.status_code is None
+
+    def test_api_key_not_in_error_messages_unparseable_body(self) -> None:
+        """Test that API key does not appear when response body does not parse."""
+        fake_key = "FAKE-KEY-TEST-12345"
+        adapter = HTTPSystemOneAdapter(api_key=fake_key)
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 200
+            mock_response.raise_for_status = MagicMock()
+            mock_response.json.side_effect = ValueError("Invalid JSON")
+            mock_post.return_value = mock_response
+
+            with pytest.raises(JevResponseError) as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            error = exc_info.value
+            assert fake_key not in str(error)
+            assert fake_key not in repr(error)
+            assert error.status_code == 200

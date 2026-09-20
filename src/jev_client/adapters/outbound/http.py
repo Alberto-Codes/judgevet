@@ -24,6 +24,12 @@ See Also:
     - [jev_client.ports.SystemOnePort][]: Protocol definition
     - [jev_client.domain.errors][]: Error types
     - [jev_client.adapters.inbound.cli][]: CLI adapter
+
+Raises:
+    JevAuthError: If the API returns 401 or 403.
+    JevRequestError: If the API returns 4xx (except 401/403).
+    JevServiceError: If the API returns 5xx or a transport error occurs.
+    JevResponseError: If the API returns 2xx with unparseable body.
 """
 
 from __future__ import annotations
@@ -38,6 +44,7 @@ from jev_client.domain.errors import (
     JevAuthError,
     JevError,
     JevRequestError,
+    JevResponseError,
     JevServiceError,
 )
 from jev_client.ports import SystemOnePort
@@ -120,6 +127,10 @@ class HTTPSystemOneAdapter(SystemOnePort):
             JevRequestError: If the API returns 4xx (except 401/403).
             JevServiceError: If the API returns 5xx or a transport error occurs.
             JevResponseError: If the API returns 2xx with unparseable body.
+
+        Note:
+            This method now handles response body parsing errors and raises
+            JevResponseError instead of letting ValueError propagate.
         """
         payload = {
             "state": state,
@@ -130,7 +141,13 @@ class HTTPSystemOneAdapter(SystemOnePort):
         try:
             response = self._client.post("/v1/systemone", json=payload)
             response.raise_for_status()
-            return response.json()
+            try:
+                return response.json()
+            except ValueError as exc:
+                raise JevResponseError(
+                    f"Failed to parse response body: {exc}",
+                    response.status_code,
+                ) from exc
         except httpx.HTTPStatusError as exc:
             status_code = exc.response.status_code
             if status_code in (
