@@ -99,10 +99,6 @@ convention = "google"
     "D104",
     "PLR2004",  # magic values are the point of test assertions
 ]
-"src/jev_client/adapters/inbound/cli.py" = [
-    "PLR0913",  # typer commands take one arg per CLI option by design
-    "PLR0917",
-]
 
 [tool.ruff.lint.isort]
 known-first-party = ["jev_client"]

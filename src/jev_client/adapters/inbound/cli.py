@@ -2,8 +2,8 @@
 
 Examples:
     ```python
-    from jev_client.adapters.inbound.cli import main
-    # Run CLI: python -m jev_client.adapters.inbound.cli
+    from jev_client.adapters.inbound.cli import app
+    # Run CLI: jev --help
     ```
 
 See Also:
@@ -20,6 +20,7 @@ import sys
 from typing import Any
 
 import httpx
+import typer
 
 from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
 from jev_client.domain.answers import (
@@ -29,6 +30,10 @@ from jev_client.domain.answers import (
     ScoreAnswer,
 )
 from jev_client.domain.questions import Choice, Noul, Score
+
+app = typer.Typer(help="Call the Jev System One API")
+
+__all__ = ["app", "cli_main"]
 
 
 def parse_questions(questions_json: str) -> dict[str, Any]:
@@ -103,21 +108,6 @@ def format_answer(name: str, answer: Answer) -> dict[str, Any]:
         raise TypeError(f"Unknown answer type: {type(answer)}")
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse command line arguments.
-
-    Returns:
-        Parsed command line arguments.
-    """
-    parser = argparse.ArgumentParser(description="Call the Jev System One API")
-    parser.add_argument("state", help="State to evaluate (JSON string or text)")
-    parser.add_argument("questions", help="Questions as JSON string")
-    parser.add_argument("--model", default="jev-latest", help="Model to use")
-    parser.add_argument("--api-key", help="TypeSafe API key")
-    parser.add_argument("--json", action="store_true", help="Output as JSON")
-    return parser.parse_args()
-
-
 def build_response_data(
     raw_response: dict[str, Any], answers: dict[str, Answer]
 ) -> dict[str, Any]:
@@ -138,49 +128,6 @@ def build_response_data(
         },
         "answers": {name: format_answer(name, ans) for name, ans in answers.items()},
     }
-
-
-def main() -> int:
-    """CLI entry point.
-
-    Returns:
-        Exit code: 0 for success, 1 for error.
-    """
-    args = parse_args()
-
-    try:
-        adapter = HTTPSystemOneAdapter(api_key=args.api_key)
-
-        state = (
-            json.loads(args.state)
-            if args.state.startswith("{") or args.state.startswith("[")
-            else args.state
-        )
-        questions = parse_questions(args.questions)
-
-        raw_response = adapter.system_one(
-            state=state, questions=questions, model=args.model
-        )
-
-        answers = parse_raw_answers(raw_response)
-        response_data = build_response_data(raw_response, answers)
-
-        output_response(response_data, args.json)
-    except (
-        ValueError,
-        json.JSONDecodeError,
-        TypeError,
-        KeyError,
-        httpx.HTTPError,
-    ) as e:
-        if args.json:
-            print(json.dumps({"error": str(e)}), file=sys.stderr)
-        else:
-            print(f"Error: {e}", file=sys.stderr)
-        return 1
-    else:
-        adapter.close()
-        return 0
 
 
 def parse_raw_answers(raw_response: dict[str, Any]) -> dict[str, Answer]:
@@ -234,5 +181,115 @@ def output_response(response_data: dict[str, Any], as_json: bool) -> None:
             print(f"  {formatted['name']}: {formatted}")
 
 
+def run_cli(
+    state: str,
+    questions: str,
+    model: str = "jev-latest",
+    api_key: str | None = None,
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> int:
+    """Run the CLI with parsed arguments.
+
+    Args:
+        state: State to evaluate (JSON string or text).
+        questions: Questions as JSON string.
+        model: Model to use.
+        api_key: TypeSafe API key.
+        json_output: Whether to output as JSON.
+
+    Returns:
+        Exit code: 0 for success, 1 for error.
+    """
+    try:
+        adapter = HTTPSystemOneAdapter(api_key=api_key)
+
+        state_data = json.loads(state) if state.startswith(("{", "[")) else state
+        questions_dict = parse_questions(questions)
+
+        raw_response = adapter.system_one(
+            state=state_data, questions=questions_dict, model=model
+        )
+
+        answers = parse_raw_answers(raw_response)
+        response_data = build_response_data(raw_response, answers)
+
+        output_response(response_data, json_output)
+    except (
+        ValueError,
+        json.JSONDecodeError,
+        TypeError,
+        KeyError,
+        httpx.HTTPError,
+    ) as e:
+        if json_output:
+            print(json.dumps({"error": str(e)}), file=sys.stderr)
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        return 1
+    else:
+        adapter.close()
+        return 0
+
+
+@app.command()
+def main(
+    state: str = typer.Argument(..., help="State to evaluate (JSON string or text)"),
+    questions: str = typer.Argument(..., help="Questions as JSON string"),
+    model: str = typer.Option("jev-latest", help="Model to use"),
+    api_key: str | None = typer.Option(None, help="TypeSafe API key"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> int:
+    """Call the Jev System One API.
+
+    Args:
+        state: State to evaluate (JSON string or text).
+        questions: Questions as JSON string.
+        model: Model to use.
+        api_key: TypeSafe API key.
+        json_output: Whether to output as JSON.
+
+    Returns:
+        Exit code: 0 for success, 1 for error.
+    """
+    return run_cli(state, questions, model, api_key, json_output)
+
+
+def cli_main() -> int:
+    """CLI entry point for backward compatibility.
+
+    This function is kept for backward compatibility with tests.
+    It parses arguments using the old argparse-based parse_args function.
+
+    Returns:
+        Exit code: 0 for success, 1 for error.
+    """
+    args = parse_args()
+    return run_cli(
+        args.state,
+        args.questions,
+        args.model,
+        args.api_key,
+        args.json,
+    )
+
+
+def parse_args() -> Any:
+    """Parse command line arguments.
+
+    This function is kept for backward compatibility with tests.
+    It creates a temporary argparse parser to parse arguments.
+
+    Returns:
+        Parsed command line arguments.
+    """
+    parser = argparse.ArgumentParser(description="Call the Jev System One API")
+    parser.add_argument("state", help="State to evaluate (JSON string or text)")
+    parser.add_argument("questions", help="Questions as JSON string")
+    parser.add_argument("--model", default="jev-latest", help="Model to use")
+    parser.add_argument("--api-key", help="TypeSafe API key")
+    parser.add_argument("--json", action="store_true", help="Output as JSON")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(app())

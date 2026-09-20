@@ -4,11 +4,12 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+import typer.testing
 
 from jev_client.adapters.inbound.cli import (
+    app,
     build_response_data,
     format_answer,
-    main,
     output_response,
     parse_questions,
     parse_raw_answers,
@@ -156,74 +157,89 @@ class TestFormatAnswerError:
 class TestMain:
     """Tests for main function."""
 
+    runner = typer.testing.CliRunner()
+
     def test_main_success(self) -> None:
         """Test successful main execution."""
         with (
-            patch("jev_client.adapters.inbound.cli.parse_args") as mock_args,
             patch(
                 "jev_client.adapters.inbound.cli.HTTPSystemOneAdapter"
-            ) as mock_adapter,
+            ) as mock_adapter_cls,
             patch("jev_client.adapters.inbound.cli.parse_questions"),
-            patch("jev_client.adapters.inbound.cli.json.loads") as mock_json_loads,
             patch("jev_client.adapters.inbound.cli.print"),
         ):
-            mock_args.return_value.api_key = "test-key"
-            mock_args.return_value.state = "test"
-            mock_args.return_value.questions = "{}"
-            mock_args.return_value.model = "test-model"
-            mock_args.return_value.json = False
-            mock_json_loads.return_value = {}
-
             mock_adapter_instance = MagicMock()
             mock_adapter_instance.system_one.return_value = {
                 "model": "jev-1.13.0",
                 "answers": {},
                 "usage": {"input_tokens": 10, "output_tokens": 0},
             }
-            mock_adapter.return_value.__enter__ = MagicMock(
-                return_value=mock_adapter_instance
-            )
-            mock_adapter.return_value.__exit__ = MagicMock(return_value=False)
+            mock_adapter_cls.return_value = mock_adapter_instance
 
-            result = main()
-            assert result == 0
+            result = self.runner.invoke(
+                app,
+                [
+                    "test",
+                    "{}",
+                    "--model",
+                    "test-model",
+                    "--api-key",
+                    "test-key",
+                ],
+                standalone_mode=False,
+            )
+
+            assert result.return_value == 0
 
     def test_main_error(self) -> None:
         """Test main function with error."""
         with (
-            patch("jev_client.adapters.inbound.cli.parse_args") as mock_args,
             patch(
                 "jev_client.adapters.inbound.cli.HTTPSystemOneAdapter"
-            ) as mock_adapter,
-            patch("jev_client.adapters.inbound.cli.print"),
+            ) as mock_adapter_cls,
         ):
-            mock_args.return_value.api_key = "test-key"
-            mock_args.return_value.state = "test"
-            mock_args.return_value.questions = "{}"
-            mock_args.return_value.json = False
+            mock_adapter_instance = MagicMock()
+            mock_adapter_instance.system_one.side_effect = ValueError("Test error")
+            mock_adapter_cls.return_value = mock_adapter_instance
 
-            mock_adapter.side_effect = ValueError("Test error")
+            result = self.runner.invoke(
+                app,
+                [
+                    "test",
+                    "{}",
+                    "--api-key",
+                    "test-key",
+                ],
+                standalone_mode=False,
+            )
 
-            result = main()
-            assert result == 1
+            assert result.return_value == 1
+            assert "Error: Test error" in result.stderr
 
     def test_main_error_json(self) -> None:
         """Test main function with error and JSON output."""
         with (
-            patch("jev_client.adapters.inbound.cli.parse_args") as mock_args,
             patch(
                 "jev_client.adapters.inbound.cli.HTTPSystemOneAdapter"
-            ) as mock_adapter,
+            ) as mock_adapter_cls,
             patch("jev_client.adapters.inbound.cli.print"),
             patch("jev_client.adapters.inbound.cli.json.dumps") as mock_json_dumps,
         ):
-            mock_args.return_value.api_key = "test-key"
-            mock_args.return_value.state = "test"
-            mock_args.return_value.questions = "{}"
-            mock_args.return_value.json = True
+            mock_adapter_instance = MagicMock()
+            mock_adapter_instance.system_one.side_effect = ValueError("Test error")
+            mock_adapter_cls.return_value = mock_adapter_instance
 
-            mock_adapter.side_effect = ValueError("Test error")
+            result = self.runner.invoke(
+                app,
+                [
+                    "test",
+                    "{}",
+                    "--api-key",
+                    "test-key",
+                    "--json",
+                ],
+                standalone_mode=False,
+            )
 
-            result = main()
-            assert result == 1
+            assert result.return_value == 1
             mock_json_dumps.assert_called_once()
