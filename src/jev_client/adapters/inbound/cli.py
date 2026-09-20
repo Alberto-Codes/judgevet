@@ -1,4 +1,16 @@
-"""Inbound CLI adapter."""
+"""Inbound CLI adapter.
+
+Examples:
+    ```python
+    from jev_client.adapters.inbound.cli import main
+    # Run CLI: python -m jev_client.adapters.inbound.cli
+    ```
+
+See Also:
+    - [jev_client.adapters.outbound.http][]: HTTP adapter
+    - [jev_client.domain.questions][]: Question types
+    - [jev_client.domain.answers][]: Answer types
+"""
 
 from __future__ import annotations
 
@@ -6,6 +18,8 @@ import argparse
 import json
 import sys
 from typing import Any
+
+import httpx
 
 from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
 from jev_client.domain.answers import (
@@ -25,6 +39,9 @@ def parse_questions(questions_json: str) -> dict[str, Any]:
 
     Returns:
         Dictionary mapping question names to question objects.
+
+    Raises:
+        ValueError: If an unknown question type is encountered.
     """
     data = json.loads(questions_json)
     result = {}
@@ -59,6 +76,9 @@ def format_answer(name: str, answer: Answer) -> dict[str, Any]:
 
     Returns:
         Dictionary representation of the answer.
+
+    Raises:
+        TypeError: If the answer type is unknown.
     """
     if isinstance(answer, NoulAnswer):
         return {"name": name, "type": "noul", "noul": answer.noul}
@@ -84,7 +104,11 @@ def format_answer(name: str, answer: Answer) -> dict[str, Any]:
 
 
 def parse_args() -> argparse.Namespace:
-    """Parse command line arguments."""
+    """Parse command line arguments.
+
+    Returns:
+        Parsed command line arguments.
+    """
     parser = argparse.ArgumentParser(description="Call the Jev System One API")
     parser.add_argument("state", help="State to evaluate (JSON string or text)")
     parser.add_argument("questions", help="Questions as JSON string")
@@ -117,7 +141,11 @@ def build_response_data(
 
 
 def main() -> int:
-    """CLI entry point."""
+    """CLI entry point.
+
+    Returns:
+        Exit code: 0 for success, 1 for error.
+    """
     args = parse_args()
 
     try:
@@ -138,16 +166,21 @@ def main() -> int:
         response_data = build_response_data(raw_response, answers)
 
         output_response(response_data, args.json)
-
-        adapter.close()
-        return 0
-
-    except Exception as e:  # noqa: BLE001
+    except (
+        ValueError,
+        json.JSONDecodeError,
+        TypeError,
+        KeyError,
+        httpx.HTTPError,
+    ) as e:
         if args.json:
             print(json.dumps({"error": str(e)}), file=sys.stderr)
         else:
             print(f"Error: {e}", file=sys.stderr)
         return 1
+    else:
+        adapter.close()
+        return 0
 
 
 def parse_raw_answers(raw_response: dict[str, Any]) -> dict[str, Answer]:

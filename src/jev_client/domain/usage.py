@@ -1,4 +1,16 @@
-"""Usage metadata from Jev API."""
+"""Usage metadata from Jev API.
+
+Examples:
+    ```python
+    from jev_client.domain.usage import Usage
+
+    usage = Usage(input_tokens=100, output_tokens=50)
+    assert usage.input_tokens == 100
+    ```
+
+See Also:
+    - [jev_client.domain.response][]: Response container
+"""
 
 from __future__ import annotations
 
@@ -7,6 +19,19 @@ class Usage:
     """Token counts for a request.
 
     See: https://jevaiguide.com/jev-api/
+
+    Attributes:
+        input_tokens (int | None): Number of input tokens used.
+        output_tokens (int | None): Number of output tokens used.
+
+    Examples:
+        ```python
+        usage = Usage(input_tokens=100, output_tokens=50)
+        assert usage.input_tokens == 100
+        ```
+
+    See Also:
+        - [jev_client.domain.response.SystemOneResponse][]: Response container
     """
 
     __slots__ = ("input_tokens", "output_tokens")
@@ -26,4 +51,5 @@ class Usage:
         self.output_tokens = output_tokens
 
     def __repr__(self) -> str:
-        return f"Usage(input_tokens={self.input_tokens}, output_tokens={self.output_tokens})"
+        """Return a string representation of the Usage."""
+        return f"Usage(input_tokens={self.input_tokens!r}, output_tokens={self.output_tokens!r})"

@@ -1,6 +1,5 @@
 """Unit tests for HTTP adapter."""
 
-
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,8 +23,9 @@ class TestHTTPSystemOneAdapter:
 
     def test_init_raises_without_key(self) -> None:
         """Test that initialization raises ValueError without API key."""
-        with patch.dict("os.environ", {}, clear=True), pytest.raises(
-            ValueError, match="API key must be provided"
+        with (
+            patch.dict("os.environ", {}, clear=True),
+            pytest.raises(ValueError, match="API key must be provided"),
         ):
             HTTPSystemOneAdapter()
 

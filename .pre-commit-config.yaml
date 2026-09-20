@@ -1,0 +1,72 @@
+# Commit stage: the fast gates. Push stage: coverage.
+#
+# Every Python tool runs from the project environment through `uv run`. The
+# lockfile then pins one version for the hook line and for CI. A pre-commit
+# mirror carries its own pin, that pin drifts from the lockfile, and the two
+# gates disagree. automarket lost time to exactly that drift, twice.
+#
+# Work lands directly on `main` here — no pull requests — so these hooks are
+# the only gate between a change and the branch. Nothing runs after them.
+default_stages: [pre-commit]
+
+repos:
+  - repo: local
+    hooks:
+      - id: check-suppressions
+        name: no gate suppressions
+        entry: uv run python scripts/check_suppressions.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check .
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --check .
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: ty-check
+        name: ty type check
+        entry: uv run ty check
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: lint-imports
+        name: import-linter
+        entry: uv run lint-imports
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: docvet
+        name: docvet check
+        entry: uv run docvet check
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: pytest
+        name: pytest (unit + contract)
+        entry: uv run pytest -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Coverage is the slowest gate and the one a single commit rarely moves.
+      # It guards the branch at push time instead of every commit.
+      - id: pytest-cov
+        name: pytest with coverage floor
+        entry: uv run pytest -q --cov
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

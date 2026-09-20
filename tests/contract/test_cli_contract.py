@@ -1,5 +1,6 @@
 """Contract tests for CLI adapter."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -142,11 +143,14 @@ class TestFormatAnswerError:
     def test_format_answer_unknown_type(self) -> None:
         """Test format_answer with unknown type raises TypeError."""
 
-    class FakeAnswer:
-        pass
+        # This test verifies the else branch in format_answer raises TypeError.
+        # We create a fake answer type that is not one of the known answer types.
+        class FakeAnswer:
+            pass
 
-    with pytest.raises(TypeError, match="Unknown answer type"):
-        format_answer("q1", FakeAnswer())
+        answer: Any = FakeAnswer()
+        with pytest.raises(TypeError, match="Unknown answer type"):
+            format_answer("q1", answer)
 
 
 class TestMain:

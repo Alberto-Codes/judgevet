@@ -46,8 +46,14 @@ code proving it.
   move the code, never weaken the contract.
 - **Modules cap at 300 code lines, functions at 50.** Over the limit means
   decompose.
-- **Never silence a gate.** Fix the cause. Do not add `per-file-ignores`, do
-  not add `# noqa`, do not narrow a gate's scope to make it pass.
+- **Never silence a gate.** Fix the cause. Do not add `per-file-ignores`,
+  `# noqa`, `# type: ignore`, `--no-verify`, or a narrowed scope. If a type
+  checker rejects a test double, the fix is a better double — a small class
+  that satisfies the protocol — not a cast to `Any`.
+- **Fixing one gate must not break another.** Run the whole table before you
+  report. Adding a docstring to satisfy ruff `D` earns a docvet `enrichment`
+  finding unless it carries the `Args:`, `Returns:`, `Raises:` and
+  `Attributes:` sections the case needs.
 
 ## Architecture
 
@@ -139,7 +145,11 @@ Conventional Commits 1.0.0. The type comes from the closed vocabulary
 (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `build`, `ci`).
 Reference an issue in the description or a footer.
 
-Default branch is `main`. The repo is private.
+Default branch is `main`. The repo is private. **No pull requests** — commit a
+finished piece of work directly to `main` and push. The pre-commit and pre-push
+hooks are the only gate between a change and the branch, so
+`uv run pre-commit install --install-hooks -t pre-commit -t pre-push` is the
+first thing a clone does. Never pass `--no-verify`.
 
 Do not describe work as complete while any gate is red. If a requirement was
 not met, name it.

@@ -1,4 +1,27 @@
-"""Question types for Jev API."""
+"""Question types for Jev API.
+
+Examples:
+    ```python
+    from jev_client.domain.questions import Noul, Choice, Score
+
+    noul = Noul(
+        instructions="Is this a valid question?",
+        criteria={"yes": "It is valid", "no": "It is not valid"},
+    )
+    choice = Choice(
+        criteria={"yes": "Yes option", "no": "No option"},
+        instructions="Choose one:",
+    )
+    score = Score(
+        criteria=["Poor", "Fair", "Good", "Excellent"],
+        instructions="Rate the response:",
+    )
+    ```
+
+See Also:
+    - [jev_client.domain.answers][]: Answer types
+    - [jev_client.domain.response][]: Response container
+"""
 
 from __future__ import annotations
 
@@ -10,6 +33,23 @@ class Noul:
     """A yes/no question with optional descriptions for either outcome.
 
     See: https://docs.typesafe.ai/primitives/noul
+
+    Attributes:
+        instructions (str | dict | Sequence | None): Question or statement to evaluate.
+        criteria (dict | None): Optional descriptions of yes and no outcomes.
+
+    Examples:
+        ```python
+        question = Noul(
+            instructions="Is this a valid question?",
+            criteria={"yes": "It is valid", "no": "It is not valid"},
+        )
+        assert question.instructions is not None
+        ```
+
+    See Also:
+        - [jev_client.domain.questions.Question][]: Union type for all questions
+        - [jev_client.domain.answers.NoulAnswer][]: Answer type for this question
     """
 
     __slots__ = ("criteria", "instructions")
@@ -29,6 +69,7 @@ class Noul:
         self.criteria = criteria
 
     def __repr__(self) -> str:
+        """Return a string representation of the Noul."""
         return f"Noul(instructions={self.instructions!r}, criteria={self.criteria!r})"
 
 
@@ -36,6 +77,23 @@ class Choice:
     """A question that selects between named alternatives.
 
     See: https://docs.typesafe.ai/primitives/choice
+
+    Attributes:
+        criteria (Mapping[str, str | dict | Sequence | None]): Labels mapped to descriptions.
+        instructions (str | dict | Sequence | None): The question to ask.
+
+    Examples:
+        ```python
+        question = Choice(
+            criteria={"yes": "Yes option", "no": "No option"},
+            instructions="Choose one:",
+        )
+        assert len(question.criteria) == 2
+        ```
+
+    See Also:
+        - [jev_client.domain.questions.Question][]: Union type for all questions
+        - [jev_client.domain.answers.ChoiceAnswer][]: Answer type for this question
     """
 
     __slots__ = ("criteria", "instructions")
@@ -55,6 +113,7 @@ class Choice:
         self.instructions = instructions
 
     def __repr__(self) -> str:
+        """Return a string representation of the Choice."""
         return f"Choice(criteria={self.criteria!r}, instructions={self.instructions!r})"
 
 
@@ -62,6 +121,23 @@ class Score:
     """A question that assigns a score using an ordered rubric.
 
     See: https://docs.typesafe.ai/primitives/score
+
+    Attributes:
+        criteria (Sequence[str | dict | Sequence]): Ordered list of descriptions.
+        instructions (str | dict | Sequence | None): What the model should rate.
+
+    Examples:
+        ```python
+        question = Score(
+            criteria=["Poor", "Fair", "Good", "Excellent"],
+            instructions="Rate the response:",
+        )
+        assert len(question.criteria) >= 2
+        ```
+
+    See Also:
+        - [jev_client.domain.questions.Question][]: Union type for all questions
+        - [jev_client.domain.answers.ScoreAnswer][]: Answer type for this question
     """
 
     __slots__ = ("criteria", "instructions")
@@ -81,6 +157,7 @@ class Score:
         self.instructions = instructions
 
     def __repr__(self) -> str:
+        """Return a string representation of the Score."""
         return f"Score(criteria={self.criteria!r}, instructions={self.instructions!r})"
 
 
