@@ -154,7 +154,24 @@ messages.
 
 Conventional Commits 1.0.0. The type comes from the closed vocabulary
 (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `build`, `ci`).
-Reference an issue in the description or a footer.
+
+**A commit that finishes an issue closes it from the footer.** Write
+`Closes #N` — spec rule 8's `<space>#` separator — and GitHub closes the issue
+on push and leaves a permanent link from the issue to the commit. Do not close
+issues by hand with `gh issue close`: a hand-written "landed in <sha>" comment
+is prose that goes stale the moment history is rewritten, and it did. Use
+`Refs #N` for an issue the commit touches but does not finish.
+
+Footers follow the git trailer convention the spec is built on: the token
+takes `-` in place of whitespace (`Generated-By`, `Co-Authored-By`), and a
+value may wrap onto further lines because parsing only stops at the next
+`token: ` or `token #` pair.
+
+Attribution is per-commit and factual. A commit a local model wrote carries
+`Generated-By: <model> (local, via pi)`, with a trailing clause naming any part
+of it that someone else wrote. A commit written by hand carries no such
+trailer — the trailer is evidence, and this repo is partly an evaluation of
+those models, so decorating an unearned commit corrupts the record.
 
 Default branch is `main`. The repo is private. **No pull requests** — commit a
 finished piece of work directly to `main` and push. The pre-commit and pre-push
