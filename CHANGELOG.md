@@ -1,7 +1,27 @@
 # Changelog
 
+Maintained by [release-please](https://github.com/googleapis/release-please)
+from conventional commit messages. Do not edit entries by hand.
+
 ## [0.1.0](https://github.com/Alberto-Codes/judgevet/compare/v0.0.1...v0.1.0) (2026-09-21)
 
+**The first release of this library.** `0.0.1` on PyPI was a name reservation
+carrying no working code, so the comparison link above has no tag to resolve
+against and the "breaking changes" below broke nothing that had shipped — they
+are recorded because the commits declared them during development, and because
+anyone who installed from the repository before today will meet them.
+
+What is worth knowing before you install:
+
+- The domain model is **verified in part**. The success response shape and the
+  401 and 422 error bodies were checked against the live service on
+  2026-09-21. The 429 and 529 bodies have never been observed, one model has
+  been exercised, and everything else is inferred from published
+  documentation. `STATUS.md` holds the line-by-line table.
+- Errors carry a `detail` that is **polymorphic** — an object for
+  authentication failures, an array for validation failures. The adapter
+  handles both and deliberately drops the `input` key, which echoes your
+  request payload back.
 
 ### ⚠ BREAKING CHANGES
 
