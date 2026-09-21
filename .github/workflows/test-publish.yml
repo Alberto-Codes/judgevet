@@ -53,4 +53,13 @@ jobs:
 
       - run: uv python install 3.12
 
-      - run: uv publish --index testpypi --check-url https://test.pypi.org/simple/
+      # --index and --check-url are mutually exclusive: uv rejects the pair
+      # with "the argument '--index <INDEX>' cannot be used with
+      # '--check-url <CHECK_URL>'". --index names the entry in
+      # [[tool.uv.index]], which already carries both `url` (what --check-url
+      # would set) and `publish-url`, so passing it again is redundant as well
+      # as fatal. publish.yml does not hit this because it passes no --index.
+      #
+      # --trusted-publishing is orthogonal to --index and is what makes the
+      # OIDC exchange happen, matching publish.yml.
+      - run: uv publish --index testpypi --trusted-publishing always
