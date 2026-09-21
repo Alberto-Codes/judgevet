@@ -9,7 +9,8 @@ Examples:
 See Also:
     - [judgevet.adapters.inbound.settings][]: Settings for configuration
     - [judgevet.adapters.outbound.http][]: HTTP adapter
-    - [judgevet.domain.response_parser][]: Response parsing
+    - [judgevet.ports][]: Port protocol
+    - [judgevet.domain.response][]: Response types
     - [judgevet.domain.questions][]: Question types
     - [judgevet.domain.answers][]: Answer types
     - [judgevet.domain.errors][]: Error types
@@ -40,6 +41,7 @@ from judgevet.domain.errors import (
 )
 from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response import SystemOneResponse
+from judgevet.ports import SystemOnePort
 
 app = typer.Typer(help="Call the Jev System One API")
 
@@ -156,23 +158,19 @@ def output_response(response_data: dict[str, Any], as_json: bool) -> None:
 
 
 def run_cli(
+    port: SystemOnePort,
     state: str,
     questions: str,
     model: str = "jev-latest",
-    api_key: str | None = None,
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> int:
-    """Run the CLI with parsed arguments.
-
-    The CLI constructs Settings and uses them for configuration.
-    Values from Settings are used as defaults unless explicitly overridden by
-    command-line options.
+    """Run the CLI with a port.
 
     Args:
+        port: The SystemOnePort implementation to use for API calls.
         state: State to evaluate (JSON string or text).
         questions: Questions as JSON string.
-        model: Model to use. Defaults to Settings.api.default_model.
-        api_key: TypeSafe API key. Overrides Settings.api.key if provided.
+        model: Model to use. Defaults to "jev-latest".
         json_output: Whether to output as JSON.
 
     Returns:
@@ -184,24 +182,11 @@ def run_cli(
         JevServiceError: If the service fails with 5xx or transport error.
         JevResponseError: If the response body cannot be parsed.
     """
-    settings = Settings()
-    base_url = settings.api.base_url
-    key = settings.api.key.get_secret_value() if settings.api.key else None
-
-    # Explicit --api-key wins over settings value
-    final_api_key = api_key if api_key is not None else key
-
     try:
-        adapter = HTTPSystemOneAdapter(
-            api_key=final_api_key,
-            base_url=base_url,
-            default_model=model,
-        )
-
         state_data = json.loads(state) if state.startswith(("{", "[")) else state
         questions_dict = parse_questions(questions)
 
-        response = adapter.system_one(
+        response = port.system_one(
             state=state_data, questions=questions_dict, model=model
         )
 
@@ -224,7 +209,6 @@ def run_cli(
             print(f"Error: {e}", file=sys.stderr)
         return 1
     else:
-        adapter.close()
         return 0
 
 
@@ -238,6 +222,10 @@ def main(
 ) -> int:
     """Call the Jev System One API.
 
+    Reads Settings, lets an explicit --api-key override the settings key,
+    constructs HTTPSystemOneAdapter once, calls run_cli with it as the port,
+    and closes the adapter in finally.
+
     Args:
         state: State to evaluate (JSON string or text).
         questions: Questions as JSON string.
@@ -248,25 +236,46 @@ def main(
     Returns:
         Exit code: 0 for success, 1 for error.
     """
-    return run_cli(state, questions, model, api_key, json_output)
+    settings = Settings()
+    base_url = settings.api.base_url
+    key = settings.api.key.get_secret_value() if settings.api.key else None
+
+    # Explicit --api-key wins over settings value
+    final_api_key = api_key if api_key is not None else key
+
+    adapter = HTTPSystemOneAdapter(
+        api_key=final_api_key,
+        base_url=base_url,
+        default_model=model,
+    )
+
+    try:
+        return run_cli(
+            port=adapter,
+            state=state,
+            questions=questions,
+            model=model,
+            json_output=json_output,
+        )
+    finally:
+        adapter.close()
 
 
 def cli_main() -> int:
     """CLI entry point for backward compatibility.
 
-    This function is kept for backward compatibility with tests.
-    It parses arguments using the old argparse-based parse_args function.
+    Parses sys.argv with parse_args and delegates to main.
 
     Returns:
         Exit code: 0 for success, 1 for error.
     """
     args = parse_args()
-    return run_cli(
-        args.state,
-        args.questions,
-        args.model,
-        args.api_key,
-        args.json,
+    return main(
+        state=args.state,
+        questions=args.questions,
+        model=args.model,
+        api_key=args.api_key,
+        json_output=args.json,
     )
 
 
