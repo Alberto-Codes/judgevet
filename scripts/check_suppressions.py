@@ -8,10 +8,9 @@ working test double with `object()` and a `# type: ignore[assignment]`.
 
 Reading the diff afterwards catches it. A hook prevents it.
 
-The two `per-file-ignores` entries already in `pyproject.toml` are allowed and
-counted: tests relax docstring and assert rules, and the typer CLI takes one
-argument per option by design. Adding a third is a decision, so this script
-fails until the budget here is raised deliberately.
+The `per-file-ignores` entries already in `pyproject.toml` are allowed and
+counted by total codes, not patterns. Adding a new code to an existing entry
+is a decision, so this script fails until the budget is raised deliberately.
 
 Usage:
     check_suppressions.py [paths...]     # defaults to src/ and tests/
@@ -23,14 +22,16 @@ from __future__ import annotations
 
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 # A suppression comment anywhere in a line of Python.
 SUPPRESSION = re.compile(r"#\s*(noqa|type:\s*ignore|ruff:\s*noqa|pyright:\s*ignore)")
 
-# Deliberate `per-file-ignores` blocks in pyproject.toml. Raise this only with
+# Deliberate `per-file-ignores` codes in pyproject.toml. Raise this only with
 # a reason in the commit message.
-ALLOWED_PER_FILE_IGNORES = 2
+# Current budget: 10 codes (7 in tests/**/*.py, 3 in mcp.py).
+ALLOWED_PER_FILE_IGNORE_CODES = 10
 
 
 def scan(paths: list[Path]) -> list[str]:
@@ -58,25 +59,33 @@ def scan(paths: list[Path]) -> list[str]:
     return findings
 
 
-def count_per_file_ignores(pyproject: Path) -> int:
-    """Count entries under ruff's `per-file-ignores` table.
+def count_per_file_ignores(pyproject: Path) -> tuple[int, dict[str, list[str]]]:
+    """Count codes under ruff's `per-file-ignores` table.
 
     Args:
         pyproject: The `pyproject.toml` to read.
 
     Returns:
-        The number of file patterns given their own ignore list.
+        A tuple of (total code count, dict mapping file pattern to its codes).
     """
     if not pyproject.is_file():
-        return 0
-    text = pyproject.read_text(errors="replace")
-    start = text.find("[tool.ruff.lint.per-file-ignores]")
-    if start == -1:
-        return 0
-    rest = text[start + 1 :]
-    end = rest.find("\n[")
-    block = rest if end == -1 else rest[:end]
-    return len(re.findall(r'^\s*"[^"]+"\s*=\s*\[', block, re.MULTILINE))
+        return 0, {}
+    try:
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    except tomllib.TOMLDecodeError:
+        return 0, {}
+    ignores_table = (
+        data.get("tool", {}).get("ruff", {}).get("lint", {}).get("per-file-ignores", {})
+    )
+    if not ignores_table:
+        return 0, {}
+    total = 0
+    per_pattern: dict[str, list[str]] = {}
+    for pattern, codes in ignores_table.items():
+        if isinstance(codes, list):
+            per_pattern[pattern] = codes
+            total += len(codes)
+    return total, per_pattern
 
 
 def main(argv: list[str]) -> int:
@@ -91,8 +100,8 @@ def main(argv: list[str]) -> int:
     roots = [Path(a) for a in argv] or [Path("src"), Path("tests")]
     findings = scan([r for r in roots if r.exists()])
 
-    ignores = count_per_file_ignores(Path("pyproject.toml"))
-    over_budget = ignores > ALLOWED_PER_FILE_IGNORES
+    total, per_pattern = count_per_file_ignores(Path("pyproject.toml"))
+    over_budget = total > ALLOWED_PER_FILE_IGNORE_CODES
 
     if not findings and not over_budget:
         return 0
@@ -103,10 +112,13 @@ def main(argv: list[str]) -> int:
             print(f"  {finding}")
     if over_budget:
         print(
-            f"pyproject.toml has {ignores} per-file-ignores entries, "
-            f"budget is {ALLOWED_PER_FILE_IGNORES}. "
-            "Raise ALLOWED_PER_FILE_IGNORES deliberately, with a reason."
+            f"pyproject.toml has {total} per-file-ignores codes, "
+            f"budget is {ALLOWED_PER_FILE_IGNORE_CODES}. "
+            "Raise ALLOWED_PER_FILE_IGNORE_CODES deliberately, with a reason."
         )
+        print("Breakdown by pattern:")
+        for pattern, codes in sorted(per_pattern.items()):
+            print(f"  {pattern!r}: {len(codes)} code(s) — {', '.join(codes)}")
     return 1
 
 
