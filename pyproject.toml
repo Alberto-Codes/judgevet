@@ -24,7 +24,11 @@ dependencies = [
 [project.optional-dependencies]
 # The MCP server is an inbound adapter, not core. Scripts and CI import the
 # library without pulling an MCP runtime.
-mcp = ["mcp>=1.2"]
+#
+# Floor is 2.2 because the 2026-07-28 spec is stateless, with no initialize
+# handshake and no protocol session, and Roots/Sampling/Logging are deprecated.
+# A 1.x resolution would target a different protocol.
+mcp = ["mcp>=2.2"]
 
 [project.scripts]
 judgevet = "judgevet.adapters.inbound.cli:app"
