@@ -97,7 +97,8 @@ class TestCLIWithFakePort:
             standalone_mode=False,
         )
 
-        assert result.return_value == 0
+        assert result.exit_code == 0
+        assert result.exception is None
         assert port.state == "test content"
         assert port.questions is not None
         assert "q1" in port.questions
@@ -130,7 +131,8 @@ class TestCLIWithFakePort:
             standalone_mode=False,
         )
 
-        assert result.return_value == 0
+        assert result.exit_code == 0
+        assert result.exception is None
         assert port.state == "some state"
         assert port.questions is not None
         assert "q1" in port.questions
