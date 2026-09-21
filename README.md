@@ -3,7 +3,11 @@
 Typed client, CLI and MCP server for TypeSafe's **Jev** (System One) judgment
 model.
 
-## Status: draft
+## What is verified
+
+This library is on PyPI and usable: `pip install judgevet`. This section says
+how much of it has been checked against the real service, because the answer
+is "most, not all" and you should know which parts before you rely on them.
 
 **The response shape is verified. The error surface is partly verified.
 Everything else is still inferred from documentation.**
@@ -27,7 +31,10 @@ Still inferred, and marked as such in `STATUS.md`: the 429 and 529 bodies —
 one needs abusing the service, the other cannot be provoked — every model
 other than `jev-1.13.0`, and any field no call has exercised.
 
-Not `stable`: one model and two error statuses is not the whole surface.
+The repository marks `README.md` and `docs/reference/api.md` as `draft`
+rather than `stable` under its own documentation trust levels — one model and
+two error statuses is not the whole surface. That is a statement about
+documentation coverage, not about whether the package works.
 
 ## What Jev is
 
