@@ -1,5 +1,14 @@
 """HTTP outbound adapter implementation.
 
+Error handling:
+    The API error `detail` field is polymorphic:
+    - Array for validation errors (422): [{"type", "loc", "msg", "input"}]
+    - Object for auth errors (401/403): {"error_type", "message"}
+    - Absent or unrecognised: falls back to status line alone.
+
+    The `input` key in validation errors contains the caller's request payload
+    and is deliberately excluded from error messages to avoid leaking user data.
+
 Examples:
     ```python
     from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
@@ -54,6 +63,51 @@ from judgevet.domain.errors import (
 )
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.response_parser import parse_system_one_response
+
+
+def _extract_error_detail(detail: Any) -> str:
+    """Extract error message from detail field.
+
+    The detail field can be:
+    - An array of validation errors: [{"type", "loc", "msg", "input"}]
+    - An object for auth errors: {"error_type", "message"}
+    - Something else (treat as unknown)
+
+    Never includes the "input" field as it contains caller content.
+
+    Args:
+        detail: The detail field from the error response body.
+
+    Returns:
+        A formatted error message, or empty string if detail is unknown.
+    """
+    if isinstance(detail, list):
+        # Array-shaped detail: validation errors
+        parts = []
+        for item in detail:
+            if isinstance(item, dict):
+                type_part = item.get("type", "unknown_type")
+                loc_part = ".".join(str(p) for p in item.get("loc", []))
+                msg_part = item.get("msg", "no message")
+                if loc_part:
+                    parts.append(f"{type_part} at {loc_part}: {msg_part}")
+                else:
+                    parts.append(f"{type_part}: {msg_part}")
+            else:
+                parts.append(str(item))
+        return "; ".join(parts)
+    elif isinstance(detail, dict):
+        # Object-shaped detail: auth or other errors
+        error_type = detail.get("error_type")
+        message = detail.get("message")
+        if error_type and message:
+            return f"{error_type}: {message}"
+        elif message:
+            return message
+        elif error_type:
+            return error_type
+    # Unknown detail shape
+    return ""
 
 
 class HTTPSystemOneAdapter:
@@ -138,6 +192,16 @@ class HTTPSystemOneAdapter:
             JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
             JevResponseError: If the API returns 2xx with unparseable body.
+
+        Error details:
+            Validation errors (422) include an array of error objects; each
+            object's `input` key contains the caller's request payload and is
+            deliberately omitted from the error message.
+
+            Auth errors (401/403) return an object with `error_type` and
+            `message` fields.
+
+            Unknown detail shapes fall back to the HTTP status line alone.
         """
         payload = {
             "state": state,
@@ -158,21 +222,35 @@ class HTTPSystemOneAdapter:
             return parse_system_one_response("system-one", raw)
         except httpx.HTTPStatusError as exc:
             status_code = exc.response.status_code
+            error_message = str(exc)
+
+            # Try to extract detailed error information from response body
+            try:
+                body = exc.response.json()
+                if isinstance(body, dict):
+                    detail = body.get("detail")
+                    if detail is not None:
+                        extracted = _extract_error_detail(detail)
+                        if extracted:
+                            error_message = f"{exc!s}; {extracted}"
+            except ValueError:
+                pass  # Body is not JSON, use default message
+
             if status_code == JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS:
-                raise JevRateLimitError(str(exc), status_code) from exc
+                raise JevRateLimitError(error_message, status_code) from exc
             elif status_code in (
                 JevError.HTTP_STATUS_401_UNAUTHORIZED,
                 JevError.HTTP_STATUS_403_FORBIDDEN,
             ):
-                raise JevAuthError(str(exc), status_code) from exc
+                raise JevAuthError(error_message, status_code) from exc
             elif (
                 JevError.HTTP_STATUS_400_MIN
                 <= status_code
                 < JevError.HTTP_STATUS_500_MIN
             ):
-                raise JevRequestError(str(exc), status_code) from exc
+                raise JevRequestError(error_message, status_code) from exc
             elif status_code >= JevError.HTTP_STATUS_500_MIN:
-                raise JevServiceError(str(exc), status_code) from exc
+                raise JevServiceError(error_message, status_code) from exc
             raise
         except httpx.RequestError as exc:
             raise JevServiceError(str(exc), None) from exc

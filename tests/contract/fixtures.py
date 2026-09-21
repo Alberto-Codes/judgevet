@@ -229,12 +229,22 @@ def _make_mixed_fixture() -> dict[str, Any]:
 
 
 def _make_error_401_fixture() -> dict[str, Any]:
-    """Fixture 5: 401 Unauthorized."""
+    """Fixture 5: 401 Unauthorized.
+
+    Real body from live API on 2026-09-21:
+    {"detail": {"error_type": "authentication_error",
+                 "message": "Cannot authenticate with the server..."}}
+    """
     return {
         "name": "error_401",
         "request": {"state": "test", "questions": {}, "model": "jev-1.13.0"},
         "status": 401,
-        "body": {},  # adapter never reads the body on non-2xx
+        "body": {
+            "detail": {
+                "error_type": "authentication_error",
+                "message": "Cannot authenticate with the server...",
+            }
+        },
         "expect": ("error", "JevAuthError", 401),
     }
 
@@ -262,12 +272,27 @@ def _make_error_429_fixture() -> dict[str, Any]:
 
 
 def _make_error_422_fixture() -> dict[str, Any]:
-    """Fixture 8: 422 Request Error."""
+    """Fixture 8: 422 Request Error.
+
+    Real body from live API on 2026-09-21:
+    {"detail": [{"type": "missing", "loc": ["body", "questions"],
+                 "msg": "Field required",
+                 "input": {"state": "x", "model": "jev-latest"}}]}
+    """
     return {
         "name": "error_422",
         "request": {"state": "test", "questions": {}, "model": "jev-1.13.0"},
         "status": 422,
-        "body": {},  # adapter never reads the body on non-2xx
+        "body": {
+            "detail": [
+                {
+                    "type": "missing",
+                    "loc": ["body", "questions"],
+                    "msg": "Field required",
+                    "input": {"state": "x", "model": "jev-latest"},
+                }
+            ]
+        },
         "expect": ("error", "JevRequestError", 422),
     }
 
