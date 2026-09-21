@@ -3,13 +3,14 @@
 Examples:
     ```python
     from judgevet.ports import SystemOnePort
+    from judgevet.domain.questions import Noul
     from judgevet.domain.response import SystemOneResponse
 
 
     def call_api(port: SystemOnePort) -> SystemOneResponse:
         return port.system_one(
             state="content",
-            questions={"q1": {"type": "noul"}},
+            questions={"q1": Noul(instructions="Question?")},
             model="jev-latest",
         )
     ```
@@ -27,6 +28,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Protocol
 
+from judgevet.domain.questions import Question
 from judgevet.domain.response import SystemOneResponse
 
 
@@ -57,7 +59,7 @@ class SystemOnePort(Protocol):
     def system_one(
         self,
         state: str | dict[str, Any] | list[Any],
-        questions: Mapping[str, Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
         model: str,
     ) -> SystemOneResponse:
         """Call the Jev System One API.
@@ -65,6 +67,8 @@ class SystemOnePort(Protocol):
         Args:
             state: The content to evaluate (text, JSON object, or array).
             questions: Mapping of question names to question definitions.
+                Both Question objects and raw dicts are accepted; mixed mappings
+                are allowed. Question objects are converted to their wire format.
             model: Model name to use (e.g., jev-1.13.0).
 
         Returns:
@@ -111,7 +115,7 @@ class AsyncSystemOnePort(Protocol):
     async def system_one(
         self,
         state: str | dict[str, Any] | list[Any],
-        questions: Mapping[str, Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
         model: str,
     ) -> SystemOneResponse:
         """Call the Jev System One API.
@@ -119,6 +123,8 @@ class AsyncSystemOnePort(Protocol):
         Args:
             state: The content to evaluate (text, JSON object, or array).
             questions: Mapping of question names to question definitions.
+                Both Question objects and raw dicts are accepted; mixed mappings
+                are allowed. Question objects are converted to their wire format.
             model: Model name to use (e.g., jev-1.13.0).
 
         Returns:

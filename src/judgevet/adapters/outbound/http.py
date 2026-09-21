@@ -14,10 +14,12 @@ Helper functions:
     - _parse_body: Parse the response body into a SystemOneResponse.
     - _translate_status_error: Translate HTTP status errors to JevError subclasses.
     - _translate_request_error: Translate request errors to JevServiceError.
+    - _convert_question_to_wire: Convert a Question object to its wire dict.
 
 Examples:
     ```python
     from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+    from judgevet.domain.questions import Noul
     from judgevet.domain.response import SystemOneResponse
 
     adapter = HTTPSystemOneAdapter(api_key="your-api-key")
@@ -25,10 +27,7 @@ Examples:
         response: SystemOneResponse = adapter.system_one(
             state="Your content here",
             questions={
-                "q1": {
-                    "type": "noul",
-                    "instructions": "Is this correct?",
-                }
+                "q1": Noul(instructions="Is this correct?"),
             },
         )
         print(response)
@@ -77,6 +76,7 @@ from judgevet.domain.errors import (
     JevResponseError,
     JevServiceError,
 )
+from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.response_parser import parse_system_one_response
 
@@ -126,6 +126,47 @@ def _extract_error_detail(detail: Any) -> str:
     return ""
 
 
+def _convert_question_to_wire(question: Any) -> Any:
+    """Convert a Question object to its wire dict format.
+
+    The wire format is:
+        - noul:   {"type": "noul",   "instructions": ..., "criteria": {...} or None}
+        - choice: {"type": "choice", "instructions": ..., "criteria": {...} or None}
+        - score:  {"type": "score",  "instructions": ..., "criteria": [...]  or None}
+
+    A key whose value is None is omitted from the output.
+
+    Args:
+        question: A Question object or a raw dict. Non-Question values pass through.
+
+    Returns:
+        A wire dict for Question objects, or the original value otherwise.
+    """
+    if isinstance(question, Noul):
+        result: dict[str, Any] = {"type": "noul"}
+        if question.instructions is not None:
+            result["instructions"] = question.instructions
+        if question.criteria is not None:
+            result["criteria"] = question.criteria
+        return result
+    elif isinstance(question, Choice):
+        result = {"type": "choice"}
+        if question.instructions is not None:
+            result["instructions"] = question.instructions
+        if question.criteria is not None:
+            result["criteria"] = question.criteria
+        return result
+    elif isinstance(question, Score):
+        result = {"type": "score"}
+        if question.instructions is not None:
+            result["instructions"] = question.instructions
+        if question.criteria is not None:
+            result["criteria"] = question.criteria
+        return result
+    # Non-Question values pass through untouched
+    return question
+
+
 def _build_payload(
     state: str | dict[str, Any] | list[Any],
     questions: Mapping[str, Any],
@@ -137,15 +178,20 @@ def _build_payload(
     Args:
         state: The content to evaluate.
         questions: Mapping of question names to question definitions.
+            Both Question objects and raw dicts are accepted; mixed mappings
+            are allowed. Question objects are converted to their wire format.
         model: Model name override, or None to use the default.
         default_model: Default model to use when model is None.
 
     Returns:
         A dictionary with keys "state", "questions", and "model".
     """
+    converted_questions = {
+        name: _convert_question_to_wire(value) for name, value in questions.items()
+    }
     return {
         "state": state,
-        "questions": questions,
+        "questions": converted_questions,
         "model": model or default_model,
     }
 

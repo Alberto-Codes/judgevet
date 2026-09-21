@@ -23,6 +23,7 @@ with matching status_code, retryable, message, and __cause__/__context__.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import anyio
@@ -34,6 +35,7 @@ from judgevet.adapters.outbound.http import (
     HTTPSystemOneAdapter,
 )
 from judgevet.domain.errors import JevError
+from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response import SystemOneResponse
 
 from .fixtures import get_fixtures
@@ -263,3 +265,124 @@ def test_3xx_fallthrough_agrees() -> None:
     # __context__ must be None (the 3xx fallthrough branch)
     assert exc_sync.__context__ is None
     assert exc_async.__context__ is None
+
+
+def test_adapters_handle_question_objects() -> None:
+    """Test that adapters correctly convert Question objects to wire dicts.
+
+    This test uses the contract test pattern: both adapters are driven with
+    the same question objects, and the captured requests are compared. Since
+    both adapters use the same _build_payload and _convert_question_to_wire,
+    the requests must be byte-identical.
+    """
+    captured_sync: list[dict[str, Any]] = []
+    captured_async: list[dict[str, Any]] = []
+
+    def sync_handler(request: httpx.Request) -> httpx.Response:
+        body = request.read().decode("utf-8")
+        captured_sync.append(json.loads(body))
+        return httpx.Response(
+            200,
+            json={
+                "model": "jev-1.13.0",
+                "answers": {},
+                "usage": {"input_tokens": 10, "output_tokens": 0},
+            },
+        )
+
+    def async_handler(request: httpx.Request) -> httpx.Response:
+        body = request.read().decode("utf-8")
+        captured_async.append(json.loads(body))
+        return httpx.Response(
+            200,
+            json={
+                "model": "jev-1.13.0",
+                "answers": {},
+                "usage": {"input_tokens": 10, "output_tokens": 0},
+            },
+        )
+
+    transport_sync = httpx.MockTransport(sync_handler)
+    transport_async = httpx.MockTransport(async_handler)
+
+    sync_adapter = HTTPSystemOneAdapter(
+        api_key="test-key",
+        transport=transport_sync,
+    )
+    async_adapter = AsyncHTTPSystemOneAdapter(
+        api_key="test-key",
+        transport=transport_async,
+    )
+
+    # Use bare Noul without criteria to test the omission rule
+    noul_no_criteria = Noul(instructions="Is this valid?")
+    noul_with_criteria = Noul(
+        instructions="Is this correct?",
+        criteria={"yes": "Correct", "no": "Incorrect"},
+    )
+    choice = Choice(
+        criteria={"a": "Option A", "b": "Option B"},
+        instructions="Choose one:",
+    )
+    score = Score(
+        criteria=["Poor", "Fair", "Good", "Excellent"],
+        instructions="Rate quality:",
+    )
+
+    # Call sync adapter
+    sync_adapter.system_one(
+        state="Test content",
+        questions={
+            "bare_noul": noul_no_criteria,
+            "noul": noul_with_criteria,
+            "choice": choice,
+            "score": score,
+        },
+    )
+    sync_adapter.close()
+
+    # Call async adapter
+    anyio.run(
+        async_adapter.system_one,
+        "Test content",
+        {
+            "bare_noul": noul_no_criteria,
+            "noul": noul_with_criteria,
+            "choice": choice,
+            "score": score,
+        },
+    )
+
+    # Both adapters must produce identical requests
+    assert len(captured_sync) == 1
+    assert len(captured_async) == 1
+    assert captured_sync[0] == captured_async[0]
+
+    questions = captured_sync[0]["questions"]
+
+    # Bare Noul without criteria (inferred: None keys are omitted)
+    assert questions["bare_noul"] == {
+        "type": "noul",
+        "instructions": "Is this valid?",
+    }
+
+    # Noul with criteria
+    assert questions["noul"] == {
+        "type": "noul",
+        "instructions": "Is this correct?",
+        "criteria": {"yes": "Correct", "no": "Incorrect"},
+    }
+
+    # Choice with criteria
+    assert questions["choice"] == {
+        "type": "choice",
+        "instructions": "Choose one:",
+        "criteria": {"a": "Option A", "b": "Option B"},
+    }
+
+    # Score with criteria (note: criteria is a list, not dict)
+    assert questions["score"] == {
+        "type": "score",
+        "instructions": "Rate quality:",
+        "criteria": ["Poor", "Fair", "Good", "Excellent"],
+    }

@@ -41,6 +41,7 @@ import pytest
 
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+from judgevet.domain.questions import Choice, Noul
 from judgevet.domain.response import SystemOneResponse
 
 
@@ -175,3 +176,53 @@ def test_system_one_live_with_all_question_types() -> None:
     assert response.model.startswith("jev-")
     _assert_answer_constraints(response.answers)
     _assert_usage_structure(response.usage)
+
+
+@pytest.mark.live
+def test_documented_example_runs() -> None:
+    """Test the documented example from the package docstring.
+
+    This test executes the example in the package docstring against the live API.
+    It uses a bare Noul without criteria to verify the omission rule.
+
+    The example in question is:
+        Noul(instructions="Is this valid?")
+    which must serialize to:
+        {"type": "noul", "instructions": "Is this valid?"}
+
+    Raises:
+        JevAuthError: If the API key is invalid or missing.
+        JevServiceError: If the API returns 5xx or a transport error occurs.
+        JevResponseError: If the response body cannot be parsed.
+    """
+    settings = Settings()
+    key = settings.api.key
+
+    if key is None:
+        pytest.skip("Missing TYPESAFE_API_KEY environment variable")
+
+    adapter = HTTPSystemOneAdapter(
+        api_key=key.get_secret_value(),
+        base_url=settings.api.base_url,
+        default_model=settings.api.default_model,
+    )
+
+    try:
+        # This is the example from the package docstring: bare Noul without criteria
+        response: SystemOneResponse = adapter.system_one(
+            state="Test content for documented example.",
+            questions={
+                "bare_noul": Noul(instructions="Is this valid?"),
+                "choice": Choice(
+                    criteria={"a": "Option A", "b": "Option B"},
+                    instructions="Choose one:",
+                ),
+            },
+        )
+
+        # Just verify it ran and parsed
+        assert response.model.startswith("jev-")
+        assert "bare_noul" in response.answers
+        assert "choice" in response.answers
+    finally:
+        adapter.close()

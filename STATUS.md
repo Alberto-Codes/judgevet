@@ -38,6 +38,14 @@ shipped in #92 reachable only through `judgevet.adapters.outbound.http`, which
 made it proven but not public; `tests/unit/test_public_surface.py` now pins the
 export set so that cannot recur silently.
 
+The question types are passable to `system_one` as of #98. They were exported
+and documented from the start and never worked: the adapter put `questions`
+straight into `json=`, so a `Noul` raised `TypeError`. Ten gates and 286 tests
+were green over it, because every test passed raw dicts and never crossed the
+wire boundary with a question object. Found by installing the built wheel in a
+clean venv and running the package's own example — see #99, which makes that a
+gate.
+
 ## Where the repo is
 
 ```
@@ -64,7 +72,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 286 tests, 95.07% overall.
+Tests and coverage: see the gate table below. 290 tests, 95.26% overall.
 
 The 13 new tests in `tests/contract/test_adapter_equivalence.py` verify that
 the sync and async HTTP adapters produce identical outcomes on the same
