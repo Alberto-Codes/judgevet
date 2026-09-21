@@ -64,7 +64,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 262 tests, 94.86% overall.
+Tests and coverage: see the gate table below. 286 tests, 95.07% overall.
 
 The 13 new tests in `tests/contract/test_adapter_equivalence.py` verify that
 the sync and async HTTP adapters produce identical outcomes on the same
