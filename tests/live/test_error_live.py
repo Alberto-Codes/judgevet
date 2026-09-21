@@ -73,7 +73,7 @@ def _call_adapter(adapter: HTTPSystemOneAdapter) -> None:
             "noul_q": {
                 "type": "noul",
                 "instructions": "Is 2+2 equal to 4?",
-                "criteria": {"yes": "Correct", "no": "Incorrect"},
+                "criteria": {"true": "Correct", "false": "Incorrect"},
             }
         },
         model="jev-latest",

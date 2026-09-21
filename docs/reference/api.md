@@ -14,7 +14,7 @@ A yes/no question.
 
 **Parameters:**
 - `instructions`: The yes/no question or statement to evaluate
-- `criteria`: Optional descriptions of the yes and no outcomes
+- `criteria`: Optional. An object with `true` and `false` descriptions of what a yes and a no mean. See: https://docs.typesafe.ai/primitives/noul
 
 **Response:** `NoulAnswer` with `noul` probability (0-1)
 
@@ -104,11 +104,8 @@ response = adapter.system_one(
     questions={
         "is_refund": Noul(instructions="Is this about a refund?"),
         "queue": Choice(
-            criteria={
-                "billing": "Money issues",
-                "technical": "Bugs",
-            },
-            instructions="Which team handles this?",
+            criteria={"a": "Option A", "b": "Option B"},
+            instructions="Choose one:",
         ),
     },
 )

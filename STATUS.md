@@ -97,6 +97,8 @@ There are no pull requests here: those hooks are the only gate before `main`.
 |---|---|
 | endpoint, auth header, three answer shapes, usage | verified — probe + official reference |
 | noul has no confidence; score is continuous; legend is a map | verified — both sources |
+| noul criteria keys `true`/`false` are read by the service — inverted criteria moved the measured answer by ≥ 0.13, while `yes`/`no` (normal and inverted) did not move it | **verified** — live differential test, issue #105 |
+| score `legend` echoes the sent criteria list exactly | **verified** — live test asserts legend equals `{0: "Poor", 1: "Fair", 2: "Good", 3: "Excellent"}` |
 | 401 returns `{"detail": {"error_type", "message"}}` | **verified** — live call with an invalid key, 2026-09-21 |
 | 422 returns `{"detail": [ {type, loc, msg, input} ]}` | **verified** — live call omitting `questions`, 2026-09-21 |
 | `detail` is polymorphic: an object for auth, an array for validation | **verified** — the two calls above disagree in shape |

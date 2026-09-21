@@ -85,6 +85,26 @@ def _assert_answer_constraints(answers: dict[str, Any]) -> None:
     assert all(0.0 <= p <= 1.0 for p in score_answer.probabilities.values())
 
 
+def _assert_score_legend_echoes_criteria(
+    score_answer: Any,
+    criteria: list[str],
+) -> None:
+    """Assert that score answer legend exactly echoes the sent criteria.
+
+    The Jev API returns a legend mapping each score level (integer position)
+    back to its description string. This is deterministic proof the service
+    received and used the criteria list, not discarded it.
+
+    Args:
+        score_answer: ScoreAnswer from the API response.
+        criteria: The exact list of descriptions sent.
+    """
+    expected_legend = {i: criteria[i] for i in range(len(criteria))}
+    assert score_answer.legend == expected_legend, (
+        f"Legend {score_answer.legend} does not match expected {expected_legend}"
+    )
+
+
 def _make_live_request(
     api_key: str, base_url: str, model: str, state: str, questions: dict[str, Any]
 ) -> SystemOneResponse:
@@ -126,7 +146,7 @@ def _live_test_questions() -> dict[str, Any]:
         "noul_q": {
             "type": "noul",
             "instructions": "Is 2+2 equal to 4?",
-            "criteria": {"yes": "Correct", "no": "Incorrect"},
+            "criteria": {"true": "Correct", "false": "Incorrect"},
         },
         "choice_q": {
             "type": "choice",
@@ -177,6 +197,13 @@ def test_system_one_live_with_all_question_types() -> None:
     _assert_answer_constraints(response.answers)
     _assert_usage_structure(response.usage)
 
+    # Verify score legend echoes the sent criteria exactly
+    score_answer = response.answers["score_q"]
+    _assert_score_legend_echoes_criteria(
+        score_answer,
+        ["Poor", "Fair", "Good", "Excellent"],
+    )
+
 
 @pytest.mark.live
 def test_documented_example_runs() -> None:
@@ -224,5 +251,109 @@ def test_documented_example_runs() -> None:
         assert response.model.startswith("jev-")
         assert "bare_noul" in response.answers
         assert "choice" in response.answers
+    finally:
+        adapter.close()
+
+
+def _run_noul_baseline_call(
+    adapter: HTTPSystemOneAdapter,
+) -> float:
+    """Run baseline noul call without criteria.
+
+    Args:
+        adapter: HTTPSystemOneAdapter instance.
+
+    Returns:
+        The noul probability from the response.
+    """
+    response = adapter.system_one(
+        state="I emailed you last week about this and nobody replied.",
+        questions={
+            "noul": {
+                "type": "noul",
+                "instructions": "Has the customer contacted us before?",
+            },
+        },
+        model="jev-latest",
+    )
+    noul_answer = response.answers["noul"]
+    # ty can't narrow the union type from dict lookup, so use ty: ignore
+    return noul_answer.noul  # ty: ignore
+
+
+def _run_noul_inverted_call(
+    adapter: HTTPSystemOneAdapter,
+) -> float:
+    """Run noul call with inverted criteria.
+
+    Args:
+        adapter: HTTPSystemOneAdapter instance.
+
+    Returns:
+        The noul probability from the response.
+    """
+    response = adapter.system_one(
+        state="I emailed you last week about this and nobody replied.",
+        questions={
+            "noul": {
+                "type": "noul",
+                "instructions": "Has the customer contacted us before?",
+                "criteria": {
+                    "true": "No prior contact of any kind is mentioned",
+                    "false": "The state mentions a prior email, attempt, or reply",
+                },
+            },
+        },
+        model="jev-latest",
+    )
+    noul_answer = response.answers["noul"]
+    # ty can't narrow the union type from dict lookup, so use ty: ignore
+    return noul_answer.noul  # ty: ignore
+
+
+@pytest.mark.live
+def test_noul_criteria_differential() -> None:
+    """Test that noul criteria keys `true`/`false` are read by the service.
+
+    Measures the differential between two calls:
+    - call A: no criteria (baseline)
+    - call B: explicit criteria with `true`/`false` keys (inverted)
+
+    The measured effect in issue #105 was 0.13 and 0.17, so asserting a
+    minimum gap of 0.10 is defensible: well above noise floor (~0.02) but
+    below smallest observed effect (0.13).
+
+    Directional assertion: `n_base - n_inv >= 0.10`. Exact values are not
+    asserted because the same baseline call measured 0.93 and 0.95 across
+    two runs — the model is a judgment model, not a switch.
+
+    Two live calls are made. `@pytest.mark.live`, excluded from the default run.
+
+    Raises:
+        JevAuthError: If the API key is invalid or missing.
+        JevServiceError: If the API returns 5xx or a transport error occurs.
+        JevResponseError: If the response body cannot be parsed.
+    """
+    settings = Settings()
+    key = settings.api.key
+
+    if key is None:
+        pytest.skip("Missing TYPESAFE_API_KEY environment variable")
+
+    adapter = HTTPSystemOneAdapter(
+        api_key=key.get_secret_value(),
+        base_url=settings.api.base_url,
+        default_model=settings.api.default_model,
+    )
+
+    try:
+        n_base = _run_noul_baseline_call(adapter)
+        n_inv = _run_noul_inverted_call(adapter)
+        gap = n_base - n_inv
+        assert gap >= 0.10, (
+            f"Gap {gap:.4f} < 0.10. "
+            f"Baseline: {n_base:.4f}, Inverted: {n_inv:.4f}. "
+            f"Expected baseline > inverted by at least 0.10."
+        )
     finally:
         adapter.close()

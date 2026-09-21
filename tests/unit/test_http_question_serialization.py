@@ -47,7 +47,7 @@ class TestHTTPSystemOneQuestionSerialization:
         noul_no_criteria = Noul(instructions="Is this valid?")
         noul_with_criteria = Noul(
             instructions="Is this correct?",
-            criteria={"yes": "Correct", "no": "Incorrect"},
+            criteria={"true": "Correct", "false": "Incorrect"},
         )
         choice = Choice(
             criteria={"a": "Option A", "b": "Option B"},
@@ -81,7 +81,7 @@ class TestHTTPSystemOneQuestionSerialization:
         assert questions["noul"] == {
             "type": "noul",
             "instructions": "Is this correct?",
-            "criteria": {"yes": "Correct", "no": "Incorrect"},
+            "criteria": {"true": "Correct", "false": "Incorrect"},
         }
 
         # Choice with criteria

@@ -6,10 +6,10 @@ Examples:
 
     noul = Noul(
         instructions="Is this a valid question?",
-        criteria={"yes": "It is valid", "no": "It is not valid"},
+        criteria={"true": "It is valid", "false": "It is not valid"},
     )
     choice = Choice(
-        criteria={"yes": "Yes option", "no": "No option"},
+        criteria={"a": "Option A", "b": "Option B"},
         instructions="Choose one:",
     )
     score = Score(
@@ -36,13 +36,14 @@ class Noul:
 
     Attributes:
         instructions (str | dict | Sequence | None): Question or statement to evaluate.
-        criteria (dict | None): Optional descriptions of yes and no outcomes.
+        criteria (dict | None): Optional. An object with `true` and `false`
+            descriptions of what a yes and a no mean.
 
     Examples:
         ```python
         question = Noul(
             instructions="Is this a valid question?",
-            criteria={"yes": "It is valid", "no": "It is not valid"},
+            criteria={"true": "It is valid", "false": "It is not valid"},
         )
         assert question.instructions is not None
         ```
@@ -85,7 +86,7 @@ class Choice:
     Examples:
         ```python
         question = Choice(
-            criteria={"yes": "Yes option", "no": "No option"},
+            criteria={"a": "Option A", "b": "Option B"},
             instructions="Choose one:",
         )
         assert len(question.criteria) == 2

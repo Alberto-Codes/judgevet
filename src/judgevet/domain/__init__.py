@@ -8,12 +8,12 @@ Examples:
     # Create a yes/no question
     noul = Noul(
         instructions="Is this a valid question?",
-        criteria={"yes": "It is valid", "no": "It is not valid"},
+        criteria={"true": "It is valid", "false": "It is not valid"},
     )
 
     # Create a choice question
     choice = Choice(
-        criteria={"yes": "Yes option", "no": "No option"},
+        criteria={"a": "Option A", "b": "Option B"},
         instructions="Choose one:",
     )
 
