@@ -59,7 +59,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 254 tests, 94.52% overall.
+Tests and coverage: see the gate table below. 258 tests, 94.84% overall.
 
 ## Gates
 
@@ -95,8 +95,17 @@ There are no pull requests here: those hooks are the only gate before `main`.
 inferences. `README.md` and `docs/reference/api.md` stay `sketch` until #6
 promotes only the verified rows.
 
-The 3xx fallthrough in `system_one` is the one branch no test pins — it was
-checked by hand for #91 and holds, and #96 exists to make that permanent.
+The 3xx fallthrough in `system_one` is pinned as of #96, parametrized over
+301, 302, 304 and 308. It asserts the raw `httpx.HTTPStatusError` propagates
+with `__cause__` and `__context__` both `None`, and that the client has
+redirects off — without that last line the test would silently stop meaning
+what its name says if the client were ever reconfigured.
+
+A note for whoever breaks it next: returning a `JevRequestError` instead of
+`None` does fail the test, but not through the type assertion.
+`JevRequestError` validates its own status range, so a 3xx cannot be
+constructed at all. The domain invariants from #77 are load-bearing here in a
+way nobody planned.
 
 ## Working with pi
 
