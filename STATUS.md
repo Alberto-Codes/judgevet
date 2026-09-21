@@ -22,7 +22,7 @@ typed boundary is still in the wrong layer (#17).
 src/judgevet/
   domain/      questions · answers · response · usage · errors     tested
                errors carry `retryable`: true on rate-limit and service
-  ports/       SystemOnePort — returns SystemOneResponse
+  ports/       SystemOnePort — a typing.Protocol, satisfied by shape
   adapters/outbound/http.py    parses the body, translates httpx into domain errors
   adapters/inbound/cli.py      typer app; consumes typed answers
   adapters/inbound/settings.py one Settings, key as SecretStr

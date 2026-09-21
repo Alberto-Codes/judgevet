@@ -18,19 +18,22 @@ See Also:
     - [judgevet.adapters.outbound.http][]: HTTP adapter implementation
 
 Attributes:
-    SystemOnePort (class): Protocol for calling the Jev System One API.
+    SystemOnePort (Protocol): Structural protocol for calling the Jev System One API.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Protocol
 
 from judgevet.domain.response import SystemOneResponse
 
 
-class SystemOnePort:
+class SystemOnePort(Protocol):
     """Protocol for calling the Jev System One API.
+
+    Attributes:
+        system_one (method): Method to call the Jev System One API.
 
     Examples:
         ```python
@@ -66,7 +69,14 @@ class SystemOnePort:
         Returns:
             Typed SystemOneResponse.
 
-        Raises:
-            NotImplementedError: If not implemented in a subclass.
+        Example:
+            ```python
+            port: SystemOnePort
+            response = port.system_one(
+                state="content",
+                questions={"q1": {"type": "noul"}},
+                model="jev-latest",
+            )
+            ```
         """
-        raise NotImplementedError
+        ...
