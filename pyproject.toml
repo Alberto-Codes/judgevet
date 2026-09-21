@@ -36,6 +36,13 @@ Issues = "https://github.com/Alberto-Codes/judgevet/issues"
 requires = ["uv_build>=0.11.20,<0.12.0"]
 build-backend = "uv_build"
 
+# --------------------------------------------------------------------------- #
+# Include the py.typed marker so type checkers see inline annotations.
+# Run `docs/reference/py-typed-marker.md` for verification steps.
+# --------------------------------------------------------------------------- #
+[tool.uv_build]
+include = ["src/judgevet/py.typed"]
+
 [dependency-groups]
 dev = [
     "docvet>=1.16.0",
