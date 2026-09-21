@@ -9,3 +9,6 @@ __pycache__/
 # Never commit: holds TYPESAFE_API_KEY
 .envrc
 .env
+
+# pi --export drops HTML in $PWD
+pi-session-*.html
