@@ -58,7 +58,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 241 tests, 94.52% overall.
+Tests and coverage: see the gate table below. 242 tests, 94.52% overall.
 
 ## Gates
 
@@ -87,6 +87,7 @@ There are no pull requests here: those hooks are the only gate before `main`.
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
 | the adapter drops the `input` field from 422 bodies to avoid echoing caller data | **verified** — live test asserts test state does not leak |
 | API keys do not leak in error str/repr | **verified** — live tests assert key not in str or repr |
+| secret guard redacts API key from test output | **verified** — `test_secret_guard.py` proves guard scrubs key from pytest report with `--showlocals` |
 
 #17 and #29 have landed, so the error rows above are observations now, not
 inferences. `README.md` and `docs/reference/api.md` stay `sketch` until #6

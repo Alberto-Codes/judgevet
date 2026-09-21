@@ -19,6 +19,17 @@ Note on 429 and 529:
     service, and 529 is an internal overload condition nobody controls. Both
     remain covered by unit and contract tests against fixtures.
 
+Usage rule:
+    A secret stays wrapped (SecretStr) until the moment it is used. The unwrap
+    happens inside the call expression, never in a binding. A binding puts the
+    plaintext in a frame local, and pytest prints frame locals of every frame in a
+    failing traceback — to the terminal, to CI logs, and to any transcript
+    capturing the output. The conftest guard in `tests/conftest.py` redacts the
+    configured key from report output as a backstop; it cannot reach `-s`/`--capture=no`
+    output, so the rule is the primary defence. Note that the guard is necessary
+    here because `--showlocals` is in `addopts`, so pytest prints every frame
+    local, not just arguments.
+
 Examples:
     ```bash
     # Run all tests except live
@@ -207,8 +218,7 @@ def _assert_422_error(
 
     exc_str = str(exc)
     assert "questions" in exc_str
-    secret = api_key.get_secret_value()
-    assert secret not in exc_str
-    assert secret not in repr(exc)
+    assert api_key.get_secret_value() not in exc_str
+    assert api_key.get_secret_value() not in repr(exc)
     assert test_state not in exc_str
     assert test_state not in repr(exc)

@@ -30,8 +30,12 @@ SUPPRESSION = re.compile(r"#\s*(noqa|type:\s*ignore|ruff:\s*noqa|pyright:\s*igno
 
 # Deliberate `per-file-ignores` codes in pyproject.toml. Raise this only with
 # a reason in the commit message.
-# Current budget: 10 codes (7 in tests/**/*.py, 3 in mcp.py).
-ALLOWED_PER_FILE_IGNORE_CODES = 10
+# Current budget: 12 codes
+# - 7 in tests/**/*.py (S101, D100, D101, D102, D103, D104, PLR2004)
+# - 1 in conftest.py (PLC0415 - import inside function; E402 would fire at module level)
+# - 3 in mcp.py (PLC0415, C901, PLR0915)
+# - 1 in test_secret_guard.py (S603 - subprocess call required for end-to-end proof)
+ALLOWED_PER_FILE_IGNORE_CODES = 12
 
 
 def scan(paths: list[Path]) -> list[str]:

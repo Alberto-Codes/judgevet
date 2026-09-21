@@ -3,6 +3,17 @@
 These tests require a valid TYPESAFE_API_KEY in the environment.
 When the key is absent, tests are skipped with a clear message.
 
+Handling the key:
+    A secret stays wrapped (SecretStr) until the moment it is used. The unwrap
+    happens inside the call expression, never in a binding. A binding puts the
+    plaintext in a frame local, and pytest prints frame locals of every frame in a
+    failing traceback — to the terminal, to CI logs, and to any transcript
+    capturing the output. The conftest guard in `tests/conftest.py` redacts the
+    configured key from report output as a backstop; it cannot reach `-s`/`--capture=no`
+    output, so the rule is the primary defence. Note that the guard is necessary
+    here because `--showlocals` is in `addopts`, so pytest prints every frame
+    local, not just arguments.
+
 Examples:
     ```bash
     # Run all tests except live

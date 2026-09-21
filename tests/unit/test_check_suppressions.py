@@ -97,13 +97,21 @@ class TestCountPerFileIgnores:
     def test_current_pyproject_toml_budget(self) -> None:
         """The actual pyproject.toml has the expected budget."""
         total, per_pattern = count_per_file_ignores(Path("pyproject.toml"))
-        # Current budget: 10 codes (7 in tests/**/*.py, 3 in mcp.py)
-        assert total == 10
-        assert len(per_pattern) == 2
+        # Current budget: 12 codes
+        # - 7 in tests/**/*.py (S101, D100, D101, D102, D103, D104, PLR2004)
+        # - 1 in conftest.py (PLC0415 - import inside function; moving to module level trips E402)
+        # - 3 in mcp.py (PLC0415, C901, PLR0915)
+        # - 1 in test_secret_guard.py (S603 - subprocess call for end-to-end test proof)
+        assert total == 12
+        assert len(per_pattern) == 4
         # tests/**/*.py has 7 codes
         assert len(per_pattern["tests/**/*.py"]) == 7
+        # conftest.py has 1 code
+        assert len(per_pattern["tests/conftest.py"]) == 1
         # mcp.py has 3 codes
         assert len(per_pattern["src/judgevet/adapters/inbound/mcp.py"]) == 3
+        # test_secret_guard.py has 1 code (removed S105 and PLW1510 as they were avoidable)
+        assert len(per_pattern["tests/unit/test_secret_guard.py"]) == 1
 
     def test_adding_code_to_existing_entry_increases_count(self) -> None:
         """Adding a code to an existing entry increases the total count (issue #79)."""
@@ -135,8 +143,8 @@ class TestCountPerFileIgnores:
             tmpdir_path = Path(tmpdir)
             pyproject = tmpdir_path / "pyproject.toml"
 
-            # Write a pyproject.toml that exceeds the budget (10 codes)
-            # 11 codes total
+            # Write a pyproject.toml that exceeds the budget (12 codes)
+            # 13 codes total
             pyproject.write_text(
                 "[tool.ruff.lint.per-file-ignores]\n"
                 '"tests/**/*.py" = [\n'
@@ -151,12 +159,14 @@ class TestCountPerFileIgnores:
                 '    "F401",\n'
                 '    "W503",\n'
                 '    "PLR0915",\n'
+                '    "PLR0913",\n'
+                '    "PLR0912",\n'
                 "]\n"
             )
 
             # Test that the count exceeds the budget
             total, _ = count_per_file_ignores(pyproject)
-            assert total == 11
+            assert total == 13
             assert total > ALLOWED_PER_FILE_IGNORE_CODES
 
             # Copy this pyproject.toml to the project root temporarily and test main()

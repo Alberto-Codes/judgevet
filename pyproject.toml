@@ -120,6 +120,12 @@ convention = "google"
     "D104",
     "PLR2004",  # magic values are the point of test assertions
 ]
+"tests/conftest.py" = [
+    "PLC0415",  # import inside function for lazy loading; moving to module level trips E402
+]
+"tests/unit/test_secret_guard.py" = [
+    "S603",  # subprocess call for test proof (the guard must be tested end-to-end)
+]
 "src/judgevet/adapters/inbound/mcp.py" = [
     "PLC0415",  # imports inside functions for import-linter contract
     "C901",     # too complex: nested async functions for each tool handler
