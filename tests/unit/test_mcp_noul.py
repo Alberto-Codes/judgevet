@@ -10,7 +10,7 @@ import anyio
 import pytest
 
 from judgevet.adapters.inbound.mcp import create_mcp_server
-from judgevet.domain.answers import NoulAnswer
+from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
 from judgevet.ports import SystemOnePort
@@ -21,9 +21,23 @@ HAS_MCP = find_spec("mcp") is not None
 class FakeSystemOnePort(SystemOnePort):
     """Fake implementation of SystemOnePort for testing."""
 
-    def __init__(self) -> None:
-        """Initialize the fake port."""
+    def __init__(
+        self,
+        noul: float = 0.75,
+        choice: str = "yes",
+        score: float = 3.5,
+    ) -> None:
+        """Initialize the fake port.
+
+        Args:
+            noul: Noul value for noul questions.
+            choice: Choice value for choice questions.
+            score: Score value for score questions.
+        """
         self.calls: list[dict[str, Any]] = []
+        self._noul = noul
+        self._choice = choice
+        self._score = score
 
     def system_one(
         self,
@@ -39,12 +53,32 @@ class FakeSystemOnePort(SystemOnePort):
                 "model": model,
             }
         )
+
+        answers: dict[str, Any] = {}
+        for name, question in questions.items():
+            qtype = question.get("type")
+            if qtype == "noul":
+                answers[name] = NoulAnswer(noul=self._noul)
+            elif qtype == "choice":
+                answers[name] = ChoiceAnswer(
+                    choice=self._choice,
+                    confidence=0.8,
+                    probabilities={"yes": 0.8, "no": 0.2},
+                )
+            elif qtype == "score":
+                answers[name] = ScoreAnswer(
+                    score=self._score,
+                    confidence=0.9,
+                    legend={1: "poor", 2: "fair", 3: "good", 4: "excellent"},
+                    probabilities={1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4},
+                )
+            else:
+                raise ValueError(f"Unknown question type: {qtype}")
+
         return SystemOneResponse(
             model="jev-latest",
             usage=Usage(input_tokens=100, output_tokens=10),
-            answers={
-                "noul_question": NoulAnswer(noul=0.75),
-            },
+            answers=answers,
         )
 
 
