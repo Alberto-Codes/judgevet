@@ -1,21 +1,21 @@
 """The one ``Settings`` the composition roots read from the environment.
 
-``Settings`` nests ``ApiSettings`` under ``api``. pydantic-settings splits the
-environment on ``__``, so ``JEV_API__BASE_URL`` and ``JEV_API__KEY`` reach the
-nested model. The key also answers to ``TYPESAFE_API_KEY``, which is the name
-the published Jev documentation and every other client use.
+``Settings`` nests ``ApiSettings`` and ``LogSettings`` under ``api`` and
+``log`` respectively. pydantic-settings splits the environment on ``__``, so
+``JEV_API__BASE_URL`` and ``JEV_LOG__LEVEL`` reach the nested models.
 
 Nothing else under ``src/`` subclasses ``BaseSettings``. An adapter takes its
 configuration as arguments; only a composition root reads the environment.
 That is what keeps the outbound adapter testable without touching
 ``os.environ``.
 
-The key is a ``SecretStr``. Its ``repr`` renders as ``**********``, so a
+The API key is a ``SecretStr``. Its ``repr`` renders as ``**********``, so a
 traceback or a log line that carries the settings object does not carry the
 key.
 
 Attributes:
     ApiSettings: Base URL, key and default model for the Jev API.
+    LogSettings: Log format, level and redaction configuration.
     Settings: The root model.
 
 Examples:
@@ -30,12 +30,15 @@ Examples:
 See Also:
     - [judgevet.adapters.outbound.http][]: Takes the values, never the environment.
     - [judgevet.adapters.inbound.cli][]: Reads it once per process.
+    - [judgevet.adapters.inbound.logs][]: Configures structured logging.
 """
 
 from __future__ import annotations
 
 from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from judgevet.adapters.inbound.logs import LogSettings as LogsLogSettings
 
 DEFAULT_BASE_URL = "https://api.typesafe.ai"
 DEFAULT_MODEL = "jev-latest"
@@ -79,6 +82,7 @@ class Settings(BaseSettings):
 
     Attributes:
         api (ApiSettings): Base URL, key and default model for the Jev API.
+        log (LogSettings): Log format, level and redaction configuration.
 
     Examples:
         ```python
@@ -88,6 +92,7 @@ class Settings(BaseSettings):
 
     See Also:
         - [judgevet.adapters.inbound.settings.ApiSettings][]: The nested model.
+        - [judgevet.adapters.inbound.logs.LogSettings][]: Log configuration.
     """
 
     model_config = SettingsConfigDict(
@@ -98,3 +103,4 @@ class Settings(BaseSettings):
     )
 
     api: ApiSettings = Field(default_factory=ApiSettings)
+    log: LogsLogSettings = Field(default_factory=LogsLogSettings)

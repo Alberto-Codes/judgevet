@@ -1,5 +1,6 @@
 """Unit tests for Settings class."""
 
+from judgevet.adapters.inbound.logs import redact
 from judgevet.adapters.inbound.settings import Settings
 
 
@@ -75,3 +76,43 @@ class TestSettingsEnvironmentPriority:
 
         assert settings.api.key is not None
         assert settings.api.key.get_secret_value() == "jev-key-preferred"
+
+
+class TestSettingsWithLog:
+    """Tests for Settings with log configuration."""
+
+    def test_log_defaults(self, monkeypatch) -> None:
+        """Test Settings with default log configuration."""
+        monkeypatch.delenv("JEV_LOG__FORMAT", raising=False)
+        monkeypatch.delenv("JEV_LOG__LEVEL", raising=False)
+
+        settings = Settings()
+
+        assert settings.log.format == "auto"
+        assert settings.log.level == "info"
+
+    def test_log_format_env(self, monkeypatch) -> None:
+        """Test Settings with JEV_LOG__FORMAT environment variable."""
+        monkeypatch.setenv("JEV_LOG__FORMAT", "json")
+        monkeypatch.delenv("JEV_LOG__LEVEL", raising=False)
+
+        settings = Settings()
+
+        assert settings.log.format == "json"
+
+    def test_log_level_env(self, monkeypatch) -> None:
+        """Test Settings with JEV_LOG__LEVEL environment variable."""
+        monkeypatch.setenv("JEV_LOG__LEVEL", "debug")
+        monkeypatch.delenv("JEV_LOG__FORMAT", raising=False)
+
+        settings = Settings()
+
+        assert settings.log.level == "debug"
+
+    def test_log_redacts_secret_keys(self, monkeypatch) -> None:
+        """Test that log redact function works with api_key."""
+        monkeypatch.setenv("JEV_API__KEY", "test-key")
+
+        # Test that api_key is redacted
+        result = redact(None, "info", {"api_key": "secret123"})
+        assert result["api_key"] == "***"
