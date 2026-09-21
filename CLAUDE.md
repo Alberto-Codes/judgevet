@@ -173,6 +173,46 @@ of it that someone else wrote. A commit written by hand carries no such
 trailer — the trailer is evidence, and this repo is partly an evaluation of
 those models, so decorating an unearned commit corrupts the record.
 
+**Two models, two trailers.** When a reasoning model wrote the specification
+and a coder implemented it, both are named and the roles are not merged:
+
+    Specified-By: Qwen3.8-27B-UD-Q4_K_M (local, via pi, --thinking medium)
+    Generated-By: Qwen3-Coder-Next-UD-IQ4_XS (local, via pi)
+
+`Specified-By` means that model produced the definition of ready and done the
+coder worked from — not that it wrote code. Collapsing the two into one
+trailer would destroy the only comparison that makes the pipeline falsifiable:
+whether a refined specification changes what the coder lands. The same
+distinction is recorded as `spec_refined` in the delegation log, so the commit
+history and the log agree.
+
+A commit with no `Specified-By` went to the coder from an issue and a prompt.
+That absence is data too, so do not add the trailer to make a commit look more
+rigorous than it was.
+
+**The specification lives on the issue, not on disk.** A reasoning pass posts
+its definition of ready and done as an issue comment, bylined with the model
+that wrote it, before any coder sees it. The coder then reads it with
+`gh issue view <N> --comments`. This is not bookkeeping: a local scratch file
+is invisible to review, dies with the machine, and has already been deleted
+twice — once by a crashing session and once by the coder itself. Keeping the
+original issue body intact beside the comment also shows what the reasoning
+pass added, which is the comparison being measured.
+
+## Never destroy work you did not create
+
+A delegated session does not run `git checkout`, `git restore`, `git reset`,
+`git stash`, `git clean`, or `rm -rf` against any path, and does not modify a
+file its task did not name. Unrelated modifications in the tree belong to
+someone else; leave them and mention them in the summary.
+
+This is not hypothetical. A session working one issue ran
+`git checkout CLAUDE.md && rm -rf scratchpad/` after inspecting the diff and
+the git log of a file that was not its concern, destroying an uncommitted
+change and a specification. Every gate here examines files that were
+*changed*; nothing notices a file that was *reverted*, because a revert leaves
+no diff and a clean-looking tree. See #82.
+
 Default branch is `main`. The repo is private. **No pull requests** — commit a
 finished piece of work directly to `main` and push. The pre-commit and pre-push
 hooks are the only gate between a change and the branch, so
