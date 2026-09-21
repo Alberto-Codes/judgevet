@@ -53,13 +53,20 @@ jobs:
 
       - run: uv python install 3.12
 
-      # --index and --check-url are mutually exclusive: uv rejects the pair
-      # with "the argument '--index <INDEX>' cannot be used with
-      # '--check-url <CHECK_URL>'". --index names the entry in
-      # [[tool.uv.index]], which already carries both `url` (what --check-url
-      # would set) and `publish-url`, so passing it again is redundant as well
-      # as fatal. publish.yml does not hit this because it passes no --index.
+      # This job never checks out the repository — it only downloads the
+      # artifact the build job produced. So there is no pyproject.toml here
+      # and `--index testpypi` cannot resolve:
       #
-      # --trusted-publishing is orthogonal to --index and is what makes the
-      # OIDC exchange happen, matching publish.yml.
-      - run: uv publish --index testpypi --trusted-publishing always
+      #   error: No indexes were found, can't use index: `testpypi`
+      #
+      # publish.yml has the same shape and works because it passes explicit
+      # URLs rather than an index name. The [[tool.uv.index]] entry in
+      # pyproject.toml stays useful for publishing by hand from a checkout;
+      # it is simply not reachable from here.
+      #
+      # --publish-url and --check-url are independent flags and may be used
+      # together. It is --index that is mutually exclusive with --check-url.
+      - run: |
+          uv publish --trusted-publishing always \
+            --publish-url https://test.pypi.org/legacy/ \
+            --check-url https://test.pypi.org/simple/
