@@ -16,12 +16,36 @@ class TestSettingsDefaults:
         monkeypatch.delenv("JEV_API__BASE_URL", raising=False)
         monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
         monkeypatch.delenv("TYPESAFE_BASE_URL", raising=False)
+        monkeypatch.delenv("JEV_API__TIMEOUT_SECONDS", raising=False)
 
         settings = Settings()
 
         assert settings.api.base_url == "https://api.typesafe.ai"
         assert settings.api.key is None
         assert settings.api.default_model == "jev-latest"
+        assert settings.api.timeout_seconds == 30.0
+
+    def test_jev_api_timeout_seconds(self, monkeypatch) -> None:
+        """Test Settings with JEV_API__TIMEOUT_SECONDS environment variable."""
+        monkeypatch.setenv("JEV_API__TIMEOUT_SECONDS", "45.5")
+
+        settings = Settings()
+
+        assert settings.api.timeout_seconds == 45.5
+
+    def test_timeout_seconds_zero_rejected(self, monkeypatch) -> None:
+        """Test that a non-positive timeout is rejected."""
+        monkeypatch.setenv("JEV_API__TIMEOUT_SECONDS", "0")
+
+        with pytest.raises(ValueError, match="JEV_API__TIMEOUT_SECONDS"):
+            Settings()
+
+    def test_timeout_seconds_negative_rejected(self, monkeypatch) -> None:
+        """Test that a negative timeout is rejected."""
+        monkeypatch.setenv("JEV_API__TIMEOUT_SECONDS", "-5.0")
+
+        with pytest.raises(ValueError, match="JEV_API__TIMEOUT_SECONDS"):
+            Settings()
 
     def test_jev_api_key_env(self, monkeypatch) -> None:
         """Test Settings with JEV_API__KEY environment variable."""

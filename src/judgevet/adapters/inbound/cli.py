@@ -223,8 +223,8 @@ def main(
     """Call the Jev System One API.
 
     Reads Settings, lets an explicit --api-key override the settings key,
-    constructs HTTPSystemOneAdapter once, calls run_cli with it as the port,
-    and closes the adapter in finally.
+    constructs HTTPSystemOneAdapter once with timeout from Settings, calls
+    run_cli with it as the port, and closes the adapter in finally.
 
     Args:
         state: State to evaluate (JSON string or text).
@@ -237,6 +237,7 @@ def main(
         Exit code: 0 for success, 1 for error.
     """
     settings = Settings()
+    timeout_seconds = settings.api.timeout_seconds
     base_url = settings.api.base_url
     key = settings.api.key.get_secret_value() if settings.api.key else None
 
@@ -247,6 +248,7 @@ def main(
         api_key=final_api_key,
         base_url=base_url,
         default_model=model,
+        timeout_seconds=timeout_seconds,
     )
 
     try:
