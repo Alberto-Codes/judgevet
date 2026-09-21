@@ -48,7 +48,7 @@ jobs:
         with:
           enable-cache: true
       - run: uv python install 3.12
-      - run: uv sync --locked --dev
+      - run: uv sync --locked --dev --extra mcp
       - run: uv run ty check
       - run: uv cache prune --ci
         if: always()
@@ -63,7 +63,7 @@ jobs:
         with:
           enable-cache: true
       - run: uv python install 3.12
-      - run: uv sync --locked --dev
+      - run: uv sync --locked --dev --extra mcp
       - run: uv run pytest -q --cov -m "not live"
       - run: uv cache prune --ci
         if: always()
@@ -79,4 +79,4 @@ jobs:
       - uses: Alberto-Codes/docvet@v1
         id: docvet
         with:
-          checks: "all"
+          checks: "enrichment,freshness,coverage,griffe,presence"
