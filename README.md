@@ -3,12 +3,31 @@
 Typed client, CLI and MCP server for TypeSafe's **Jev** (System One) judgment
 model.
 
-## Status: sketch
+## Status: draft
 
-**No call has been made against the live API.** Every field name, endpoint and
-response shape here is inferred from published documentation, not observed.
-Treat the domain model as a hypothesis until a `live`-marked test passes with a
-real `TYPESAFE_API_KEY`.
+**The response shape is verified. The error surface is partly verified.
+Everything else is still inferred from documentation.**
+
+A `live`-marked test passes against the real API, and three probe calls on
+2026-09-21 settled what had been guesswork:
+
+- The success shape parses field for field — including the parts easiest to
+  get wrong. A noul answer carries no `confidence` while choice and score do;
+  `score` is continuous, not an index; `legend` is a map keyed by stringified
+  position. The real probabilities summed to exactly 1.0, the choice appeared
+  in its own map, and the score sat inside its legend, so the domain's
+  invariants do not reject real data.
+- `model` in a response is the **resolved** version. Sending `jev-latest`
+  returned `jev-1.13.0`.
+- `detail` on an error is **polymorphic**: an object for authentication
+  errors, an array for validation errors. Documentation did not say so, and
+  code that assumes either shape breaks on the other.
+
+Still inferred, and marked as such in `STATUS.md`: the 429 and 529 bodies —
+one needs abusing the service, the other cannot be provoked — every model
+other than `jev-1.13.0`, and any field no call has exercised.
+
+Not `stable`: one model and two error statuses is not the whole surface.
 
 ## What Jev is
 

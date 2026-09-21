@@ -26,12 +26,23 @@ code proving it.
 
 ## Non-negotiables
 
-- **The domain model is unverified.** No call has been made against the live
-  Jev API. Every field name, endpoint and response shape is inferred from
-  published documentation. `README.md` and `docs/reference/api.md` stay
-  `sketch` until a `live`-marked test passes against the real API with a
-  `TYPESAFE_API_KEY`. Promoting them before that is the one change this repo
-  will not accept.
+- **The domain model is verified in part, and only in part.** This rule used
+  to read "no call has been made". Calls have now been made: a `live`-marked
+  test passes against the real API, and three probe calls on 2026-09-21
+  settled the success shape and the 401 and 422 error bodies. `README.md` and
+  `docs/reference/api.md` moved from `sketch` to `draft` on that evidence, for
+  those parts only.
+
+  What the rule becomes, rather than disappears: **promote a claim only when a
+  call has exercised it.** The 429 and 529 bodies are unseen — one needs
+  abusing the service, the other cannot be provoked — every model other than
+  `jev-1.13.0` is untested, and any field no call touched is still inference.
+  `STATUS.md` carries the line-by-line table, and moving a line from inferred
+  to verified without a call that did it is the one change this repo will not
+  accept.
+
+  Nothing reaches `stable` while a documented status code has never been
+  seen.
 - **No API detail without a citation.** A field name, an endpoint or a status
   code carries the URL it came from, in the docstring or the docs page. An
   uncited detail is an invention.
