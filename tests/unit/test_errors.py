@@ -7,6 +7,7 @@ import pytest
 from jev_client.domain.errors import (
     JevAuthError,
     JevError,
+    JevRateLimitError,
     JevRequestError,
     JevResponseError,
     JevServiceError,
@@ -176,3 +177,52 @@ class TestExceptionInheritance:
         for error in errors:
             with pytest.raises(JevError):
                 raise error
+
+
+class TestRetryable:
+    """Tests for retryable property on error types."""
+
+    def test_jev_error_retryable_is_false(self) -> None:
+        """Test that JevError has retryable=False."""
+        error = JevError("error", 500)
+        assert error.retryable is False
+
+    def test_jev_auth_error_401_retryable_is_false(self) -> None:
+        """Test that JevAuthError with 401 has retryable=False."""
+        error = JevAuthError("Unauthorized", 401)
+        assert error.retryable is False
+
+    def test_jev_auth_error_403_retryable_is_false(self) -> None:
+        """Test that JevAuthError with 403 has retryable=False."""
+        error = JevAuthError("Forbidden", 403)
+        assert error.retryable is False
+
+    def test_jev_request_error_retryable_is_false(self) -> None:
+        """Test that JevRequestError has retryable=False."""
+        error = JevRequestError("Bad Request", 400)
+        assert error.retryable is False
+
+    def test_jev_request_error_422_retryable_is_false(self) -> None:
+        """Test that JevRequestError with 422 has retryable=False."""
+        error = JevRequestError("Unprocessable Entity", 422)
+        assert error.retryable is False
+
+    def test_jev_rate_limit_error_retryable_is_true(self) -> None:
+        """Test that JevRateLimitError has retryable=True."""
+        error = JevRateLimitError("Rate limit exceeded", 429)
+        assert error.retryable is True
+
+    def test_jev_service_error_500_retryable_is_true(self) -> None:
+        """Test that JevServiceError with 500 has retryable=True."""
+        error = JevServiceError("Internal Server Error", 500)
+        assert error.retryable is True
+
+    def test_jev_service_error_529_retryable_is_true(self) -> None:
+        """Test that JevServiceError with 529 has retryable=True."""
+        error = JevServiceError("Service Overloaded", 529)
+        assert error.retryable is True
+
+    def test_jev_response_error_retryable_is_false(self) -> None:
+        """Test that JevResponseError has retryable=False."""
+        error = JevResponseError("Parse error", 200)
+        assert error.retryable is False

@@ -21,6 +21,7 @@ typed boundary is still in the wrong layer (#17).
 ```
 src/jev_client/
   domain/      questions · answers · response · usage · errors     tested
+               errors carry `retryable`: true on rate-limit and service
   ports/       SystemOnePort — returns dict[str, Any], see #17
   adapters/outbound/http.py    translates httpx into domain errors
   adapters/inbound/cli.py      typer app, and the only parser (#17)
@@ -31,7 +32,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-91 tests, 98.5% coverage, all seven gates green, eleven commits on `main`.
+102 tests, 98%+ coverage, all seven gates green, thirteen commits on `main`.
 
 ## Gates
 
@@ -47,7 +48,7 @@ There are no pull requests here: those hooks are the only gate before `main`.
 |---|---|
 | endpoint, auth header, three answer shapes, usage | verified — probe + official reference |
 | noul has no confidence; score is continuous; legend is a map | verified — both sources |
-| 401 / 422 / 429 / 529 are the documented errors | documented, not exercised (#18) |
+| 401 / 422 / 429 / 529 are the documented errors | mapped and unit-tested (#18); not seen from the live service |
 | every other field name | inferred from documentation |
 | error response bodies | never seen |
 | models other than `jev-latest` | never called |

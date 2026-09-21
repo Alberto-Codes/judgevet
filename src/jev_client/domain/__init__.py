@@ -41,6 +41,7 @@ Attributes:
     ChoiceAnswer (type): Answer type for multiple choice.
     JevAuthError (type): 401/403 authentication errors.
     JevError (type): Base exception for all Jev errors.
+    JevRateLimitError (type): 429 rate limit errors.
     JevRequestError (type): 4xx client request errors.
     JevResponseError (type): 2xx with unparseable body.
     JevServiceError (type): 5xx or transport errors.
@@ -62,6 +63,7 @@ from jev_client.domain.answers import (
 from jev_client.domain.errors import (
     JevAuthError,
     JevError,
+    JevRateLimitError,
     JevRequestError,
     JevResponseError,
     JevServiceError,
@@ -76,6 +78,7 @@ __all__ = [
     "ChoiceAnswer",
     "JevAuthError",
     "JevError",
+    "JevRateLimitError",
     "JevRequestError",
     "JevResponseError",
     "JevServiceError",

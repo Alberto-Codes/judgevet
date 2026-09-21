@@ -1,4 +1,47 @@
-"""Domain error types for Jev System One API."""
+"""Domain error types for Jev System One API.
+
+Examples:
+    ```python
+    from jev_client.domain.errors import (
+        JevAuthError,
+        JevError,
+        JevRequestError,
+        JevResponseError,
+        JevServiceError,
+    )
+
+    try:
+        # Your API call here
+        pass
+    except JevAuthError as exc:
+        # Handle authentication errors
+        if exc.retryable:
+            # Retry with backoff
+            pass
+    except JevRequestError as exc:
+        # Handle client request errors (do not retry)
+        pass
+    except JevServiceError as exc:
+        # Handle service errors
+        if exc.retryable:
+            # Retry with backoff
+            pass
+    except JevError as exc:
+        # Handle all other Jev errors
+        pass
+    ```
+
+See Also:
+    - [jev_client.ports.SystemOnePort][]: Protocol definition
+    - [jev_client.adapters.outbound.http][]: HTTP adapter
+
+Attributes:
+    JevError (type): Base exception for all Jev errors.
+    JevAuthError (type): 401/403 authentication errors.
+    JevRequestError (type): 4xx client request errors.
+    JevResponseError (type): 2xx with unparseable body.
+    JevServiceError (type): 5xx or transport errors.
+"""
 
 from __future__ import annotations
 
@@ -11,12 +54,20 @@ class JevError(Exception):
     without needing to import httpx.
 
     Attributes:
-        message: The error message.
-        status_code: The HTTP status code if available, None otherwise.
+        message (str): The error message.
+        status_code (int | None): The HTTP status code if available, None otherwise.
+        retryable (bool): True if the error is retryable (429, 5xx).
+
+    Examples:
+        ```python
+        error = JevError("Something went wrong", 500)
+        assert error.retryable is False
+        ```
     """
 
     HTTP_STATUS_401_UNAUTHORIZED = 401
     HTTP_STATUS_403_FORBIDDEN = 403
+    HTTP_STATUS_429_TOO_MANY_REQUESTS = 429
     HTTP_STATUS_400_MIN = 400
     HTTP_STATUS_499_MAX = 499
     HTTP_STATUS_500_MIN = 500
@@ -30,6 +81,12 @@ class JevError(Exception):
         Args:
             message: The error message.
             status_code: The HTTP status code if available.
+
+        Examples:
+            ```python
+            error = JevError("Something went wrong", 500)
+            assert error.retryable is False
+            ```
         """
         super().__init__(message)
         self.status_code = status_code
@@ -40,6 +97,15 @@ class JevError(Exception):
             return f"{super().__str__()} (status {self.status_code})"
         return super().__str__()
 
+    @property
+    def retryable(self) -> bool:
+        """Return True if the error is retryable.
+
+        Returns:
+            True for 429 (rate limit) and 5xx errors, False for 4xx and auth errors.
+        """
+        return False
+
 
 class JevAuthError(JevError):
     """Authentication error - 401 or 403.
@@ -48,8 +114,14 @@ class JevAuthError(JevError):
     permissions to access the requested resource.
 
     Attributes:
-        message: The error message.
-        status_code: Always 401 or 403.
+        message (str): The error message.
+        status_code (int): Always 401 or 403.
+
+    Examples:
+        ```python
+        error = JevAuthError("Unauthorized", 401)
+        assert error.retryable is False
+        ```
     """
 
     def __init__(self, message: str, status_code: int) -> None:
@@ -58,6 +130,9 @@ class JevAuthError(JevError):
         Args:
             message: The error message.
             status_code: The HTTP status code (401 or 403).
+
+        Raises:
+            ValueError: If status_code is not 401 or 403.
         """
         is_auth_status = status_code in (
             JevError.HTTP_STATUS_401_UNAUTHORIZED,
@@ -71,6 +146,15 @@ class JevAuthError(JevError):
             )
         super().__init__(message, status_code)
 
+    @property
+    def retryable(self) -> bool:
+        """Return True if the error is retryable.
+
+        Returns:
+            False for auth errors (401, 403).
+        """
+        return False
+
 
 class JevRequestError(JevError):
     """Client request error - 4xx (except 401/403).
@@ -79,8 +163,14 @@ class JevRequestError(JevError):
     malformed input, or other client-side issues.
 
     Attributes:
-        message: The error message.
-        status_code: The HTTP status code (4xx).
+        message (str): The error message.
+        status_code (int): The HTTP status code (4xx).
+
+    Examples:
+        ```python
+        error = JevRequestError("Bad Request", 400)
+        assert error.retryable is False
+        ```
     """
 
     def __init__(self, message: str, status_code: int) -> None:
@@ -89,6 +179,9 @@ class JevRequestError(JevError):
         Args:
             message: The error message.
             status_code: The HTTP status code (4xx).
+
+        Raises:
+            ValueError: If status_code is not a 4xx code or is 401/403.
         """
         is_4xx = (
             JevError.HTTP_STATUS_400_MIN <= status_code < JevError.HTTP_STATUS_500_MIN
@@ -106,6 +199,15 @@ class JevRequestError(JevError):
             )
         super().__init__(message, status_code)
 
+    @property
+    def retryable(self) -> bool:
+        """Return True if the error is retryable.
+
+        Returns:
+            False for request errors (4xx).
+        """
+        return False
+
 
 class JevServiceError(JevError):
     """Server service error - 5xx or transport failures.
@@ -114,8 +216,14 @@ class JevServiceError(JevError):
     error occurs (network issues, timeouts, etc.).
 
     Attributes:
-        message: The error message.
-        status_code: The HTTP status code (5xx) or None for transport errors.
+        message (str): The error message.
+        status_code (int | None): The HTTP status code (5xx) or None for transport errors.
+
+    Examples:
+        ```python
+        error = JevServiceError("Internal Server Error", 500)
+        assert error.retryable is True
+        ```
     """
 
     def __init__(self, message: str, status_code: int | None = None) -> None:
@@ -124,6 +232,9 @@ class JevServiceError(JevError):
         Args:
             message: The error message.
             status_code: The HTTP status code (5xx) or None for transport errors.
+
+        Raises:
+            ValueError: If status_code is not a 5xx code when provided.
         """
         if status_code is not None and not (
             JevError.HTTP_STATUS_500_MIN
@@ -136,6 +247,62 @@ class JevServiceError(JevError):
             )
         super().__init__(message, status_code)
 
+    @property
+    def retryable(self) -> bool:
+        """Return True if the error is retryable.
+
+        Returns:
+            True for service errors (5xx).
+        """
+        return True
+
+
+class JevRateLimitError(JevError):
+    """Rate limit exceeded - 429.
+
+    Raised when the API returns a 429 status code indicating the client
+    has exceeded the rate limit. The caller should use exponential backoff
+    before retrying the request.
+
+    See: https://docs.typesafe.ai/api.md
+
+    Attributes:
+        message (str): The error message.
+        status_code (int): Always 429.
+
+    Examples:
+        ```python
+        error = JevRateLimitError("Rate limit exceeded", 429)
+        assert error.retryable is True
+        ```
+    """
+
+    def __init__(self, message: str, status_code: int) -> None:
+        """Initialize the rate limit error.
+
+        Args:
+            message: The error message.
+            status_code: The HTTP status code (must be 429).
+
+        Raises:
+            ValueError: If status_code is not 429.
+        """
+        if status_code != JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS:
+            raise ValueError(
+                "JevRateLimitError status code must be "
+                f"{JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS}"
+            )
+        super().__init__(message, status_code)
+
+    @property
+    def retryable(self) -> bool:
+        """Return True if the error is retryable.
+
+        Returns:
+            True for rate limit errors (429).
+        """
+        return True
+
 
 class JevResponseError(JevError):
     """Response parsing error - 2xx with invalid body.
@@ -146,8 +313,14 @@ class JevResponseError(JevError):
     so shape mismatches are expected when a live key exists.
 
     Attributes:
-        message: The error message.
-        status_code: Always 2xx.
+        message (str): The error message.
+        status_code (int): Always 2xx.
+
+    Examples:
+        ```python
+        error = JevResponseError("Parse error", 200)
+        assert error.retryable is False
+        ```
     """
 
     def __init__(self, message: str, status_code: int) -> None:
@@ -156,6 +329,9 @@ class JevResponseError(JevError):
         Args:
             message: The error message.
             status_code: The HTTP status code (2xx).
+
+        Raises:
+            ValueError: If status_code is not a 2xx code.
         """
         if not (
             JevError.HTTP_STATUS_200_MIN
@@ -167,3 +343,12 @@ class JevResponseError(JevError):
                 f"{JevError.HTTP_STATUS_200_MIN}-{JevError.HTTP_STATUS_299_MAX}"
             )
         super().__init__(message, status_code)
+
+    @property
+    def retryable(self) -> bool:
+        """Return True if the error is retryable.
+
+        Returns:
+            False for response errors (2xx with invalid body).
+        """
+        return False

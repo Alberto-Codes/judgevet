@@ -27,7 +27,8 @@ See Also:
 
 Raises:
     JevAuthError: If the API returns 401 or 403.
-    JevRequestError: If the API returns 4xx (except 401/403).
+    JevRateLimitError: If the API returns 429 (rate limit exceeded).
+    JevRequestError: If the API returns 4xx (except 401/403, 429).
     JevServiceError: If the API returns 5xx or a transport error occurs.
     JevResponseError: If the API returns 2xx with unparseable body.
 """
@@ -42,6 +43,7 @@ import httpx
 from jev_client.domain.errors import (
     JevAuthError,
     JevError,
+    JevRateLimitError,
     JevRequestError,
     JevResponseError,
     JevServiceError,
@@ -121,7 +123,8 @@ class HTTPSystemOneAdapter(SystemOnePort):
 
         Raises:
             JevAuthError: If the API returns 401 or 403.
-            JevRequestError: If the API returns 4xx (except 401/403).
+            JevRateLimitError: If the API returns 429 (rate limit exceeded).
+            JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
             JevResponseError: If the API returns 2xx with unparseable body.
 
@@ -147,7 +150,9 @@ class HTTPSystemOneAdapter(SystemOnePort):
                 ) from exc
         except httpx.HTTPStatusError as exc:
             status_code = exc.response.status_code
-            if status_code in (
+            if status_code == JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS:
+                raise JevRateLimitError(str(exc), status_code) from exc
+            elif status_code in (
                 JevError.HTTP_STATUS_401_UNAUTHORIZED,
                 JevError.HTTP_STATUS_403_FORBIDDEN,
             ):

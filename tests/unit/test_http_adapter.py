@@ -8,6 +8,7 @@ import pytest
 from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
 from jev_client.domain.errors import (
     JevAuthError,
+    JevRateLimitError,
     JevRequestError,
     JevResponseError,
     JevServiceError,
@@ -280,3 +281,49 @@ class TestHTTPSystemOneAdapter:
             assert fake_key not in str(error)
             assert fake_key not in repr(error)
             assert error.status_code == 200
+
+    def test_system_one_translates_429_to_jev_rate_limit_error(self) -> None:
+        """Test that 429 is translated to JevRateLimitError."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key")
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 429
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Rate limit exceeded",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(
+                JevRateLimitError, match=r"Rate limit exceeded.*status 429"
+            ) as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            error = exc_info.value
+            assert error.status_code == 429
+            assert error.retryable is True
+
+    def test_system_one_translates_529_to_jev_service_error(self) -> None:
+        """Test that 529 is translated to JevServiceError."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key")
+
+        with patch.object(adapter._client, "post") as mock_post:
+            mock_response = MagicMock()
+            mock_response.status_code = 529
+            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+                message="Service overloaded",
+                request=MagicMock(),
+                response=mock_response,
+            )
+            mock_post.return_value = mock_response
+
+            with pytest.raises(
+                JevServiceError, match=r"Service overloaded.*status 529"
+            ) as exc_info:
+                adapter.system_one(state="test", questions={})
+
+            error = exc_info.value
+            assert error.status_code == 529
+            assert error.retryable is True
