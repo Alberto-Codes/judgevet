@@ -25,6 +25,8 @@ Examples:
     ```
 
 Attributes:
+    __version__ (str): The installed package version. release-please
+        rewrites this line on every release. Do not edit it by hand.
     Choice (type): Question type for selecting one option from a set.
     HTTPSystemOneAdapter (type): HTTP adapter for the Jev API.
     Noul (type): Question type for yes/no questions.
@@ -42,4 +44,6 @@ See Also:
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.questions import Choice, Noul, Score
 
-__all__ = ["Choice", "HTTPSystemOneAdapter", "Noul", "Score"]
+__version__ = "0.1.0"  # x-release-please-version
+
+__all__ = ["Choice", "HTTPSystemOneAdapter", "Noul", "Score", "__version__"]
