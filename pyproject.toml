@@ -134,6 +134,12 @@ convention = "google"
 # The import happens when create_mcp_server() is called, which is in the mcp
 # adapter module, not from domain/ports/outbound.
 
+"scripts/smoke_release_child.py" = [
+    "S102",  # exec(): running extracted docstring examples is the point of this script
+    "BLE001",  # except Exception: catching arbitrary failures from example code
+    "S603",  # subprocess.run: controlled invocation of judgevet --help
+    "PLC0415",  # judgevet imported lazily: --selftest must run where it is NOT installed
+]
 [tool.ruff.lint.isort]
 known-first-party = ["judgevet"]
 
