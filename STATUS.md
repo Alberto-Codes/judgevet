@@ -1,6 +1,6 @@
 # STATUS
 
-Last written: 2026-09-25. A session overwrites this file.
+Last written: 2026-09-21. A session overwrites this file.
 
 ## The headline
 
@@ -78,6 +78,9 @@ There are no pull requests here: those hooks are the only gate before `main`.
 | models other than `jev-latest` | never called |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 12 hand-authored fixtures, inferred from docs/reference/api.md |
+| 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
+| the adapter drops the `input` field from 422 bodies to avoid echoing caller data | **verified** — live test asserts test state does not leak |
+| API keys do not leak in error str/repr | **verified** — live tests assert key not in str or repr |
 
 #17 has landed. `README.md` and `docs/reference/api.md` stay `sketch` until #29
 observes the real error bodies and #6 promotes only the verified rows.
