@@ -68,10 +68,10 @@ class TestParseSystemOneResponse:
             "answers": {
                 "q1": {
                     "type": "score",
-                    "score": 3.5,
+                    "score": 2.5,
                     "confidence": 0.9,
                     "legend": {"1": "poor", "2": "fair", "3": "good"},
-                    "probabilities": {"1": 0.1, "2": 0.2, "3": 0.3, "4": 0.4},
+                    "probabilities": {"1": 0.1, "2": 0.2, "3": 0.7},
                 }
             },
             "usage": {
@@ -83,9 +83,9 @@ class TestParseSystemOneResponse:
         result = parse_system_one_response("req-1", raw)
 
         assert isinstance(result.answers["q1"], ScoreAnswer)
-        assert result.answers["q1"].score == 3.5
+        assert result.answers["q1"].score == 2.5
         assert result.answers["q1"].legend == {1: "poor", 2: "fair", 3: "good"}
-        assert result.answers["q1"].probabilities == {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4}
+        assert result.answers["q1"].probabilities == {1: 0.1, 2: 0.2, 3: 0.7}
 
     def test_parses_multiple_answers(self) -> None:
         """Test parsing a response with multiple answers."""

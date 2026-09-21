@@ -21,6 +21,8 @@ typed boundary is still in the wrong layer (#17).
 ```
 src/judgevet/
   domain/      questions · answers · response · usage · errors     tested
+               frozen dataclasses; __post_init__ raises ValueError on a
+               bad range, a non-distribution, or a choice off its own map
                errors carry `retryable`: true on rate-limit and service
   ports/       SystemOnePort — a typing.Protocol, satisfied by shape
   adapters/outbound/http.py    parses the body, translates httpx into domain errors
@@ -33,7 +35,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 182 tests, 96% overall.
+Tests and coverage: see the gate table below. 197 tests, 96% overall.
 
 ## Gates
 

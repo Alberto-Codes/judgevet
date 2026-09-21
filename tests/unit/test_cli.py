@@ -73,7 +73,7 @@ class TestFormatAnswer:
     def test_format_score(self) -> None:
         """Test formatting a score answer."""
         answer = ScoreAnswer(
-            score=2.5,
+            score=1.5,
             confidence=0.8,
             legend={0: "low", 1: "medium", 2: "high"},
             probabilities={0: 0.1, 1: 0.1, 2: 0.8},
@@ -81,7 +81,7 @@ class TestFormatAnswer:
         formatted = format_answer("q1", answer)
         assert formatted["name"] == "q1"
         assert formatted["type"] == "score"
-        assert formatted["score"] == 2.5
+        assert formatted["score"] == 1.5
 
 
 class TestParseArgs:

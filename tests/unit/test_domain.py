@@ -91,12 +91,12 @@ class TestScoreAnswer:
     def test_init(self) -> None:
         """Test ScoreAnswer initialization."""
         answer = ScoreAnswer(
-            score=2.5,
+            score=1.5,
             confidence=0.8,
             legend={0: "low", 1: "medium", 2: "high"},
             probabilities={0: 0.1, 1: 0.1, 2: 0.8},
         )
-        assert answer.score == 2.5
+        assert answer.score == 1.5
 
 
 class TestUsage:
@@ -141,7 +141,7 @@ class TestRepr:
         answer = ChoiceAnswer(
             choice="option1",
             confidence=0.95,
-            probabilities={"option1": 0.95},
+            probabilities={"option1": 0.95, "option2": 0.05},
         )
         assert "ChoiceAnswer" in repr(answer)
 
@@ -149,10 +149,10 @@ class TestRepr:
     def test_score_answer_repr(self) -> None:
         """Test ScoreAnswer __repr__."""
         answer = ScoreAnswer(
-            score=2.5,
+            score=1.5,
             confidence=0.8,
-            legend={0: "low"},
-            probabilities={0: 0.1},
+            legend={0: "low", 1: "medium", 2: "high"},
+            probabilities={0: 0.1, 1: 0.1, 2: 0.8},
         )
         assert "ScoreAnswer" in repr(answer)
 
