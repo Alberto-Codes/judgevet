@@ -139,6 +139,11 @@ messages.
 ## Working rounds
 
 - **One deliverable per round.** Land one thing, run the gates, stop.
+- **`STATUS.md` is rewritten in the commit that changes what it says.** It names
+  the test count, the coverage figure, the gate state and what is verified
+  against the live service. A commit that moves any of those and leaves STATUS
+  alone publishes a claim the next session has to discover is false. automarket
+  lost three sessions to exactly that and gated it; see #28.
 - **Read a file once.** Use `git diff` between reads rather than re-reading.
 - **Never poll.** Wait on a watcher, not a loop of empty checks.
 - **Do not write summary documents.** `docs/` holds `reference/api.md` and the

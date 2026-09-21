@@ -5,3 +5,7 @@ __pycache__/
 .ruff_cache/
 .import_linter_cache/
 .coverage
+
+# Never commit: holds TYPESAFE_API_KEY
+.envrc
+.env
