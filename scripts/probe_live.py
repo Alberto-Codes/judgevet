@@ -23,8 +23,8 @@ import json
 import sys
 from pathlib import Path
 
-from jev_client.adapters.inbound.settings import Settings
-from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
+from judgevet.adapters.inbound.settings import Settings
+from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 
 QUESTIONS = {
     "is_urgent": {

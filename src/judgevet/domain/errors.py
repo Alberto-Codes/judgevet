@@ -2,7 +2,7 @@
 
 Examples:
     ```python
-    from jev_client.domain.errors import (
+    from judgevet.domain.errors import (
         JevAuthError,
         JevError,
         JevRequestError,
@@ -32,8 +32,8 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.ports.SystemOnePort][]: Protocol definition
-    - [jev_client.adapters.outbound.http][]: HTTP adapter
+    - [judgevet.ports.SystemOnePort][]: Protocol definition
+    - [judgevet.adapters.outbound.http][]: HTTP adapter
 
 Attributes:
     JevError (type): Base exception for all Jev errors.

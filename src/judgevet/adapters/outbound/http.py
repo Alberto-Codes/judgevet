@@ -2,8 +2,8 @@
 
 Examples:
     ```python
-    from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
-    from jev_client.domain.response import SystemOneResponse
+    from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+    from judgevet.domain.response import SystemOneResponse
 
     adapter = HTTPSystemOneAdapter(api_key="your-api-key")
     try:
@@ -24,10 +24,10 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.ports.SystemOnePort][]: Protocol definition
-    - [jev_client.domain.errors][]: Error types
-    - [jev_client.adapters.inbound.cli][]: CLI adapter
-    - [jev_client.domain.response_parser][]: Response parsing
+    - [judgevet.ports.SystemOnePort][]: Protocol definition
+    - [judgevet.domain.errors][]: Error types
+    - [judgevet.adapters.inbound.cli][]: CLI adapter
+    - [judgevet.domain.response_parser][]: Response parsing
 
 Raises:
     JevAuthError: If the API returns 401 or 403.
@@ -44,7 +44,7 @@ from typing import Any, Self
 
 import httpx
 
-from jev_client.domain.errors import (
+from judgevet.domain.errors import (
     JevAuthError,
     JevError,
     JevRateLimitError,
@@ -52,9 +52,9 @@ from jev_client.domain.errors import (
     JevResponseError,
     JevServiceError,
 )
-from jev_client.domain.response import SystemOneResponse
-from jev_client.domain.response_parser import parse_system_one_response
-from jev_client.ports import SystemOnePort
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.response_parser import parse_system_one_response
+from judgevet.ports import SystemOnePort
 
 
 class HTTPSystemOneAdapter(SystemOnePort):

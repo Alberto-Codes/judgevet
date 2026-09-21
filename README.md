@@ -1,4 +1,4 @@
-# jev-client
+# judgevet
 
 Typed client, CLI and MCP server for TypeSafe's **Jev** (System One) judgment
 model.

@@ -2,7 +2,7 @@
 
 import pytest
 
-from jev_client.ports import SystemOnePort
+from judgevet.ports import SystemOnePort
 
 
 class TestSystemOnePort:

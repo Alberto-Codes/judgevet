@@ -1,10 +1,10 @@
-"""Tests for jev_client.domain.response_parser - parsing tests."""
+"""Tests for judgevet.domain.response_parser - parsing tests."""
 
 from __future__ import annotations
 
-from jev_client.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
-from jev_client.domain.response import SystemOneResponse
-from jev_client.domain.response_parser import parse_system_one_response
+from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.response_parser import parse_system_one_response
 
 
 class TestParseSystemOneResponse:

@@ -1,5 +1,5 @@
 [project]
-name = "jev-client"
+name = "judgevet"
 version = "0.1.0"
 description = "Typed client, CLI and MCP server for TypeSafe's Jev (System One) judgment model"
 readme = "README.md"
@@ -9,7 +9,6 @@ requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Environment :: Console",
-    "Private :: Do Not Upload",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -27,11 +26,11 @@ dependencies = [
 mcp = ["mcp>=1.2"]
 
 [project.scripts]
-jev = "jev_client.adapters.inbound.cli:app"
+judgevet = "judgevet.adapters.inbound.cli:app"
 
 [project.urls]
-Source = "https://github.com/Alberto-Codes/jev-client"
-Issues = "https://github.com/Alberto-Codes/jev-client/issues"
+Source = "https://github.com/Alberto-Codes/judgevet"
+Issues = "https://github.com/Alberto-Codes/judgevet/issues"
 
 [build-system]
 requires = ["uv_build>=0.11.20,<0.12.0"]
@@ -101,7 +100,7 @@ convention = "google"
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["jev_client"]
+known-first-party = ["judgevet"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -130,7 +129,7 @@ addopts = [
 # Coverage
 # --------------------------------------------------------------------------- #
 [tool.coverage.run]
-source = ["jev_client"]
+source = ["judgevet"]
 
 [tool.coverage.report]
 fail_under = 90
@@ -141,7 +140,7 @@ show_missing = true
 # domain stays pure.
 # --------------------------------------------------------------------------- #
 [tool.importlinter]
-root_package = "jev_client"
+root_package = "judgevet"
 include_external_packages = true
 exclude_type_checking_imports = true
 
@@ -149,17 +148,17 @@ exclude_type_checking_imports = true
 name = "Hexagonal layers"
 type = "layers"
 layers = [
-    "jev_client.adapters.inbound",
-    "jev_client.adapters.outbound",
-    "jev_client.ports",
-    "jev_client.domain",
+    "judgevet.adapters.inbound",
+    "judgevet.adapters.outbound",
+    "judgevet.ports",
+    "judgevet.domain",
 ]
 
 [[tool.importlinter.contracts]]
 # The domain is pure: no IO, no serialization, no CLI or server framework.
 name = "Domain is IO-free"
 type = "forbidden"
-source_modules = ["jev_client.domain"]
+source_modules = ["judgevet.domain"]
 forbidden_modules = [
     "json",
     "pathlib",
@@ -177,9 +176,9 @@ forbidden_modules = [
 name = "MCP stays in its adapter"
 type = "forbidden"
 source_modules = [
-    "jev_client.domain",
-    "jev_client.ports",
-    "jev_client.adapters.outbound",
+    "judgevet.domain",
+    "judgevet.ports",
+    "judgevet.adapters.outbound",
 ]
 forbidden_modules = ["mcp"]
 
@@ -188,7 +187,10 @@ forbidden_modules = ["mcp"]
 # --------------------------------------------------------------------------- #
 [tool.docvet]
 fail-on = ["enrichment", "freshness", "coverage", "griffe", "presence"]
-exclude = ["tests"]
+# `scripts/` holds the gate scripts and the live probe. They form no package,
+# so the mkdocs cross-reference rules cannot apply to them — automarket
+# excludes its own scripts for the same reason.
+exclude = ["tests", "scripts"]
 
 [tool.docvet.presence]
 min-coverage = 100.0

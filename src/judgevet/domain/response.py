@@ -2,9 +2,9 @@
 
 Examples:
     ```python
-    from jev_client.domain.answers import NoulAnswer
-    from jev_client.domain.response import SystemOneResponse
-    from jev_client.domain.usage import Usage
+    from judgevet.domain.answers import NoulAnswer
+    from judgevet.domain.response import SystemOneResponse
+    from judgevet.domain.usage import Usage
 
     response = SystemOneResponse(
         model="jev-latest",
@@ -15,14 +15,14 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.domain.answers][]: Answer types
-    - [jev_client.domain.usage][]: Usage metadata
+    - [judgevet.domain.answers][]: Answer types
+    - [judgevet.domain.usage][]: Usage metadata
 """
 
 from __future__ import annotations
 
-from jev_client.domain.answers import Answer
-from jev_client.domain.usage import Usage
+from judgevet.domain.answers import Answer
+from judgevet.domain.usage import Usage
 
 
 class SystemOneResponse:
@@ -37,8 +37,8 @@ class SystemOneResponse:
 
     Examples:
         ```python
-        from jev_client.domain.answers import NoulAnswer
-        from jev_client.domain.usage import Usage
+        from judgevet.domain.answers import NoulAnswer
+        from judgevet.domain.usage import Usage
 
         response = SystemOneResponse(
             model="jev-latest",
@@ -49,8 +49,8 @@ class SystemOneResponse:
         ```
 
     See Also:
-        - [jev_client.domain.answers][]: Answer types
-        - [jev_client.domain.usage][]: Usage metadata
+        - [judgevet.domain.answers][]: Answer types
+        - [judgevet.domain.usage][]: Usage metadata
     """
 
     __slots__ = ("answers", "model", "usage")

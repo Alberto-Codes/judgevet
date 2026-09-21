@@ -51,9 +51,9 @@ Smallest piece, and it proves the loop works before anything harder.
 
 ## Task 2 — port the CLI to typer
 
-> `src/jev_client/adapters/inbound/cli.py` uses argparse. Port it to typer,
+> `src/judgevet/adapters/inbound/cli.py` uses argparse. Port it to typer,
 > keeping behaviour identical. `pyproject.toml` already declares
-> `jev = "jev_client.adapters.inbound.cli:app"`, so the module must expose a
+> `jev = "judgevet.adapters.inbound.cli:app"`, so the module must expose a
 > typer `app`. The CLI takes a `SystemOnePort`; it must not construct an HTTP
 > client itself. Keep its contract test passing and `uv run jev --help`
 > working.
@@ -62,7 +62,7 @@ Smallest piece, and it proves the loop works before anything harder.
 
 The real test of the architecture.
 
-> Add `src/jev_client/adapters/inbound/mcp.py`: an MCP stdio server exposing
+> Add `src/judgevet/adapters/inbound/mcp.py`: an MCP stdio server exposing
 > the three question types as typed tools, over the same `SystemOnePort` the
 > CLI uses. Return MCP structured content, not a JSON string for the client to
 > re-parse. The `mcp` package is an optional extra (`uv sync --extra mcp`) and

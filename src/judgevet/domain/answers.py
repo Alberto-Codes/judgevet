@@ -2,7 +2,7 @@
 
 Examples:
     ```python
-    from jev_client.domain.answers import NoulAnswer, ChoiceAnswer, ScoreAnswer
+    from judgevet.domain.answers import NoulAnswer, ChoiceAnswer, ScoreAnswer
 
     noul = NoulAnswer(noul=0.75)
     choice = ChoiceAnswer(
@@ -17,8 +17,8 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.domain.questions][]: Question types
-    - [jev_client.domain.response][]: Response container
+    - [judgevet.domain.questions][]: Question types
+    - [judgevet.domain.response][]: Response container
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ class NoulAnswer:
         ```
 
     See Also:
-        - [jev_client.domain.answers.Answer][]: Union type for all answers
-        - [jev_client.domain.response.SystemOneResponse][]: Response container
+        - [judgevet.domain.answers.Answer][]: Union type for all answers
+        - [judgevet.domain.response.SystemOneResponse][]: Response container
     """
 
     __slots__ = ("noul",)
@@ -79,8 +79,8 @@ class ChoiceAnswer:
         ```
 
     See Also:
-        - [jev_client.domain.answers.Answer][]: Union type for all answers
-        - [jev_client.domain.response.SystemOneResponse][]: Response container
+        - [judgevet.domain.answers.Answer][]: Union type for all answers
+        - [judgevet.domain.response.SystemOneResponse][]: Response container
     """
 
     __slots__ = ("choice", "confidence", "probabilities")
@@ -134,8 +134,8 @@ class ScoreAnswer:
         ```
 
     See Also:
-        - [jev_client.domain.answers.Answer][]: Union type for all answers
-        - [jev_client.domain.response.SystemOneResponse][]: Response container
+        - [judgevet.domain.answers.Answer][]: Union type for all answers
+        - [judgevet.domain.response.SystemOneResponse][]: Response container
     """
 
     __slots__ = ("confidence", "legend", "probabilities", "score")

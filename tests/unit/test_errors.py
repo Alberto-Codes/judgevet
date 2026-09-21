@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jev_client.domain.errors import (
+from judgevet.domain.errors import (
     JevAuthError,
     JevError,
     JevRateLimitError,

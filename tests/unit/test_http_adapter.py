@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import httpx
 import pytest
 
-from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
-from jev_client.domain.errors import (
+from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+from judgevet.domain.errors import (
     JevAuthError,
     JevRateLimitError,
     JevRequestError,

@@ -1,15 +1,15 @@
-"""Unit tests for jev_client."""
+"""Unit tests for judgevet."""
 
 import pytest
 
-from jev_client.domain.answers import (
+from judgevet.domain.answers import (
     ChoiceAnswer,
     NoulAnswer,
     ScoreAnswer,
 )
-from jev_client.domain.questions import Choice, Noul, Score
-from jev_client.domain.response import SystemOneResponse
-from jev_client.domain.usage import Usage
+from judgevet.domain.questions import Choice, Noul, Score
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.usage import Usage
 
 
 class TestDummy:

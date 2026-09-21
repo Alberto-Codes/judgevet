@@ -1,4 +1,4 @@
-"""Contract tests for jev_client adapters."""
+"""Contract tests for judgevet adapters."""
 
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ from typing import Any
 
 import pytest
 
-from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
-from jev_client.domain.answers import NoulAnswer
-from jev_client.domain.response import SystemOneResponse
-from jev_client.domain.usage import Usage
-from jev_client.ports import SystemOnePort
+from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+from judgevet.domain.answers import NoulAnswer
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.usage import Usage
+from judgevet.ports import SystemOnePort
 
 
 class FakeSystemOnePort(SystemOnePort):

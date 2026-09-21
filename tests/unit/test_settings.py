@@ -1,6 +1,6 @@
 """Unit tests for Settings class."""
 
-from jev_client.adapters.inbound.settings import Settings
+from judgevet.adapters.inbound.settings import Settings
 
 
 class TestSettingsDefaults:

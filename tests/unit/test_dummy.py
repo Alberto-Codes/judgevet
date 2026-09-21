@@ -1,4 +1,4 @@
-"""Unit tests for jev_client."""
+"""Unit tests for judgevet."""
 
 import pytest
 

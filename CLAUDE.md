@@ -4,7 +4,7 @@ Guidance for coding agents in this repository. `AGENTS.md` is the same file.
 
 ## What this repo is
 
-**jev-client** is a typed client for TypeSafe's Jev (System One) judgment
+**judgevet** is a typed client for TypeSafe's Jev (System One) judgment
 model, plus two inbound adapters over it: a CLI and an MCP server.
 
 The **library is the artifact**. Jev answers typed questions with calibrated
@@ -56,7 +56,7 @@ code proving it.
   `Attributes:` sections the case needs.
 - **Every new module needs its docstring sections on the first pass.** docvet
   fails on `enrichment`, so a module docstring needs an `Examples:` block with
-  runnable code and a `See Also:` list of `[jev_client.module.path][]`
+  runnable code and a `See Also:` list of `[judgevet.module.path][]`
   cross-references. A class needs `Attributes:`, a function that returns needs
   `Returns:`, one that raises needs `Raises:`. Writing them afterwards has cost
   three extra sessions already.

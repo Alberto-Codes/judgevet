@@ -2,14 +2,14 @@
 
 Examples:
     ```python
-    from jev_client.domain.usage import Usage
+    from judgevet.domain.usage import Usage
 
     usage = Usage(input_tokens=100, output_tokens=50)
     assert usage.input_tokens == 100
     ```
 
 See Also:
-    - [jev_client.domain.response][]: Response container
+    - [judgevet.domain.response][]: Response container
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ class Usage:
         ```
 
     See Also:
-        - [jev_client.domain.response.SystemOneResponse][]: Response container
+        - [judgevet.domain.response.SystemOneResponse][]: Response container
     """
 
     __slots__ = ("input_tokens", "output_tokens")

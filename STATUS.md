@@ -19,7 +19,7 @@ typed boundary is still in the wrong layer (#17).
 ## Where the repo is
 
 ```
-src/jev_client/
+src/judgevet/
   domain/      questions · answers · response · usage · errors     tested
                errors carry `retryable`: true on rate-limit and service
   ports/       SystemOnePort — returns SystemOneResponse
@@ -32,7 +32,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-120 tests, 97.6% coverage, all seven gates green, fifteen commits on `main`.
+120 tests, 97.6% coverage, all seven gates green, seventeen commits on `main`.
 
 ## Gates
 

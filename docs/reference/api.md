@@ -88,7 +88,7 @@ Token counts.
 ### Basic Usage
 
 ```python
-from jev_client import HTTPSystemOneAdapter, Noul, Choice
+from judgevet import HTTPSystemOneAdapter, Noul, Choice
 
 adapter = HTTPSystemOneAdapter()
 

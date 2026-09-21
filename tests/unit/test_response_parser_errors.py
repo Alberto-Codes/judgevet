@@ -1,11 +1,11 @@
-"""Tests for jev_client.domain.response_parser - error handling tests."""
+"""Tests for judgevet.domain.response_parser - error handling tests."""
 
 from __future__ import annotations
 
 import pytest
 
-from jev_client.domain.errors import JevResponseError
-from jev_client.domain.response_parser import parse_system_one_response
+from judgevet.domain.errors import JevResponseError
+from judgevet.domain.response_parser import parse_system_one_response
 
 
 class TestParseSystemOneResponseErrors:

@@ -4,7 +4,7 @@ This module provides functions to parse raw API responses into typed domain obje
 
 Examples:
     ```python
-    from jev_client.domain.response_parser import parse_system_one_response
+    from judgevet.domain.response_parser import parse_system_one_response
 
     raw_response = {
         "model": "jev-latest",
@@ -25,9 +25,9 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.domain.response][]: Response types
-    - [jev_client.domain.answers][]: Answer types
-    - [jev_client.domain.errors][]: Error types
+    - [judgevet.domain.response][]: Response types
+    - [judgevet.domain.answers][]: Answer types
+    - [judgevet.domain.errors][]: Error types
 
 Raises:
     JevResponseError: If the response cannot be parsed due to missing fields,
@@ -38,10 +38,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from jev_client.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
-from jev_client.domain.errors import JevResponseError
-from jev_client.domain.response import SystemOneResponse
-from jev_client.domain.usage import Usage
+from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.errors import JevResponseError
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.usage import Usage
 
 
 def parse_system_one_response(

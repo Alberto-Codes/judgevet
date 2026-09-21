@@ -16,10 +16,10 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.adapters.inbound.settings][]: Settings for configuration
-    - [jev_client.adapters.outbound.http][]: HTTP adapter
-    - [jev_client.domain.questions][]: Question types
-    - [jev_client.domain.answers][]: Answer types
+    - [judgevet.adapters.inbound.settings][]: Settings for configuration
+    - [judgevet.adapters.outbound.http][]: HTTP adapter
+    - [judgevet.domain.questions][]: Question types
+    - [judgevet.domain.answers][]: Answer types
 """
 
 from __future__ import annotations
@@ -28,9 +28,9 @@ from typing import Any
 
 import pytest
 
-from jev_client.adapters.inbound.settings import Settings
-from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
-from jev_client.domain.response import SystemOneResponse
+from judgevet.adapters.inbound.settings import Settings
+from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+from judgevet.domain.response import SystemOneResponse
 
 
 def _assert_usage_structure(usage: Any) -> None:

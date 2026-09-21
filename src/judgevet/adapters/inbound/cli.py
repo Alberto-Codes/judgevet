@@ -2,17 +2,17 @@
 
 Examples:
     ```python
-    from jev_client.adapters.inbound.cli import app
+    from judgevet.adapters.inbound.cli import app
     # Run CLI: jev --help
     ```
 
 See Also:
-    - [jev_client.adapters.inbound.settings][]: Settings for configuration
-    - [jev_client.adapters.outbound.http][]: HTTP adapter
-    - [jev_client.domain.response_parser][]: Response parsing
-    - [jev_client.domain.questions][]: Question types
-    - [jev_client.domain.answers][]: Answer types
-    - [jev_client.domain.errors][]: Error types
+    - [judgevet.adapters.inbound.settings][]: Settings for configuration
+    - [judgevet.adapters.outbound.http][]: HTTP adapter
+    - [judgevet.domain.response_parser][]: Response parsing
+    - [judgevet.domain.questions][]: Question types
+    - [judgevet.domain.answers][]: Answer types
+    - [judgevet.domain.errors][]: Error types
 """
 
 from __future__ import annotations
@@ -24,22 +24,22 @@ from typing import Any
 
 import typer
 
-from jev_client.adapters.inbound.settings import Settings
-from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
-from jev_client.domain.answers import (
+from judgevet.adapters.inbound.settings import Settings
+from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+from judgevet.domain.answers import (
     Answer,
     ChoiceAnswer,
     NoulAnswer,
     ScoreAnswer,
 )
-from jev_client.domain.errors import (
+from judgevet.domain.errors import (
     JevAuthError,
     JevRequestError,
     JevResponseError,
     JevServiceError,
 )
-from jev_client.domain.questions import Choice, Noul, Score
-from jev_client.domain.response import SystemOneResponse
+from judgevet.domain.questions import Choice, Noul, Score
+from judgevet.domain.response import SystemOneResponse
 
 app = typer.Typer(help="Call the Jev System One API")
 

@@ -2,12 +2,12 @@
 
 import pytest
 
-from jev_client.adapters.inbound.cli import (
+from judgevet.adapters.inbound.cli import (
     format_answer,
     parse_args,
     parse_questions,
 )
-from jev_client.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
 
 
 class TestParseQuestions:

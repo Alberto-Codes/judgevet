@@ -28,8 +28,8 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.adapters.outbound.http][]: Takes the values, never the environment.
-    - [jev_client.adapters.inbound.cli][]: Reads it once per process.
+    - [judgevet.adapters.outbound.http][]: Takes the values, never the environment.
+    - [judgevet.adapters.inbound.cli][]: Reads it once per process.
 """
 
 from __future__ import annotations
@@ -58,7 +58,7 @@ class ApiSettings(BaseSettings):
         ```
 
     See Also:
-        - [jev_client.adapters.inbound.settings.Settings][]: Nests this model.
+        - [judgevet.adapters.inbound.settings.Settings][]: Nests this model.
     """
 
     model_config = SettingsConfigDict(extra="ignore", frozen=True)
@@ -87,7 +87,7 @@ class Settings(BaseSettings):
         ```
 
     See Also:
-        - [jev_client.adapters.inbound.settings.ApiSettings][]: The nested model.
+        - [judgevet.adapters.inbound.settings.ApiSettings][]: The nested model.
     """
 
     model_config = SettingsConfigDict(

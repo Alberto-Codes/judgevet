@@ -2,7 +2,7 @@
 
 Examples:
     ```python
-    from jev_client.domain.questions import Noul, Choice, Score
+    from judgevet.domain.questions import Noul, Choice, Score
 
     noul = Noul(
         instructions="Is this a valid question?",
@@ -19,8 +19,8 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.domain.answers][]: Answer types
-    - [jev_client.domain.response][]: Response container
+    - [judgevet.domain.answers][]: Answer types
+    - [judgevet.domain.response][]: Response container
 """
 
 from __future__ import annotations
@@ -48,8 +48,8 @@ class Noul:
         ```
 
     See Also:
-        - [jev_client.domain.questions.Question][]: Union type for all questions
-        - [jev_client.domain.answers.NoulAnswer][]: Answer type for this question
+        - [judgevet.domain.questions.Question][]: Union type for all questions
+        - [judgevet.domain.answers.NoulAnswer][]: Answer type for this question
     """
 
     __slots__ = ("criteria", "instructions")
@@ -92,8 +92,8 @@ class Choice:
         ```
 
     See Also:
-        - [jev_client.domain.questions.Question][]: Union type for all questions
-        - [jev_client.domain.answers.ChoiceAnswer][]: Answer type for this question
+        - [judgevet.domain.questions.Question][]: Union type for all questions
+        - [judgevet.domain.answers.ChoiceAnswer][]: Answer type for this question
     """
 
     __slots__ = ("criteria", "instructions")
@@ -136,8 +136,8 @@ class Score:
         ```
 
     See Also:
-        - [jev_client.domain.questions.Question][]: Union type for all questions
-        - [jev_client.domain.answers.ScoreAnswer][]: Answer type for this question
+        - [judgevet.domain.questions.Question][]: Union type for all questions
+        - [judgevet.domain.answers.ScoreAnswer][]: Answer type for this question
     """
 
     __slots__ = ("criteria", "instructions")

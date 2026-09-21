@@ -2,8 +2,8 @@
 
 Examples:
     ```python
-    from jev_client.domain import Noul, Choice, Score
-    from jev_client.domain.answers import NoulAnswer, ChoiceAnswer, ScoreAnswer
+    from judgevet.domain import Noul, Choice, Score
+    from judgevet.domain.answers import NoulAnswer, ChoiceAnswer, ScoreAnswer
 
     # Create a yes/no question
     noul = Noul(
@@ -29,11 +29,11 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.domain.answers][]: Answer types
-    - [jev_client.domain.errors][]: Error types
-    - [jev_client.domain.questions][]: Question types
-    - [jev_client.domain.response][]: Response container
-    - [jev_client.domain.usage][]: Usage tracking
+    - [judgevet.domain.answers][]: Answer types
+    - [judgevet.domain.errors][]: Error types
+    - [judgevet.domain.questions][]: Question types
+    - [judgevet.domain.response][]: Response container
+    - [judgevet.domain.usage][]: Usage tracking
 
 Attributes:
     Answer (type): Union type of all answer types.
@@ -54,13 +54,13 @@ Attributes:
     Usage (type): API usage tracking.
 """
 
-from jev_client.domain.answers import (
+from judgevet.domain.answers import (
     Answer,
     ChoiceAnswer,
     NoulAnswer,
     ScoreAnswer,
 )
-from jev_client.domain.errors import (
+from judgevet.domain.errors import (
     JevAuthError,
     JevError,
     JevRateLimitError,
@@ -68,9 +68,9 @@ from jev_client.domain.errors import (
     JevResponseError,
     JevServiceError,
 )
-from jev_client.domain.questions import Choice, Noul, Question, Score
-from jev_client.domain.response import SystemOneResponse
-from jev_client.domain.usage import Usage
+from judgevet.domain.questions import Choice, Noul, Question, Score
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.usage import Usage
 
 __all__ = [
     "Answer",

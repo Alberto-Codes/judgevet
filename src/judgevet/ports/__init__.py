@@ -2,8 +2,8 @@
 
 Examples:
     ```python
-    from jev_client.ports import SystemOnePort
-    from jev_client.domain.response import SystemOneResponse
+    from judgevet.ports import SystemOnePort
+    from judgevet.domain.response import SystemOneResponse
 
 
     def call_api(port: SystemOnePort) -> SystemOneResponse:
@@ -15,7 +15,7 @@ Examples:
     ```
 
 See Also:
-    - [jev_client.adapters.outbound.http][]: HTTP adapter implementation
+    - [judgevet.adapters.outbound.http][]: HTTP adapter implementation
 
 Attributes:
     SystemOnePort (class): Protocol for calling the Jev System One API.
@@ -26,7 +26,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from jev_client.domain.response import SystemOneResponse
+from judgevet.domain.response import SystemOneResponse
 
 
 class SystemOnePort:
@@ -34,8 +34,8 @@ class SystemOnePort:
 
     Examples:
         ```python
-        from jev_client.ports import SystemOnePort
-        from jev_client.domain.response import SystemOneResponse
+        from judgevet.ports import SystemOnePort
+        from judgevet.domain.response import SystemOneResponse
 
 
         def call_api(port: SystemOnePort) -> SystemOneResponse:
@@ -47,7 +47,7 @@ class SystemOnePort:
         ```
 
     See Also:
-        - [jev_client.adapters.outbound.http][]: HTTP adapter implementation
+        - [judgevet.adapters.outbound.http][]: HTTP adapter implementation
     """
 
     def system_one(

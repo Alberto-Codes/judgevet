@@ -6,16 +6,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 import typer.testing
 
-from jev_client.adapters.inbound.cli import (
+from judgevet.adapters.inbound.cli import (
     app,
     build_response_data,
     format_answer,
     output_response,
     parse_questions,
 )
-from jev_client.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
-from jev_client.domain.response import SystemOneResponse
-from jev_client.domain.usage import Usage
+from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.usage import Usage
 
 
 class TestBuildResponseData:
@@ -58,7 +58,7 @@ class TestOutputResponse:
             answers={},
         )
         response_data = build_response_data(response)
-        with patch("jev_client.adapters.inbound.cli.print") as mock_print:
+        with patch("judgevet.adapters.inbound.cli.print") as mock_print:
             output_response(response_data, as_json=True)
             mock_print.assert_called_once()
 
@@ -70,7 +70,7 @@ class TestOutputResponse:
             answers={},
         )
         response_data = build_response_data(response)
-        with patch("jev_client.adapters.inbound.cli.print") as mock_print:
+        with patch("judgevet.adapters.inbound.cli.print") as mock_print:
             output_response(response_data, as_json=False)
             assert mock_print.call_count > 0
 
@@ -84,7 +84,7 @@ class TestOutputResponse:
             },
         )
         response_data = build_response_data(response)
-        with patch("jev_client.adapters.inbound.cli.print") as mock_print:
+        with patch("judgevet.adapters.inbound.cli.print") as mock_print:
             output_response(response_data, as_json=False)
             assert mock_print.call_count > 0
 
@@ -158,10 +158,10 @@ class TestMain:
         """Test successful main execution."""
         with (
             patch(
-                "jev_client.adapters.inbound.cli.HTTPSystemOneAdapter"
+                "judgevet.adapters.inbound.cli.HTTPSystemOneAdapter"
             ) as mock_adapter_cls,
-            patch("jev_client.adapters.inbound.cli.parse_questions"),
-            patch("jev_client.adapters.inbound.cli.print"),
+            patch("judgevet.adapters.inbound.cli.parse_questions"),
+            patch("judgevet.adapters.inbound.cli.print"),
         ):
             mock_adapter_instance = MagicMock()
             mock_adapter_instance.system_one.return_value = SystemOneResponse(
@@ -190,7 +190,7 @@ class TestMain:
         """Test main function with error."""
         with (
             patch(
-                "jev_client.adapters.inbound.cli.HTTPSystemOneAdapter"
+                "judgevet.adapters.inbound.cli.HTTPSystemOneAdapter"
             ) as mock_adapter_cls,
         ):
             mock_adapter_instance = MagicMock()
@@ -215,10 +215,10 @@ class TestMain:
         """Test main function with error and JSON output."""
         with (
             patch(
-                "jev_client.adapters.inbound.cli.HTTPSystemOneAdapter"
+                "judgevet.adapters.inbound.cli.HTTPSystemOneAdapter"
             ) as mock_adapter_cls,
-            patch("jev_client.adapters.inbound.cli.print"),
-            patch("jev_client.adapters.inbound.cli.json.dumps") as mock_json_dumps,
+            patch("judgevet.adapters.inbound.cli.print"),
+            patch("judgevet.adapters.inbound.cli.json.dumps") as mock_json_dumps,
         ):
             mock_adapter_instance = MagicMock()
             mock_adapter_instance.system_one.side_effect = ValueError("Test error")
