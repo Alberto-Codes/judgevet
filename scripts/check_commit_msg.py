@@ -87,7 +87,7 @@ def get_allowed_authors() -> list[str]:
         ) from exc
 
 
-def get_author_email() -> str:
+def get_author_email_from_git_var() -> str:
     """Read the author email from GIT_AUTHOR_IDENT.
 
     Returns:
@@ -114,6 +114,24 @@ def get_author_email() -> str:
         )
 
     return match["email"]
+
+
+def get_author_emails_in_range(rev_range: str) -> list[str]:
+    """Read the author emails for all commits in a revision range.
+
+    Args:
+        rev_range: A git range such as ``origin/main..HEAD``.
+
+    Returns:
+        A list of author emails, one per commit (newest first).
+    """
+    result = subprocess.run(  # noqa: S603
+        ["/usr/bin/git", "log", "--format=%ae", rev_range],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return [line for line in result.stdout.splitlines() if line]
 
 
 def message_lines(text: str) -> list[str]:
@@ -269,15 +287,29 @@ def messages_in_range(rev_range: str) -> list[tuple[str, str]]:
     return found
 
 
-def check_author() -> list[str] | None:
-    """Check if the committing author is allowed.
+def check_author_for_commit_msg() -> list[str] | None:
+    """Check if the committing author is allowed (commit-msg mode).
+
+    This mode uses `git var GIT_AUTHOR_IDENT` because the commit does not
+    exist yet, so the pending author is the right thing to check.
 
     Returns:
         A list with one failure message if the author is not allowed,
         or None if the author is allowed.
     """
     allowed = get_allowed_authors()
-    author_email = get_author_email()
+    try:
+        author_email = get_author_email_from_git_var()
+    except RuntimeError as exc:
+        if "git var GIT_AUTHOR_IDENT failed" in str(exc):
+            return [
+                "git identity is not configured",
+                "",
+                "Set your name and email before committing:",
+                "    git config --global user.name 'Your Name'",
+                "    git config --global user.email 'your.email@example.com'",
+            ]
+        raise
 
     if author_email not in allowed:
         return [
@@ -289,17 +321,59 @@ def check_author() -> list[str] | None:
     return None
 
 
-def report(label: str, text: str) -> bool:
+def check_author_in_range(rev_range: str) -> list[str]:
+    """Check if all commits in a range have allowed authors.
+
+    This mode reads each commit's recorded author with `git log --format=%ae`
+    because `git var` would report the runner's identity, not the commit's
+    author.
+
+    Args:
+        rev_range: A git range such as ``origin/main..HEAD``.
+
+    Returns:
+        A list of failure messages, one per disallowed author, or empty if all
+        authors are allowed.
+    """
+    allowed = get_allowed_authors()
+    author_emails = get_author_emails_in_range(rev_range)
+
+    problems = [
+        f"author email {email!r} is not in the allowed list"
+        for email in author_emails
+        if email not in allowed
+    ]
+
+    return problems
+
+
+def report(
+    label: str,
+    text: str,
+    *,
+    range_mode: bool = False,
+    rev_range: str | None = None,
+) -> bool:
     """Check one message and print the outcome.
 
     Args:
         label: What to name the message in the output.
         text: The raw message.
+        range_mode: If True, check authors from commit history rather than
+            the pending commit. Ignored unless range is provided.
+        rev_range: The revision range for author checking in range mode.
 
     Returns:
         True when the message failed.
     """
-    if (author_problems := check_author()) is not None:
+    author_problems: list[str] | None = None
+
+    if range_mode and rev_range is not None:
+        author_problems = check_author_in_range(rev_range)
+    else:
+        author_problems = check_author_for_commit_msg()
+
+    if author_problems:
         for problem in author_problems:
             print(f"FAIL {label}: {problem}")
         return True
@@ -331,8 +405,9 @@ def main(argv: list[str] | None = None) -> int:
         if len(args) != RANGE_ARGS:
             print(f"FAIL: {RANGE} takes one revision range")
             return 1
+        rev_range = args[1]
         try:
-            found = messages_in_range(args[1])
+            found = messages_in_range(rev_range)
         except subprocess.CalledProcessError as error:
             reason = error.stderr.strip().splitlines()
             print(
@@ -340,7 +415,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 1
         for sha, text in found:
-            failed |= report(sha, text)
+            failed |= report(sha, text, range_mode=True, rev_range=rev_range)
     else:
         for path in (Path(arg) for arg in args):
             if not path.is_file():
