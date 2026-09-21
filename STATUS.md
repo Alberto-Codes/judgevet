@@ -70,9 +70,21 @@ scripts/
   check_suppressions.py        gate: no noqa / type: ignore
   check_test_hygiene.py        gate: tests that cannot fail, secrets in bindings
   probe_live.py                prints one real response; asserts nothing
+  smoke_release_child.py       the in-venv half of the release smoke test —
+                               runs under a temp venv's own interpreter and
+                               checks what shipped. Two of its detectors do
+                               not detect; see below
 ```
 
-Tests and coverage: see the gate table below. 290 tests, 95.26% overall.
+Tests and coverage: see the gate table below. 290 tests, 95.26% overall,
+unchanged by `e4e7abf` — `scripts/` is outside the coverage scope.
+
+The suppression budget rose 12 -> 16 in `e4e7abf`, four codes each with a
+reason in the source: `exec` because running an extracted example is the
+point, `BLE001` because example code raises anything, `S603` for the console
+script, and the lazy `judgevet` import so `--selftest` runs where judgevet is
+not installed. `S607` did not survive: the console script is invoked by
+absolute path off `sys.executable`, and `grep -c 'S607' pyproject.toml` is 0.
 
 The 13 new tests in `tests/contract/test_adapter_equivalence.py` verify that
 the sync and async HTTP adapters produce identical outcomes on the same
@@ -158,8 +170,31 @@ one and had to be reverted. Decide the shape, then hand over the wiring.
 Outcomes are logged to
 `~/Projects/bazzite-dotfiles/agents/data/delegation-log.jsonl`.
 
+## The smoke test is half built, and #106 stays open
+
+`e4e7abf` landed `scripts/smoke_release_child.py` with ten gates green and
+`--selftest` printing `3/3 detectors fired as expected`. Both are true and
+neither is evidence. Two detectors were proven not to detect, by breaking
+the precondition rather than by reading:
+
+| detector | proof | state |
+|---|---|---|
+| `run_async_block` runs the async example | an async body of `raise RuntimeError(...)` returns normally; `RuntimeWarning: coroutine '__tmp_async' was never awaited` | **broken.** It builds the coroutine and discards it. The async example has never run |
+| selftest case 1 exercises `run_sync_block` | `run_sync_block` sabotaged to swallow every exception; selftest still prints `3/3` | **vacuous.** The case inlines a copy of the body instead of calling the function |
+| the import guard, selftest case 2 | fires | holds — and it is the load-bearing one |
+| the placeholder check, selftest case 3 | fires | holds |
+
+`assert_all_names_resolve`, `count_await_blocks` and the console-script check
+have no selftest case at all.
+
+This is the third time a session has returned with every gate green and a
+defect no linter could see, and the second time the defect was a check that
+cannot be made to fail. The audit and both proofs are on #106.
+
+#107 is blocked on #106, and #99 on both.
+
 ## Next
 
 The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set.
+set. #106 is the live one.
