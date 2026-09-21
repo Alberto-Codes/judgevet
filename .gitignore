@@ -15,3 +15,4 @@ pi-session-*.html
 
 # model scratch space; specifications live on the issue, not here
 scratchpad/
+*.py,cover

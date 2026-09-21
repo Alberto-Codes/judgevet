@@ -366,3 +366,51 @@ class TestHTTPSystemOneAdapter:
         """Test that a negative timeout raises ValueError."""
         with pytest.raises(ValueError, match="timeout_seconds"):
             HTTPSystemOneAdapter(api_key="test-key", timeout_seconds=-1.0)
+
+    @pytest.mark.parametrize(
+        "status_code",
+        [301, 302, 304, 308],
+    )
+    def test_system_one_3xx_fallthrough_preserves_httpx_exception(
+        self,
+        status_code: int,
+    ) -> None:
+        """Test that 3xx status codes propagate httpx.HTTPStatusError unchanged.
+
+        3xx responses are unhandled by _translate_status_error and return None,
+        which causes the original httpx.HTTPStatusError to be raised without
+        wrapping or chaining. This test verifies:
+
+        1. The raw httpx.HTTPStatusError type is raised (not a Jev* subclass);
+        2. __cause__ is None (no explicit chaining with 'raise X from Y');
+        3. __context__ is None (no implicit chaining from except blocks).
+
+        These attributes are set only when exceptions are re-raised explicitly
+        (cause) or when a new exception is raised inside an active except block
+        (context). A bare 'raise' in the except handler preserves both as None.
+
+        The test drives the adapter with MockTransport to ensure a 3xx response
+        reaches raise_for_status() and propagates to _translate_status_error.
+        """
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(
+                status_code,
+                request=request,
+                headers={"Location": "https://example.com/redirect"},
+            )
+
+        adapter = HTTPSystemOneAdapter(
+            api_key="test-key",
+            transport=httpx.MockTransport(handler),
+        )
+
+        assert adapter._client.follow_redirects is False
+
+        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+            adapter.system_one(state="test", questions={})
+
+        exc = exc_info.value
+        assert exc.__cause__ is None
+        assert exc.__context__ is None
+        assert exc.response.status_code == status_code
