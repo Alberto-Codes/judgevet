@@ -110,6 +110,11 @@ convention = "google"
     "D104",
     "PLR2004",  # magic values are the point of test assertions
 ]
+"src/judgevet/adapters/inbound/mcp.py" = ["PLC0415"]
+
+# MCP module needs imports inside functions to respect import-linter contract.
+# The import happens when create_mcp_server() is called, which is in the mcp
+# adapter module, not from domain/ports/outbound.
 
 [tool.ruff.lint.isort]
 known-first-party = ["judgevet"]
