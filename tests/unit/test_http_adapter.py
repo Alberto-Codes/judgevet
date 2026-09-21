@@ -35,6 +35,7 @@ class TestHTTPSystemOneAdapter:
         """Test that close closes the HTTP client."""
         adapter = HTTPSystemOneAdapter(api_key="test-key")
         adapter.close()  # Should not raise
+        assert adapter._client.is_closed
 
     def test_context_manager(self) -> None:
         """Test context manager protocol."""

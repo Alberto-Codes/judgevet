@@ -1,5 +1,6 @@
 """Unit tests for the logs adapter."""
 
+import contextvars
 import io
 from unittest.mock import patch
 
@@ -135,10 +136,13 @@ class TestConfigure:
     def test_configure_does_not_raise(self) -> None:
         """Test that configure does not raise on valid input."""
         settings = LogSettings(format="json", level="info")
-        # Capture stderr to avoid actual output
         captured = io.StringIO()
         configure(settings, stream=captured)
-        # Just verify it doesn't raise - actual configuration is tested via behavior
+        # Configure structlog, emit a log, and verify the captured output
+        logger = structlog.get_logger()
+        logger.info("test_event")
+        output = captured.getvalue()
+        assert "test_event" in output
 
 
 class TestNewRunId:
@@ -163,14 +167,35 @@ class TestBindFunctions:
 
     def test_bind_command_sets_context(self) -> None:
         """Test that bind_command sets the command context variable."""
+        # Clear any existing context
+        for var in list(contextvars.Context().items()):
+            var[0].set(None)
+        settings = LogSettings(format="json", level="info")
+        captured = io.StringIO()
+        configure(settings, stream=captured)
         bind_command("jev call")
-        # Note: We can't easily verify the context is set without exposing
-        # structlog's context, but we verify the function exists and runs
+        logger = structlog.get_logger()
+        logger.info("test_event")
+        output = captured.getvalue()
+        assert "command" in output
+        assert "jev call" in output
 
     def test_bind_invocation_sets_context(self) -> None:
         """Test that bind_invocation sets command and run_id context variables."""
+        # Clear any existing context
+        for var in list(contextvars.Context().items()):
+            var[0].set(None)
+        settings = LogSettings(format="json", level="info")
+        captured = io.StringIO()
+        configure(settings, stream=captured)
         run_id = new_run_id()
         bind_invocation("jev", run_id)
+        logger = structlog.get_logger()
+        logger.info("test_event")
+        output = captured.getvalue()
+        assert "command" in output
+        assert "jev" in output
+        assert "run_id" in output
 
 
 class TestStderrOutput:
