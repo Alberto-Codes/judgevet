@@ -55,15 +55,17 @@ src/judgevet/
   adapters/inbound/mcp.py      stdio server: ask_noul · ask_choice · ask_score
 scripts/
   check_suppressions.py        gate: no noqa / type: ignore
+  check_test_hygiene.py        gate: tests that cannot fail, secrets in bindings
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 242 tests, 94.52% overall.
+Tests and coverage: see the gate table below. 254 tests, 94.52% overall.
 
 ## Gates
 
 `ruff check` · `ruff format --check` · `ty check` · `lint-imports` ·
-`docvet check` · `docvet check --all` · `pytest --cov` · `check_suppressions`
+`docvet check` · `docvet check --all` · `pytest --cov` · `check_suppressions` ·
+`check_test_hygiene`
 
 All green. pre-commit runs the fast ones, pre-push adds the coverage floor
 and the whole-repo docvet check.
@@ -108,8 +110,15 @@ ways.
 all eight gates green and a real defect: a test that passed whether or not the
 behaviour under test happened, and a helper that raised where the spec said
 return, making its own return annotation false and the call site unreachable.
-Neither is visible to any linter — #94 and #95 exist to convert the
-mechanically decidable half into gates.
+Neither was visible to any linter. #94 and #95 have since converted the
+mechanically decidable half into gates: `check_test_hygiene` flags a
+`try`/`except` whose assertions only run on the exception path, a test with no
+assertion at all, and an unwrapped secret that settles in a binding. Its scope
+comes from `python_files`, so renaming a file into pytest's collection set
+brings it under the gate in the same commit.
+
+What stays unmechanical, and is still read by eye: a fake that asserts on its
+own return value, and a helper that raises where a spec said return.
 
 `judgment` means the task asks for a shape to be decided. The one such task
 that was delegated (#2) came back with a parallel structure beside the intended
