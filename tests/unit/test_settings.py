@@ -1,5 +1,7 @@
 """Unit tests for Settings class."""
 
+import pytest
+
 from judgevet.adapters.inbound.logs import redact
 from judgevet.adapters.inbound.settings import Settings
 
@@ -76,6 +78,68 @@ class TestSettingsEnvironmentPriority:
 
         assert settings.api.key is not None
         assert settings.api.key.get_secret_value() == "jev-key-preferred"
+
+
+class TestSettingsBaseUrlValidation:
+    """Tests for base_url scheme validation."""
+
+    def test_https_accepted(self, monkeypatch) -> None:
+        """Test that https:// URLs are accepted."""
+        monkeypatch.setenv("JEV_API__BASE_URL", "https://api.typesafe.ai")
+        monkeypatch.delenv("TYPESAFE_BASE_URL", raising=False)
+
+        settings = Settings()
+
+        assert settings.api.base_url == "https://api.typesafe.ai"
+
+    def test_remote_http_rejected(self, monkeypatch) -> None:
+        """Test that remote http:// URLs are rejected."""
+        monkeypatch.setenv("JEV_API__BASE_URL", "http://evil.example")
+        monkeypatch.delenv("TYPESAFE_BASE_URL", raising=False)
+
+        with pytest.raises(ValueError) as exc_info:
+            Settings()
+
+        assert "JEV_API__BASE_URL" in str(exc_info.value)
+        assert "plaintext HTTP" in str(exc_info.value)
+
+    def test_localhost_http_accepted(self, monkeypatch) -> None:
+        """Test that http://localhost is accepted."""
+        monkeypatch.setenv("JEV_API__BASE_URL", "http://localhost")
+        monkeypatch.delenv("TYPESAFE_BASE_URL", raising=False)
+
+        settings = Settings()
+
+        assert settings.api.base_url == "http://localhost"
+
+    def test_127_0_0_1_http_accepted(self, monkeypatch) -> None:
+        """Test that http://127.0.0.1 is accepted."""
+        monkeypatch.setenv("JEV_API__BASE_URL", "http://127.0.0.1")
+        monkeypatch.delenv("TYPESAFE_BASE_URL", raising=False)
+
+        settings = Settings()
+
+        assert settings.api.base_url == "http://127.0.0.1"
+
+    def test_typesafe_base_url_https_accepted(self, monkeypatch) -> None:
+        """Test that TYPESAFE_BASE_URL with https:// is accepted."""
+        monkeypatch.setenv("TYPESAFE_BASE_URL", "https://custom.api.example.com")
+        monkeypatch.delenv("JEV_API__BASE_URL", raising=False)
+
+        settings = Settings()
+
+        assert settings.api.base_url == "https://custom.api.example.com"
+
+    def test_typesafe_base_url_remote_http_rejected(self, monkeypatch) -> None:
+        """Test that TYPESAFE_BASE_URL with remote http:// is rejected."""
+        monkeypatch.setenv("TYPESAFE_BASE_URL", "http://evil.example")
+        monkeypatch.delenv("JEV_API__BASE_URL", raising=False)
+
+        with pytest.raises(ValueError) as exc_info:
+            Settings()
+
+        assert "JEV_API__BASE_URL" in str(exc_info.value)
+        assert "plaintext HTTP" in str(exc_info.value)
 
 
 class TestSettingsWithLog:

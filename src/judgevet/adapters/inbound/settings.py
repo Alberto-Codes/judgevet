@@ -13,6 +13,10 @@ The API key is a ``SecretStr``. Its ``repr`` renders as ``**********``, so a
 traceback or a log line that carries the settings object does not carry the
 key.
 
+``ApiSettings`` validates ``base_url`` to prevent plaintext HTTP to remote
+hosts. Only ``https://`` or loopback ``http://localhost`` and ``http://127.0.0.1``
+are accepted. This prevents the API key from being sent in the clear.
+
 Attributes:
     ApiSettings: Base URL, key and default model for the Jev API.
     LogSettings: Log format, level and redaction configuration.
@@ -35,7 +39,9 @@ See Also:
 
 from __future__ import annotations
 
-from pydantic import AliasChoices, Field, SecretStr
+from urllib.parse import urlparse
+
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from judgevet.adapters.inbound.logs import LogSettings as LogsLogSettings
@@ -49,6 +55,9 @@ class ApiSettings(BaseSettings):
 
     Attributes:
         base_url (str): Root of the Jev API. Defaults to the documented host.
+            Must use ``https://`` or loopback ``http://localhost`` or
+            ``http://127.0.0.1``. Remote HTTP is rejected to prevent the API
+            key from being sent in the clear.
         key (SecretStr | None): The API key. ``None`` until one is supplied,
             which is why every call path reports a missing key rather than
             assuming one.
@@ -70,6 +79,42 @@ class ApiSettings(BaseSettings):
         default=DEFAULT_BASE_URL,
         validation_alias=AliasChoices("base_url", "TYPESAFE_BASE_URL"),
     )
+
+    @field_validator("base_url", mode="after")
+    @classmethod
+    def _validate_base_url(cls, value: str) -> str:
+        """Validate that base_url uses HTTPS or is a loopback HTTP URL.
+
+        Args:
+            value: The base URL to validate.
+
+        Returns:
+            The validated URL.
+
+        Raises:
+            ValueError: If the URL uses HTTP but is not loopback (localhost or 127.0.0.1).
+        """
+        parsed = urlparse(value)
+        scheme = parsed.scheme.lower()
+
+        if scheme == "https":
+            return value
+
+        if scheme == "http":
+            hostname = parsed.hostname or ""
+            if hostname in ("localhost", "127.0.0.1"):
+                return value
+            raise ValueError(
+                f"base_url must use https://. The variable JEV_API__BASE_URL "
+                f"received a plaintext HTTP URL ({value}). This would send the "
+                f"API key in the clear. Use https:// or http://localhost for local testing."
+            )
+
+        raise ValueError(
+            f"base_url must use https:// or http://. The variable JEV_API__BASE_URL "
+            f"received an unsupported scheme in ({value})."
+        )
+
     key: SecretStr | None = Field(
         default=None,
         validation_alias=AliasChoices("key", "TYPESAFE_API_KEY"),
