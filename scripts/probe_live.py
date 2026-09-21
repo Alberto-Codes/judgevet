@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 from judgevet.adapters.inbound.settings import Settings
@@ -76,7 +77,11 @@ def main() -> int:
     finally:
         adapter.close()
 
-    rendered = json.dumps(body, indent=2, sort_keys=True)
+    # The domain became frozen dataclasses in #77, which json cannot encode.
+    # asdict walks them recursively; default= catches anything else so a new
+    # field type prints as a repr instead of killing the probe after the call
+    # has already been paid for.
+    rendered = json.dumps(asdict(body), indent=2, sort_keys=True, default=repr)
     print(rendered)
     if args.out:
         args.out.write_text(rendered + "\n")
