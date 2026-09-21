@@ -40,7 +40,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 223 tests, 96% overall.
+Tests and coverage: see the gate table below. 240 tests, 95% overall.
 
 ## Gates
 

@@ -327,3 +327,41 @@ class TestHTTPSystemOneAdapter:
             error = exc_info.value
             assert error.status_code == 529
             assert error.retryable is True
+
+    def test_system_one_translates_read_timeout_to_jev_service_error(self) -> None:
+        """Test that a ReadTimeout is translated to JevServiceError."""
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise httpx.ReadTimeout("read timed out", request=request)
+
+        adapter = HTTPSystemOneAdapter(
+            api_key="test-key",
+            transport=httpx.MockTransport(handler),
+        )
+        with pytest.raises(JevServiceError) as exc_info:
+            adapter.system_one(state="test", questions={})
+
+        error = exc_info.value
+        assert error.retryable is True
+        assert error.status_code is None
+        assert "read timed out" in str(error)
+
+    def test_default_timeout_reaches_client(self) -> None:
+        """Test that the default 30 s read / 5 s connect timeout reaches the client."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key")
+        assert adapter._client._timeout == httpx.Timeout(30.0, connect=5.0)
+
+    def test_explicit_timeout_reaches_client(self) -> None:
+        """Test that an explicit timeout_seconds reaches the client."""
+        adapter = HTTPSystemOneAdapter(api_key="test-key", timeout_seconds=90.0)
+        assert adapter._client._timeout == httpx.Timeout(90.0, connect=5.0)
+
+    def test_init_raises_on_zero_timeout(self) -> None:
+        """Test that a zero timeout raises ValueError."""
+        with pytest.raises(ValueError, match="timeout_seconds"):
+            HTTPSystemOneAdapter(api_key="test-key", timeout_seconds=0)
+
+    def test_init_raises_on_negative_timeout(self) -> None:
+        """Test that a negative timeout raises ValueError."""
+        with pytest.raises(ValueError, match="timeout_seconds"):
+            HTTPSystemOneAdapter(api_key="test-key", timeout_seconds=-1.0)

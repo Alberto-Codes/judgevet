@@ -123,6 +123,29 @@ class HTTPSystemOneAdapter:
         base_url (str): The API base URL.
         default_model (str): The default model to use.
 
+    Raises:
+        JevAuthError: If the API returns 401 or 403.
+        JevRateLimitError: If the API returns 429 (rate limit exceeded).
+        JevRequestError: If the API returns 4xx (except 401/403, 429).
+        JevServiceError: If the API returns 5xx or a transport error occurs.
+        JevResponseError: If the API returns 2xx with unparseable body.
+
+    Error details:
+        Validation errors (422) include an array of error objects; each
+        object's `input` key contains the caller's request payload and is
+        deliberately omitted from the error message.
+
+        Auth errors (401/403) return an object with `error_type` and
+        `message` fields.
+
+        Unknown detail shapes fall back to the HTTP status line alone.
+
+        Transport errors (timeouts, connection failures) are mapped to
+        `JevServiceError` with `status_code=None` and `retryable=True`.
+        A `retryable=True` timeout is advisory: retrying a read timeout
+        may be double-billed because the service may still be processing
+        the first attempt.
+
     Examples:
         ```python
         adapter = HTTPSystemOneAdapter(api_key="your-api-key")
@@ -143,6 +166,7 @@ class HTTPSystemOneAdapter:
         base_url: str | None = None,
         default_model: str = "jev-latest",
         transport: httpx.BaseTransport | None = None,
+        timeout_seconds: float = 30.0,
     ) -> None:
         """Initialize the HTTP adapter.
 
@@ -151,13 +175,17 @@ class HTTPSystemOneAdapter:
             base_url: API base URL. Defaults to https://api.typesafe.ai.
             default_model: Default model to use. Defaults to jev-latest.
             transport: Optional httpx transport for testing. Defaults to None.
+            timeout_seconds: Read timeout in seconds. Defaults to 30.0.
 
         Raises:
-            ValueError: If no API key is provided.
+            ValueError: If no API key is provided, or timeout_seconds <= 0.
         """
         self._api_key = api_key
         if self._api_key is None:
             raise ValueError("API key must be provided")
+
+        if timeout_seconds <= 0:
+            raise ValueError(f"timeout_seconds must be positive, got {timeout_seconds}")
 
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
@@ -168,6 +196,7 @@ class HTTPSystemOneAdapter:
                 "Content-Type": "application/json",
             },
             transport=transport,
+            timeout=httpx.Timeout(timeout_seconds, connect=5.0),
         )
 
     def system_one(
@@ -202,6 +231,12 @@ class HTTPSystemOneAdapter:
             `message` fields.
 
             Unknown detail shapes fall back to the HTTP status line alone.
+
+            Transport errors (timeouts, connection failures) are mapped to
+            `JevServiceError` with `status_code=None` and `retryable=True`.
+            A `retryable=True` timeout is advisory: retrying a read timeout
+            may be double-billed because the service may still be processing
+            the first attempt.
         """
         payload = {
             "state": state,

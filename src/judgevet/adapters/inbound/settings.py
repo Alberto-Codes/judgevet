@@ -18,7 +18,7 @@ hosts. Only ``https://`` or loopback ``http://localhost`` and ``http://127.0.0.1
 are accepted. This prevents the API key from being sent in the clear.
 
 Attributes:
-    ApiSettings: Base URL, key and default model for the Jev API.
+    ApiSettings: Base URL, key, default model and timeout for the Jev API.
     LogSettings: Log format, level and redaction configuration.
     Settings: The root model.
 
@@ -62,6 +62,8 @@ class ApiSettings(BaseSettings):
             which is why every call path reports a missing key rather than
             assuming one.
         default_model (str): Model id sent when a call names none.
+        timeout_seconds (float): Read timeout in seconds. Defaults to 30.0.
+            Can be set via ``JEV_API__TIMEOUT_SECONDS`` environment variable.
 
     Examples:
         ```python
@@ -121,12 +123,35 @@ class ApiSettings(BaseSettings):
     )
     default_model: str = Field(default=DEFAULT_MODEL)
 
+    timeout_seconds: float = Field(default=30.0)
+
+    @field_validator("timeout_seconds", mode="after")
+    @classmethod
+    def _validate_timeout_seconds(cls, value: float) -> float:
+        """Validate that timeout_seconds is positive.
+
+        Args:
+            value: The timeout value in seconds.
+
+        Returns:
+            The validated timeout value.
+
+        Raises:
+            ValueError: If the value is zero or negative.
+        """
+        if value <= 0:
+            raise ValueError(
+                f"timeout_seconds must be positive. The variable JEV_API__TIMEOUT_SECONDS "
+                f"received {value}."
+            )
+        return value
+
 
 class Settings(BaseSettings):
     """Every setting this client reads, nested per adapter.
 
     Attributes:
-        api (ApiSettings): Base URL, key and default model for the Jev API.
+        api (ApiSettings): Base URL, key, default model and timeout for the Jev API.
         log (LogSettings): Log format, level and redaction configuration.
 
     Examples:
