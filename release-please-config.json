@@ -13,18 +13,50 @@
         "src/judgevet/__init__.py"
       ],
       "pull-request-header": "Pre-flight for a release cut. On merge, release-please cuts a **draft** GitHub release and creates its tag. Nothing reaches PyPI until a maintainer publishes the draft.\n\n- [ ] The version above is the intended one. If not, do not merge.\n- [ ] The gate table is green. Every gate in the row that `pre-commit install` runs is \ud83c\udfaf green.\n- [ ] STATUS.md's verified-vs-inferred table still holds. No inferred line has become verified, and no verified line has become inferred.\n- [ ] `uv.lock` was refreshed.\n",
-      "pull-request-footer": "After you merge this PR, finish the release by hand.\n\n1. Edit the draft release. Write what this tag ships.\n2. State the measured state the tag represents.\n3. State how to run it.\n4. Link any writeup or documentation.\n5. Pin every doc link to the tag, not `main`.\n6. Publish the draft. Publishing fires `publish.yml`, which uploads to PyPI.",
+      "pull-request-footer": "After merging: release-please cuts the draft and its tag. Edit the draft to say what this release is for, then publish it by hand \u2014 publishing is what fires publish.yml and uploads to PyPI over OIDC. Nothing reaches the index until you click it.",
       "changelog-sections": [
-        { "type": "feat", "section": "Features" },
-        { "type": "fix", "section": "Bug Fixes" },
-        { "type": "revert", "section": "Reverts" },
-        { "type": "perf", "section": "Performance Improvements" },
-        { "type": "docs", "section": "Documentation", "hidden": true },
-        { "type": "refactor", "section": "Refactoring", "hidden": true },
-        { "type": "chore", "section": "Miscellaneous", "hidden": true },
-        { "type": "test", "section": "Tests", "hidden": true },
-        { "type": "ci", "section": "CI", "hidden": true }
-      ]
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "refactor",
+          "section": "Refactoring"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation"
+        },
+        {
+          "type": "test",
+          "section": "Tests",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Chores",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "CI",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Build",
+          "hidden": true
+        }
+      ],
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }
