@@ -22,9 +22,9 @@ typed boundary is still in the wrong layer (#17).
 src/jev_client/
   domain/      questions · answers · response · usage · errors     tested
                errors carry `retryable`: true on rate-limit and service
-  ports/       SystemOnePort — returns dict[str, Any], see #17
-  adapters/outbound/http.py    translates httpx into domain errors
-  adapters/inbound/cli.py      typer app, and the only parser (#17)
+  ports/       SystemOnePort — returns SystemOneResponse
+  adapters/outbound/http.py    parses the body, translates httpx into domain errors
+  adapters/inbound/cli.py      typer app; consumes typed answers
   adapters/inbound/settings.py one Settings, key as SecretStr
   adapters/inbound/mcp.py      DOES NOT EXIST (#4)
 scripts/
@@ -32,7 +32,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-102 tests, 98%+ coverage, all seven gates green, thirteen commits on `main`.
+120 tests, 97.6% coverage, all seven gates green, fifteen commits on `main`.
 
 ## Gates
 
@@ -52,9 +52,10 @@ There are no pull requests here: those hooks are the only gate before `main`.
 | every other field name | inferred from documentation |
 | error response bodies | never seen |
 | models other than `jev-latest` | never called |
+| `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 
-`README.md` and `docs/reference/api.md` stay `sketch` until #17 lands and #6
-promotes only the verified rows.
+#17 has landed. `README.md` and `docs/reference/api.md` stay `sketch` until #29
+observes the real error bodies and #6 promotes only the verified rows.
 
 ## Working with pi
 

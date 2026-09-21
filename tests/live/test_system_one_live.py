@@ -30,59 +30,23 @@ import pytest
 
 from jev_client.adapters.inbound.settings import Settings
 from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
-from jev_client.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
+from jev_client.domain.response import SystemOneResponse
 
 
-def _parse_raw_answers(raw_answers: dict[str, dict]) -> dict[str, Answer]:
-    """Parse raw API answers into domain answer objects.
-
-    Args:
-        raw_answers: Raw answer data from the API.
-
-    Returns:
-        Dictionary of domain answer objects.
-
-    Raises:
-        pytest.fail: If an unknown answer type is encountered.
-    """
-    answers: dict[str, Answer] = {}
-    for name, raw_answer in raw_answers.items():
-        answer_type = raw_answer.get("type")
-        if answer_type == "noul":
-            answers[name] = NoulAnswer(noul=raw_answer["noul"])
-        elif answer_type == "choice":
-            answers[name] = ChoiceAnswer(
-                choice=raw_answer["choice"],
-                confidence=raw_answer["confidence"],
-                probabilities=raw_answer["probabilities"],
-            )
-        elif answer_type == "score":
-            legend_raw = raw_answer["legend"]
-            probabilities_raw = raw_answer["probabilities"]
-            legend = {int(k): v for k, v in legend_raw.items()}
-            probabilities = {int(k): v for k, v in probabilities_raw.items()}
-            answers[name] = ScoreAnswer(
-                score=raw_answer["score"],
-                confidence=raw_answer["confidence"],
-                legend=legend,
-                probabilities=probabilities,
-            )
-        else:
-            pytest.fail(f"Unknown answer type in response: {answer_type}")
-    return answers
-
-
-def _assert_usage_structure(usage_data: dict) -> None:
+def _assert_usage_structure(usage: Any) -> None:
     """Assert usage data has the expected structure.
 
     Args:
-        usage_data: Raw usage data from the API response.
+        usage: Usage object or dict from the API response.
     """
-    assert isinstance(usage_data, dict)
-    assert "input_tokens" in usage_data or "output_tokens" in usage_data
+    if isinstance(usage, dict):
+        assert "input_tokens" in usage or "output_tokens" in usage
+    else:
+        # SystemOneResponse
+        assert usage.input_tokens is not None or usage.output_tokens is not None
 
 
-def _assert_answer_constraints(answers: dict[str, Answer]) -> None:
+def _assert_answer_constraints(answers: dict[str, Any]) -> None:
     """Assert that parsed answers meet domain constraints.
 
     Args:
@@ -93,17 +57,14 @@ def _assert_answer_constraints(answers: dict[str, Answer]) -> None:
     assert "score_q" in answers
 
     noul_answer = answers["noul_q"]
-    assert isinstance(noul_answer, NoulAnswer)
     assert 0.0 <= noul_answer.noul <= 1.0
 
     choice_answer = answers["choice_q"]
-    assert isinstance(choice_answer, ChoiceAnswer)
     assert 0.0 <= choice_answer.confidence <= 1.0
     assert choice_answer.choice in choice_answer.probabilities
     assert all(0.0 <= p <= 1.0 for p in choice_answer.probabilities.values())
 
     score_answer = answers["score_q"]
-    assert isinstance(score_answer, ScoreAnswer)
     assert 0.0 <= score_answer.confidence <= 1.0
     assert len(score_answer.legend) >= 2
     assert len(score_answer.legend) == len(score_answer.probabilities)
@@ -114,8 +75,8 @@ def _assert_answer_constraints(answers: dict[str, Answer]) -> None:
 
 def _make_live_request(
     api_key: str, base_url: str, model: str, state: str, questions: dict[str, Any]
-) -> dict:
-    """Make a live API request and return the raw response.
+) -> SystemOneResponse:
+    """Make a live API request and return the typed response.
 
     Args:
         api_key: TypeSafe API key.
@@ -125,7 +86,7 @@ def _make_live_request(
         questions: Questions to ask.
 
     Returns:
-        Raw API response dictionary.
+        Typed SystemOneResponse.
     """
     adapter = HTTPSystemOneAdapter(
         api_key=api_key,
@@ -141,6 +102,31 @@ def _make_live_request(
         )
     finally:
         adapter.close()
+
+
+def _live_test_questions() -> dict[str, Any]:
+    """Return questions for live tests.
+
+    Returns:
+        Dictionary with one question of each type: Noul, Choice, Score.
+    """
+    return {
+        "noul_q": {
+            "type": "noul",
+            "instructions": "Is 2+2 equal to 4?",
+            "criteria": {"yes": "Correct", "no": "Incorrect"},
+        },
+        "choice_q": {
+            "type": "choice",
+            "instructions": "Which animal is a cat?",
+            "criteria": {"cat": "Feline", "dog": "Canine", "bird": "Feathered"},
+        },
+        "score_q": {
+            "type": "score",
+            "instructions": "Rate quality:",
+            "criteria": ["Poor", "Fair", "Good", "Excellent"],
+        },
+    }
 
 
 @pytest.mark.live
@@ -162,25 +148,9 @@ def test_system_one_live_with_all_question_types() -> None:
     if key is None:
         pytest.skip("Missing TYPESAFE_API_KEY environment variable")
 
-    questions = {
-        "noul_q": {
-            "type": "noul",
-            "instructions": "Is 2+2 equal to 4?",
-            "criteria": {"yes": "Correct", "no": "Incorrect"},
-        },
-        "choice_q": {
-            "type": "choice",
-            "instructions": "Which animal is a cat?",
-            "criteria": {"cat": "Feline", "dog": "Canine", "bird": "Feathered"},
-        },
-        "score_q": {
-            "type": "score",
-            "instructions": "Rate quality:",
-            "criteria": ["Poor", "Fair", "Good", "Excellent"],
-        },
-    }
+    questions = _live_test_questions()
 
-    raw_response = _make_live_request(
+    response = _make_live_request(
         api_key=key.get_secret_value(),
         base_url=settings.api.base_url,
         model=settings.api.default_model,
@@ -188,10 +158,9 @@ def test_system_one_live_with_all_question_types() -> None:
         questions=questions,
     )
 
-    assert "model" in raw_response
-    assert "answers" in raw_response
-    assert "usage" in raw_response
-    _assert_usage_structure(raw_response["usage"])
-
-    answers = _parse_raw_answers(raw_response["answers"])
-    _assert_answer_constraints(answers)
+    # jev-latest is an alias that the service resolves to a concrete version.
+    # The response returns the resolved version, not the alias.
+    # See: https://typesafe.ai/docs/system-one/api/api-parameters#model
+    assert response.model.startswith("jev-")
+    _assert_answer_constraints(response.answers)
+    _assert_usage_structure(response.usage)

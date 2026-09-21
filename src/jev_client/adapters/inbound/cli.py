@@ -9,6 +9,7 @@ Examples:
 See Also:
     - [jev_client.adapters.inbound.settings][]: Settings for configuration
     - [jev_client.adapters.outbound.http][]: HTTP adapter
+    - [jev_client.domain.response_parser][]: Response parsing
     - [jev_client.domain.questions][]: Question types
     - [jev_client.domain.answers][]: Answer types
     - [jev_client.domain.errors][]: Error types
@@ -38,6 +39,7 @@ from jev_client.domain.errors import (
     JevServiceError,
 )
 from jev_client.domain.questions import Choice, Noul, Score
+from jev_client.domain.response import SystemOneResponse
 
 app = typer.Typer(help="Call the Jev System One API")
 
@@ -116,60 +118,24 @@ def format_answer(name: str, answer: Answer) -> dict[str, Any]:
         raise TypeError(f"Unknown answer type: {type(answer)}")
 
 
-def build_response_data(
-    raw_response: dict[str, Any], answers: dict[str, Answer]
-) -> dict[str, Any]:
-    """Build response data dictionary.
+def build_response_data(response: SystemOneResponse) -> dict[str, Any]:
+    """Build response data dictionary from a typed SystemOneResponse.
 
     Args:
-        raw_response: Raw API response.
-        answers: Parsed answer objects.
+        response: Typed SystemOneResponse from the adapter.
 
     Returns:
-        Response data dictionary.
+        Response data dictionary for output.
     """
+    answers = {name: format_answer(name, ans) for name, ans in response.answers.items()}
     return {
-        "model": raw_response["model"],
+        "model": response.model,
         "usage": {
-            "input_tokens": raw_response["usage"].get("input_tokens"),
-            "output_tokens": raw_response["usage"].get("output_tokens"),
+            "input_tokens": response.usage.input_tokens,
+            "output_tokens": response.usage.output_tokens,
         },
-        "answers": {name: format_answer(name, ans) for name, ans in answers.items()},
+        "answers": answers,
     }
-
-
-def parse_raw_answers(raw_response: dict[str, Any]) -> dict[str, Answer]:
-    """Parse raw API answers into domain objects.
-
-    Args:
-        raw_response: Raw API response.
-
-    Returns:
-        Dictionary of answer objects.
-    """
-    answers: dict[str, Answer] = {}
-    for name, raw_answer in raw_response.get("answers", {}).items():
-        atype = raw_answer.get("type")
-        if atype == "noul":
-            answers[name] = NoulAnswer(noul=raw_answer["noul"])
-        elif atype == "choice":
-            answers[name] = ChoiceAnswer(
-                choice=raw_answer["choice"],
-                confidence=raw_answer["confidence"],
-                probabilities=raw_answer["probabilities"],
-            )
-        elif atype == "score":
-            legend = {int(k): v for k, v in raw_answer["legend"].items()}
-            probabilities = {int(k): v for k, v in raw_answer["probabilities"].items()}
-            answers[name] = ScoreAnswer(
-                score=raw_answer["score"],
-                confidence=raw_answer["confidence"],
-                legend=legend,
-                probabilities=probabilities,
-            )
-        else:
-            print(f"Warning: Unknown answer type {atype}", file=sys.stderr)
-    return answers
 
 
 def output_response(response_data: dict[str, Any], as_json: bool) -> None:
@@ -198,8 +164,9 @@ def run_cli(
 ) -> int:
     """Run the CLI with parsed arguments.
 
-    The CLI reads Settings once per process. Values from Settings are used as
-    defaults unless explicitly overridden by command-line options.
+    The CLI constructs Settings and uses them for configuration.
+    Values from Settings are used as defaults unless explicitly overridden by
+    command-line options.
 
     Args:
         state: State to evaluate (JSON string or text).
@@ -234,12 +201,11 @@ def run_cli(
         state_data = json.loads(state) if state.startswith(("{", "[")) else state
         questions_dict = parse_questions(questions)
 
-        raw_response = adapter.system_one(
+        response = adapter.system_one(
             state=state_data, questions=questions_dict, model=model
         )
 
-        answers = parse_raw_answers(raw_response)
-        response_data = build_response_data(raw_response, answers)
+        response_data = build_response_data(response)
 
         output_response(response_data, json_output)
     except (

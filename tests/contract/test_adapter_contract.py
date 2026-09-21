@@ -8,6 +8,9 @@ from typing import Any
 import pytest
 
 from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
+from jev_client.domain.answers import NoulAnswer
+from jev_client.domain.response import SystemOneResponse
+from jev_client.domain.usage import Usage
 from jev_client.ports import SystemOnePort
 
 
@@ -23,7 +26,7 @@ class FakeSystemOnePort(SystemOnePort):
         state: str | dict[str, Any] | list[Any],
         questions: Mapping[str, Any],
         model: str,
-    ) -> dict[str, Any]:
+    ) -> SystemOneResponse:
         """Return a fake response."""
         self.calls.append(
             {
@@ -32,19 +35,13 @@ class FakeSystemOnePort(SystemOnePort):
                 "model": model,
             }
         )
-        return {
-            "model": "jev-1.13.0",
-            "answers": {
-                "test": {
-                    "type": "noul",
-                    "noul": 0.5,
-                },
+        return SystemOneResponse(
+            model="jev-1.13.0",
+            usage=Usage(input_tokens=100, output_tokens=10),
+            answers={
+                "test": NoulAnswer(noul=0.5),
             },
-            "usage": {
-                "input_tokens": 100,
-                "output_tokens": 10,
-            },
-        }
+        )
 
 
 @pytest.mark.contract
@@ -67,6 +64,7 @@ class TestHTTPAdapterContract:
             questions={"q1": {"type": "noul", "instructions": "test"}},
             model="test-model",
         )
-        assert "model" in response
-        assert "answers" in response
-        assert "usage" in response
+        assert hasattr(response, "model")
+        assert hasattr(response, "answers")
+        assert hasattr(response, "usage")
+        assert isinstance(response.answers["test"], NoulAnswer)

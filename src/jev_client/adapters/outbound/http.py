@@ -3,10 +3,11 @@
 Examples:
     ```python
     from jev_client.adapters.outbound.http import HTTPSystemOneAdapter
+    from jev_client.domain.response import SystemOneResponse
 
     adapter = HTTPSystemOneAdapter(api_key="your-api-key")
     try:
-        response = adapter.system_one(
+        response: SystemOneResponse = adapter.system_one(
             state="Your content here",
             questions={
                 "q1": {
@@ -16,6 +17,8 @@ Examples:
             },
         )
         print(response)
+        print(response.model)
+        print(response.answers)
     finally:
         adapter.close()
     ```
@@ -24,6 +27,7 @@ See Also:
     - [jev_client.ports.SystemOnePort][]: Protocol definition
     - [jev_client.domain.errors][]: Error types
     - [jev_client.adapters.inbound.cli][]: CLI adapter
+    - [jev_client.domain.response_parser][]: Response parsing
 
 Raises:
     JevAuthError: If the API returns 401 or 403.
@@ -48,6 +52,8 @@ from jev_client.domain.errors import (
     JevResponseError,
     JevServiceError,
 )
+from jev_client.domain.response import SystemOneResponse
+from jev_client.domain.response_parser import parse_system_one_response
 from jev_client.ports import SystemOnePort
 
 
@@ -65,7 +71,7 @@ class HTTPSystemOneAdapter(SystemOnePort):
         ```python
         adapter = HTTPSystemOneAdapter(api_key="your-api-key")
         try:
-            response = adapter.system_one(
+            response: SystemOneResponse = adapter.system_one(
                 state="Your content here",
                 questions={"q1": {"type": "noul", "instructions": "Is this correct?"}},
             )
@@ -110,7 +116,7 @@ class HTTPSystemOneAdapter(SystemOnePort):
         state: str | dict[str, Any] | list[Any],
         questions: Mapping[str, Any],
         model: str | None = None,
-    ) -> dict[str, Any]:
+    ) -> SystemOneResponse:
         """Call the Jev System One API via HTTP.
 
         Args:
@@ -119,7 +125,7 @@ class HTTPSystemOneAdapter(SystemOnePort):
             model: Model name override.
 
         Returns:
-            Raw API response dictionary.
+            Typed SystemOneResponse with parsed answer objects.
 
         Raises:
             JevAuthError: If the API returns 401 or 403.
@@ -127,10 +133,6 @@ class HTTPSystemOneAdapter(SystemOnePort):
             JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
             JevResponseError: If the API returns 2xx with unparseable body.
-
-        Note:
-            This method now handles response body parsing errors and raises
-            JevResponseError instead of letting ValueError propagate.
         """
         payload = {
             "state": state,
@@ -142,12 +144,13 @@ class HTTPSystemOneAdapter(SystemOnePort):
             response = self._client.post("/v1/systemone", json=payload)
             response.raise_for_status()
             try:
-                return response.json()
+                raw = response.json()
             except ValueError as exc:
                 raise JevResponseError(
                     f"Failed to parse response body: {exc}",
                     response.status_code,
                 ) from exc
+            return parse_system_one_response("system-one", raw)
         except httpx.HTTPStatusError as exc:
             status_code = exc.response.status_code
             if status_code == JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS:

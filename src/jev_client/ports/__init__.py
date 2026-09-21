@@ -1,20 +1,61 @@
-"""Port protocols that the domain calls out through."""
+"""Port protocols that the domain calls out through.
+
+Examples:
+    ```python
+    from jev_client.ports import SystemOnePort
+    from jev_client.domain.response import SystemOneResponse
+
+
+    def call_api(port: SystemOnePort) -> SystemOneResponse:
+        return port.system_one(
+            state="content",
+            questions={"q1": {"type": "noul"}},
+            model="jev-latest",
+        )
+    ```
+
+See Also:
+    - [jev_client.adapters.outbound.http][]: HTTP adapter implementation
+
+Attributes:
+    SystemOnePort (class): Protocol for calling the Jev System One API.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
 
+from jev_client.domain.response import SystemOneResponse
+
 
 class SystemOnePort:
-    """Protocol for calling the Jev System One API."""
+    """Protocol for calling the Jev System One API.
+
+    Examples:
+        ```python
+        from jev_client.ports import SystemOnePort
+        from jev_client.domain.response import SystemOneResponse
+
+
+        def call_api(port: SystemOnePort) -> SystemOneResponse:
+            return port.system_one(
+                state="content",
+                questions={"q1": {"type": "noul"}},
+                model="jev-latest",
+            )
+        ```
+
+    See Also:
+        - [jev_client.adapters.outbound.http][]: HTTP adapter implementation
+    """
 
     def system_one(
         self,
         state: str | dict[str, Any] | list[Any],
         questions: Mapping[str, Any],
         model: str,
-    ) -> dict[str, Any]:
+    ) -> SystemOneResponse:
         """Call the Jev System One API.
 
         Args:
@@ -23,6 +64,9 @@ class SystemOnePort:
             model: Model name to use (e.g., jev-1.13.0).
 
         Returns:
-            Raw API response dictionary.
+            Typed SystemOneResponse.
+
+        Raises:
+            NotImplementedError: If not implemented in a subclass.
         """
         raise NotImplementedError

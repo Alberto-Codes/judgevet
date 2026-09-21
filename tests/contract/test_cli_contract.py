@@ -12,23 +12,39 @@ from jev_client.adapters.inbound.cli import (
     format_answer,
     output_response,
     parse_questions,
-    parse_raw_answers,
 )
+from jev_client.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from jev_client.domain.response import SystemOneResponse
+from jev_client.domain.usage import Usage
 
 
 class TestBuildResponseData:
     """Tests for build_response_data function."""
 
-    def test_build_response_data(self) -> None:
-        """Test building response data."""
-        raw_response = {
-            "model": "jev-1.13.0",
-            "usage": {"input_tokens": 100, "output_tokens": 10},
-        }
-        answers = {}
-        response_data = build_response_data(raw_response, answers)
+    def test_build_response_data_empty(self) -> None:
+        """Test building response data with empty answers."""
+        response = SystemOneResponse(
+            model="jev-1.13.0",
+            usage=Usage(input_tokens=100, output_tokens=10),
+            answers={},
+        )
+        response_data = build_response_data(response)
         assert response_data["model"] == "jev-1.13.0"
         assert "answers" in response_data
+
+    def test_build_response_data_with_answers(self) -> None:
+        """Test building response data with answers."""
+        response = SystemOneResponse(
+            model="jev-1.13.0",
+            usage=Usage(input_tokens=100, output_tokens=10),
+            answers={
+                "q1": NoulAnswer(noul=0.75),
+            },
+        )
+        response_data = build_response_data(response)
+        assert response_data["model"] == "jev-1.13.0"
+        assert "answers" in response_data
+        assert "q1" in response_data["answers"]
 
 
 class TestOutputResponse:
@@ -36,96 +52,41 @@ class TestOutputResponse:
 
     def test_output_response_json(self) -> None:
         """Test JSON output."""
-        response_data = {
-            "model": "jev-1.13.0",
-            "usage": {"input_tokens": 100, "output_tokens": 10},
-            "answers": {},
-        }
+        response = SystemOneResponse(
+            model="jev-1.13.0",
+            usage=Usage(input_tokens=100, output_tokens=10),
+            answers={},
+        )
+        response_data = build_response_data(response)
         with patch("jev_client.adapters.inbound.cli.print") as mock_print:
             output_response(response_data, as_json=True)
             mock_print.assert_called_once()
 
     def test_output_response_text(self) -> None:
         """Test text output."""
-        response_data = {
-            "model": "jev-1.13.0",
-            "usage": {"input_tokens": 100, "output_tokens": 10},
-            "answers": {},
-        }
+        response = SystemOneResponse(
+            model="jev-1.13.0",
+            usage=Usage(input_tokens=100, output_tokens=10),
+            answers={},
+        )
+        response_data = build_response_data(response)
         with patch("jev_client.adapters.inbound.cli.print") as mock_print:
             output_response(response_data, as_json=False)
             assert mock_print.call_count > 0
 
     def test_output_response_text_with_answers(self) -> None:
         """Test text output with answers."""
-        response_data = {
-            "model": "jev-1.13.0",
-            "usage": {"input_tokens": 100, "output_tokens": 10},
-            "answers": {
-                "q1": {"name": "q1", "type": "noul", "noul": 0.5},
+        response = SystemOneResponse(
+            model="jev-1.13.0",
+            usage=Usage(input_tokens=100, output_tokens=10),
+            answers={
+                "q1": NoulAnswer(noul=0.5),
             },
-        }
+        )
+        response_data = build_response_data(response)
         with patch("jev_client.adapters.inbound.cli.print") as mock_print:
             output_response(response_data, as_json=False)
             assert mock_print.call_count > 0
-
-
-class TestParseRawAnswers:
-    """Tests for parse_raw_answers function."""
-
-    def test_parse_raw_answers_noul(self) -> None:
-        """Test parsing noul answers."""
-        raw_response = {
-            "answers": {
-                "q1": {"type": "noul", "noul": 0.75},
-            }
-        }
-        answers = parse_raw_answers(raw_response)
-        assert "q1" in answers
-
-    def test_parse_raw_answers_choice(self) -> None:
-        """Test parsing choice answers."""
-        raw_response = {
-            "answers": {
-                "q1": {
-                    "type": "choice",
-                    "choice": "option1",
-                    "confidence": 0.95,
-                    "probabilities": {"option1": 0.95},
-                    "legend": None,
-                },
-            }
-        }
-        answers = parse_raw_answers(raw_response)
-        assert "q1" in answers
-
-    def test_parse_raw_answers_score(self) -> None:
-        """Test parsing score answers."""
-        raw_response = {
-            "answers": {
-                "q1": {
-                    "type": "score",
-                    "score": 2.5,
-                    "confidence": 0.8,
-                    "probabilities": {"0": 0.1},
-                    "legend": {"0": "low"},
-                },
-            }
-        }
-        answers = parse_raw_answers(raw_response)
-        assert "q1" in answers
-
-    def test_parse_raw_answers_unknown_type(self) -> None:
-        """Test parsing unknown answer type."""
-        raw_response = {
-            "answers": {
-                "q1": {"type": "unknown", "value": "test"},
-            }
-        }
-        with patch("jev_client.adapters.inbound.cli.print") as mock_print:
-            answers = parse_raw_answers(raw_response)
-            assert "q1" not in answers
-            mock_print.assert_called_once()
 
 
 class TestParseQuestionsError:
@@ -136,6 +97,40 @@ class TestParseQuestionsError:
         questions_json = '{"q1": {"type": "unknown"}}'
         with pytest.raises(ValueError, match="Unknown question type"):
             parse_questions(questions_json)
+
+
+class TestFormatAnswer:
+    """Tests for format_answer function."""
+
+    def test_format_answer_noul(self) -> None:
+        """Test formatting noul answer."""
+        answer = NoulAnswer(noul=0.5)
+        formatted = format_answer("q1", answer)
+        assert formatted["type"] == "noul"
+        assert formatted["noul"] == 0.5
+
+    def test_format_answer_choice(self) -> None:
+        """Test formatting choice answer."""
+        answer = ChoiceAnswer(
+            choice="yes",
+            confidence=0.8,
+            probabilities={"yes": 0.8, "no": 0.2},
+        )
+        formatted = format_answer("q1", answer)
+        assert formatted["type"] == "choice"
+        assert formatted["choice"] == "yes"
+
+    def test_format_answer_score(self) -> None:
+        """Test formatting score answer."""
+        answer = ScoreAnswer(
+            score=3.5,
+            confidence=0.9,
+            legend={1: "poor", 2: "good"},
+            probabilities={1: 0.1, 2: 0.9},
+        )
+        formatted = format_answer("q1", answer)
+        assert formatted["type"] == "score"
+        assert formatted["score"] == 3.5
 
 
 class TestFormatAnswerError:
@@ -169,11 +164,11 @@ class TestMain:
             patch("jev_client.adapters.inbound.cli.print"),
         ):
             mock_adapter_instance = MagicMock()
-            mock_adapter_instance.system_one.return_value = {
-                "model": "jev-1.13.0",
-                "answers": {},
-                "usage": {"input_tokens": 10, "output_tokens": 0},
-            }
+            mock_adapter_instance.system_one.return_value = SystemOneResponse(
+                model="jev-1.13.0",
+                usage=Usage(input_tokens=10, output_tokens=0),
+                answers={},
+            )
             mock_adapter_cls.return_value = mock_adapter_instance
 
             result = self.runner.invoke(
