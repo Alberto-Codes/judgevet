@@ -33,6 +33,11 @@ inside its legend — so the constraints added in #77 do not reject real data.
 What is still inferred: 429 and 529 bodies, every model but `jev-1.13.0`, and
 the field names no call has exercised.
 
+The package root exports both adapters as of 0.2.0. `AsyncHTTPSystemOneAdapter`
+shipped in #92 reachable only through `judgevet.adapters.outbound.http`, which
+made it proven but not public; `tests/unit/test_public_surface.py` now pins the
+export set so that cannot recur silently.
+
 ## Where the repo is
 
 ```
@@ -59,7 +64,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 271 tests, 95.07% overall.
+Tests and coverage: see the gate table below. 262 tests, 94.86% overall.
 
 The 13 new tests in `tests/contract/test_adapter_equivalence.py` verify that
 the sync and async HTTP adapters produce identical outcomes on the same
