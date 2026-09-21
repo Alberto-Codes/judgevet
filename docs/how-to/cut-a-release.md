@@ -60,6 +60,29 @@ that table is where this project records which claims a call has actually
 exercised. If a line moved from inferred to verified without a call that did
 it, stop.
 
+## Standing permission, and its limits
+
+Alberto granted standing permission on 2026-09-21 to merge the release PR,
+edit the draft and publish, without asking each time. The bar for using it:
+
+**Cut a release when** CI is green on `main`; the wheel installs and works in
+a clean virtualenv built from the published artifact, not the local build;
+`STATUS.md`'s verified-versus-inferred table is accurate, with no line moved
+to verified without a call that did it; nothing open would be hit by someone
+running `pip install judgevet`; and the changelog entry reads as something a
+stranger can use.
+
+**Hold and ask instead when** a change breaks an API that is already
+published — 0.1.0 is on the index, so that bar is real from here rather than
+theoretical; when the verified-versus-inferred table changes in a way that
+alters what a user should trust; or when a step needs a credential or a
+decision only a human has.
+
+Publishing is the one irreversible step in this repository. A version can be
+yanked but never replaced, so the check that matters most is the clean-venv
+install from the index, because it is the only one that tests what a user
+actually receives.
+
 ## Publishing the draft
 
 Publishing is the only irreversible step, and it is deliberately manual.
