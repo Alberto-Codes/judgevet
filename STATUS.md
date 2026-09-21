@@ -27,13 +27,13 @@ src/judgevet/
   adapters/inbound/cli.py      typer app; consumes typed answers
   adapters/inbound/settings.py one Settings, key as SecretStr
   adapters/inbound/logs.py     structlog to stderr, secrets redacted
-  adapters/inbound/mcp.py      stdio server, ask_noul only (#24 adds the rest)
+  adapters/inbound/mcp.py      stdio server: ask_noul · ask_choice · ask_score
 scripts/
   check_suppressions.py        gate: no noqa / type: ignore
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. Twenty commits on `main`.
+Tests and coverage: see the gate table below. 170 tests, 96% overall.
 
 ## Gates
 
