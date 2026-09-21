@@ -10,8 +10,9 @@ written. It went up over OIDC trusted publishing with no stored token in the
 path, from a draft release a human published by hand — `publish.yml` triggers
 on `release: types: [published]` and nothing else.
 
-`0.0.1` remains on the index unyanked. It is the name reservation and installs
-nothing useful; see #88.
+`0.0.1` is yanked, with the reason "Name reservation only; contained no
+working code. Use 0.1.0 or later." It still resolves for anyone who pins it
+exactly, which is what yanking means; it is gone from resolution. #88 closed.
 
 ## What the release contains
 
@@ -41,7 +42,13 @@ src/judgevet/
                bad range, a non-distribution, or a choice off its own map
                errors carry `retryable`: true on rate-limit and service
   ports/       SystemOnePort — a typing.Protocol, satisfied by shape
-  adapters/outbound/http.py    parses the body, translates httpx into domain errors
+  adapters/outbound/http.py    four module-level helpers — build payload,
+                               parse body, translate status error, translate
+                               request error — and a thin adapter over them.
+                               The translators return the exception rather
+                               than raising, so #92's async adapter shares
+                               them and keeps `raise ... from exc` at one
+                               site per adapter (#91)
   adapters/inbound/cli.py      typer app; takes a port, one construction site
   adapters/inbound/settings.py one Settings, key as SecretStr
   adapters/inbound/logs.py     structlog to stderr, secrets redacted
@@ -51,7 +58,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 240 tests, 95% overall.
+Tests and coverage: see the gate table below. 241 tests, 94.52% overall.
 
 ## Gates
 
@@ -74,7 +81,6 @@ There are no pull requests here: those hooks are the only gate before `main`.
 | a 422 body echoes the request payload back under `input` | **verified**, and the adapter discards it (#85) |
 | 429 and 529 | still unseen. 429 needs abusing the service and 529 cannot be forced |
 | every other field name | inferred from documentation |
-| error response bodies | never seen |
 | models other than `jev-latest` | never called |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 12 hand-authored fixtures, inferred from docs/reference/api.md |
@@ -82,15 +88,27 @@ There are no pull requests here: those hooks are the only gate before `main`.
 | the adapter drops the `input` field from 422 bodies to avoid echoing caller data | **verified** — live test asserts test state does not leak |
 | API keys do not leak in error str/repr | **verified** — live tests assert key not in str or repr |
 
-#17 has landed. `README.md` and `docs/reference/api.md` stay `sketch` until #29
-observes the real error bodies and #6 promotes only the verified rows.
+#17 and #29 have landed, so the error rows above are observations now, not
+inferences. `README.md` and `docs/reference/api.md` stay `sketch` until #6
+promotes only the verified rows.
+
+The 3xx fallthrough in `system_one` is the one branch no test pins — it was
+checked by hand for #91 and holds, and #96 exists to make that permanent.
 
 ## Working with pi
 
 Issues carry two extra labels beyond priority: `pi-fit` or `judgment`, and
-`size-S|M|L`. Measured across ten delegated sessions, `size-S` lands clean far
-more often than `size-M`, and no new task has landed clean on a first attempt.
-Split before assigning.
+`size-S|M|L`. Across 37 delegated sessions, `size-S` lands clean roughly three
+times in four and `size-M` one time in four, so split before assigning. Some
+tasks do land clean first time; the ones that do not fail in two recurring
+ways.
+
+**A green gate table is not an audit.** Two consecutive sessions returned with
+all eight gates green and a real defect: a test that passed whether or not the
+behaviour under test happened, and a helper that raised where the spec said
+return, making its own return annotation false and the call site unreachable.
+Neither is visible to any linter — #94 and #95 exist to convert the
+mechanically decidable half into gates.
 
 `judgment` means the task asks for a shape to be decided. The one such task
 that was delegated (#2) came back with a parallel structure beside the intended
