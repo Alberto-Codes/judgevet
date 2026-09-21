@@ -24,7 +24,7 @@ src/judgevet/
                errors carry `retryable`: true on rate-limit and service
   ports/       SystemOnePort — a typing.Protocol, satisfied by shape
   adapters/outbound/http.py    parses the body, translates httpx into domain errors
-  adapters/inbound/cli.py      typer app; consumes typed answers
+  adapters/inbound/cli.py      typer app; takes a port, one construction site
   adapters/inbound/settings.py one Settings, key as SecretStr
   adapters/inbound/logs.py     structlog to stderr, secrets redacted
   adapters/inbound/mcp.py      stdio server: ask_noul · ask_choice · ask_score
