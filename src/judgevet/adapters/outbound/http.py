@@ -88,6 +88,7 @@ class HTTPSystemOneAdapter:
         api_key: str | None = None,
         base_url: str | None = None,
         default_model: str = "jev-latest",
+        transport: httpx.BaseTransport | None = None,
     ) -> None:
         """Initialize the HTTP adapter.
 
@@ -95,6 +96,7 @@ class HTTPSystemOneAdapter:
             api_key: TypeSafe API key.
             base_url: API base URL. Defaults to https://api.typesafe.ai.
             default_model: Default model to use. Defaults to jev-latest.
+            transport: Optional httpx transport for testing. Defaults to None.
 
         Raises:
             ValueError: If no API key is provided.
@@ -111,6 +113,7 @@ class HTTPSystemOneAdapter:
                 "Authorization": f"Bearer {self._api_key}",
                 "Content-Type": "application/json",
             },
+            transport=transport,
         )
 
     def system_one(
