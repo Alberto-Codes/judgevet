@@ -42,6 +42,15 @@ requires = ["uv_build>=0.11.20,<0.12.0"]
 build-backend = "uv_build"
 
 # --------------------------------------------------------------------------- #
+# PyPI indexes.
+# --------------------------------------------------------------------------- #
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+# --------------------------------------------------------------------------- #
 # Include the py.typed marker so type checkers see inline annotations.
 # Run `docs/reference/py-typed-marker.md` for verification steps.
 # --------------------------------------------------------------------------- #
