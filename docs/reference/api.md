@@ -42,6 +42,7 @@ HTTP implementation of the SystemOnePort.
 - `api_key`: TypeSafe API key (or `TYPESAFE_API_KEY` env var)
 - `base_url`: API base URL (default: `https://api.typesafe.ai`)
 - `default_model`: Default model (default: `jev-latest`)
+- `transport`: Optional httpx transport for testing (default: `None`)
 
 **Methods:**
 - `system_one(state, questions, model)`: Call the Jev API
