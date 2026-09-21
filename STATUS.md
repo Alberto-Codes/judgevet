@@ -59,7 +59,14 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 258 tests, 94.84% overall.
+Tests and coverage: see the gate table below. 271 tests, 95.07% overall.
+
+The 13 new tests in `tests/contract/test_adapter_equivalence.py` verify that
+the sync and async HTTP adapters produce identical outcomes on the same
+fixture corpus. The suite pins the async-specific surface: the `await`-ed call
+path, the two `except` bodies, and exception flow. It does not cover shared
+helpers like `_translate_status_error`, as changes there affect both adapters
+in lockstep.
 
 ## Gates
 

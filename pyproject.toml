@@ -148,7 +148,7 @@ docstring-code-format = true
 testpaths = ["tests"]
 markers = [
     "unit: fast, isolated",
-    "contract: verified-fake port suites — fake and real adapter proven equivalent on fixtures",
+    "contract: fixture suites pinning adapter behaviour — fake/real contract and sync/async equivalence",
     "live: touches the live Jev API; needs TYPESAFE_API_KEY; never in CI",
 ]
 addopts = [
