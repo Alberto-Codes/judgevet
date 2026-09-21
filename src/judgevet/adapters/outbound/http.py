@@ -54,11 +54,13 @@ from judgevet.domain.errors import (
 )
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.response_parser import parse_system_one_response
-from judgevet.ports import SystemOnePort
 
 
-class HTTPSystemOneAdapter(SystemOnePort):
-    """HTTP implementation of the SystemOnePort using httpx.
+class HTTPSystemOneAdapter:
+    """HTTP implementation of SystemOnePort using httpx.
+
+    This class satisfies SystemOnePort structurally without importing it.
+    See: https://api.typesafe.ai/v1/systemone
 
     See: https://api.typesafe.ai/v1/systemone
 
