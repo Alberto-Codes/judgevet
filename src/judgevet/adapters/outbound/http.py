@@ -50,6 +50,16 @@ Raises:
     JevRequestError: If the API returns 4xx (except 401/403, 429).
     JevServiceError: If the API returns 5xx or a transport error occurs.
     JevResponseError: If the API returns 2xx with unparseable body.
+
+Async adapters:
+    AsyncSystemOnePort: Async protocol for the System One API.
+    AsyncHTTPSystemOneAdapter: Async HTTP implementation using httpx.AsyncClient.
+
+    The async adapter provides `aclose()`, `__aenter__`, and `__aexit__` for
+    lifecycle management. It does NOT provide sync names (`close`, `__enter__`,
+    `__exit__`) because calling `self._client.aclose()` without `await` would
+    return an un-awaited coroutine and close nothing silently. An AttributeError
+    is the better failure.
 """
 
 from __future__ import annotations
@@ -372,3 +382,166 @@ class HTTPSystemOneAdapter:
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Exit context manager."""
         self.close()
+
+
+class AsyncHTTPSystemOneAdapter:
+    """Async HTTP implementation of AsyncSystemOnePort using httpx.AsyncClient.
+
+    This class satisfies AsyncSystemOnePort structurally without importing it.
+    See: https://api.typesafe.ai/v1/systemone
+
+    Note:
+        This adapter provides `aclose()`, `__aenter__`, and `__aexit__` for
+        lifecycle management. It does NOT provide sync names (`close`,
+        `__enter__`, `__exit__`) because calling `self._client.aclose()`
+        without `await` would return an un-awaited coroutine and close nothing
+        silently. An AttributeError is the better failure.
+
+    Attributes:
+        api_key (str | None): The TypeSafe API key.
+        base_url (str): The API base URL.
+        default_model (str): The default model to use.
+
+    Raises:
+        JevAuthError: If the API returns 401 or 403.
+        JevRateLimitError: If the API returns 429 (rate limit exceeded).
+        JevRequestError: If the API returns 4xx (except 401/403, 429).
+        JevServiceError: If the API returns 5xx or a transport error occurs.
+        JevResponseError: If the API returns 2xx with unparseable body.
+
+    Error details:
+        Validation errors (422) include an array of error objects; each
+        object's `input` key contains the caller's request payload and is
+        deliberately omitted from the error message.
+
+        Auth errors (401/403) return an object with `error_type` and
+        `message` fields.
+
+        Unknown detail shapes fall back to the HTTP status line alone.
+
+        Transport errors (timeouts, connection failures) are mapped to
+        `JevServiceError` with `status_code=None` and `retryable=True`.
+        A `retryable=True` timeout is advisory: retrying a read timeout
+        may be double-billed because the service may still be processing
+        the first attempt.
+
+    Examples:
+        ```python
+        async def main() -> SystemOneResponse:
+            adapter = AsyncHTTPSystemOneAdapter(api_key="your-api-key")
+            try:
+                response: SystemOneResponse = await adapter.system_one(
+                    state="Your content here",
+                    questions={
+                        "q1": {"type": "noul", "instructions": "Is this correct?"}
+                    },
+                )
+                print(response)
+                return response
+            finally:
+                await adapter.aclose()
+        ```
+    """
+
+    def __init__(
+        self,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        default_model: str = "jev-latest",
+        transport: httpx.AsyncBaseTransport | None = None,
+        timeout_seconds: float = 30.0,
+    ) -> None:
+        """Initialize the async HTTP adapter.
+
+        Args:
+            api_key: TypeSafe API key.
+            base_url: API base URL. Defaults to https://api.typesafe.ai.
+            default_model: Default model to use. Defaults to jev-latest.
+            transport: Optional httpx async transport for testing. Defaults to None.
+            timeout_seconds: Read timeout in seconds. Defaults to 30.0.
+
+        Raises:
+            ValueError: If no API key is provided, or timeout_seconds <= 0.
+        """
+        if api_key is None:
+            raise ValueError("API key must be provided")
+
+        if timeout_seconds <= 0:
+            raise ValueError(f"timeout_seconds must be positive, got {timeout_seconds}")
+
+        self._api_key = api_key
+        self._base_url = base_url or "https://api.typesafe.ai"
+        self._default_model = default_model
+        self._client = httpx.AsyncClient(
+            base_url=self._base_url,
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+            },
+            transport=transport,
+            timeout=httpx.Timeout(timeout_seconds, connect=5.0),
+        )
+
+    async def system_one(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Any],
+        model: str | None = None,
+    ) -> SystemOneResponse:
+        """Call the Jev System One API via HTTP asynchronously.
+
+        Args:
+            state: The content to evaluate.
+            questions: Mapping of question names to question definitions.
+            model: Model name override.
+
+        Returns:
+            Typed SystemOneResponse with parsed answer objects.
+
+        Raises:
+            JevAuthError: If the API returns 401 or 403.
+            JevRateLimitError: If the API returns 429 (rate limit exceeded).
+            JevRequestError: If the API returns 4xx (except 401/403, 429).
+            JevServiceError: If the API returns 5xx or a transport error occurs.
+            JevResponseError: If the API returns 2xx with unparseable body.
+
+        Error details:
+            Validation errors (422) include an array of error objects; each
+            object's `input` key contains the caller's request payload and is
+            deliberately omitted from the error message.
+
+            Auth errors (401/403) return an object with `error_type` and
+            `message` fields.
+
+            Unknown detail shapes fall back to the HTTP status line alone.
+
+            Transport errors (timeouts, connection failures) are mapped to
+            `JevServiceError` with `status_code=None` and `retryable=True`.
+            A `retryable=True` timeout is advisory: retrying a read timeout
+            may be double-billed because the service may still be processing
+            the first attempt.
+        """
+        payload = _build_payload(state, questions, model, self._default_model)
+        try:
+            response = await self._client.post("/v1/systemone", json=payload)
+            response.raise_for_status()
+            return _parse_body(response)
+        except httpx.HTTPStatusError as exc:
+            translated = _translate_status_error(exc)
+            if translated is None:
+                raise
+            raise translated from exc
+        except httpx.RequestError as exc:
+            raise _translate_request_error(exc) from exc
+
+    async def aclose(self) -> None:
+        """Close the HTTP async client."""
+        await self._client.aclose()
+
+    async def __aenter__(self) -> Self:
+        """Enter async context manager."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Exit async context manager."""
+        await self.aclose()
