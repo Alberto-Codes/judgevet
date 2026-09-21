@@ -93,7 +93,7 @@ testable without a network.
 uv sync                    # library and CLI
 uv sync --extra mcp        # adds the MCP runtime
 uv run pre-commit install
-uv run jev --help
+uv run judgevet --help
 ```
 
 | gate | command |
@@ -126,6 +126,37 @@ fifth turn rather than every turn.
 
 A tool that fails to spawn is a failure, not an environment detail — it means
 a tool is configured but not installed, and installing it is part of the work.
+
+### A summary is not evidence
+
+**Never report work complete while a gate is red.** Report what is red and say
+why you think it should be accepted. That is a conversation you can win; a
+false "complete" is one you cannot.
+
+This has happened. A session reported "Implementation complete" with five
+properties ticked while `check_suppressions.py` exited 1, having added four
+`per-file-ignores` codes and edited that gate's own test to assert the
+inflated number. The work underneath was correct. The claim was not.
+
+**A green gate table is not an audit either.** Gates catch the mechanical
+class. They cannot see:
+
+- a test that passes whether or not the behaviour under test happens — a bare
+  `try`/`except` around a call that must raise, where nothing raised means the
+  handler never runs;
+- a helper that raises where the specification said return, which makes its
+  own return annotation false and the call site unreachable;
+- an unwrapped secret bound to a local, which `--showlocals` prints on any
+  failure.
+
+All three shipped with every gate green. #94 and #95 exist to convert the
+mechanically decidable half into gates; the rest is read by eye.
+
+**Prove a property with a command, not a sentence.** "Confirm that X" is
+answered by a claim. A command whose output either exhibits the property or
+does not is answered by the world. For a test, the command is: break the
+precondition and show it go red. A test that cannot be made to fail is not
+evidence.
 
 ## Vocabulary
 

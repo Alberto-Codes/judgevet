@@ -120,6 +120,6 @@ Outcomes are logged to
 
 ## Next
 
-[NEXT_PROMPT.md](NEXT_PROMPT.md) holds the ordered work. The open queue is in
+The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
 set.

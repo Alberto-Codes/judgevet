@@ -75,7 +75,7 @@ everything but its own adapter.
 
 ```bash
 uv sync
-uv run jev --help
+uv run judgevet --help
 ```
 
 The MCP server is an optional extra, so the library and CLI install without an
