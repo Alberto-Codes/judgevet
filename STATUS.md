@@ -12,9 +12,14 @@ than an integer index, and `legend` is a map keyed by stringified position
 rather than a list. The official HTTP reference then confirmed all three
 independently.
 
-That does **not** promote the sketch. One call, three question types, one
-model. Error bodies, other models and edge shapes remain unverified, and the
-typed boundary is still in the wrong layer (#17).
+Error bodies are now verified too, for the two statuses that can be provoked
+without abusing the service. The response shape held a second time against a
+domain that has since grown invariants: the real probabilities summed to
+exactly 1.0 in both maps, the choice appeared in its own map, and the score sat
+inside its legend — so the constraints added in #77 do not reject real data.
+
+What is still inferred: 429 and 529 bodies, every model but `jev-1.13.0`, and
+the field names no call has exercised.
 
 ## Where the repo is
 
@@ -51,7 +56,11 @@ There are no pull requests here: those hooks are the only gate before `main`.
 |---|---|
 | endpoint, auth header, three answer shapes, usage | verified — probe + official reference |
 | noul has no confidence; score is continuous; legend is a map | verified — both sources |
-| 401 / 422 / 429 / 529 are the documented errors | mapped and unit-tested (#18); not seen from the live service |
+| 401 returns `{"detail": {"error_type", "message"}}` | **verified** — live call with an invalid key, 2026-09-21 |
+| 422 returns `{"detail": [ {type, loc, msg, input} ]}` | **verified** — live call omitting `questions`, 2026-09-21 |
+| `detail` is polymorphic: an object for auth, an array for validation | **verified** — the two calls above disagree in shape |
+| a 422 body echoes the request payload back under `input` | **verified**, and the adapter discards it (#85) |
+| 429 and 529 | still unseen. 429 needs abusing the service and 529 cannot be forced |
 | every other field name | inferred from documentation |
 | error response bodies | never seen |
 | models other than `jev-latest` | never called |
