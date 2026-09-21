@@ -123,14 +123,14 @@ class TestFormatAnswer:
     def test_format_answer_score(self) -> None:
         """Test formatting score answer."""
         answer = ScoreAnswer(
-            score=3.5,
+            score=1.5,
             confidence=0.9,
             legend={1: "poor", 2: "good"},
             probabilities={1: 0.1, 2: 0.9},
         )
         formatted = format_answer("q1", answer)
         assert formatted["type"] == "score"
-        assert formatted["score"] == 3.5
+        assert formatted["score"] == 1.5
 
 
 class TestFormatAnswerError:

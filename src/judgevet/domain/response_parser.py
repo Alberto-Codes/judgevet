@@ -58,7 +58,7 @@ def parse_system_one_response(
 
     Raises:
         JevResponseError: If parsing fails due to missing fields, unknown types,
-            or wrong value kinds. The error message will include the question id
+            or wrong value kinds. The error message includes the question ID
             and what was wrong.
     """
     model = _get_string(raw, "model", request_id)
