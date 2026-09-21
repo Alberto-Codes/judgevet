@@ -1,6 +1,6 @@
 # STATUS
 
-Last written: 2026-09-21. A session overwrites this file.
+Last written: 2026-09-25. A session overwrites this file.
 
 ## The headline
 
@@ -56,10 +56,11 @@ Tests and coverage: see the gate table below. 240 tests, 95% overall.
 ## Gates
 
 `ruff check` · `ruff format --check` · `ty check` · `lint-imports` ·
-`docvet check` · `pytest --cov` · `check_suppressions`
+`docvet check` · `docvet check --all` · `pytest --cov` · `check_suppressions`
 
-All green. pre-commit runs the fast ones, pre-push adds the coverage floor.
-There are no pull requests here: those hooks are the only gate before `main`.
+All green. pre-commit runs the fast ones, pre-push adds the coverage floor
+and the whole-repo docvet check.
+There are no pull requests here: those hooks are the only gate before `main`. 
 
 ## What is verified, and what is not
 

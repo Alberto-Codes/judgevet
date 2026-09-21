@@ -105,6 +105,11 @@ uv run jev --help
 | docs | `uv run docvet check` |
 | tests | `uv run pytest -q --cov` |
 
+docvet runs in two modes: the pre-commit hook vets only the files a commit
+touches (`uv run docvet check`, diff mode), and the pre-push hook vets the
+whole repo (`uv run docvet check --all`), so commits never fail on doc debt
+they did not introduce and no stale docstring can leave the branch.
+
 Coverage floor is 90. Test markers are `unit`, `contract` and `live`; `live`
 touches the real API and is excluded from the default run.
 

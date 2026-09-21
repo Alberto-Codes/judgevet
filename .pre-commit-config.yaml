@@ -1,4 +1,4 @@
-# Commit stage: the fast gates. Push stage: coverage.
+# Commit stage: the fast gates. Push stage: whole-repo docs and coverage.
 #
 # Every Python tool runs from the project environment through `uv run`. The
 # lockfile then pins one version for the hook line and for CI. A pre-commit
@@ -53,6 +53,17 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      # The whole-repo check guards the branch at push time. The pre-commit
+      # stage keeps its fast diff mode: a whole-repo check there would fail
+      # commits for debt they did not introduce.
+      - id: docvet-all
+        name: docvet check --all
+        entry: uv run docvet check --all
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
 
       - id: pytest
         name: pytest (unit + contract)
