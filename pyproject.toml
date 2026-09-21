@@ -51,6 +51,7 @@ include = ["src/judgevet/py.typed"]
 [dependency-groups]
 dev = [
     "docvet>=1.16.0",
+    "griffe>=2.3.0",
     "import-linter>=2.15",
     "pre-commit>=4.6.2",
     "pytest>=9.1.1",
