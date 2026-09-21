@@ -18,7 +18,7 @@ from __future__ import annotations
 class Usage:
     """Token counts for a request.
 
-    See: https://jevaiguide.com/jev-api/
+    See: https://docs.typesafe.ai/api.md
 
     Attributes:
         input_tokens (int | None): Number of input tokens used.

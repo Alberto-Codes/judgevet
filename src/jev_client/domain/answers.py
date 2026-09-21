@@ -27,7 +27,7 @@ from __future__ import annotations
 class NoulAnswer:
     """A yes/no answer with probability of true.
 
-    See: https://jevaiguide.com/jev-api/
+    See: https://docs.typesafe.ai/primitives/noul
 
     Attributes:
         noul (float): Probability of a yes answer or true statement, from 0 to 1.
@@ -61,7 +61,7 @@ class NoulAnswer:
 class ChoiceAnswer:
     """A selected choice with probabilities and confidence.
 
-    See: https://jevaiguide.com/jev-api/
+    See: https://docs.typesafe.ai/primitives/choice
 
     Attributes:
         choice (str): The name of the choice with highest probability.
@@ -114,7 +114,7 @@ class ChoiceAnswer:
 class ScoreAnswer:
     """A scored response with rubric and probabilities.
 
-    See: https://jevaiguide.com/jev-api/
+    See: https://docs.typesafe.ai/primitives/score
 
     Attributes:
         score (float): Expected score (probability-weighted average of rubric levels).
