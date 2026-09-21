@@ -1,6 +1,11 @@
 """Tests for the commit message gate."""
 
-from scripts.check_commit_msg import message_lines, problems, subject_problems
+from scripts.check_commit_msg import (
+    get_allowed_authors,
+    message_lines,
+    problems,
+    subject_problems,
+)
 
 
 class TestMessageLines:
@@ -100,3 +105,13 @@ class TestProblems:
         found, has_issue = problems(text)
         assert found == []
         assert has_issue is True
+
+
+class TestCheckAuthor:
+    """Tests for get_allowed_authors()."""
+
+    def test_get_allowed_authors_returns_list(self) -> None:
+        """get_allowed_authors returns a list of strings."""
+        result = get_allowed_authors()
+        assert isinstance(result, list)
+        assert all(isinstance(item, str) for item in result)

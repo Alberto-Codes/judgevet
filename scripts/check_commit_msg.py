@@ -9,6 +9,7 @@ not every such commit finishes an issue.
 
 The gate reads the file pre-commit hands it at the ``commit-msg`` stage. It
 skips a merge, a revert and a ``fixup!`` message, because git writes those.
+It also refuses commits whose author email is not in the allowed list.
 
 CI is the backstop, because a hook can be bypassed. ``--range`` checks
 every message a branch adds.
@@ -29,6 +30,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 SPEC = "https://www.conventionalcommits.org/en/v1.0.0/"
@@ -60,6 +62,58 @@ _SCISSORS = re.compile(r"^# --- >8 ---$", re.MULTILINE)
 _ISSUE = re.compile(r"#\d+")
 _TRAILING_REFS = re.compile(r"\s*\((?:#\d+(?:,\s*)?)+\)$")
 _FOOTER_TOKEN_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 -]*)(?:: | #)")
+_AUTHOR_PATTERN = re.compile(r"^(?:.*<)?(?P<email>[^>]+@[^>]+)>?.*$")
+
+
+def get_allowed_authors() -> list[str]:
+    """Read the allowed author emails from pyproject.toml.
+
+    Returns:
+        A list of allowed email addresses.
+
+    Raises:
+        RuntimeError: If the configuration is missing or malformed.
+    """
+    pyproject = Path("pyproject.toml")
+    if not pyproject.exists():
+        raise RuntimeError("pyproject.toml not found")
+
+    config = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+    try:
+        return config["tool"]["judgevet"]["commit-msg"]["allowed-authors"]
+    except KeyError as exc:
+        raise RuntimeError(
+            "Missing [tool.judgevet.commit-msg] section in pyproject.toml"
+        ) from exc
+
+
+def get_author_email() -> str:
+    """Read the author email from GIT_AUTHOR_IDENT.
+
+    Returns:
+        The author email address.
+
+    Raises:
+        RuntimeError: If the author email cannot be determined.
+    """
+    try:
+        result = subprocess.run(
+            ["/usr/bin/git", "var", "GIT_AUTHOR_IDENT"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        ident = result.stdout.strip()
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError("git var GIT_AUTHOR_IDENT failed") from exc
+
+    match = _AUTHOR_PATTERN.match(ident)
+    if match is None:
+        raise RuntimeError(
+            f"Could not parse author email from GIT_AUTHOR_IDENT: {ident}"
+        )
+
+    return match["email"]
 
 
 def message_lines(text: str) -> list[str]:
@@ -215,6 +269,26 @@ def messages_in_range(rev_range: str) -> list[tuple[str, str]]:
     return found
 
 
+def check_author() -> list[str] | None:
+    """Check if the committing author is allowed.
+
+    Returns:
+        A list with one failure message if the author is not allowed,
+        or None if the author is allowed.
+    """
+    allowed = get_allowed_authors()
+    author_email = get_author_email()
+
+    if author_email not in allowed:
+        return [
+            f"author email {author_email!r} is not in the allowed list",
+            "",
+            "Use a scratch repository instead:",
+            "    tmp=$(mktemp -d) && git -C '$tmp' init -q",
+        ]
+    return None
+
+
 def report(label: str, text: str) -> bool:
     """Check one message and print the outcome.
 
@@ -225,6 +299,11 @@ def report(label: str, text: str) -> bool:
     Returns:
         True when the message failed.
     """
+    if (author_problems := check_author()) is not None:
+        for problem in author_problems:
+            print(f"FAIL {label}: {problem}")
+        return True
+
     found, _ = problems(text)
     for problem in found:
         print(f"FAIL {label}: {problem}")

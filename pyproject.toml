@@ -224,3 +224,19 @@ exclude = ["tests", "scripts"]
 
 [tool.docvet.presence]
 min-coverage = 100.0
+
+# --------------------------------------------------------------------------- #
+# commit-msg gate
+# --------------------------------------------------------------------------- #
+[tool.judgevet.commit-msg]
+# The email in GIT_AUTHOR_IDENT must match one of these for the commit to be
+# allowed. A commit by an allowed author succeeds; a commit by any other
+# author is refused with instructions to use a scratch repository instead.
+allowed-authors = [
+    # Both addresses are Alberto's and both appear in his repositories:
+    # judgevet's history uses the first, docvet's uses the second. A list
+    # rather than a single value so a second contributor adds themselves
+    # here rather than editing a script.
+    "alberto.nieto.80@gmail.com",
+    "alberto.codes.dev@gmail.com",
+]
