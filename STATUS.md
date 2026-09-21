@@ -4,6 +4,17 @@ Last written: 2026-09-21. A session overwrites this file.
 
 ## The headline
 
+**judgevet 0.1.0 is on PyPI.** `pip install judgevet` installs it, the CLI and
+the MCP server; the wheel was verified from the index before this line was
+written. It went up over OIDC trusted publishing with no stored token in the
+path, from a draft release a human published by hand — `publish.yml` triggers
+on `release: types: [published]` and nothing else.
+
+`0.0.1` remains on the index unyanked. It is the name reservation and installs
+nothing useful; see #88.
+
+## What the release contains
+
 **The domain model matches the live service.** It was written entirely from
 documentation and never exercised. One probe call settled it: every field
 parses, including the parts easiest to get wrong — a noul answer carries no
