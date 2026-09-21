@@ -33,7 +33,7 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
 ```
 
-Tests and coverage: see the gate table below. 170 tests, 96% overall.
+Tests and coverage: see the gate table below. 182 tests, 96% overall.
 
 ## Gates
 
@@ -54,6 +54,7 @@ There are no pull requests here: those hooks are the only gate before `main`.
 | error response bodies | never seen |
 | models other than `jev-latest` | never called |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
+| fake and real adapter produce identical outcomes | verified — contract tests on 12 hand-authored fixtures, inferred from docs/reference/api.md |
 
 #17 has landed. `README.md` and `docs/reference/api.md` stay `sketch` until #29
 observes the real error bodies and #6 promotes only the verified rows.
