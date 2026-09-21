@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "29bf34dfca38aabeabd3adf536a8e4b7c89e823d",
+  "packages": {
+    ".": {
+      "release-type": "python",
+      "package-name": "judgevet",
+      "include-component-in-tag": false,
+      "bump-minor-pre-major": true,
+      "draft": true,
+      "force-tag-creation": true,
+      "extra-files": [
+        "src/judgevet/__init__.py"
+      ],
+      "pull-request-header": "Pre-flight for a release cut. On merge, release-please cuts a **draft** GitHub release and creates its tag. Nothing reaches PyPI until a maintainer publishes the draft.\n\n- [ ] The version above is the intended one. If not, do not merge.\n- [ ] The gate table is green. Every gate in the row that `pre-commit install` runs is \ud83c\udfaf green.\n- [ ] STATUS.md's verified-vs-inferred table still holds. No inferred line has become verified, and no verified line has become inferred.\n- [ ] `uv.lock` was refreshed.\n",
+      "pull-request-footer": "After you merge this PR, finish the release by hand.\n\n1. Edit the draft release. Write what this tag ships.\n2. State the measured state the tag represents.\n3. State how to run it.\n4. Link any writeup or documentation.\n5. Pin every doc link to the tag, not `main`.\n6. Publish the draft. Publishing fires `publish.yml`, which uploads to PyPI.",
+      "changelog-sections": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "revert", "section": "Reverts" },
+        { "type": "perf", "section": "Performance Improvements" },
+        { "type": "docs", "section": "Documentation", "hidden": true },
+        { "type": "refactor", "section": "Refactoring", "hidden": true },
+        { "type": "chore", "section": "Miscellaneous", "hidden": true },
+        { "type": "test", "section": "Tests", "hidden": true },
+        { "type": "ci", "section": "CI", "hidden": true }
+      ]
+    }
+  }
+}
