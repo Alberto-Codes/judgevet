@@ -70,3 +70,10 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-push]
+
+      # Commit message gate: verify every message follows Conventional Commits 1.0.0
+      - id: commit-msg-check
+        name: commit-msg check
+        entry: uv run python scripts/check_commit_msg.py
+        language: system
+        stages: [commit-msg]

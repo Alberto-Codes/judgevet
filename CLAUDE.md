@@ -216,7 +216,8 @@ no diff and a clean-looking tree. See #82.
 Default branch is `main`. The repo is private. **No pull requests** — commit a
 finished piece of work directly to `main` and push. The pre-commit and pre-push
 hooks are the only gate between a change and the branch, so
-`uv run pre-commit install --install-hooks -t pre-commit -t pre-push` is the
+`uv run pre-commit install --install-hooks -t pre-commit -t pre-push -t commit-msg`
+is the
 first thing a clone does. Never pass `--no-verify`.
 
 Do not describe work as complete while any gate is red. If a requirement was
