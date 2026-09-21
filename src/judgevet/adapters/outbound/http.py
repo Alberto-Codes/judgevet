@@ -9,6 +9,12 @@ Error handling:
     The `input` key in validation errors contains the caller's request payload
     and is deliberately excluded from error messages to avoid leaking user data.
 
+Helper functions:
+    - _build_payload: Build the request payload.
+    - _parse_body: Parse the response body into a SystemOneResponse.
+    - _translate_status_error: Translate HTTP status errors to JevError subclasses.
+    - _translate_request_error: Translate request errors to JevServiceError.
+
 Examples:
     ```python
     from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
@@ -108,6 +114,106 @@ def _extract_error_detail(detail: Any) -> str:
             return error_type
     # Unknown detail shape
     return ""
+
+
+def _build_payload(
+    state: str | dict[str, Any] | list[Any],
+    questions: Mapping[str, Any],
+    model: str | None,
+    default_model: str,
+) -> dict[str, Any]:
+    """Build the request payload for the System One API.
+
+    Args:
+        state: The content to evaluate.
+        questions: Mapping of question names to question definitions.
+        model: Model name override, or None to use the default.
+        default_model: Default model to use when model is None.
+
+    Returns:
+        A dictionary with keys "state", "questions", and "model".
+    """
+    return {
+        "state": state,
+        "questions": questions,
+        "model": model or default_model,
+    }
+
+
+def _parse_body(response: httpx.Response) -> SystemOneResponse:
+    """Parse the JSON response body into a SystemOneResponse.
+
+    Args:
+        response: The HTTP response from the API.
+
+    Returns:
+        A parsed SystemOneResponse.
+
+    Raises:
+        JevResponseError: If the response body is not valid JSON.
+    """
+    try:
+        raw = response.json()
+    except ValueError as exc:
+        raise JevResponseError(
+            f"Failed to parse response body: {exc}",
+            response.status_code,
+        ) from exc
+    return parse_system_one_response("system-one", raw)
+
+
+def _translate_status_error(
+    exc: httpx.HTTPStatusError,
+) -> JevError | None:
+    """Translate an httpx.HTTPStatusError to a JevError subclass.
+
+    Args:
+        exc: The HTTP status error to translate.
+
+    Returns:
+        A JevError subclass instance for status codes 429, 401, 403, 4xx, or 5xx.
+        None for unhandled status codes (e.g., 3xx).
+    """
+    status_code = exc.response.status_code
+    error_message = str(exc)
+
+    # Try to extract detailed error information from response body
+    try:
+        body = exc.response.json()
+        if isinstance(body, dict):
+            detail = body.get("detail")
+            if detail is not None:
+                extracted = _extract_error_detail(detail)
+                if extracted:
+                    error_message = f"{exc!s}; {extracted}"
+    except ValueError:
+        pass  # Body is not JSON, use default message
+
+    if status_code == JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS:
+        return JevRateLimitError(error_message, status_code)
+    elif status_code in (
+        JevError.HTTP_STATUS_401_UNAUTHORIZED,
+        JevError.HTTP_STATUS_403_FORBIDDEN,
+    ):
+        return JevAuthError(error_message, status_code)
+    elif JevError.HTTP_STATUS_400_MIN <= status_code < JevError.HTTP_STATUS_500_MIN:
+        return JevRequestError(error_message, status_code)
+    elif status_code >= JevError.HTTP_STATUS_500_MIN:
+        return JevServiceError(error_message, status_code)
+    # Unhandled status code (e.g., 3xx)
+    return None
+
+
+def _translate_request_error(exc: httpx.RequestError) -> JevServiceError:
+    """Translate an httpx.RequestError to a JevServiceError.
+
+    Args:
+        exc: The request error to translate.
+
+    Returns:
+        A JevServiceError with the original error message and status_code=None.
+    """
+    return JevServiceError(str(exc), None)
 
 
 class HTTPSystemOneAdapter:
@@ -237,58 +343,23 @@ class HTTPSystemOneAdapter:
             A `retryable=True` timeout is advisory: retrying a read timeout
             may be double-billed because the service may still be processing
             the first attempt.
-        """
-        payload = {
-            "state": state,
-            "questions": questions,
-            "model": model or self._default_model,
-        }
 
+        Implementation notes:
+            Uses helper functions for payload building, response parsing,
+            and error translation to ensure consistent behavior across adapters.
+        """
+        payload = _build_payload(state, questions, model, self._default_model)
         try:
             response = self._client.post("/v1/systemone", json=payload)
             response.raise_for_status()
-            try:
-                raw = response.json()
-            except ValueError as exc:
-                raise JevResponseError(
-                    f"Failed to parse response body: {exc}",
-                    response.status_code,
-                ) from exc
-            return parse_system_one_response("system-one", raw)
+            return _parse_body(response)
         except httpx.HTTPStatusError as exc:
-            status_code = exc.response.status_code
-            error_message = str(exc)
-
-            # Try to extract detailed error information from response body
-            try:
-                body = exc.response.json()
-                if isinstance(body, dict):
-                    detail = body.get("detail")
-                    if detail is not None:
-                        extracted = _extract_error_detail(detail)
-                        if extracted:
-                            error_message = f"{exc!s}; {extracted}"
-            except ValueError:
-                pass  # Body is not JSON, use default message
-
-            if status_code == JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS:
-                raise JevRateLimitError(error_message, status_code) from exc
-            elif status_code in (
-                JevError.HTTP_STATUS_401_UNAUTHORIZED,
-                JevError.HTTP_STATUS_403_FORBIDDEN,
-            ):
-                raise JevAuthError(error_message, status_code) from exc
-            elif (
-                JevError.HTTP_STATUS_400_MIN
-                <= status_code
-                < JevError.HTTP_STATUS_500_MIN
-            ):
-                raise JevRequestError(error_message, status_code) from exc
-            elif status_code >= JevError.HTTP_STATUS_500_MIN:
-                raise JevServiceError(error_message, status_code) from exc
-            raise
+            translated = _translate_status_error(exc)
+            if translated is None:
+                raise
+            raise translated from exc
         except httpx.RequestError as exc:
-            raise JevServiceError(str(exc), None) from exc
+            raise _translate_request_error(exc) from exc
 
     def close(self) -> None:
         """Close the HTTP client."""
