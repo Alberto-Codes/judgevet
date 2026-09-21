@@ -1,5 +1,11 @@
 # Jev Client API Reference
 
+> **status: draft.** The success response and the 401/422 error bodies are
+> verified against the live service (2026-09-21). The 429 and 529 bodies,
+> models other than `jev-1.13.0`, and any field no call has exercised remain
+> inferred from published documentation. `STATUS.md` holds the line-by-line
+> table.
+
 ## Question Types
 
 ### Noul
