@@ -72,6 +72,9 @@ scripts/
                                COMMENT tokens only, so prose that quotes the
                                syntax is not a finding
   check_test_hygiene.py        gate: tests that cannot fail, secrets in bindings
+  check_dependencies.py        gate: the runtime dependency set matches a pin
+                               in the script, compared both ways so a removal
+                               fails as well as an addition
   probe_live.py                prints one real response; asserts nothing
   smoke_release_child.py       the in-venv half of the release smoke test —
                                runs under a temp venv's own interpreter and
@@ -80,8 +83,8 @@ scripts/
                                outside the module
 ```
 
-Tests and coverage: see the gate table below. 296 tests, 95.26% overall.
-`scripts/` is outside the coverage scope, so the six new tests moved the
+Tests and coverage: see the gate table below. 330 tests, 95.26% overall.
+`scripts/` is outside the coverage scope, so the gate-script tests move the
 count and not the percentage.
 
 The suppression budget is 17. It rose 12 -> 16 in `e4e7abf`, four codes each
@@ -104,7 +107,7 @@ in lockstep.
 
 `ruff check` · `ruff format --check` · `ty check` · `lint-imports` ·
 `docvet check` · `docvet check --all` · `pytest --cov` · `check_suppressions` ·
-`check_test_hygiene`
+`check_test_hygiene` · `check_dependencies`
 
 All green. pre-commit runs the fast ones, pre-push adds the coverage floor
 and the whole-repo docvet check.
@@ -273,8 +276,64 @@ Inline suppressions are now forbidden in all three roots, and
 `per-file-ignores` is the only route. That ruling is in the gate's own
 docstring.
 
+## A gate reads the runtime dependency list now
+
+Nothing did. A delegated session put `pytest-asyncio[dev]>=1.4.0` into
+`[project.dependencies]` while fixing #98 and every gate passed; a published
+0.2.0 would have pulled a test framework into every application depending on
+judgevet. ruff, ty, import-linter and docvet read Python, not packaging
+metadata; pytest passes either way; the wheel builds fine and just drags the
+extra along.
+
+`scripts/check_dependencies.py` pins the set — `httpx`, `pydantic-settings`,
+`structlog`, `typer` — as a module constant with a reason per entry, on the
+shape of `ALLOWED_PER_FILE_IGNORE_CODES`. Three decisions are worth recording
+because each rejected something the issue asked for:
+
+**A separate script, not an extension of `check_suppressions.py`.** One
+concern per module. That file reading packaging metadata would make its own
+name and docstring false. Line count was not the argument — both would fit the
+cap.
+
+**Names only, no specifiers.** The incident was a package *appearing*. A pin
+carrying specifiers is a second source of truth that every version bump edits
+twice, and the reviewer updating the copy learns nothing. The accepted cost:
+a silently weakened specifier is not caught, and stays visible only in the
+manifest diff.
+
+**No deny-list, though the issue asked for one.** Once the pin exists, a
+test-only package in `[project.dependencies]` is outside the pinned set and
+already fails. A deny-list beside it is a subset check that can never fail
+when the pin passes, and can only ever *disagree* with it. Two overlapping
+checks that disagree are a defect of their own. What the list would have
+communicated is a sentence in the failure message instead.
+
+Compared both ways, so a removal fails too — the issue's wording is "the set
+changes", not "the set grows". Proven on throwaway manifests in temp
+directories, never by editing the real one:
+
+| planted | gate |
+|---|---|
+| `pytest-asyncio[dev]` added | `unpinned: pytest-asyncio`, exit 1 |
+| `typer` removed | `pinned but absent: typer`, exit 1 |
+| `tenacity` added legitimately | exit 1 until the pin is updated, message names the file and the constant |
+| `Pydantic_Settings` for `pydantic-settings` | clean — PEP 503 normalization holds |
+
+The failure advice follows the finding rather than printing both halves every
+time. A removal has nothing to do with the dev group, and printing that
+sentence anyway trains the reader to skip it.
+
+**What is still unguarded:** the *malformed* half of that same incident.
+`[dev]` is not an extra `pytest-asyncio` publishes, and an unknown extra is a
+warning rather than an error. The specification ruled that undetectable
+without network metadata; that was wrong, and `uv lock` settles it — a valid
+extra becomes a key on the provider's lock entry, a nonexistent one is absent
+entirely, while `requires-dist` records the ask either way. One table records
+what was asked for and the other what resolved, which is exactly what makes
+the mismatch visible locally. Filed as #110 with the measurement.
+
 ## Next
 
 The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set. #106 and #109 are the open smoke-test pair; #107 is unblocked.
+set. #107 is unblocked and P1; #110 carries the other half of #100.

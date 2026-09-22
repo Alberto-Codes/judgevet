@@ -19,6 +19,13 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: check-dependencies
+        name: runtime dependencies pinned
+        entry: uv run python scripts/check_dependencies.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: check-test-hygiene
         name: test hygiene
         entry: uv run python scripts/check_test_hygiene.py
