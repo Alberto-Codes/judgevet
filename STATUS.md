@@ -94,6 +94,17 @@ mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
+- #67/#66: sourced research recommends a supported pure typed policy API with
+  separate JSON decoding, additive exports for ports/errors/answer types, and
+  explicit adapter ownership. One distribution/version remains; scopes and
+  release-note migration entries identify the affected public surfaces.
+  [API decision](https://github.com/Alberto-Codes/judgevet/issues/67#issuecomment-5786388416)
+  and [compatibility decision](https://github.com/Alberto-Codes/judgevet/issues/66#issuecomment-5786398764)
+  record costs, change conditions, source evidence and corrected historical
+  premises. An isolated published 0.5.0 base install confirms six root exports,
+  py.typed and no MCP runtime; four public-surface tests pass. No proposed API,
+  MCP policy feature or release configuration was implemented in this round.
+
 - #27/#3: the CLI (both paths) and MCP roots configure existing stderr logging
   exactly once. Sync/async HTTP calls emit one opt-in debug terminal event with
   requested model, question count, status and outcome. Default output stays quiet;
@@ -235,5 +246,5 @@ way nobody planned.
 
 The developer-workflow release requirements are fulfilled. Final evidence-commit
 CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
-first fresh-launcher failure remains unexplained. #67/#66 remain broader research outside
-this release. No inferred API claim was promoted and no quality gate was weakened.
+first fresh-launcher failure remains unexplained. #67/#66 now have sourced recommendations; their proposed API implementation is
+separate work. #102 credential scoping remains outstanding. No inferred API claim was promoted and no quality gate was weakened.
