@@ -2,6 +2,47 @@
 
 Last written: 2026-09-21. A session overwrites this file.
 
+## Next-release MCP command (#25)
+
+The source tree now installs `judgevet-mcp`. Its composition root reads
+Settings once, acquires the HTTP adapter, serves the existing three tools,
+and closes its adapter in `finally`. Missing key, invalid settings and a
+missing optional runtime fail with fixed stderr; stdout carries MCP frames.
+The error boundary names IO, runtime, value, type and grouped failures. It
+does not claim to sanitize every arbitrary exception class.
+
+Seventeen new tests bring the default suite to **390 passed, 95.55% coverage**.
+They exercise real stdio EOF, acquisition and serving failures, interruption,
+settings propagation, offline subprocess discovery and all three HTTP-backed
+tools. Five deliberate mutations were rejected: disabled close, duplicate
+Settings reads, stdout noise, raw validation details and absent entry point.
+The unmodified tests passed again after each source change was restored.
+
+A wheel from this source passed in separate base-only and MCP-extra virtual
+environments outside the checkout. Base library/CLI work without MCP. The
+installed MCP command discovered exactly three tools, completed all three
+live calls with resolved model `jev-1.13.0`, emitted only protocol frames,
+and exited 0 on EOF with empty stderr. SHA-256:
+`9f63fcda5f484c8f74bac8d0f2fd410df32cd61a5ce5365214baebcc6330055a`.
+This is an **unreleased local source wheel**, still carrying the current
+0.2.0 metadata. It is not the published 0.2.0 wheel or an index verification.
+
+The handshake still reports server version 0.1.0; #113 owns that observed
+defect. #114 owns compatibility prose, #37 installation guidance, and #115
+the live MCP publishing gate. The already-landed library gate is unchanged.
+Native Codex tools were exercised successfully through the existing inline
+launcher before this change. A fresh configured connection after replacing
+the launcher is a separate check; it cannot prove a native session reload.
+
+The OSS workflow did not land cleanly. The reasoning specification required
+corrections, and several coder test drafts were rejected. The coder's
+source-contained lifecycle repair passed two gatekeeper-corrected red tests;
+the gatekeeper repaired the error boundary and wrote the retained regression
+proofs. `CLAUDE.md` now requires behavioral tests to start red. Original and
+accepted specifications, dispatch revisions and findings are on #25; per-run
+outcomes are in the shared delegation log. No model-confidence value is used
+as release permission.
+
 ## The headline
 
 **judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and
@@ -95,7 +136,7 @@ scripts/
                                outside the module
 ```
 
-Tests and coverage: see the gate table below. 373 tests, 95.26% overall.
+Tests and coverage: see the gate table below. 390 tests, 95.55% overall.
 `scripts/` is outside the coverage scope, so the gate-script tests move the
 count and not the percentage.
 
@@ -149,8 +190,8 @@ There are no pull requests here: those hooks are the only gate before `main`.
 | secret guard redacts API key from test output | **verified** — `test_secret_guard.py` proves guard scrubs key from pytest report with `--showlocals` |
 
 #17 and #29 have landed, so the error rows above are observations now, not
-inferences. `README.md` and `docs/reference/api.md` stay `sketch` until #6
-promotes only the verified rows.
+inferences. `README.md` and `docs/reference/api.md` are `draft` for the verified
+success and 401/422 shapes. Unseen 429/529 bodies still prevent `stable`.
 
 The 3xx fallthrough in `system_one` is pinned as of #96, parametrized over
 301, 302, 304 and 308. It asserts the raw `httpx.HTTPStatusError` propagates
@@ -500,7 +541,7 @@ distributions and OIDC. Ordinary CI makes no live call.
 
 `actionlint` and offline checks pass for step order, secret scope, unchanged
 build and upload commands, zero or multiple wheels, exact path handling, and
-shell failure propagation. The test count and coverage remain 373 and 95.26%.
+shell failure propagation. At that release, the test count and coverage were 373 and 95.26%.
 The [broken-artifact run](https://github.com/Alberto-Codes/judgevet/actions/runs/35686353515)
 rebuilt with the historical serialization defect on an isolated branch. Both
 examples raised `TypeError: Object of type Noul is not JSON serializable`,

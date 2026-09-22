@@ -32,6 +32,7 @@ mcp = ["mcp>=2.2"]
 
 [project.scripts]
 judgevet = "judgevet.adapters.inbound.cli:app"
+judgevet-mcp = "judgevet.adapters.inbound.mcp_entrypoint:main"
 
 [project.urls]
 Source = "https://github.com/Alberto-Codes/judgevet"

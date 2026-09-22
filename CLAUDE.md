@@ -185,6 +185,11 @@ messages.
 
 ## Working rounds
 
+- **Behavioral changes start red.** Write the acceptance test first and record
+  its failing command and output on the issue. Verify it fails for the missing
+  behavior, not a broken fixture. Give the coder that exact test contract,
+  then require green gates and an independent failure proof. Do not split a
+  production-only change from tests promised in a later round.
 - **One deliverable per round.** Land one thing, run the gates, stop.
 - **`STATUS.md` is rewritten in the commit that changes what it says.** It names
   the test count, the coverage figure, the gate state and what is verified
