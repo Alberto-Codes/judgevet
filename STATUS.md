@@ -121,6 +121,38 @@ MCP-extra environment using the exact downloaded wheel, live tool calls before
 upload, and a broken-artifact Actions proof followed by a clean candidate.
 The existing base-only artifact smoke remains unchanged.
 
+## Isolated MCP wheel gate (#115, second round)
+
+Both publishing workflows now run the MCP check after the existing base-only
+smoke and before upload, using the same downloaded wheel path. The new stdlib
+parent creates a separate MCP-extra venv outside the checkout, proves the
+installed import location and version, and launches that venv's absolute
+`judgevet-mcp`. Setup subprocesses and server transport have bounded lifetimes.
+Missing credentials, failed setup, malformed probe metadata and server failures
+produce fixed diagnostics. Temporary files and owned processes are cleaned up.
+
+Twenty-five new offline tests bring the suite to **451 passed, 5 deselected,
+95.55% coverage**. All eleven configured gates and workflow actionlint pass.
+Three mutations failed their targeted tests: omit the server check, accept an
+outside import, and retain poisonous Python environment variables. The literal
+module invocation passed live with a source wheel whose SHA-256 is
+`41747535dae8a2d0004b33e7cdbeb359f11704bfcc00d89f13d9a26c509d2bf1`.
+The existing base smoke passed the identical wheel. Missing-key and modified
+wheel-without-MCP-entry-point invocations exited 1 with fixed FAIL output.
+These are local source-artifact checks, not index publication evidence.
+
+The whole-module coder return was rejected before execution for absent process
+cleanup and entrypoint, invalid imports and substring isolation checks. Smaller
+function returns supplied the retained implementation with gatekeeper repairs.
+Codex wrote the retained tests, CLI entrypoint, workflow steps and gate fixes.
+Specifications, raw returns, corrections and measurements are on #115 and in
+the shared delegation log. Prior transport tests and local MCP config retain
+their recorded hashes; the shared skill records the observed limitations.
+
+#115 remains open: TestPyPI Actions must reject a broken MCP artifact before
+upload, and the final fresh-version candidate must pass. Release-please currently
+proposes 0.3.0; no new version has been published by this round.
+
 ## The headline
 
 **judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and

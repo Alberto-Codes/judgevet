@@ -76,6 +76,12 @@ jobs:
         run: |
           "$(uv python find 3.12)" scripts/smoke_release.py --wheel "$WHEEL"
 
+      - name: Smoke test installed MCP tools
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: |
+          "$(uv python find 3.12)" -m scripts.smoke_mcp_release --wheel "$WHEEL"
+
       # Keep explicit endpoints; --index cannot be combined with --check-url.
       - run: |
           uv publish --trusted-publishing always \
