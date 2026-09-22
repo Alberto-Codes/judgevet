@@ -40,6 +40,29 @@ records commands, hashes, runs and limits. The installation guide now pins the
 verified published version. Native tools were available and dogfooded during
 #123 development; judgment output was advisory, never a substitute for gates.
 
+## Current developer-workflow round
+
+The accepted #68 design is tracked by #131, milestone "Next release: reusable
+questions and developer policy". #127 adds explicit --questions-file and
+--state-file inputs, including opt-in stdin. Legacy positional input and output
+remain compatible. Input conflicts precede reads; invalid files stop before HTTP
+with sanitized diagnostics. Policy #128, integration #129 and publication #130
+remain pending. These source changes are not in published 0.4.1.
+
+The installed-process baseline was 55 failing new cases and two passing legacy
+cases. After implementation, 60 process cases pass, including CRLF preservation.
+Twenty-seven direct resolver/command cases cover source selection and parsing.
+Removing duplicate-key detection causes four failures. Removing early state
+validation causes one failure after the diagnostic assertion was strengthened;
+its initial mutation survived fallback parsing and was not counted as proof.
+
+The local coder's first whole-file test return was rejected. The bounded test
+and resolver artifacts were reused with named gatekeeper repairs to field names,
+mapping access, diagnostics, types and documentation. Codex supplied the process
+harness, negative/boundary tests, CLI integration and user documentation. Raw
+returns, prompts, accepted specification and red/green evidence live on #127.
+The shared delegation log records the observed failures without a causal claim.
+
 ## Delivered scope
 
 - [#123](https://github.com/Alberto-Codes/judgevet/issues/123): the installed
@@ -63,16 +86,17 @@ verified published version. Native tools were available and dogfooded during
   #8's acceptance and title use hard limits of 300/50 code lines. Obsolete
   blocked/pi-fit labels were corrected. Commit `5f2c346`.
 
-#68 CLI ergonomics remains a later goal. #125 records release-please's generated
+The accepted #68 design now governs tracker #131. #125 records release-please's generated
 "closes" wording for `Refs` links. Reviewed release notes distinguish references
 from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**554 tests pass, 6 live tests deselected, 95.63% coverage.** All eleven configured
+**641 tests pass, 6 live tests deselected, 95.85% coverage.** All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
-push hooks remain enabled. Main, candidate and
+push hooks remain enabled. The new #127 source commit still needs its own remote CI verification. Prior
+main, candidate and
 [release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35735621182)
 passed. Final evidence-commit CI is recorded on tracker #124.
 
@@ -142,6 +166,11 @@ constructed at all. The domain invariants from #77 are load-bearing here in a
 way nobody planned.
 
 ## Remaining work
+
+Finish #128 explicit policy, #129 developer integration and #130 publication in
+that order under #131. Verify the next actual index artifacts before describing
+this developer workflow as released. #67/#66 broader research remains separate.
+
 
 Tracker #124's implementation and artifact-verification scope is fulfilled.
 Final evidence-commit CI and milestone closure are recorded on that tracker.

@@ -1,7 +1,8 @@
 """Inbound CLI adapter.
 
 The command wrapper propagates failure status to the process while helpers
-return integer codes and the composition root closes its adapter.
+return integer codes and the composition root closes its adapter. Explicit
+file and stdin sources are validated before adapter construction.
 
 Examples:
     ```python
@@ -24,10 +25,11 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from typing import Any
+from typing import Annotated, Any
 
 import typer
 
+from judgevet.adapters.inbound.cli_inputs import InputFailure, resolve_inputs
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.answers import (
@@ -217,11 +219,23 @@ def run_cli(
 
 @app.command(help="Call the Jev System One API.")
 def _cli_command(
-    state: str = typer.Argument(..., help="State to evaluate (JSON string or text)"),
-    questions: str = typer.Argument(..., help="Questions as JSON string"),
+    state: str | None = typer.Argument(
+        None, help="State to evaluate (JSON string or text)"
+    ),
+    questions: str | None = typer.Argument(None, help="Questions as JSON string"),
     model: str = typer.Option("jev-latest", help="Model to use"),
     api_key: str | None = typer.Option(None, help="TypeSafe API key"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    state_files: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--state-file", help="Read UTF-8 state from a file; - reads stdin"
+        ),
+    ] = None,
+    question_files: Annotated[
+        list[str] | None,
+        typer.Option("--questions-file", help="Read questions from a UTF-8 JSON file"),
+    ] = None,
 ) -> int:
     """Call the Jev System One API.
 
@@ -231,13 +245,33 @@ def _cli_command(
         model: Model to use.
         api_key: TypeSafe API key.
         json_output: Output as JSON.
+        state_files: Explicit state source, specified at most once.
+        question_files: Explicit questions source, specified at most once.
 
     Returns:
         0 on success. Failures raise typer.Exit.
 
     Raises:
-        typer.Exit: Raised with non-zero exit code if main returns a nonzero value.
+        typer.Exit: If input validation or the judgment fails.
+        typer.BadParameter: If required legacy positional arguments are absent.
     """
+    if state_files or question_files:
+        try:
+            state, questions = resolve_inputs(
+                state,
+                questions,
+                state_files or [],
+                question_files or [],
+                parse_questions,
+            )
+        except InputFailure as exc:
+            message = {"error": str(exc)}
+            print(
+                json.dumps(message) if json_output else f"Error: {exc}", file=sys.stderr
+            )
+            raise typer.Exit(exc.code) from None
+    if state is None or questions is None:
+        raise typer.BadParameter("State and questions are required")
     code = main(
         state=state,
         questions=questions,
