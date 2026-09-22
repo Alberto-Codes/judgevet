@@ -2,7 +2,8 @@
 
 The command wrapper propagates failure status to the process while helpers
 return integer codes and the composition root closes its adapter. Explicit
-file and stdin sources are validated before adapter construction.
+file and stdin sources are validated before adapter construction. Explicit
+policies use a separate composition path and distinguish unmet policy from errors.
 
 Examples:
     ```python
@@ -30,6 +31,7 @@ from typing import Annotated, Any
 import typer
 
 from judgevet.adapters.inbound.cli_inputs import InputFailure, resolve_inputs
+from judgevet.adapters.inbound.cli_policy_run import CliCallbacks, run_policy
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.answers import (
@@ -47,6 +49,8 @@ from judgevet.domain.errors import (
 from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response import SystemOneResponse
 from judgevet.ports import SystemOnePort
+
+MAX_POSITIONAL_INPUTS = 2
 
 app = typer.Typer(help="Call the Jev System One API")
 
@@ -217,15 +221,71 @@ def run_cli(
         return 0
 
 
+def _command_inputs(
+    state: str | None,
+    questions: str | None,
+    state_files: list[str] | None,
+    question_files: list[str] | None,
+    policy_files: list[str] | None,
+    as_json: bool,
+) -> tuple[str, str]:
+    """Resolve explicit input sources before either judgment composition path.
+
+    Args:
+        state: Legacy state positional argument.
+        questions: Legacy questions positional argument.
+        state_files: Explicit state source options.
+        question_files: Explicit questions source options.
+        policy_files: Explicit policy source options.
+        as_json: Select machine diagnostics.
+
+    Returns:
+        Resolved state and questions strings.
+
+    Raises:
+        typer.Exit: If explicit sources conflict or contain invalid input.
+        typer.BadParameter: If legacy positional arguments are missing.
+    """
+    if policy_files and len(policy_files) > 1:
+        message = "--policy: specify one policy file"
+        print(
+            json.dumps({"error": message}) if as_json else f"Error: {message}",
+            file=sys.stderr,
+        )
+        raise typer.Exit(2)
+    try:
+        if state_files or question_files or policy_files:
+            state, questions = resolve_inputs(
+                state,
+                questions,
+                state_files or [],
+                question_files or [],
+                parse_questions,
+            )
+    except InputFailure as exc:
+        print(
+            json.dumps({"error": str(exc)}) if as_json else f"Error: {exc}",
+            file=sys.stderr,
+        )
+        raise typer.Exit(exc.code) from None
+    if state is None or questions is None:
+        raise typer.BadParameter("State and questions are required")
+    return state, questions
+
+
 @app.command(help="Call the Jev System One API.")
 def _cli_command(
-    state: str | None = typer.Argument(
-        None, help="State to evaluate (JSON string or text)"
-    ),
-    questions: str | None = typer.Argument(None, help="Questions as JSON string"),
+    arguments: Annotated[
+        list[str] | None,
+        typer.Argument(
+            help=("state: State to evaluate. questions: Questions as JSON string."),
+            metavar="[STATE] [QUESTIONS]",
+        ),
+    ] = None,
     model: str = typer.Option("jev-latest", help="Model to use"),
     api_key: str | None = typer.Option(None, help="TypeSafe API key"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    *,
     state_files: Annotated[
         list[str] | None,
         typer.Option(
@@ -236,17 +296,21 @@ def _cli_command(
         list[str] | None,
         typer.Option("--questions-file", help="Read questions from a UTF-8 JSON file"),
     ] = None,
+    policy_files: Annotated[
+        list[str] | None,
+        typer.Option("--policy", help="Apply an explicit acceptance policy from JSON"),
+    ] = None,
 ) -> int:
     """Call the Jev System One API.
 
     Args:
-        state: State to evaluate (JSON string or text).
-        questions: Questions as JSON string.
+        arguments: Optional positional state followed by questions JSON.
         model: Model to use.
         api_key: TypeSafe API key.
         json_output: Output as JSON.
         state_files: Explicit state source, specified at most once.
         question_files: Explicit questions source, specified at most once.
+        policy_files: Explicit policy source, specified at most once.
 
     Returns:
         0 on success. Failures raise typer.Exit.
@@ -255,30 +319,32 @@ def _cli_command(
         typer.Exit: If input validation or the judgment fails.
         typer.BadParameter: If required legacy positional arguments are absent.
     """
-    if state_files or question_files:
-        try:
-            state, questions = resolve_inputs(
-                state,
-                questions,
-                state_files or [],
-                question_files or [],
-                parse_questions,
-            )
-        except InputFailure as exc:
-            message = {"error": str(exc)}
-            print(
-                json.dumps(message) if json_output else f"Error: {exc}", file=sys.stderr
-            )
-            raise typer.Exit(exc.code) from None
-    if state is None or questions is None:
-        raise typer.BadParameter("State and questions are required")
-    code = main(
-        state=state,
-        questions=questions,
-        model=model,
-        api_key=api_key,
-        json_output=json_output,
+    positions = arguments or []
+    if len(positions) > MAX_POSITIONAL_INPUTS:
+        raise typer.BadParameter("Expected at most state and questions")
+    state = positions[0] if positions else None
+    questions = positions[1] if len(positions) == MAX_POSITIONAL_INPUTS else None
+    state, questions = _command_inputs(
+        state, questions, state_files, question_files, policy_files, json_output
     )
+    if policy_files:
+        code = run_policy(
+            state,
+            questions,
+            model,
+            api_key,
+            json_output,
+            policy_files[0],
+            CliCallbacks(parse_questions, build_response_data, output_response),
+        )
+    else:
+        code = main(
+            state=state,
+            questions=questions,
+            model=model,
+            api_key=api_key,
+            json_output=json_output,
+        )
     if code != 0:
         raise typer.Exit(code=code)
     return code

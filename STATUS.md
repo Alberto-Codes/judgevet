@@ -43,25 +43,34 @@ verified published version. Native tools were available and dogfooded during
 ## Current developer-workflow round
 
 The accepted #68 design is tracked by #131, milestone "Next release: reusable
-questions and developer policy". #127 adds explicit --questions-file and
---state-file inputs, including opt-in stdin. Legacy positional input and output
-remain compatible. Input conflicts precede reads; invalid files stop before HTTP
-with sanitized diagnostics. Policy #128, integration #129 and publication #130
-remain pending. These source changes are not in published 0.4.1.
+questions and developer policy". #127 supplies explicit file/stdin input. #128
+adds opt-in --policy validation, typed inclusive predicates and ordered reports.
+Valid judgments exit 0 for a met policy and 3 for an unmet policy. Input/service
+errors exit 1; usage conflicts exit 2. Legacy low probabilities still exit 0.
+Integration #129 and publication #130 remain pending. These changes are not in
+published 0.4.1.
 
-The installed-process baseline was 55 failing new cases and two passing legacy
-cases. After implementation, 60 process cases pass, including CRLF preservation.
-Twenty-seven direct resolver/command cases cover source selection and parsing.
-Removing duplicate-key detection causes four failures. Removing early state
-validation causes one failure after the diagnostic assertion was strengthened;
-its initial mutation survived fallback parsing and was not counted as proof.
+The #128 installed-command baseline was 57 failing new cases. The final round
+adds 146 tests: 50 parser, 28 evaluator, 57 installed-process and 11 lifecycle
+cases. Independent mutations cause failures when conjunction (4 cases), inclusive
+bounds (7), confidence (2) or adapter cleanup (6) is removed. All mutations were
+restored. No live-service verification claim changed.
 
-The local coder's first whole-file test return was rejected. The bounded test
-and resolver artifacts were reused with named gatekeeper repairs to field names,
-mapping access, diagnostics, types and documentation. Codex supplied the process
-harness, negative/boundary tests, CLI integration and user documentation. Raw
-returns, prompts, accepted specification and red/green evidence live on #127.
-The shared delegation log records the observed failures without a causal claim.
+The coder's toolless parser was rejected. Its tool-enabled parser needed four
+runtime-case and four type-diagnostic repairs. The evaluator needed exact return
+annotations and documentation repairs, with no runtime logic changed. Codex
+supplied integration, process/adversarial tests and user documentation. Initial
+integration broke two legacy help assertions; the existing help contract is
+restored. Raw returns, prompts, acceptance and repair evidence live on #128.
+
+The delegation skill and existing prompt template now require executable coverage
+of every known relevant requirement, exact interfaces and bounded context. The
+log distinguishes coder self-repair, supervisor repairs and retries. Local-model
+usage is recorded; historical per-artifact supervisor usage is unavailable because
+start checkpoints were not captured. Lower supervisor cost remains a hypothesis.
+
+The #127 input proofs remain: 60 installed-process and 27 direct cases, with
+mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
@@ -92,10 +101,11 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**641 tests pass, 6 live tests deselected, 95.85% coverage.** All eleven configured
+**787 tests pass, 6 live tests deselected, 95.13% coverage** (1173/1233 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
-push hooks remain enabled. The new #127 source commit still needs its own remote CI verification. Prior
+push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
+passed. The #128 source commit still needs its own remote CI verification. Prior
 main, candidate and
 [release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35735621182)
 passed. Final evidence-commit CI is recorded on tracker #124.
