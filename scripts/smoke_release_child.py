@@ -168,10 +168,14 @@ async def run_async_block(code: str) -> None:
         + "\n".join(
             f"    {line}" if line.strip() else line for line in code.split("\n")
         )
-        + "\n__tmp_async()\n"
+        + "\n"
     )
-    local_ns: dict[str, object] = {}
+    # Any, not object: exec defines __tmp_async at runtime, so its type is
+    # genuinely unknown to the checker. Narrowing to object and silencing the
+    # await is the same claim with a suppression attached.
+    local_ns: dict[str, Any] = {}
     exec(wrapped, {"__name__": "__main__"}, local_ns)
+    await local_ns["__tmp_async"]()
 
 
 def run_live_checks(api_key: str) -> list[str]:
@@ -261,52 +265,147 @@ def run_checks_offline() -> list[str]:
     return failures
 
 
-def selftest() -> list[str]:
-    """Run self-test by sabotaging each detector and asserting it fires.
+def _selftest_sync_example_runner() -> str | None:
+    """Run self-test case for sync example runner.
 
     Returns:
-        A list of failure messages; empty if all self-tests pass.
+        Failure message if the detector did not fire, None otherwise.
     """
-    failures: list[str] = []
-
-    # Test 1: Example runner with broken example
+    broken_code = "raise RuntimeError('intentional failure')"
     try:
-        broken_code = "raise RuntimeError('intentional failure')"
-        exec(broken_code, {"__name__": "__main__"})
-        failures.append("Selftest 1 (example runner): Expected failure did not occur")
+        run_sync_block(broken_code)
     except RuntimeError:
-        # Expected
-        pass
+        return None
+    return "Expected failure did not occur"
 
-    # Test 2: Import guard with bad path
+
+async def _selftest_async_example_runner() -> str | None:
+    """Run self-test case for async example runner.
+
+    Returns:
+        Failure message if the detector did not fire, None otherwise.
+    """
     try:
-        # Temporarily modify sys.prefix to force a mismatch
-        original_prefix = sys.prefix
+        await run_async_block("raise RuntimeError('intentional failure')")
+    except RuntimeError:
+        return None
+    return "Expected failure did not occur"
+
+
+def _selftest_import_guard() -> str | None:
+    """Run self-test case for import guard.
+
+    Returns:
+        Failure message if the detector did not fire, None otherwise.
+    """
+    original_prefix = sys.prefix
+    try:
         sys.prefix = "/nonexistent"
         try:
             assert_in_site_packages()
-            failures.append("Selftest 2 (import guard): Expected failure did not occur")
         except RuntimeError:
-            # Expected
-            pass
+            return None
     finally:
         sys.prefix = original_prefix
+    return "Expected failure did not occur"
 
-    # Test 3: Placeholder check with missing placeholder
+
+def _selftest_placeholder_check() -> str | None:
+    """Run self-test case for placeholder check.
+
+    Returns:
+        Failure message if the detector did not fire, None otherwise.
+    """
+    blocks_without_placeholder = ['print("no key here")']
     try:
-        blocks_without_placeholder = ['print("no key here")']
         check_placeholder_present(blocks_without_placeholder)
-        failures.append(
-            "Selftest 3 (placeholder check): Expected failure did not occur"
-        )
     except ValueError:
-        # Expected
-        pass
+        return None
+    return "Expected failure did not occur"
 
-    # Report what ran. A selftest that succeeds in silence is
-    # indistinguishable from one that did nothing, which is the defect class
-    # this whole script exists to catch.
-    print(f"selftest: {3 - len(failures)}/3 detectors fired as expected")
+
+def _selftest_assert_all_names_resolve() -> str | None:
+    """Run self-test case for assert_all_names_resolve.
+
+    Returns:
+        Failure message if the detector did not fire, None otherwise.
+    """
+    real_getter = __get_judgevet_module
+
+    class FakeModule:
+        __all__ = ("__selftest_missing_name__",)
+
+    def fake_getter() -> FakeModule:
+        return FakeModule()
+
+    try:
+        globals()["__get_judgevet_module"] = fake_getter
+        assert_all_names_resolve()
+    except AttributeError:
+        return None
+    finally:
+        globals()["__get_judgevet_module"] = real_getter
+    return "Expected failure did not occur"
+
+
+def _selftest_count_await_blocks() -> str | None:
+    """Run self-test case for count_await_blocks.
+
+    Returns:
+        Failure message if the detector did not fire, None otherwise.
+    """
+    blocks_with_await = ["await foo()"]
+    result = count_await_blocks(blocks_with_await)
+    if result != 1:
+        return f"Expected 1, got {result}"
+    return None
+
+
+def selftest() -> list[str]:
+    """Run every selftest case and report which detectors fired.
+
+    Each case calls the detector named in its own label with input that must
+    trip it. A case that reports no failure means its detector did not fire,
+    which is the failure. The total is derived from the case list, never
+    written down.
+
+    Returns:
+        A list of failure messages; empty if every detector fired.
+    """
+    # Run all cases
+    cases: list[tuple[str, str | None]] = []
+
+    # Sync example runner
+    msg = _selftest_sync_example_runner()
+    cases.append(("sync example runner", msg))
+
+    # Import guard
+    msg = _selftest_import_guard()
+    cases.append(("import guard", msg))
+
+    # Placeholder check
+    msg = _selftest_placeholder_check()
+    cases.append(("placeholder check", msg))
+
+    # Async example runner
+    msg = asyncio.run(_selftest_async_example_runner())
+    cases.append(("async example runner", msg))
+
+    # All names resolve
+    msg = _selftest_assert_all_names_resolve()
+    cases.append(("all names resolve", msg))
+
+    # Await block count
+    msg = _selftest_count_await_blocks()
+    cases.append(("await block count", msg))
+
+    # Build failure list
+    failures = [f"Selftest ({label}): {msg}" for label, msg in cases if msg is not None]
+
+    # Report what ran
+    print(
+        f"selftest: {len(cases) - len(failures)}/{len(cases)} detectors fired as expected"
+    )
     for f in failures:
         print(f"  FAILED: {f}")
 

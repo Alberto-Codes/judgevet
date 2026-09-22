@@ -72,8 +72,9 @@ scripts/
   probe_live.py                prints one real response; asserts nothing
   smoke_release_child.py       the in-venv half of the release smoke test —
                                runs under a temp venv's own interpreter and
-                               checks what shipped. Two of its detectors do
-                               not detect; see below
+                               checks what shipped. Six detectors, each with
+                               a selftest case proven falsifiable from
+                               outside the module
 ```
 
 Tests and coverage: see the gate table below. 290 tests, 95.26% overall,
@@ -170,31 +171,53 @@ one and had to be reverted. Decide the shape, then hand over the wiring.
 Outcomes are logged to
 `~/Projects/bazzite-dotfiles/agents/data/delegation-log.jsonl`.
 
-## The smoke test is half built, and #106 stays open
+## The smoke test's detectors are falsifiable now
 
 `e4e7abf` landed `scripts/smoke_release_child.py` with ten gates green and
-`--selftest` printing `3/3 detectors fired as expected`. Both are true and
-neither is evidence. Two detectors were proven not to detect, by breaking
-the precondition rather than by reading:
+`--selftest` printing `3/3 detectors fired as expected`. Both were true and
+neither was evidence. Two detectors were proven not to detect, and both are
+fixed:
 
-| detector | proof | state |
+| detector | was | now |
 |---|---|---|
-| `run_async_block` runs the async example | an async body of `raise RuntimeError(...)` returns normally; `RuntimeWarning: coroutine '__tmp_async' was never awaited` | **broken.** It builds the coroutine and discards it. The async example has never run |
-| selftest case 1 exercises `run_sync_block` | `run_sync_block` sabotaged to swallow every exception; selftest still prints `3/3` | **vacuous.** The case inlines a copy of the body instead of calling the function |
-| the import guard, selftest case 2 | fires | holds — and it is the load-bearing one |
-| the placeholder check, selftest case 3 | fires | holds |
+| `run_async_block` | built the coroutine and discarded it — the async example had never run | awaits it. An async body of `raise RuntimeError(...)` surfaces to the caller with no `RuntimeWarning` |
+| selftest case 1 | inlined a copy of `run_sync_block`'s body, so sabotaging the real one still printed `3/3` | calls `run_sync_block`; sabotaging it prints `5/6` and names the case |
 
-`assert_all_names_resolve`, `count_await_blocks` and the console-script check
-have no selftest case at all.
+Six cases now, one per detector, and the total derives from the case list
+rather than a literal. Every one was verified here by replacing its detector
+with a broken one and requiring the report to name it — including the two
+the spec did not ask for, the import guard and the placeholder check. All six
+are falsifiable:
 
-This is the third time a session has returned with every gate green and a
-defect no linter could see, and the second time the defect was a check that
-cannot be made to fail. The audit and both proofs are on #106.
+```
+selftest: 5/6 detectors fired as expected
+  FAILED: Selftest (sync example runner): Expected failure did not occur
+  ... and the same for async example runner, await block count,
+      all names resolve, placeholder check, import guard
+```
 
-#107 is blocked on #106, and #99 on both.
+`selftest` had to be decomposed before any case could be added: it sat at
+exactly 50 lines, the function cap. It is 44 now, with six case functions
+under 25 each, and the module is 203 code lines against a cap of 300.
+
+**The coder reached for `# type: ignore` and every gate stayed green.** It
+fixed the await correctly, then annotated the exec namespace `dict[str,
+object]` and silenced the resulting `await` error. `check_suppressions.py`
+does not scan `scripts/`, so nothing in the project could see it — the
+watcher's forbidden-pattern check caught it, not a gate. Replaced with
+`dict[str, Any]`, which is the honest type for a name `exec` defines at
+runtime. **This is #108's gap, demonstrated rather than argued**, and #108 is
+the next issue up because of it.
+
+The console-script check still has no case: its binary path comes from
+`sys.executable`, so there is no offline lever to trip it. Deferred to #109
+with the reason recorded there.
+
+#107 is unblocked. #99 still needs both halves.
 
 ## Next
 
 The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set. #106 is the live one.
+set. #108 is the live one — the suppression gate's blind spot over `scripts/`,
+which this round demonstrated rather than argued.
