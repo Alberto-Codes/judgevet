@@ -4,11 +4,17 @@ Last written: 2026-09-21. A session overwrites this file.
 
 ## The headline
 
-**judgevet 0.1.0 is on PyPI.** `pip install judgevet` installs it, the CLI and
-the MCP server; the wheel was verified from the index before this line was
-written. It went up over OIDC trusted publishing with no stored token in the
-path, from a draft release a human published by hand — `publish.yml` triggers
-on `release: types: [published]` and nothing else.
+**judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and
+CLI. The `mcp` extra adds the MCP runtime. The wheel downloaded from PyPI
+passed both documented live examples in a fresh virtualenv outside the
+checkout. Its SHA-256 matches the independently verified TestPyPI wheel:
+`30b1b76a191c78bf01184a7727446ff3cde7999fcbbc7a5106fc7b598e8b9318`.
+
+[v0.2.0](https://github.com/Alberto-Codes/judgevet/releases/tag/v0.2.0)
+shipped from `05c0d95` under the documented standing release permission.
+The [publish run](https://github.com/Alberto-Codes/judgevet/actions/runs/35686542690)
+passed its live artifact gate before uploading over OIDC. No stored PyPI token
+is used. Publishing the draft triggered the workflow.
 
 `0.0.1` is yanked, with the reason "Name reservation only; contained no
 working code. Use 0.1.0 or later." It still resolves for anyone who pins it
@@ -479,9 +485,9 @@ the one structure they depend on. Renaming the key the parser reads fails it.
 
 The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set. #109 owns the console-script selftest case. #101 owns the publish smoke
-gate; the `pypi` environment now has `TYPESAFE_API_KEY`, verified by reading
-secret metadata without its value. #111 tracks the suppression scanner's
+set. #109 owns the console-script selftest case. #101's publish smoke gate is
+wired and proven in Actions. Both publishing environments have the vendor
+key; it is scoped to the smoke step. #111 tracks the suppression scanner's
 unrecognized `ty: ignore` comments and the three existing occurrences.
 
 ## Publish gate wiring
@@ -495,6 +501,15 @@ distributions and OIDC. Ordinary CI makes no live call.
 `actionlint` and offline checks pass for step order, secret scope, unchanged
 build and upload commands, zero or multiple wheels, exact path handling, and
 shell failure propagation. The test count and coverage remain 373 and 95.26%.
-#101 remains open until Actions proves a broken artifact fails the smoke step
-and skips upload, and the clean candidate passes. No new release is published
-by this wiring commit.
+The [broken-artifact run](https://github.com/Alberto-Codes/judgevet/actions/runs/35686353515)
+rebuilt with the historical serialization defect on an isolated branch. Both
+examples raised `TypeError: Object of type Noul is not JSON serializable`,
+the smoke step failed, and upload was skipped.
+
+The [clean-main run](https://github.com/Alberto-Codes/judgevet/actions/runs/35686401025)
+passed smoke. Its upload then refused to replace existing 0.1.0 files whose
+hashes differ; that run is not a successful publication. The newly versioned
+[0.2.0 candidate](https://github.com/Alberto-Codes/judgevet/actions/runs/35686390962)
+passed smoke and published to TestPyPI. The production run then passed and
+published to PyPI. Downloads from both indexes passed independent live checks
+and have identical wheel hashes. This completes #101.
