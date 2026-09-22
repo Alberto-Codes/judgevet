@@ -3,6 +3,20 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.5.0](https://github.com/Alberto-Codes/judgevet/compare/v0.4.1...v0.5.0) (2026-09-22)
+
+
+### Features
+
+* **cli:** evaluate explicit acceptance policies ([610ed95](https://github.com/Alberto-Codes/judgevet/commit/610ed95e84e2023ce6f7b741a22a9f98ed50faf6)), closes [#128](https://github.com/Alberto-Codes/judgevet/issues/128) [#131](https://github.com/Alberto-Codes/judgevet/issues/131)
+* **cli:** load reusable questions and explicit state sources ([59218ec](https://github.com/Alberto-Codes/judgevet/commit/59218ec03dc10776bdfa3b361a677e0f5fc6bbd9)), closes [#127](https://github.com/Alberto-Codes/judgevet/issues/127) [#68](https://github.com/Alberto-Codes/judgevet/issues/68) [#131](https://github.com/Alberto-Codes/judgevet/issues/131)
+
+
+### Documentation
+
+* **cli:** ship an opt-in staged-diff review example ([d8105db](https://github.com/Alberto-Codes/judgevet/commit/d8105dbff34a67be1a6cfe07bbbc8ce0e4b8ac5d)), closes [#129](https://github.com/Alberto-Codes/judgevet/issues/129) [#131](https://github.com/Alberto-Codes/judgevet/issues/131)
+* record verified 0.4.1 release and installation ([d6a12f1](https://github.com/Alberto-Codes/judgevet/commit/d6a12f15173706cee7c380d8a57442684b5bf893)), closes [#124](https://github.com/Alberto-Codes/judgevet/issues/124)
+
 ## [0.4.1](https://github.com/Alberto-Codes/judgevet/compare/v0.4.0...v0.4.1) (2026-09-22)
 
 
