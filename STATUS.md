@@ -5,42 +5,47 @@ remain in Git history and their linked issues.
 
 ## Published release
 
-**judgevet 0.4.1 is published and verified.** The patch fixes handled CLI
-failures returning success to shell scripts. The library, CLI and supported
-`judgevet-mcp` command install from PyPI. MCP remains optional.
+**judgevet 0.5.0 is published and verified.** Developers can keep reusable
+questions and an explicit acceptance policy in version control, read state from
+files or stdin, and distinguish an unmet policy from input/service failures.
+The library, CLI and optional supported MCP command remain independently usable.
 
-Release commit: `b12fb3c6085a16187ed50d97e2a4000cc50a5a29`.
-Release-please selected the version and updated all four version fields.
-The release tree matches candidate `ecd62452855b90b82c36a3ef1570c531b30b0b01`.
+Release commit: `3f77287a0c487e9e828ee0781ab6d60059002908`.
+Release-please selected the version and updated all four version fields. The
+release tree equals candidate `06f29ef9b96a15fb620a2aeaef0e628007bbd634`.
 
-Actual TestPyPI and PyPI distributions match their Actions artifacts and each
-other byte-for-byte:
+Actual TestPyPI/PyPI downloads match their Actions artifacts and each other:
 
 | artifact | SHA-256 |
 |---|---|
-| wheel | `f5c59808917975fef7f79f2598ce02c5314e3d453149345d56528e159b3445c5` |
-| source distribution | `3aced27ca3fb5caa0edb8aa5946db9b1daa54409f65a0f654f30514bed2deb7f` |
+| wheel | `7f5b659b9eeec20dae5b7a4c6398bbda78127a7218f3bd743291d9b937be01df` |
+| source distribution | `1fbfafc8d4c721857cef5b576f79a13ddf27541036bcf6d669806c0076aecea9` |
 
-[TestPyPI run](https://github.com/Alberto-Codes/judgevet/actions/runs/35735298922)
-and [production run](https://github.com/Alberto-Codes/judgevet/actions/runs/35735744611)
-passed isolated base and MCP smoke checks before OIDC upload. Independent checks
-of actual index downloads passed outside the checkout: library examples,
-CLI help, live mixed CLI judgment, six offline CLI process cases, and all three
-MCP tools. Base installs omit MCP and the wheel includes `py.typed`.
+[TestPyPI run](https://github.com/Alberto-Codes/judgevet/actions/runs/35794248340)
+and [production run](https://github.com/Alberto-Codes/judgevet/actions/runs/35794710780)
+passed isolated base/MCP smoke checks before upload. Independent actual-wheel
+checks passed outside checkout: library examples, CLI help, mixed live installed
+CLI, MCP discovery/all three tools and eight offline staged-workflow cases.
+Base installs omit MCP; the wheel includes `py.typed`.
 
-The published uvx launcher passed from a temporary working directory with an
-empty cache: version 0.4.1, exactly three tools, and live calls to `ask_noul`,
-`ask_choice` and `ask_score`. Its first probe returned a sanitized transport
-failure; a help probe and fresh empty-cache transport retry passed without a
-product/config change. Cause remains unproven. Fresh transport checks do not
-prove an already-running native agent session reloaded.
+The published uvx launcher passed from a temporary cwd and empty cache with
+version 0.5.0, exactly three tools and all three live calls. Its first probe
+returned a sanitized transport error; a help probe and fresh empty-cache retry
+passed without a product/config change. Cause remains unknown (#133). This does
+not prove that an already-running agent session reloaded its native tools.
+The actual PyPI wheel also ran the staged-diff workflow live, returning valid
+unmet-policy status 3. The verdict is not a judgment-quality guarantee.
 
-[Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/issues/124#issuecomment-5777743633)
-records commands, hashes, runs and limits. The installation guide now pins the
-verified published version. Native tools were available and dogfooded during
-#123 development; judgment output was advisory, never a substitute for gates.
+[Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/issues/130#issuecomment-5785649938)
+records commands, hashes, runs and limits. Native tools were available and all
+three were dogfooded as advisory aids during development.
 
-## Current developer-workflow round
+Replacing the generated release PR body prevented release-please from parsing
+it. Restoring that body and rerunning the same release-commit workflow created
+the correct draft/tag. Unintended unmerged PR #132 was closed. The release guide
+now preserves that machine-parsed structure; no index files were replaced.
+
+## Delivered developer workflow
 
 The accepted #68 design is tracked by #131, milestone "Next release: reusable
 questions and developer policy". #127 supplies explicit file/stdin input. #128
@@ -48,7 +53,7 @@ adds opt-in --policy validation, typed inclusive predicates and ordered reports.
 Valid judgments exit 0 for a met policy and 3 for an unmet policy. Input/service
 errors exit 1; usage conflicts exit 2. Legacy low probabilities still exit 0.
 Integration #129 supplies an opt-in staged-diff example with versioned questions
-and policy. Publication #130 remains pending; these changes are not in 0.4.1.
+and policy. These changes are published in 0.5.0; #130 records artifact verification.
 
 The #128 installed-command baseline was 57 failing new cases. The final round
 adds 146 tests: 50 parser, 28 evaluator, 57 installed-process and 11 lifecycle
@@ -121,10 +126,10 @@ local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
 passed. [#128 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35792578365)
-passed. The #129 source commit still needs its own remote CI verification. Prior
-main, candidate and
-[release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35735621182)
-passed. Final evidence-commit CI is recorded on tracker #124.
+passed. [#129 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35794073659),
+[candidate CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35794111885)
+and [release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35794411245)
+passed. Final evidence-commit CI is tracked on #131.
 
 Reasoning used Qwen3.8-27B-UD-Q4_K_M with explicit medium thinking; coding used
 Qwen3-Coder-Next-UD-IQ4_XS with thinking off. Prompts, original returns, accepted
@@ -193,11 +198,7 @@ way nobody planned.
 
 ## Remaining work
 
-Finish #130 publication under #131; file inputs, explicit policy and the
-staged-diff integration are implemented. Verify the next actual index artifacts before describing
-this developer workflow as released. #67/#66 broader research remains separate.
-
-
-Tracker #124's implementation and artifact-verification scope is fulfilled.
-Final evidence-commit CI and milestone closure are recorded on that tracker.
-Unseen API bodies remain inferred; no documentation becomes stable here.
+The developer-workflow release requirements are fulfilled. Final evidence-commit
+CI and milestone closure are tracked on #131. #133 investigates the intermittent
+first fresh-launcher diagnostic failure. #67/#66 remain broader research outside
+this release. No inferred API claim was promoted and no quality gate was weakened.

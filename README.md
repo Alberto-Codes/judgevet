@@ -85,6 +85,24 @@ MCP runtime:
 uv sync --extra mcp
 ```
 
+## Developer workflows
+
+Version 0.5.0 supports reusable question files, file/stdin state and explicit
+acceptance policies:
+
+```bash
+judgevet --state-file document.txt --questions-file questions.json --policy policy.json --json
+```
+
+A successful judgment exits 0 when its policy passes and 3 when it does not.
+Input/service failures exit 1; invalid usage exits 2. Without a policy, a low
+probability remains a successful judgment.
+
+See [file inputs](docs/how-to/use-cli-files.md),
+[policy rules](docs/how-to/use-cli-policy.md), and the
+[opt-in staged-diff example](docs/how-to/review-staged-diff.md).
+[Installation](docs/how-to/install.md) covers the library, CLI and MCP command.
+
 ## Gates
 
 ```bash

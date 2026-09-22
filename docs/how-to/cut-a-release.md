@@ -60,6 +60,14 @@ root entry, and the root `judgevet` package version in `uv.lock`. All must equal
 main CI run and require completed success. Fetching does not replace local
 files or discard unrelated work.
 
+Keep the generated release PR body intact. release-please parses its version
+heading and body structure after merge. Put acceptance evidence in issue or PR
+comments, and put reviewed prose in the draft release notes. Replacing the body
+in #130 made release-please skip the merged release and propose another version,
+even though the workflow was green. Restoring the generated body and rerunning
+the same workflow recovered the draft without changing source or index files.
+Always verify the expected draft and tag; a green workflow alone is insufficient.
+
 ## Publish and verify the TestPyPI candidate
 
 Verify TestPyPI before merging. This checks what the index serves before using
