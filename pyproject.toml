@@ -25,9 +25,11 @@ dependencies = [
 # The MCP server is an inbound adapter, not core. Scripts and CI import the
 # library without pulling an MCP runtime.
 #
-# Floor is 2.2 because the 2026-07-28 spec is stateless, with no initialize
-# handshake and no protocol session, and Roots/Sampling/Logging are deprecated.
-# A 1.x resolution would target a different protocol.
+# Floor is 2.2 because 2.2.0 is the tested SDK baseline. Its source supports
+# both eras (legacy initialize and modern per-request-envelope); judgevet has
+# exercised only the legacy initialization path (`runner.py` selects the era
+# from the first request). See the tested SDK source:
+# https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp/server/runner.py
 mcp = ["mcp>=2.2"]
 
 [project.scripts]

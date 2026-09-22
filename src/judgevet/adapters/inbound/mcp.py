@@ -4,8 +4,15 @@ This module provides an MCP server that exposes three tools, ``ask_noul``,
 ``ask_choice``, and ``ask_score``, each taking a state and an instruction and
 returning the corresponding answer as MCP structured content.
 
-The server implements the stateless 2026-07-28 spec: no ``initialize`` handshake,
-no protocol session, and deprecated Roots/Sampling/Logging features.
+The server was tested with MCP Python SDK v2.2.0. Its
+[Server.run](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp/server/lowlevel/server.py)
+delegates to the
+[compatibility loop](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp/server/runner.py).
+The client's first request selects the legacy initialization path or the modern
+per-request-envelope path. judgevet's subprocess test exercises the legacy
+[2025-03-26 lifecycle](https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle):
+initialize, list tools and call all three tools. The modern path has not been
+exercised here. The floor ``mcp>=2.2`` reflects the tested SDK baseline.
 
 Examples:
     ```python
@@ -26,8 +33,16 @@ Examples:
             await server.run(read, write, server.create_initialization_options())
 
 
-    anyio.run(main)
+    try:
+        anyio.run(main)
+    finally:
+        port.close()
     ```
+
+    The SDK uses snake_case for Python attributes (``server_info``,
+    ``structured_content``, ``is_error``) and camelCase for wire JSON fields
+    (``serverInfo``, ``structuredContent``, ``isError``). See the tagged
+    [SDK type definitions](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp-types/mcp_types/_types.py).
 
 See Also:
     - [judgevet.ports.SystemOnePort][]: Protocol definition
@@ -41,9 +56,9 @@ Attributes:
 
 Note:
     ``mcp`` is an optional extra (``uv sync --extra mcp``). An import-linter
-    contract forbids importing it outside this module; if that contract breaks,
-    the import is in the wrong layer, so move the code rather than weakening
-    the contract.
+    contract forbids importing it in ``judgevet.domain``, ``judgevet.ports`` and
+    ``judgevet.adapters.outbound``. Factory and stdio entrypoint are inbound
+    adapters.
 """
 
 from __future__ import annotations
@@ -79,7 +94,9 @@ def create_mcp_server(port: SystemOnePort) -> Any:
 
     Note:
         This function imports mcp locally to respect the import-linter contract
-        that forbids mcp outside this module.
+        that forbids mcp in ``judgevet.domain``, ``judgevet.ports`` and
+        ``judgevet.adapters.outbound``. Factory and stdio entrypoint are inbound
+        adapters.
     """
     import mcp.types as mcp_types
     from mcp.server import Server
@@ -484,7 +501,7 @@ def create_mcp_server(port: SystemOnePort) -> Any:
             structured_content=structured_content,
         )
 
-    # Create the server with stateless 2026-07-28 spec
+    # Create the SDK server with the tool handlers.
     server = Server(
         name=SERVER_NAME,
         version=SERVER_VERSION,

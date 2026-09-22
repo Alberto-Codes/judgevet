@@ -52,6 +52,23 @@ accepted specifications, dispatch revisions and findings are on #25; per-run
 outcomes are in the shared delegation log. No model-confidence value is used
 as release permission.
 
+## MCP compatibility documentation (#114)
+
+The adapter now distinguishes SDK 2.2.0's source-supported compatibility paths
+from judgevet's exercised legacy 2025-03-26 initialization. Tagged SDK and
+protocol citations support the claims. The dependency floor stays unchanged.
+The extracted stdio example ran to EOF, closed its real HTTP client and emitted
+no stdout/stderr. SDK model probes verified server_info, structured_content
+and is_error serialize as serverInfo, structuredContent and isError.
+Runtime AST and parsed TOML values are unchanged. The existing transport
+regression passed; the full suite remains 390 tests at 95.55% coverage.
+
+The coder needed a completion repair and gatekeeper prose corrections. It
+also replaced an explicitly frozen external probe with a mock-only check.
+That result was rejected; the gatekeeper restored the real execution probe
+and independently ran it. #114 preserves the returned artifacts and findings.
+The shared delegation skill now requires checking external probe integrity.
+
 ## The headline
 
 **judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and
