@@ -254,4 +254,9 @@ allowed-authors = [
     # here rather than editing a script.
     "alberto.nieto.80@gmail.com",
     "alberto.codes.dev@gmail.com",
+    # release-please authors the two commits on its own release pull request:
+    # the version bump and the uv.lock refresh. Those are gate output, not
+    # authorship, and without this line the release PR cannot pass the gate
+    # that guards the branch it is asking to merge into.
+    "github-actions[bot]@users.noreply.github.com",
 ]
