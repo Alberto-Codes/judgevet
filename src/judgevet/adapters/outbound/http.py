@@ -4,7 +4,7 @@ Error handling:
     The API error `detail` field is polymorphic:
     - Array for validation errors (422): [{"type", "loc", "msg", "input"}]
     - Object for auth errors (401/403): {"error_type", "message"}
-    - Absent or unrecognised: falls back to status line alone.
+    - Absent, malformed or unrecognised: falls back to status line alone.
 
     The `input` key in validation errors contains the caller's request payload
     and is deliberately excluded from error messages to avoid leaking user data.
@@ -82,14 +82,15 @@ from judgevet.domain.response_parser import parse_system_one_response
 
 
 def _extract_error_detail(detail: Any) -> str:
-    """Extract error message from detail field.
+    """Extract a message only from recognized, well-formed diagnostic fields.
 
     The detail field can be:
     - An array of validation errors: [{"type", "loc", "msg", "input"}]
     - An object for auth errors: {"error_type", "message"}
     - Something else (treat as unknown)
 
-    Never includes the "input" field as it contains caller content.
+    Never includes the "input" field as it contains caller content. Invalid
+    field shapes discard the entire detail rather than stringify containers.
 
     Args:
         detail: The detail field from the error response body.
@@ -98,31 +99,32 @@ def _extract_error_detail(detail: Any) -> str:
         A formatted error message, or empty string if detail is unknown.
     """
     if isinstance(detail, list):
-        # Array-shaped detail: validation errors
         parts = []
         for item in detail:
-            if isinstance(item, dict):
-                type_part = item.get("type", "unknown_type")
-                loc_part = ".".join(str(p) for p in item.get("loc", []))
-                msg_part = item.get("msg", "no message")
-                if loc_part:
-                    parts.append(f"{type_part} at {loc_part}: {msg_part}")
-                else:
-                    parts.append(f"{type_part}: {msg_part}")
+            if not isinstance(item, dict):
+                return ""
+            type_part = item.get("type", "unknown_type")
+            location = item.get("loc", [])
+            msg_part = item.get("msg", "no message")
+            if (
+                not isinstance(type_part, str)
+                or not isinstance(msg_part, str)
+                or not isinstance(location, list)
+                or any(type(part) not in (str, int) for part in location)
+            ):
+                return ""
+            loc_part = ".".join(str(part) for part in location)
+            if loc_part:
+                parts.append(f"{type_part} at {loc_part}: {msg_part}")
             else:
-                parts.append(str(item))
+                parts.append(f"{type_part}: {msg_part}")
         return "; ".join(parts)
-    elif isinstance(detail, dict):
-        # Object-shaped detail: auth or other errors
-        error_type = detail.get("error_type")
-        message = detail.get("message")
-        if error_type and message:
-            return f"{error_type}: {message}"
-        elif message:
-            return message
-        elif error_type:
-            return error_type
-    # Unknown detail shape
+    if isinstance(detail, dict):
+        error_type = detail.get("error_type", "")
+        message = detail.get("message", "")
+        if not isinstance(error_type, str) or not isinstance(message, str):
+            return ""
+        return ": ".join(part for part in (error_type, message) if part)
     return ""
 
 

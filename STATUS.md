@@ -94,6 +94,13 @@ mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
+- #136: malformed diagnostic fields use the existing HTTP status-only fallback
+  in both sync and async adapters. Valid object and validation-list messages
+  retain their formatting; input fields and malformed containers are excluded.
+  Seventy-eight offline cases cover typed errors, fallback and valid shapes.
+  Sixty started red; restoring the old parser causes the same sixty failures.
+  These synthetic cases add no live-service verification.
+
 - #135: both CLI paths handle synthetic rate limits with status 1, empty stdout
   and text/JSON stderr diagnostics. Eight offline process/lifecycle cases cover
   both paths and output modes, secrecy and exact adapter closure. All eight
@@ -128,7 +135,7 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**803 tests pass, 6 live tests deselected, 92.30% coverage** (1138/1233 statements). All eleven configured
+**881 tests pass, 6 live tests deselected, 95.38% coverage** (1176/1233 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
