@@ -140,6 +140,9 @@ convention = "google"
     "S603",  # subprocess.run: controlled invocation of judgevet --help
     "PLC0415",  # judgevet imported lazily: --selftest must run where it is NOT installed
 ]
+"scripts/smoke_release.py" = [
+    "S603",  # uv and python are invoked by absolute path with a list argv, never a shell
+]
 "scripts/check_commit_msg.py" = [
     "S603",  # git is invoked by absolute path with a list argv, never a shell
 ]

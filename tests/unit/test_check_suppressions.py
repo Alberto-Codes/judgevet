@@ -98,7 +98,7 @@ class TestCountPerFileIgnores:
     def test_current_pyproject_toml_budget(self) -> None:
         """The actual pyproject.toml has the expected budget."""
         total, per_pattern = count_per_file_ignores(Path("pyproject.toml"))
-        # Current budget: 17 codes
+        # Current budget: 18 codes
         # - 7 in tests/**/*.py (S101, D100, D101, D102, D103, D104, PLR2004)
         # - 1 in conftest.py (PLC0415 - import inside function; module level trips E402)
         # - 3 in mcp.py (PLC0415, C901, PLR0915)
@@ -107,8 +107,9 @@ class TestCountPerFileIgnores:
         #   failures, S603 subprocess, PLC0415 lazy import so --selftest runs
         #   where judgevet is NOT installed)
         # - 1 in check_commit_msg.py (S603 - git is invoked by absolute path with a list argv)
-        assert total == 17
-        assert len(per_pattern) == 6
+        # - 1 in smoke_release.py (S603 - uv and python by absolute path, list argv)
+        assert total == 18
+        assert len(per_pattern) == 7
         # tests/**/*.py has 7 codes
         assert len(per_pattern["tests/**/*.py"]) == 7
         # conftest.py has 1 code
@@ -121,6 +122,8 @@ class TestCountPerFileIgnores:
         assert len(per_pattern["scripts/smoke_release_child.py"]) == 4
         # check_commit_msg.py has 1 code
         assert len(per_pattern["scripts/check_commit_msg.py"]) == 1
+        # smoke_release.py has 1 code
+        assert len(per_pattern["scripts/smoke_release.py"]) == 1
 
     def test_adding_code_to_existing_entry_increases_count(self) -> None:
         """Adding a code to an existing entry increases the total count (issue #79)."""

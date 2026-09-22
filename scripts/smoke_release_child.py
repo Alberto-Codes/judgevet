@@ -39,6 +39,7 @@ import os
 import re
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 from typing import Any
 
@@ -98,8 +99,14 @@ def extract_python_blocks(docstring: str | None) -> list[str]:
     """
     if docstring is None:
         raise ValueError("Package docstring is None")
-    pattern = r"```python\n(.*?)\n```"
-    return re.findall(pattern, docstring, re.DOTALL)
+    # The fences are indented, because the examples live inside a Google-style
+    # `Examples:` section. A pattern anchored at column 0 matches nothing on
+    # any real docstring, which is how this gate ran for a release without
+    # ever executing an example. Allow leading whitespace on the closing
+    # fence, then dedent -- an indented block is an IndentationError at exec.
+    pattern = r"```python[ \t]*\n(.*?)^[ \t]*```"
+    found = re.findall(pattern, docstring, re.DOTALL | re.MULTILINE)
+    return [textwrap.dedent(block) for block in found]
 
 
 def count_await_blocks(blocks: list[str]) -> int:
