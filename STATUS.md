@@ -7,11 +7,11 @@ remain in Git history and their linked issues.
 
 Published 0.4.0 remains artifact-verified, but a post-release process test found
 #123: malformed question JSON produces an error on stderr and exits 0. The
-exact downloaded PyPI wheel reproduces it without a live request. This commit fixes that
+exact downloaded PyPI wheel reproduces it without a live request. #123 fixes that
 exit contract through a thin Typer wrapper. Direct helpers retain integer
 returns, the non-standalone callback retains success0, and adapter cleanup
-still occurs before exit. #30's opt-in live installed-CLI coverage and the
-next release remain pending. Published 0.4.0 still contains the defect.
+still occurs before exit. #30 now adds opt-in live installed-CLI coverage.
+The next release remains pending. Published 0.4.0 still contains the defect.
 
 Twenty-six new offline cases cover local failures with zero observed requests,
 controlled HTTP failures, all three answer types, and helper/lifecycle behavior.
@@ -29,6 +29,25 @@ preserves the existing test. Gatekeeper tests, integration and documentation
 corrections are distinguished from model-generated wrapper code. Native MCP
 claim-audit dogfood returned probability0.05 for release completion; this is
 advisory evidence, and the release remains incomplete.
+
+#30 exercises one installed-console request with Noul, Choice and Score. It
+checks process status, empty stderr, typed answers, model, usage and exact
+legend. Seventeen offline oracle checks pass. They include absent-key skip,
+configured failure, malformed output, missing executable and real-child cleanup.
+Removing model validation or cleanup makes the corresponding check fail.
+
+The opt-in test passed against the real service from both the development
+installation and an isolated local wheel outside the checkout. The wheel check
+proved the package imported from that environment's site-packages. Missing-key
+selection skips, and default collection deselects the test even with a canary
+key present. The release guide now repeats this check against actual downloaded
+TestPyPI and PyPI wheels; those release checks have not happened yet.
+
+Two whole-file coder returns were rejected. Bounded validator and process/live
+artifacts were integrated with named gatekeeper corrections. A positive fixture
+caught an envelope-key error that the rejection tests alone missed. Original
+returns, specification, corrections and evidence are preserved on
+[#30](https://github.com/Alberto-Codes/judgevet/issues/30#issuecomment-5777549590).
 
 Backlog acceptance was reconciled while preserving historical issue bodies.
 #34's async client/equivalence work, #22's release history and #19's documented
@@ -114,8 +133,8 @@ estimate. Historical failures were labelled separately from current green gates.
 
 ## Gates and model evidence
 
-**537 tests pass, 5 live tests deselected, 95.63% coverage.**
-The #123 local full-suite run confirms these figures. Published 0.4.0
+**554 tests pass, 6 live tests deselected, 95.63% coverage.**
+The #30 local full-suite run confirms these figures. Published 0.4.0
 [release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35728612308)
 records its earlier baseline of 511 tests and 95.61% coverage. All eleven configured local gates passed:
 suppressions, dependencies, test hygiene, ruff check/format, ty, import-linter,
@@ -140,6 +159,7 @@ The suppression budget remains 18; this release did not weaken gates.
 
 | claim | status |
 |---|---|
+| installed CLI sends a mixed live request and renders typed answers with success status and clean stderr | verified — #30 live test on development install and isolated local wheel |
 | endpoint, auth header, three answer shapes, usage | verified — probe + official reference |
 | noul has no confidence; score is continuous; legend is a map | verified — both sources |
 | noul criteria keys `true`/`false` are read by the service — inverted criteria moved the measured answer by ≥ 0.13, while `yes`/`no` (normal and inverted) did not move it | **verified** — live differential test, issue #105 |
