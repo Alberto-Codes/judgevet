@@ -74,7 +74,9 @@ scripts/
   check_test_hygiene.py        gate: tests that cannot fail, secrets in bindings
   check_dependencies.py        gate: the runtime dependency set matches a pin
                                in the script, compared both ways so a removal
-                               fails as well as an addition
+                               fails as well as an addition; and every
+                               requested extra exists in its provider's lock
+                               entry
   smoke_release.py             the parent: builds, makes a venv OUTSIDE this
                                checkout, installs only the wheel, and runs
                                the child under that interpreter. Its exit
@@ -87,7 +89,7 @@ scripts/
                                outside the module
 ```
 
-Tests and coverage: see the gate table below. 342 tests, 95.26% overall.
+Tests and coverage: see the gate table below. 366 tests, 95.26% overall.
 `scripts/` is outside the coverage scope, so the gate-script tests move the
 count and not the percentage.
 
@@ -403,9 +405,65 @@ is the same argument #106 used for the console script. One code was genuine.
 Budget is 18. It also printed `smoke_release: ok (child exit 1)` beside a
 failing run.
 
+## A requirement naming an extra its provider does not publish is caught
+
+`pytest-asyncio[dev]` was two defects in one line. #100 caught the misplaced
+half. This is the malformed half: `[dev]` is not an extra that package
+publishes, and an unknown extra is a warning rather than an error, so
+resolution succeeds and the warning scrolls past.
+
+It is detectable with no network, because two tables in `uv.lock` disagree:
+`requires-dist` records what was **asked for**, and the provider's own entry
+records what **resolved**. A valid extra becomes a key on that entry; a
+nonexistent one leaves it absent.
+
+| planted | verdict |
+|---|---|
+| `pyjwt[definitelynotanextra]` in `[project.dependencies]` | `pyjwt has no extra named 'definitelynotanextra' (from requires-dist)` |
+| the same in `[dependency-groups] dev` | caught, and names the table: `(from requires-dev.dev)` |
+| `pyjwt[crypto]` | not flagged |
+| a requirement added without re-locking | `pyjwt is required but absent from uv.lock; the lock is stale — run uv lock` |
+
+Three rulings, made here rather than by a spec pass:
+
+- **Dev groups are checked too.** A malformed extra there breaks a
+  contributor's `uv sync` rather than a user's install — lesser severity,
+  same defect, and a gate that knows and stays quiet because of where the
+  problem sits is the shape this repo keeps deleting.
+- **A missing lock entry is a different finding with its own header.** All 13
+  requirements resolve today and a resolved lock records every requirement by
+  construction, so absence means the lock is stale. Filing that under
+  "invalid extras" would send the reader hunting for a typo when the fix is
+  a re-lock.
+- **It lives in `check_dependencies.py`.** #100's flip-condition was about
+  sharing a parsed `pyproject.toml`; not met. Both checks answer one
+  question, so splitting them would invert #100's rule rather than apply it.
+
+**The spec pass was skipped, and that is a finding.** Two dispatches both
+stalled: each wrote its file skeleton then generated ~8,400 tokens on a
+single turn without finishing, the second with one of its two open questions
+already answered — so narrowing was not the cure. The issue had been written
+with the detection rule, the measurement proving it, and the proof shape
+already in the body, leaving nothing weighty to rule on. The signal for
+skipping is not "the issue looks precise"; it is "the issue contains its own
+measurement".
+
+**The implementation shipped with zero tests** — 8 functions, ~200 lines,
+count unchanged at 342. `scripts/` is outside the coverage scope, so eleven
+gates went green over it. A tests-only follow-up added 23, and they bite:
+making every extra look valid fails 4, and disabling dev-group scanning fails
+3.
+
+Those fixtures are hand-written lock files, which is not what was asked for
+and is a real weakness: they assert against a model of uv's format rather
+than against uv. `test_fixture_format_matches_what_uv_actually_writes` now
+anchors them — it reads this repo's own `uv.lock`, which uv wrote, and pins
+the one structure they depend on. Renaming the key the parser reads fails it.
+
 ## Next
 
 The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set. #107 stays open for the past-red half; #109 and #110 are the
-other deferred halves.
+set. #107 stays open for the past-red half and #109 for the
+console-script selftest case. #101 is blocked on a human adding the
+`TYPESAFE_API_KEY` environment secret.
