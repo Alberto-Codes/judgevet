@@ -69,6 +69,28 @@ That result was rejected; the gatekeeper restored the real execution probe
 and independently ran it. #114 preserves the returned artifacts and findings.
 The shared delegation skill now requires checking external probe integrity.
 
+## Installation guidance (#37)
+
+`docs/how-to/install.md` distinguishes published 0.2.0 library/CLI installs
+from the supported MCP command on main. Fresh pip and uv installs outside the
+checkout imported from site-packages; the base installation had no MCP runtime.
+The downloaded published wheel contains `judgevet/py.typed` and retains hash
+`30b1b76a191c78bf01184a7727446ff3cde7999fcbbc7a5106fc7b598e8b9318`.
+The published MCP extra installs its runtime but lacks the console entry point.
+
+The documented direnv/uv launcher discovered all three tools and completed
+all three live calls from /tmp. An isolated source-wheel installation also
+passed; its hash is
+`41747535dae8a2d0004b33e7cdbeb359f11704bfcc00d89f13d9a26c509d2bf1`.
+This is an unreleased source artifact with 0.2.0 metadata, not an index release.
+Native Codex session reload remains unproven by these separate probes.
+The local config and external probes retained their pre-dispatch hashes.
+
+The coder drafted the guide but mislabeled config scope and confused tool
+inputs with outputs. Codex corrected those errors and missing requirements.
+Original prompts, accepted spec, returned draft and installation outputs are
+on #37. The shared skill now calls for one consolidated accepted checklist.
+
 ## The headline
 
 **judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and
