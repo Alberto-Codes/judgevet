@@ -94,6 +94,16 @@ mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
+- #133: the launcher probe reports fixed stage/reason labels for spawn,
+  initialization, discovery, each tool call, shutdown and cleanup. A cleanup
+  failure cannot replace the first session failure. Fourteen deterministic
+  cases cover stage distinctions and cleanup; removing the diagnostic labels
+  causes all fourteen to fail. Existing transport and cancellation checks pass.
+  Two new published 0.5.0 probes used separate empty caches and temporary working
+  directories. Both passed identity/version, exact discovery, all three live
+  tool calls and cleanup (1.95s and 1.92s). The historical failure did not recur;
+  its cause remains unknown. This diagnostic work does not establish a cure.
+
 - #136: malformed diagnostic fields use the existing HTTP status-only fallback
   in both sync and async adapters. Valid object and validation-list messages
   retain their formatting; input fields and malformed containers are excluded.
@@ -135,7 +145,7 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**881 tests pass, 6 live tests deselected, 95.38% coverage** (1176/1233 statements). All eleven configured
+**895 tests pass, 6 live tests deselected, 95.38% coverage** (1176/1233 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
@@ -213,6 +223,6 @@ way nobody planned.
 ## Remaining work
 
 The developer-workflow release requirements are fulfilled. Final evidence-commit
-CI and milestone closure are tracked on #131. #133 investigates the intermittent
-first fresh-launcher diagnostic failure. #67/#66 remain broader research outside
+CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
+first fresh-launcher failure remains unexplained. #67/#66 remain broader research outside
 this release. No inferred API claim was promoted and no quality gate was weakened.

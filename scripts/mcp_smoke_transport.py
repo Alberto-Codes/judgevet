@@ -1,4 +1,4 @@
-"""Exercise initialization, discovery and three typed tool calls over stdio.
+"""Exercise stdio tools with safe stage diagnostics and bounded child cleanup.
 
 Protocol framing and initialization follow
 https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle.
@@ -22,6 +22,7 @@ See Also:
 import asyncio
 import json
 from contextlib import suppress
+from dataclasses import dataclass
 from typing import Any
 
 from scripts.mcp_smoke_checks import (
@@ -29,6 +30,42 @@ from scripts.mcp_smoke_checks import (
     validate_tool_call,
     validate_tool_list,
 )
+
+
+@dataclass
+class _Progress:
+    """Track only the fixed probe stage, never caller or protocol data.
+
+    Attributes:
+        stage: Current operation label.
+    """
+
+    stage: str = "spawn"
+
+
+def _failure(stage: str, error: Exception) -> RuntimeError:
+    """Create a diagnostic from fixed labels without exception text.
+
+    Args:
+        stage: Current operation label.
+        error: Failure whose class selects a safe category.
+
+    Returns:
+        Sanitized probe failure.
+    """
+    if isinstance(error, FileNotFoundError):
+        reason = "executable_not_found"
+    elif isinstance(error, TimeoutError):
+        reason = "timeout"
+    elif isinstance(error, OSError):
+        reason = "os_error"
+    elif isinstance(
+        error, (ValueError, TypeError, KeyError, AttributeError, OverflowError)
+    ):
+        reason = "invalid_data"
+    else:
+        reason = "validation"
+    return RuntimeError(f"mcp_smoke: stage={stage} reason={reason}")
 
 
 async def _read_line(stream: asyncio.StreamReader) -> str:
@@ -121,14 +158,14 @@ async def _initialize(
     process: asyncio.subprocess.Process,
     expected_version: str,
 ) -> None:
-    """Initialize the server and require exact tool discovery.
+    """Initialize the server and validate its identity and version.
 
     Args:
         process: Owned child.
         expected_version: Installed distribution version.
 
     Raises:
-        RuntimeError: Identity or tool discovery validation fails.
+        RuntimeError: Server identity or version validation fails.
         TypeError: Protocol data has an invalid shape.
         ValueError: A protocol frame cannot be read.
     """
@@ -155,6 +192,18 @@ async def _initialize(
         {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}},
     )
 
+
+async def _discover(process: asyncio.subprocess.Process) -> None:
+    """Require exact tool discovery after initialization.
+
+    Args:
+        process: Initialized child.
+
+    Raises:
+        RuntimeError: Discovery violates the tool contract.
+        TypeError: A protocol frame has an invalid shape.
+        ValueError: A protocol frame cannot be read.
+    """
     # id 2: tools/list
     await _write_json(
         process, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
@@ -166,11 +215,13 @@ async def _initialize(
 
 async def _call_tools(
     process: asyncio.subprocess.Process,
+    progress: _Progress,
 ) -> None:
-    """Call each supported tool once and validate its answer.
+    """Track and validate each supported tool call once.
 
     Args:
         process: Initialized child.
+        progress: Fixed operation labels for safe diagnostics.
 
     Raises:
         RuntimeError: A tool answer violates its contract.
@@ -186,6 +237,7 @@ async def _call_tools(
     ]
 
     for call_id, (name, criteria) in enumerate(calls, start=3):
+        progress.stage = f"call:{name}"
         await _write_json(
             process,
             {
@@ -284,7 +336,7 @@ async def smoke(
     env: dict[str, str],
     timeout: float = 30.0,
 ) -> None:
-    """Exercise initialization, discovery and three typed tool calls.
+    """Exercise all stages and preserve the first failure through child cleanup.
 
     Args:
         command: Installed executable and optional arguments.
@@ -296,6 +348,8 @@ async def smoke(
         RuntimeError: Startup, framing, validation, timeout or cleanup fails.
     """
     process: asyncio.subprocess.Process | None = None
+    progress = _Progress()
+    failure: RuntimeError | None = None
     try:
         async with asyncio.timeout(timeout):
             process = await asyncio.create_subprocess_exec(
@@ -305,11 +359,32 @@ async def smoke(
                 stderr=asyncio.subprocess.DEVNULL,
                 env=env,
             )
+            progress.stage = "initialization"
             await _initialize(process, expected_version)
-            await _call_tools(process)
+            progress.stage = "discovery"
+            await _discover(process)
+            await _call_tools(process, progress)
+            progress.stage = "shutdown"
             await _finish(process)
-    except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError):
-        raise RuntimeError("mcp_smoke: transport validation failed") from None
+    except (
+        OSError,
+        ValueError,
+        TypeError,
+        KeyError,
+        AttributeError,
+        OverflowError,
+        RuntimeError,
+    ) as error:
+        failure = _failure(progress.stage, error)
     finally:
         if process is not None:
-            await _cleanup(process)
+            try:
+                await _cleanup(process)
+            except (OSError, RuntimeError) as error:
+                failure = (
+                    RuntimeError(f"{failure}; cleanup=failed")
+                    if failure
+                    else _failure("cleanup", error)
+                )
+    if failure is not None:
+        raise failure from None
