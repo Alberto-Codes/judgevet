@@ -3,6 +3,19 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.4.1](https://github.com/Alberto-Codes/judgevet/compare/v0.4.0...v0.4.1) (2026-09-22)
+
+
+### Fixes
+
+* **cli:** propagate handled failures to installed command exit status ([97fff00](https://github.com/Alberto-Codes/judgevet/commit/97fff00d00402778d491033c67c69c170faa733d)), closes [#123](https://github.com/Alberto-Codes/judgevet/issues/123) [#124](https://github.com/Alberto-Codes/judgevet/issues/124)
+
+
+### Documentation
+
+* reconcile backlog acceptance after 0.4.0 ([5f2c346](https://github.com/Alberto-Codes/judgevet/commit/5f2c34622febb2c0dfc3804a1a0c5f268f4b3068)), closes [#34](https://github.com/Alberto-Codes/judgevet/issues/34) [#22](https://github.com/Alberto-Codes/judgevet/issues/22) [#19](https://github.com/Alberto-Codes/judgevet/issues/19) [#3](https://github.com/Alberto-Codes/judgevet/issues/3) [#27](https://github.com/Alberto-Codes/judgevet/issues/27) [#43](https://github.com/Alberto-Codes/judgevet/issues/43) [#67](https://github.com/Alberto-Codes/judgevet/issues/67) [#68](https://github.com/Alberto-Codes/judgevet/issues/68) [#8](https://github.com/Alberto-Codes/judgevet/issues/8) [#124](https://github.com/Alberto-Codes/judgevet/issues/124)
+* record verified 0.4.0 release and installation ([0290d9f](https://github.com/Alberto-Codes/judgevet/commit/0290d9fa9318124ad8530e8bc710c94f295c13df)), closes [#121](https://github.com/Alberto-Codes/judgevet/issues/121)
+
 ## [0.4.0](https://github.com/Alberto-Codes/judgevet/compare/v0.3.0...v0.4.0) (2026-09-22)
 
 
