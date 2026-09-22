@@ -3,7 +3,7 @@
 Examples:
     ```python
     from judgevet.adapters.inbound.cli import app
-    # Run CLI: jev --help
+    # Run CLI: judgevet --help
     ```
 
 See Also:
@@ -212,7 +212,7 @@ def run_cli(
         return 0
 
 
-@app.command()
+@app.command(help="Call the Jev System One API.")
 def main(
     state: str = typer.Argument(..., help="State to evaluate (JSON string or text)"),
     questions: str = typer.Argument(..., help="Questions as JSON string"),
@@ -225,6 +225,7 @@ def main(
     Reads Settings, lets an explicit --api-key override the settings key,
     constructs HTTPSystemOneAdapter once with timeout from Settings, calls
     run_cli with it as the port, and closes the adapter in finally.
+    The command decorator supplies separate user-facing help.
 
     Args:
         state: State to evaluate (JSON string or text).

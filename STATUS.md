@@ -2,6 +2,32 @@
 
 Last written: 2026-09-22. A session overwrites this file.
 
+## Next-release CLI help (#16)
+
+The command decorator supplies explicit public help. Installed `judgevet
+--help` keeps usage, argument/option descriptions and defaults without leaking
+Google docstring sections or implementation details. Developer documentation
+and runtime behavior remain intact; one docstring sentence explains the
+separate help source to satisfy docvet freshness.
+
+Two public-help tests failed before implementation; all three help tests pass
+now. Removing the decorator help makes those two fail again. Tests also prove
+help does not construct application settings and preserve the developer
+sections. All eleven gates pass: **511 tests, 5 deselected, 95.61% coverage**.
+A final base-only wheel installed outside the checkout passed the same help
+assertions without a key or MCP runtime. Its SHA-256 is
+`6f9031084e60716a508df02fc46c833b0083246382d9179b24aefd4c08c3789f`.
+This is an unreleased local source wheel with 0.3.0 metadata, not the published
+0.3.0 artifact. No live call or new API verification claim was needed.
+
+The reasoner proposed the command-level help seam. The coder returned the two
+exact accepted replacements with no functional repair. Gatekeeper authored
+red tests, artifact/mutation checks and the freshness sentence after docvet
+rejected the original unchanged-docstring recipe. This is a specification
+correction, not a coder deviation. #16 preserves that history and the revised
+accepted comment. #97 remains required by tracker #121 before publication;
+release-please currently proposes 0.4.0.
+
 ## Next-release typed answer accessors (#103)
 
 `SystemOneResponse.nouls`, `.choices` and `.scores` return freshly filtered
