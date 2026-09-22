@@ -11,6 +11,7 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
       issues: write
@@ -24,36 +25,43 @@ jobs:
       prs_created: ${{ steps.release.outputs.prs_created }}
       pr_branch: ${{ steps.release.outputs.prs_created == 'true' && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
     steps:
+      - name: Verify release credential
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          if [ "$HAS_PAT" != true ]; then
+            echo "::error::Release environment PAT is missing"
+            exit 1
+          fi
+          identity="$(gh api user --jq .login)"
+          if [ "$identity" != Alberto-Codes ]; then
+            echo "::error::Unexpected release credential identity"
+            exit 1
+          fi
+          echo "HAS_PAT=true"
+          echo "PAT_IDENTITY=$identity"
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           target-branch: main
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # Without the PAT the action falls back to GITHUB_TOKEN, and the draft
-      # and its tag are authored by github-actions. A maintainer's publish
-      # click still fires publish.yml, because the release event carries the
-      # publisher, not the author. The remaining cost is that the lockfile
-      # push cannot trigger CI on the release PR. Warn instead of failing.
-      - name: Warn on a release cut without the PAT
-        if: steps.release.outputs.release_created == 'true' && env.HAS_PAT != 'true'
-        run: |
-          echo "::warning::Cut ${{ steps.release.outputs.tag_name }} with GITHUB_TOKEN. \
-          Set RELEASE_PLEASE_TOKEN so a maintainer account authors releases and CI runs on the release PR."
 
   update-lockfile:
     needs: release-please
     if: needs.release-please.outputs.prs_created == 'true'
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: write
     steps:
       - name: Checkout release-please PR branch
         uses: actions/checkout@v7
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           ref: ${{ needs.release-please.outputs.pr_branch }}
 
       - name: Set up uv

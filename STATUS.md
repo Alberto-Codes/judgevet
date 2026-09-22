@@ -167,7 +167,7 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**921 tests pass, 6 live tests deselected, 95.44% coverage** (1214/1272 statements). All eleven configured
+**929 tests pass, 6 live tests deselected, 95.44% coverage** (1214/1272 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
@@ -243,6 +243,15 @@ constructed at all. The domain invariants from #77 are load-bearing here in a
 way nobody planned.
 
 ## Remaining work
+
+#102 migration is in progress. The release environment permits main only.
+Both credential-consuming jobs now bind to it and require the existing PAT,
+with an authenticated identity check and no GITHUB_TOKEN fallback. Eight
+workflow acceptance cases started red and now pass. The temporary manual
+sealing workflow encrypts the original secret for the destination public key;
+its exact code passed a canary round trip and no-plaintext-output check. The
+repository secret remains until destination presence is proved. Environment
+migration, repository removal and fresh-run identity proof are still pending.
 
 The developer-workflow release requirements are fulfilled. Final evidence-commit
 CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
