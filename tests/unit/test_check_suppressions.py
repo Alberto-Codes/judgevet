@@ -10,6 +10,7 @@ from scripts.check_suppressions import (
     ALLOWED_PER_FILE_IGNORE_CODES,
     count_per_file_ignores,
     main,
+    scan,
 )
 
 
@@ -97,7 +98,7 @@ class TestCountPerFileIgnores:
     def test_current_pyproject_toml_budget(self) -> None:
         """The actual pyproject.toml has the expected budget."""
         total, per_pattern = count_per_file_ignores(Path("pyproject.toml"))
-        # Current budget: 16 codes
+        # Current budget: 17 codes
         # - 7 in tests/**/*.py (S101, D100, D101, D102, D103, D104, PLR2004)
         # - 1 in conftest.py (PLC0415 - import inside function; module level trips E402)
         # - 3 in mcp.py (PLC0415, C901, PLR0915)
@@ -105,8 +106,9 @@ class TestCountPerFileIgnores:
         # - 4 in smoke_release_child.py (S102 exec, BLE001 arbitrary example
         #   failures, S603 subprocess, PLC0415 lazy import so --selftest runs
         #   where judgevet is NOT installed)
-        assert total == 16
-        assert len(per_pattern) == 5
+        # - 1 in check_commit_msg.py (S603 - git is invoked by absolute path with a list argv)
+        assert total == 17
+        assert len(per_pattern) == 6
         # tests/**/*.py has 7 codes
         assert len(per_pattern["tests/**/*.py"]) == 7
         # conftest.py has 1 code
@@ -117,6 +119,8 @@ class TestCountPerFileIgnores:
         assert len(per_pattern["tests/unit/test_secret_guard.py"]) == 1
         # smoke_release_child.py has 4 codes
         assert len(per_pattern["scripts/smoke_release_child.py"]) == 4
+        # check_commit_msg.py has 1 code
+        assert len(per_pattern["scripts/check_commit_msg.py"]) == 1
 
     def test_adding_code_to_existing_entry_increases_count(self) -> None:
         """Adding a code to an existing entry increases the total count (issue #79)."""
@@ -179,3 +183,100 @@ class TestCountPerFileIgnores:
             finally:
                 if backup.exists():
                     shutil.move(str(backup), str(original_pyproject))
+
+
+class TestScan:
+    """Tests for the scan function."""
+
+    def test_planted_suppression_in_code_line_is_flagged(self) -> None:
+        """A # noqa comment on a code line is flagged."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            script_dir = tmpdir_path / "scripts"
+            script_dir.mkdir()
+            probe_file = script_dir / "_probe_tmp.py"
+            probe_file.write_text("import os  # noqa: E501\n")
+
+            findings, files_scanned = scan([script_dir])
+
+            assert files_scanned == 1
+            assert len(findings) == 1
+            assert "_probe_tmp.py" in findings[0]
+            assert "import os" in findings[0]
+            assert findings[0].endswith("import os  # noqa: E501")
+
+    def test_suppression_in_docstring_is_not_flagged(self) -> None:
+        """A # noqa text in a docstring is not flagged."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            script_dir = tmpdir_path / "scripts"
+            script_dir.mkdir()
+            probe_file = script_dir / "_probe_tmp.py"
+            probe_file.write_text(
+                '"""This docstring names # noqa and # type: ignore[assignment]."""\n'
+            )
+
+            findings, files_scanned = scan([script_dir])
+
+            assert files_scanned == 1
+            assert len(findings) == 0
+
+    def test_suppression_in_string_literal_is_not_flagged(self) -> None:
+        """A # noqa text in a string literal is not flagged."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            script_dir = tmpdir_path / "scripts"
+            script_dir.mkdir()
+            probe_file = script_dir / "_probe_tmp.py"
+            probe_file.write_text('S = "this mentions # noqa: E501 in prose"\n')
+
+            findings, files_scanned = scan([script_dir])
+
+            assert files_scanned == 1
+            assert len(findings) == 0
+
+    def test_standalone_comment_suppression_is_flagged(self) -> None:
+        """A # noqa on its own comment line above a statement is flagged."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            script_dir = tmpdir_path / "scripts"
+            script_dir.mkdir()
+            probe_file = script_dir / "_probe_tmp.py"
+            probe_file.write_text("# noqa: E501\nimport os\n")
+
+            findings, files_scanned = scan([script_dir])
+
+            assert files_scanned == 1
+            assert len(findings) == 1
+            assert findings[0].endswith("# noqa: E501")
+
+    def test_unparseable_file_falls_back_to_line_scan(self) -> None:
+        """An unparseable file falls back to line-based scan."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            script_dir = tmpdir_path / "scripts"
+            script_dir.mkdir()
+            probe_file = script_dir / "_probe_tmp.py"
+            probe_file.write_text("def broken(:\n    pass  # noqa: E501\n")
+
+            findings, files_scanned = scan([script_dir])
+
+            assert files_scanned == 1
+            assert len(findings) == 1
+            assert "_probe_tmp.py" in findings[0]
+            assert "pass" in findings[0]
+
+    def test_main_on_clean_dir_returns_zero(self) -> None:
+        """main() returns 0 over a file it actually read.
+
+        The directory holds a real module with no suppression, so a pass
+        here means the scanner read it and found nothing. An empty
+        directory would return 0 whether or not the scanner works.
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            script_dir = Path(tmpdir)
+            (script_dir / "_probe_tmp.py").write_text("import os\n\nprint(os)\n")
+            findings, files_scanned = scan([script_dir])
+            assert files_scanned == 1
+            assert findings == []
+            assert main([tmpdir]) == 0

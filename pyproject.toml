@@ -140,6 +140,9 @@ convention = "google"
     "S603",  # subprocess.run: controlled invocation of judgevet --help
     "PLC0415",  # judgevet imported lazily: --selftest must run where it is NOT installed
 ]
+"scripts/check_commit_msg.py" = [
+    "S603",  # git is invoked by absolute path with a list argv, never a shell
+]
 [tool.ruff.lint.isort]
 known-first-party = ["judgevet"]
 

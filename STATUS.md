@@ -67,7 +67,10 @@ src/judgevet/
   adapters/inbound/logs.py     structlog to stderr, secrets redacted
   adapters/inbound/mcp.py      stdio server: ask_noul · ask_choice · ask_score
 scripts/
-  check_suppressions.py        gate: no noqa / type: ignore
+  check_suppressions.py        gate: no noqa / type: ignore. Scans src,
+                               tests AND scripts, by tokenizing and reading
+                               COMMENT tokens only, so prose that quotes the
+                               syntax is not a finding
   check_test_hygiene.py        gate: tests that cannot fail, secrets in bindings
   probe_live.py                prints one real response; asserts nothing
   smoke_release_child.py       the in-venv half of the release smoke test —
@@ -77,15 +80,18 @@ scripts/
                                outside the module
 ```
 
-Tests and coverage: see the gate table below. 290 tests, 95.26% overall,
-unchanged by `e4e7abf` — `scripts/` is outside the coverage scope.
+Tests and coverage: see the gate table below. 296 tests, 95.26% overall.
+`scripts/` is outside the coverage scope, so the six new tests moved the
+count and not the percentage.
 
-The suppression budget rose 12 -> 16 in `e4e7abf`, four codes each with a
-reason in the source: `exec` because running an extracted example is the
-point, `BLE001` because example code raises anything, `S603` for the console
-script, and the lazy `judgevet` import so `--selftest` runs where judgevet is
-not installed. `S607` did not survive: the console script is invoked by
-absolute path off `sys.executable`, and `grep -c 'S607' pyproject.toml` is 0.
+The suppression budget is 17. It rose 12 -> 16 in `e4e7abf`, four codes each
+with a reason in the source: `exec` because running an extracted example is
+the point, `BLE001` because example code raises anything, `S603` for the
+console script, and the lazy `judgevet` import so `--selftest` runs where
+judgevet is not installed. `S607` did not survive: the console script is
+invoked by absolute path off `sys.executable`, and `grep -c 'S607'
+pyproject.toml` is 0. The seventeenth is `S603` on `check_commit_msg.py`,
+converted from two inline `# noqa` by #108.
 
 The 13 new tests in `tests/contract/test_adapter_equivalence.py` verify that
 the sync and async HTTP adapters produce identical outcomes on the same
@@ -215,9 +221,60 @@ with the reason recorded there.
 
 #107 is unblocked. #99 still needs both halves.
 
+## The suppression gate can see its own neighbourhood now
+
+`check_suppressions.py` scanned `src/` and `tests/` and not `scripts/` — the
+directory the gate scripts live in. The cost was not theoretical: the session
+implementing #106 put a `# type: ignore` into `scripts/smoke_release_child.py`
+and **all ten gates passed over it**. It was caught by a watcher's forbidden-
+pattern check, outside this repository. That is what #108 closed.
+
+The fix is not "add a root". Adding `scripts/` makes the gate flag its own
+module docstring, which quotes `` `# noqa` `` in prose to state the rule. Four
+findings, two real and two self-inflicted.
+
+**The gate now reads `COMMENT` tokens, not lines.** `tokenize` the file and
+test the pattern against comments only. The boundary is the linter's own
+semantics: ruff honours a `noqa` only in a comment, and a `# noqa` inside a
+string suppresses nothing, so the gate flags precisely what a linter would act
+on. An allowlist exempting the gate's own filename was refused — it is a named
+exemption, and the next real suppression in that file would hide behind it.
+A file that `tokenize` cannot parse falls back to the line regex rather than
+being skipped, because a skip is the blind spot this issue was about.
+
+Proven by planting suppressions rather than by reading:
+
+| planted | gate |
+|---|---|
+| `# noqa` on a code line in `scripts/` | names file and line, exit 1 |
+| `# noqa` inside a string literal | clean, exit 0 |
+| `# noqa` in a file with a syntax error | names it via the fallback, exit 1 |
+| **a real `# noqa` inside `check_suppressions.py` itself** | **names it, exit 1** — so there is no allowlist |
+| the gate's own docstring, lines 4 and 7 | not flagged, and still quotes the exact syntax |
+
+The passing path prints what it checked:
+
+```
+check_suppressions: clean, 54 files scanned under src, tests, scripts,
+per-file-ignores codes 17/17
+```
+
+A gate that passes in silence is indistinguishable from one that scanned
+nothing. This one says which.
+
+The two `# noqa: S603` in `check_commit_msg.py` became a counted
+`per-file-ignores` entry with a reason, budget 16 -> 17. **Adding `shell=False`
+does not clear S603** — measured, ruff flags the explicit form exactly as it
+flags the absent one — so there was no cause to fix, only a suppression to
+make reviewable. The specification claimed otherwise and was overruled before
+dispatch.
+
+Inline suppressions are now forbidden in all three roots, and
+`per-file-ignores` is the only route. That ruling is in the gate's own
+docstring.
+
 ## Next
 
 The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set. #108 is the live one — the suppression gate's blind spot over `scripts/`,
-which this round demonstrated rather than argued.
+set. #106 and #109 are the open smoke-test pair; #107 is unblocked.

@@ -12,8 +12,13 @@ The `per-file-ignores` entries already in `pyproject.toml` are allowed and
 counted by total codes, not patterns. Adding a new code to an existing entry
 is a decision, so this script fails until the budget is raised deliberately.
 
+Inline suppressions (`# noqa`, `# type: ignore`) are forbidden in `src/`,
+`tests/` and `scripts/`; `per-file-ignores` is the only route. A real
+suppression must be a comment; a `# noqa` inside a string literal suppresses
+nothing, so this gate uses `tokenize` to flag `COMMENT` tokens only.
+
 Usage:
-    check_suppressions.py [paths...]     # defaults to src/ and tests/
+    check_suppressions.py [paths...]     # defaults to src/, tests/, scripts/
 
 Exit status is 1 when a suppression is found.
 """
@@ -22,6 +27,7 @@ from __future__ import annotations
 
 import re
 import sys
+import tokenize
 import tomllib
 from pathlib import Path
 
@@ -30,38 +36,80 @@ SUPPRESSION = re.compile(r"#\s*(noqa|type:\s*ignore|ruff:\s*noqa|pyright:\s*igno
 
 # Deliberate `per-file-ignores` codes in pyproject.toml. Raise this only with
 # a reason in the commit message.
-# Current budget: 16 codes
+# Current budget: 17 codes
 # - 7 in tests/**/*.py (S101, D100, D101, D102, D103, D104, PLR2004)
 # - 1 in conftest.py (PLC0415 - import inside function; E402 would fire at module level)
 # - 3 in mcp.py (PLC0415, C901, PLR0915)
 # - 1 in test_secret_guard.py (S603 - subprocess call required for end-to-end proof)
-# - 3 in scripts/smoke_release_child.py
-ALLOWED_PER_FILE_IGNORE_CODES = 16
+# - 4 in scripts/smoke_release_child.py (S102, BLE001, S603, PLC0415)
+# - 1 in scripts/check_commit_msg.py (S603 - git is invoked by absolute path with a list argv)
+ALLOWED_PER_FILE_IGNORE_CODES = 17
 
 
-def scan(paths: list[Path]) -> list[str]:
+def _scan_with_tokenize(file: Path) -> list[tuple[int, str]]:
+    """Scan a file using tokenize and return findings from COMMENT tokens only.
+
+    Args:
+        file: The Python file to scan.
+
+    Returns:
+        A list of (line_number, line_text) tuples for each suppression found.
+    """
+    findings: list[tuple[int, str]] = []
+    text = file.read_text(errors="replace")
+    try:
+        tokens = tokenize.generate_tokens(iter(text.splitlines(keepends=True)).__next__)
+        findings.extend(
+            (token.start[0], token.line)
+            for token in tokens
+            if token.type == tokenize.COMMENT and SUPPRESSION.search(token.string)
+        )
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        # Fall through to line-based scan for unparseable files
+        pass
+    return findings
+
+
+def scan(paths: list[Path]) -> tuple[list[str], int]:
     """Report every suppression comment found under the given paths.
 
     Args:
         paths: Files or directories to scan.
 
     Returns:
-        One line per finding, empty when the tree is clean.
+        A tuple of (list of one line per finding in format "file:line: text",
+        count of files scanned).
     """
     findings: list[str] = []
+    files_scanned = 0
     for root in paths:
         files = root.rglob("*.py") if root.is_dir() else [root]
         for file in files:
             if "__pycache__" in file.parts or ".venv" in file.parts:
                 continue
             try:
-                lines = file.read_text(errors="replace").splitlines()
+                text = file.read_text(errors="replace")
+                lines = text.splitlines(keepends=True)
             except OSError:
                 continue
-            for number, line in enumerate(lines, start=1):
-                if SUPPRESSION.search(line):
-                    findings.append(f"{file}:{number}: {line.strip()}")
-    return findings
+            files_scanned += 1
+
+            # Try tokenize first, fall back to line-based scan on parse errors
+            try:
+                token_stream = tokenize.generate_tokens(iter(lines).__next__)
+                tokenize_findings = [
+                    f"{file}:{token.start[0]}: {token.line.strip()}"
+                    for token in token_stream
+                    if token.type == tokenize.COMMENT
+                    and SUPPRESSION.search(token.string)
+                ]
+                findings.extend(tokenize_findings)
+            except (tokenize.TokenError, IndentationError, SyntaxError):
+                # Fall back to line-regex scan for this file
+                for number, line in enumerate(lines, start=1):
+                    if SUPPRESSION.search(line):
+                        findings.append(f"{file}:{number}: {line.strip()}")
+    return findings, files_scanned
 
 
 def count_per_file_ignores(pyproject: Path) -> tuple[int, dict[str, list[str]]]:
@@ -97,18 +145,24 @@ def main(argv: list[str]) -> int:
     """Run the check.
 
     Args:
-        argv: Paths to scan; defaults to `src` and `tests`.
+        argv: Paths to scan; defaults to `src`, `tests`, `scripts`.
 
     Returns:
         1 when a suppression is found or the ignore budget is exceeded.
     """
-    roots = [Path(a) for a in argv] or [Path("src"), Path("tests")]
-    findings = scan([r for r in roots if r.exists()])
+    roots = [Path(a) for a in argv] or [Path("src"), Path("tests"), Path("scripts")]
+    existing_roots = [r for r in roots if r.exists()]
+    findings, files_scanned = scan(existing_roots)
 
     total, per_pattern = count_per_file_ignores(Path("pyproject.toml"))
     over_budget = total > ALLOWED_PER_FILE_IGNORE_CODES
 
     if not findings and not over_budget:
+        roots_str = ", ".join(str(r) for r in roots if r.exists())
+        print(
+            f"check_suppressions: clean, {files_scanned} files scanned "
+            f"under {roots_str}, per-file-ignores codes {total}/{ALLOWED_PER_FILE_IGNORE_CODES}"
+        )
         return 0
 
     if findings:

@@ -125,7 +125,7 @@ def get_author_emails_in_range(rev_range: str) -> list[str]:
     Returns:
         A list of author emails, one per commit (newest first).
     """
-    result = subprocess.run(  # noqa: S603
+    result = subprocess.run(
         ["/usr/bin/git", "log", "--format=%ae", rev_range],
         capture_output=True,
         text=True,
@@ -272,7 +272,7 @@ def messages_in_range(rev_range: str) -> list[tuple[str, str]]:
     Returns:
         The short hash and the message of each commit, newest first.
     """
-    proc = subprocess.run(  # noqa: S603
+    proc = subprocess.run(
         ["/usr/bin/git", "log", "-z", "--format=%H%n%B", rev_range],
         capture_output=True,
         text=True,
