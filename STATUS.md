@@ -2,6 +2,13 @@
 
 Last written: 2026-09-22. A session overwrites this file.
 
+## Deliberately broken artifact proof branch
+
+This branch adds a TestPyPI build-only mutation removing judgevet-mcp from the
+built wheel. Production source and the publishing gate stay unchanged. The
+expected outcome is base smoke PASS, MCP smoke FAIL, upload SKIPPED. This branch
+is not a release candidate and must not be merged into main.
+
 ## Next-release MCP command (#25)
 
 The source tree now installs `judgevet-mcp`. Its composition root reads
