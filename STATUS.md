@@ -27,8 +27,17 @@ and exited 0 on EOF with empty stderr. SHA-256:
 This is an **unreleased local source wheel**, still carrying the current
 0.2.0 metadata. It is not the published 0.2.0 wheel or an index verification.
 
-The handshake still reports server version 0.1.0; #113 owns that observed
-defect. #114 owns compatibility prose, #37 installation guidance, and #115
+The handshake now reads the installed distribution version (#113). A real
+initialization assertion failed before the change (0.1.0 versus 0.2.0), passed
+after it, and rejected a deliberate 0.0.0 mutation. A fresh wheel installed
+outside the checkout advertised 0.2.0, matching its distribution metadata;
+its SHA-256 is
+`319a3cda2074c4e6fa8d407b2e5bd25a1975ca87a410e900a46f02e024cc4daa`.
+This is also an unreleased source wheel, not an index artifact. The suite
+remains 390 passed, 95.55% coverage; all eleven configured gates passed.
+The coder implemented the accepted specification without a functional repair;
+the gatekeeper wrote the red regression assertion and artifact probe.
+#114 owns compatibility prose, #37 installation guidance, and #115
 the live MCP publishing gate. The already-landed library gate is unchanged.
 Native Codex tools were exercised successfully through the existing inline
 launcher before this change. A fresh configured connection after replacing

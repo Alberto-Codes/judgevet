@@ -37,7 +37,7 @@ See Also:
 
 Attributes:
     SERVER_NAME (str): The MCP server name.
-    SERVER_VERSION (str): The MCP server version.
+    SERVER_VERSION (str): The MCP server version, sourced from installed distribution metadata.
 
 Note:
     ``mcp`` is an optional extra (``uv sync --extra mcp``). An import-linter
@@ -48,6 +48,7 @@ Note:
 
 from __future__ import annotations
 
+from importlib.metadata import version
 from typing import Any
 
 from judgevet.domain.answers import (
@@ -60,7 +61,7 @@ from judgevet.ports import SystemOnePort
 SERVER_NAME = "judgevet-mcp"
 """str: The MCP server name."""
 
-SERVER_VERSION = "0.1.0"
+SERVER_VERSION = version("judgevet")
 """str: The MCP server version."""
 
 __all__ = ["SERVER_NAME", "SERVER_VERSION", "create_mcp_server"]

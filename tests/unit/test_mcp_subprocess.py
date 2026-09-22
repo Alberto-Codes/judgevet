@@ -11,6 +11,7 @@ import sys
 import threading
 from collections.abc import Iterator
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from importlib.metadata import version
 from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
@@ -157,6 +158,7 @@ async def exercise(process: asyncio.subprocess.Process) -> None:
         },
     )
     assert initialized["serverInfo"]["name"] == "judgevet-mcp"
+    assert initialized["serverInfo"]["version"] == version("judgevet")
     assert process.stdin is not None
     process.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
     await process.stdin.drain()
