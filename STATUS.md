@@ -2,14 +2,41 @@
 
 Last written: 2026-09-22. A session overwrites this file.
 
+## Next-release typed answer accessors (#103)
+
+`SystemOneResponse.nouls`, `.choices` and `.scores` return freshly filtered
+plain dictionaries with exact answer types. Each read reflects the current
+`answers` dictionary, preserving matching insertion order and answer-object
+identity. Returned mapping edits do not change `answers`; nested dictionaries
+on shared answer objects retain their existing aliasing. Missing and
+wrong-variant keys raise ordinary `KeyError` when indexed. Existing dataclass
+fields, constructor behavior and repr remain unchanged.
+
+Eighteen new acceptance cases failed before implementation and now pass.
+They cover mixed/empty selections, snapshot identity and source/selection
+mutations. Actual `ty` subprocess probes prove all three field accesses and
+exact dictionary types without casts; the wrong-assignment case rejects a
+no-op checker. A wrong filter caused four runtime failures. Widening an
+accessor's return type caused both type-check tests to fail. All eleven gates
+pass: **508 tests, 5 deselected, 95.61% coverage**.
+
+The coder supplied the three properties. Gatekeeper corrected its import,
+attribute documentation and example and wrote the independent tests. The
+reasoner supplied the computed-property decision, but its unperformed-test
+claims and immutability overstatement were rejected. Raw and accepted specs,
+red/green evidence and audits are on #103; factual role attribution is retained.
+No live-service behavior or verification claim changed. This feature is on
+main for tracker #121, not in published 0.3.0. #16 and #97 remain required
+before the next release; release-please selects its version.
+
 ## Published 0.3.0 and final release verification
 
 [0.3.0](https://github.com/Alberto-Codes/judgevet/releases/tag/v0.3.0) is published
 and verified. Its tag resolves to `46da3873409809133e763f58f6ebed2d97048e6a`.
 Release commit CI [35706796296](https://github.com/Alberto-Codes/judgevet/actions/runs/35706796296)
 passed. Production [35706880816](https://github.com/Alberto-Codes/judgevet/actions/runs/35706880816)
-passed both isolated smoke gates before uploading. Current local gates all
-pass: **490 tests, 5 deselected, 95.55% coverage**.
+passed both isolated smoke gates before uploading. At that release, local gates all
+passed: **490 tests, 5 deselected, 95.55% coverage**.
 
 Actual PyPI downloads match production Actions and the accepted TestPyPI
 artifacts byte-for-byte:
