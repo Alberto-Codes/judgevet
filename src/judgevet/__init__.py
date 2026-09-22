@@ -69,7 +69,7 @@ from judgevet.adapters.outbound.http import (
 )
 from judgevet.domain.questions import Choice, Noul, Score
 
-__version__ = "0.3.0"  # x-release-please-version
+__version__ = "0.4.0"  # x-release-please-version
 
 __all__ = [
     "AsyncHTTPSystemOneAdapter",
