@@ -41,6 +41,7 @@ import pytest
 
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+from judgevet.domain.answers import NoulAnswer
 from judgevet.domain.questions import Choice, Noul
 from judgevet.domain.response import SystemOneResponse
 
@@ -277,8 +278,8 @@ def _run_noul_baseline_call(
         model="jev-latest",
     )
     noul_answer = response.answers["noul"]
-    # ty can't narrow the union type from dict lookup, so use ty: ignore
-    return noul_answer.noul  # ty: ignore
+    assert isinstance(noul_answer, NoulAnswer)
+    return noul_answer.noul
 
 
 def _run_noul_inverted_call(
@@ -307,8 +308,8 @@ def _run_noul_inverted_call(
         model="jev-latest",
     )
     noul_answer = response.answers["noul"]
-    # ty can't narrow the union type from dict lookup, so use ty: ignore
-    return noul_answer.noul  # ty: ignore
+    assert isinstance(noul_answer, NoulAnswer)
+    return noul_answer.noul
 
 
 @pytest.mark.live

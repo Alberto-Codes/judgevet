@@ -6,6 +6,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from scripts.check_suppressions import (
     ALLOWED_PER_FILE_IGNORE_CODES,
     count_per_file_ignores,
@@ -283,3 +285,57 @@ class TestScan:
             assert files_scanned == 1
             assert findings == []
             assert main([tmpdir]) == 0
+
+
+@pytest.mark.parametrize(
+    "directive",
+    [
+        "# ty: ignore",
+        "# ty: ignore[invalid-assignment]",
+        "#ty:ignore[invalid-assignment]",
+    ],
+)
+@pytest.mark.parametrize(
+    "template",
+    [
+        "value: str = 1  {directive}\n",
+        "{directive}\nvalue: str = 1\n",
+        "def broken(:\n    pass  {directive}\n",
+    ],
+)
+def test_ty_comment_rejected(directive: str, template: str, tmp_path: Path) -> None:
+    """Reject real ty comments, including the tokenizer-error fallback."""
+    path = tmp_path / "canary.py"
+    path.write_text(template.format(directive=directive))
+    findings, count = scan([path])
+    assert count == 1
+    assert len(findings) == 1
+    assert findings[0].endswith(directive)
+    assert main([str(path)]) == 1
+
+
+@pytest.mark.parametrize(
+    "directive",
+    [
+        "# ty: ignore",
+        "# ty: ignore[invalid-assignment]",
+        "#ty:ignore[invalid-assignment]",
+    ],
+)
+@pytest.mark.parametrize(
+    "template",
+    [
+        'text = "{directive}"\n',
+        '"""A documented example: {directive}."""\n',
+    ],
+)
+def test_quoted_ty_is_not_a_suppression(
+    directive: str,
+    template: str,
+    tmp_path: Path,
+) -> None:
+    """Preserve ordinary strings and docstrings containing directive examples."""
+    path = tmp_path / "example.py"
+    path.write_text(template.format(directive=directive))
+    assert scan([path]) == ([], 1)
+    assert main([str(path)]) == 0

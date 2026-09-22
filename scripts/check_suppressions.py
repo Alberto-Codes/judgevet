@@ -12,7 +12,7 @@ The `per-file-ignores` entries already in `pyproject.toml` are allowed and
 counted by total codes, not patterns. Adding a new code to an existing entry
 is a decision, so this script fails until the budget is raised deliberately.
 
-Inline suppressions (`# noqa`, `# type: ignore`) are forbidden in `src/`,
+Inline suppressions (`# noqa`, `# type: ignore`, `# ty: ignore`) are forbidden in `src/`,
 `tests/` and `scripts/`; `per-file-ignores` is the only route. A real
 suppression must be a comment; a `# noqa` inside a string literal suppresses
 nothing, so this gate uses `tokenize` to flag `COMMENT` tokens only.
@@ -32,7 +32,9 @@ import tomllib
 from pathlib import Path
 
 # A suppression comment anywhere in a line of Python.
-SUPPRESSION = re.compile(r"#\s*(noqa|type:\s*ignore|ruff:\s*noqa|pyright:\s*ignore)")
+SUPPRESSION = re.compile(
+    r"#\s*(noqa|type:\s*ignore|ty:\s*ignore|ruff:\s*noqa|pyright:\s*ignore)"
+)
 
 # Deliberate `per-file-ignores` codes in pyproject.toml. Raise this only with
 # a reason in the commit message.

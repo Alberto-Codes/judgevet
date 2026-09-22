@@ -185,6 +185,28 @@ reasoner's specification also needed a routing correction. #109 preserves the
 raw returns, accepted specification and executable proof; the shared skill/log
 record these observations. Native MCP feedback was advisory, not a gate.
 
+## Type-checker suppression gate (#111)
+
+The scanner now recognizes bare and bracketed ty ignore comments through both
+its token-aware path and parse-error fallback. Strings and docstrings containing
+examples remain unflagged. Both actual and allowed per-file-ignore counts remain
+18. The two live-test answer lookups now narrow to NoulAnswer explicitly; no live
+call was needed. The frozen-settings test mutates each field dynamically and
+still requires the runtime frozen-model error.
+
+Fifteen scanner cases and a second frozen-field case bring the suite to
+**475 passed, 5 deselected, 95.55% coverage**. All eleven configured gates pass.
+The real suppressed assignment canary passes ty and fails the suppression gate;
+removing its ignore makes ty fail. Removing the scanner alternative makes all
+nine detector cases fail. Disabling runtime immutability makes both frozen-field
+cases fail. Source bytes were restored after each deliberate mutation.
+
+The coder returned all five requested replacements correctly. Codex's accepted
+constant-setattr recipe caused a B010 finding; Codex corrected the specification
+and parameterized the runtime test. The model was not responsible for that
+recipe error. Original/revised specifications, raw replacements and executable
+proof are on #111; the shared skill/log preserve that distinction.
+
 ## The headline
 
 **judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and
@@ -670,8 +692,7 @@ The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
 set. #109 completed the remaining console-script detector proof for #106 and #99. #101's publish smoke gate is
 wired and proven in Actions. Both publishing environments have the vendor
-key; it is scoped to the smoke step. #111 tracks the suppression scanner's
-unrecognized `ty: ignore` comments and the three existing occurrences.
+key; it is scoped to the smoke step. #111 closed the scanner's `ty: ignore` gap and removed the three existing uses.
 
 ## Publish gate wiring
 

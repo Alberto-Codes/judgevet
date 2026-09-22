@@ -40,12 +40,14 @@ class TestLogSettings:
         settings = LogSettings(level="debug")
         assert settings.level == "debug"
 
-    def test_frozen(self) -> None:
-        """Test that LogSettings is immutable."""
+    @pytest.mark.parametrize(
+        "field_name, value", [("format", "json"), ("level", "debug")]
+    )
+    def test_frozen(self, field_name: str, value: str) -> None:
+        """Require each configured field to reject runtime mutation."""
         settings = LogSettings()
         with pytest.raises(ValidationError, match="frozen"):
-            # ty: ignore[invalid-assignment]
-            settings.format = "json"
+            setattr(settings, field_name, value)
 
 
 class TestRedact:
