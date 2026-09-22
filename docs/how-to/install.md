@@ -4,10 +4,8 @@ status: draft
 
 # Install judgevet
 
-The published 0.2.0 package provides the library and CLI. The supported
-`judgevet-mcp` command is available on main and awaits the
-[next release](https://github.com/Alberto-Codes/judgevet/issues/116).
-Installing the published MCP extra alone does not provide that command yet.
+Published judgevet 0.3.0 provides the library, CLI and `judgevet-mcp` command.
+The MCP runtime is optional.
 
 ## Install the library
 
@@ -23,11 +21,9 @@ Alternatively, in an existing uv project, run:
 uv add judgevet
 ```
 
-Independent installs resolved imports from their virtual environments'
-site-packages. The downloaded published 0.2.0 wheel contains
-`judgevet/py.typed`. See the
-[installation measurements](https://github.com/Alberto-Codes/judgevet/issues/37#issuecomment-5771877533).
-The base installation does not require the MCP runtime.
+The published 0.3.0 wheel includes `judgevet/py.typed`. Independent base
+installs resolve under their virtual environments' site-packages without the
+MCP runtime. See the [published artifact proof](https://github.com/Alberto-Codes/judgevet/issues/116#issuecomment-5773724671).
 
 ## Run the CLI
 
@@ -45,12 +41,32 @@ In a virtual environment with pip, run:
 python -m pip install 'judgevet[mcp]'
 ```
 
-This adds the MCP runtime. Published 0.2.0 has no `judgevet-mcp` entry point;
-use the source instructions below until the next release is verified.
+This installs the MCP runtime and `judgevet-mcp` command. Supply `JEV_API__KEY`
+through the environment before running it. The launcher below loads it through
+direnv.
 
-## Run MCP from a source checkout
+## Run the published MCP command
 
-Use a checkout containing the supported command. Install uv and direnv.
+Prerequisites: `uv` and `direnv` installed. `/absolute/path/to/project` is any
+trusted project directory with an approved `.envrc` exporting `JEV_API__KEY`.
+No judgevet checkout is required. Keep secrets outside checked-in
+configuration, command arguments, or diagnostics.
+
+Execute the following command to launch the MCP server:
+
+```bash
+direnv exec /absolute/path/to/project uvx --from 'judgevet[mcp]==0.3.0' judgevet-mcp
+```
+
+This command pins judgevet to version 0.3.0. To update, replace `0.3.0` with a
+newer published version after verification. Note that only the judgevet package
+is pinned; transitive dependencies may still resolve differently. The server
+waits for client input on stdin and closes on EOF, emitting frames on stdout
+and diagnostics on stderr.
+
+## Optional: run MCP from a source checkout
+
+For development, use a checkout containing the supported command. Install uv and direnv.
 Replace `/absolute/path/to/judgevet` with that checkout's absolute path.
 Its reviewed, already-authorized `.envrc` must export `JEV_API__KEY`.
 Keep the credential outside checked-in files, TOML, command arguments and
@@ -70,15 +86,15 @@ stdout; diagnostics use stderr.
 
 ## Configure Codex for a project
 
-In a trusted project's `.codex/config.toml`, add the following table. Preserve
-other settings. Replace both placeholder paths with the source checkout path.
-The Codex process must find `direnv` and `uv` on its PATH; otherwise use their
-absolute executable paths.
+Create or edit `.codex/config.toml` in your trusted project directory. Keep
+other settings unchanged. The placeholder refers to your project's approved
+`.envrc`. Ensure `direnv` and `uvx` are on `PATH`, or use absolute executable
+paths.
 
 ```toml
 [mcp_servers.judgevet]
 command = "direnv"
-args = ["exec", "/absolute/path/to/judgevet", "uv", "run", "--directory", "/absolute/path/to/judgevet", "--locked", "--extra", "mcp", "judgevet-mcp"]
+args = ["exec", "/absolute/path/to/project", "uvx", "--from", "judgevet[mcp]==0.3.0", "judgevet-mcp"]
 ```
 
 Codex loads project settings only for trusted projects. User-wide settings
@@ -116,9 +132,10 @@ In the Python MCP SDK, initialization returns `server_info`; tool answers use
 A successful call has no tool error and returns model and usage fields.
 This verifies integration, not the accuracy of a judgment.
 
-The [issue evidence](https://github.com/Alberto-Codes/judgevet/issues/37#issuecomment-5771877533)
-records discovery and all three live calls from an isolated source-wheel
-installation and the configured launcher. That unreleased wheel still has
-0.2.0 metadata; it is distinct from the published 0.2.0 wheel. Those checks
-exercise legacy initialization. A separate SDK or wire probe does not prove
-that an already-running Codex session reloaded its native tools.
+The [published artifact proof](https://github.com/Alberto-Codes/judgevet/issues/116#issuecomment-5773724671)
+records byte equality and live base/MCP checks on the actual PyPI download.
+The [published launcher proof](https://github.com/Alberto-Codes/judgevet/issues/119#issuecomment-5773781232)
+records discovery and all three live calls from a temporary working directory
+with an empty uv cache. These checks exercise legacy initialization. A separate
+SDK or wire probe does not prove that an already-running Codex session reloaded
+its native tools.

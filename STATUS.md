@@ -2,6 +2,56 @@
 
 Last written: 2026-09-22. A session overwrites this file.
 
+## Published 0.3.0 and final release verification
+
+[0.3.0](https://github.com/Alberto-Codes/judgevet/releases/tag/v0.3.0) is published
+and verified. Its tag resolves to `46da3873409809133e763f58f6ebed2d97048e6a`.
+Release commit CI [35706796296](https://github.com/Alberto-Codes/judgevet/actions/runs/35706796296)
+passed. Production [35706880816](https://github.com/Alberto-Codes/judgevet/actions/runs/35706880816)
+passed both isolated smoke gates before uploading. Current local gates all
+pass: **490 tests, 5 deselected, 95.55% coverage**.
+
+Actual PyPI downloads match production Actions and the accepted TestPyPI
+artifacts byte-for-byte:
+
+| artifact | SHA-256 |
+|---|---|
+| wheel | `71e37956ef451c682cbd22b8ed0a61a58da7317c5e7526ecdeae77b91779aefd` |
+| sdist | `4e76b15f11a98dba1cc994bee208a5d7220b6c3d07f143b8d480a4453b97e0c3` |
+
+Fresh TestPyPI publication ran in
+[35705399418](https://github.com/Alberto-Codes/judgevet/actions/runs/35705399418).
+After #118, candidate re-evaluation with Actions' uv 0.12.17 reproduced both
+exact distributions. [35706686352](https://github.com/Alberto-Codes/judgevet/actions/runs/35706686352)
+passed the repaired gates and skipped identical existing files; it did not
+replace them or count as another fresh publication. The merge tree matched
+the accepted candidate. Local uv 0.11.20 produced different generator metadata;
+this is measured build-tool sensitivity, not a claim of general reproducibility.
+
+The actual PyPI wheel passed base library/CLI checks and a separate MCP-extra
+installation outside the checkout. The installed command advertised 0.3.0,
+discovered exactly three tools, completed all three live calls and closed.
+The wheel contains `judgevet/py.typed`. The published pinned uvx launcher also
+passed from a temporary cwd and empty cache, loading the key through direnv.
+Fresh pip base, pip extra, uv add and uvx CLI recipes passed at 0.3.0.
+[Artifact evidence](https://github.com/Alberto-Codes/judgevet/issues/116#issuecomment-5773724671)
+and [launcher evidence](https://github.com/Alberto-Codes/judgevet/issues/119#issuecomment-5773781232)
+record the commands and limits. The install guide now defaults to the published
+command and retains optional source development instructions.
+
+Native judgevet tools were dogfooded separately. The local config keeps its
+supported source command and inherited key; no inline launcher remains. Fresh
+transport checks do not prove an already-running session reloaded native tools.
+Only exercised legacy initialization and `jev-1.13.0` remain verified; unseen
+429/529 bodies stay inferred. Judgment probabilities do not authorize release.
+
+#119's reasoning and coder drafts required corrections, including an invented
+key-variable name. The gatekeeper verified literal commands, corrected prose
+and wrote this STATUS entry. Issue comments and the shared delegation log keep
+raw returns, accepted specs and factual role attribution. Unrelated `.serena/`
+and local `.codex/config.toml` were preserved. The sections below retain earlier
+round measurements; their then-unreleased artifacts are historical evidence.
+
 ## Release import guard (#118)
 
 Fresh TestPyPI 0.3.0 publication passed both Actions smoke checks in
