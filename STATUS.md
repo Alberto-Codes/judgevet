@@ -47,8 +47,8 @@ questions and developer policy". #127 supplies explicit file/stdin input. #128
 adds opt-in --policy validation, typed inclusive predicates and ordered reports.
 Valid judgments exit 0 for a met policy and 3 for an unmet policy. Input/service
 errors exit 1; usage conflicts exit 2. Legacy low probabilities still exit 0.
-Integration #129 and publication #130 remain pending. These changes are not in
-published 0.4.1.
+Integration #129 supplies an opt-in staged-diff example with versioned questions
+and policy. Publication #130 remains pending; these changes are not in 0.4.1.
 
 The #128 installed-command baseline was 57 failing new cases. The final round
 adds 146 tests: 50 parser, 28 evaluator, 57 installed-process and 11 lifecycle
@@ -68,6 +68,21 @@ of every known relevant requirement, exact interfaces and bounded context. The
 log distinguishes coder self-repair, supervisor repairs and retries. Local-model
 usage is recorded; historical per-artifact supervisor usage is unavailable because
 start checkpoints were not captured. Lower supervisor cost remains a hypothesis.
+
+The #129 example captures only staged changes, rejects producer failures before
+calling the installed CLI, and forwards stdin with exact argument checks. Eight
+isolated Git/HTTP cases cover pass, unmet policy, auth error, no staged changes,
+producer failure, partial producer output, invalid policy and usage. Removing
+producer rejection causes one failure; cleanup removal causes seven; masking CLI
+status causes three. A live isolated staged-README call returned valid policy
+failure (exit 3), jev-1.13.0, an approve answer and empty stderr. That observation
+proves wiring, not judgment quality or deterministic policy acceptance.
+
+The first example dispatch needed a corrected supervisor fixture and a stronger
+stdin oracle. The bounded retry fixed stdin; Codex corrected remaining docs.
+The full-matrix handoff has not demonstrated lower total repair cost. Shared
+skill, template and delegation records are committed in bazzite-dotfiles
+3802e7e; unrelated local changes there were excluded through an isolated worktree.
 
 The #127 input proofs remain: 60 installed-process and 27 direct cases, with
 mutations detecting duplicate-key and early state-validation removal.
@@ -101,11 +116,12 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**787 tests pass, 6 live tests deselected, 95.13% coverage** (1173/1233 statements). All eleven configured
+**795 tests pass, 6 live tests deselected, 95.13% coverage** (1173/1233 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
-passed. The #128 source commit still needs its own remote CI verification. Prior
+passed. [#128 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35792578365)
+passed. The #129 source commit still needs its own remote CI verification. Prior
 main, candidate and
 [release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35735621182)
 passed. Final evidence-commit CI is recorded on tracker #124.
@@ -177,8 +193,8 @@ way nobody planned.
 
 ## Remaining work
 
-Finish #128 explicit policy, #129 developer integration and #130 publication in
-that order under #131. Verify the next actual index artifacts before describing
+Finish #130 publication under #131; file inputs, explicit policy and the
+staged-diff integration are implemented. Verify the next actual index artifacts before describing
 this developer workflow as released. #67/#66 broader research remains separate.
 
 

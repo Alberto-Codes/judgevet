@@ -1,0 +1,6 @@
+{
+  "approve": {
+    "type": "noul",
+    "instructions": "Assess whether the staged change appears suitable to accept, including obvious correctness problems and tests"
+  }
+}

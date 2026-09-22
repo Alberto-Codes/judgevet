@@ -1,0 +1,12 @@
+{
+  "rules": [
+    {
+      "question": "approve",
+      "pass": {
+        "noul": {
+          "min": 0.8
+        }
+      }
+    }
+  ]
+}
