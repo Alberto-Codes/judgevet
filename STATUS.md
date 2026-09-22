@@ -2,6 +2,40 @@
 
 Last written: 2026-09-22. A session overwrites this file.
 
+## Optional assisted audits (#97)
+
+Shared tooling shipped in bazzite-dotfiles commit5ba51d9 on its default
+`develop` branch. An isolated checkout excluded two unrelated local commits;
+existing local skill/template/log edits remain preserved. Judgevet continues
+on `main`.
+
+`pi-forensics.py --judge` adds advisory judgment without changing gate exits
+or regex findings. The default needs neither judgevet nor credentials; key
+presence alone does not enable paid calls. A45-second worker communication
+bound includes imports, request and cleanup. Missing input/key/dependency,
+service errors, malformed answers and timeouts retain the deterministic audit.
+Unexpected worker exceptions become fixed `worker_failure` at the parent.
+
+All18shared-tooling tests and static/format checks pass. Mutations disabling
+opt-in, failed-gate exit or timeout each fail their acceptance tests. A real
+worker import timeout was killed and reaped. The actual no-key CLI ran all11
+judgevet gates green and reported `missing_key`. Judgevet remains at **511
+tests,5deselected,95.61%coverage**; its implementation did not change this round.
+
+Historical dogfood reconstructed #95's final TOML to recorded Git blob
+`e058e8e14a4ba51b44bc72c2fffc986d7c44f23d`. Its original checker exited1 for
+14suppression codes against budget10. The isolated published0.3.0 client
+returned probability0.65 for the conflicting completion claim, resolved model
+`jev-1.13.0`,685input/20outputtokens. Regex returned no claim warning, so the
+report correctly showed disagreement. This one observation is not an accuracy
+estimate. Historical gates were labelled separately from current green gates.
+
+Reasoner drafts, accepted corrections, rejected coder artifacts, repairs,
+red/green tests and live evidence are preserved on #97. Both model roles have
+factual trailers; gatekeeper-authored validation, tests and repairs are named.
+No API trust claims changed. #103,#16,#97 implementation is landed; fresh
+TestPyPI and production verification for the next release remain outstanding.
+
 ## Next-release CLI help (#16)
 
 The command decorator supplies explicit public help. Installed `judgevet
