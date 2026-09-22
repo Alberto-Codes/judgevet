@@ -3,163 +3,110 @@
 Last written: 2026-09-22. This file reports current state; historical rounds
 remain in Git history and their linked issues.
 
-## Active CLI patch (#124)
-
-Published 0.4.0 remains artifact-verified, but a post-release process test found
-#123: malformed question JSON produces an error on stderr and exits 0. The
-exact downloaded PyPI wheel reproduces it without a live request. #123 fixes that
-exit contract through a thin Typer wrapper. Direct helpers retain integer
-returns, the non-standalone callback retains success0, and adapter cleanup
-still occurs before exit. #30 now adds opt-in live installed-CLI coverage.
-The next release remains pending. Published 0.4.0 still contains the defect.
-
-Twenty-six new offline cases cover local failures with zero observed requests,
-controlled HTTP failures, all three answer types, and helper/lifecycle behavior.
-Before implementation, 18 process cases failed on exit0 and eight cases passed.
-Removing exit propagation causes 18 failures; removing closure causes four.
-The final base wheel passes six installed-console cases outside the checkout,
-with isolated package import/entrypoint and no MCP runtime. These are synthetic
-HTTP fixtures, not new live API trust claims.
-
-The coder's first diff was rejected without application. The next function
-matched the initial specification, but the full suite exposed a missing
-callback-return compatibility requirement. Revised accepted specification
-[5777155848](https://github.com/Alberto-Codes/judgevet/issues/123#issuecomment-5777155848)
-preserves the existing test. Gatekeeper tests, integration and documentation
-corrections are distinguished from model-generated wrapper code. Native MCP
-claim-audit dogfood returned probability0.05 for release completion; this is
-advisory evidence, and the release remains incomplete.
-
-#30 exercises one installed-console request with Noul, Choice and Score. It
-checks process status, empty stderr, typed answers, model, usage and exact
-legend. Seventeen offline oracle checks pass. They include absent-key skip,
-configured failure, malformed output, missing executable and real-child cleanup.
-Removing model validation or cleanup makes the corresponding check fail.
-
-The opt-in test passed against the real service from both the development
-installation and an isolated local wheel outside the checkout. The wheel check
-proved the package imported from that environment's site-packages. Missing-key
-selection skips, and default collection deselects the test even with a canary
-key present. The release guide now repeats this check against actual downloaded
-TestPyPI and PyPI wheels; those release checks have not happened yet.
-
-Two whole-file coder returns were rejected. Bounded validator and process/live
-artifacts were integrated with named gatekeeper corrections. A positive fixture
-caught an envelope-key error that the rejection tests alone missed. Original
-returns, specification, corrections and evidence are preserved on
-[#30](https://github.com/Alberto-Codes/judgevet/issues/30#issuecomment-5777549590).
-
-Backlog acceptance was reconciled while preserving historical issue bodies.
-#34's async client/equivalence work, #22's release history and #19's documented
-Noul criteria are fulfilled. A focused async/contract/public-surface/logging
-run passed 53 tests; the existing all-question-types live test passed with
-true/false criteria. These audits add no new API trust claims.
-
-#3 remains the logging parent: #26 configuration exists, while #27 call-site
-wiring and real-stream proof remain. Its named stderr test uses an explicit
-StringIO and never captures actual stdout, so its name alone is not evidence
-of default stderr behavior. #27 and #43 lost obsolete blocked labels. Current
-acceptance for #43/#67/#68 reflects the released README, exports and clean CLI
-help. #8 now requires the AGENTS.md hard limit of 300 code lines, not 320;
-actual baseline inventory and decomposition must precede a green size gate.
-
 ## Published release
 
-**judgevet 0.4.0 is published and verified.** The library, CLI and supported
-`judgevet-mcp` command install from PyPI. MCP remains an optional extra.
+**judgevet 0.4.1 is published and verified.** The patch fixes handled CLI
+failures returning success to shell scripts. The library, CLI and supported
+`judgevet-mcp` command install from PyPI. MCP remains optional.
 
-Release commit: `c9907a2679ac8a0289ecbe791672667d1bc1b862`.
+Release commit: `b12fb3c6085a16187ed50d97e2a4000cc50a5a29`.
 Release-please selected the version and updated all four version fields.
-The release tree matches candidate `0200e1f4ef5e4c63b9f92fb819599d6253297293`.
+The release tree matches candidate `ecd62452855b90b82c36a3ef1570c531b30b0b01`.
 
-Both actual TestPyPI and PyPI distributions match their Actions artifacts and
-each other byte-for-byte:
+Actual TestPyPI and PyPI distributions match their Actions artifacts and each
+other byte-for-byte:
 
 | artifact | SHA-256 |
 |---|---|
-| wheel | `cc41725f53066430a725116f6c932338c31f7b1e5bbd6602a5bfc533c2344497` |
-| source distribution | `204cf766b82dcf6c0a493b48b490b13dcfd6570b23a5b0579be239a2449b3a54` |
+| wheel | `f5c59808917975fef7f79f2598ce02c5314e3d453149345d56528e159b3445c5` |
+| source distribution | `3aced27ca3fb5caa0edb8aa5946db9b1daa54409f65a0f654f30514bed2deb7f` |
 
-[TestPyPI run](https://github.com/Alberto-Codes/judgevet/actions/runs/35728419079)
-and [production run](https://github.com/Alberto-Codes/judgevet/actions/runs/35728680925)
+[TestPyPI run](https://github.com/Alberto-Codes/judgevet/actions/runs/35735298922)
+and [production run](https://github.com/Alberto-Codes/judgevet/actions/runs/35735744611)
 passed isolated base and MCP smoke checks before OIDC upload. Independent checks
-of the actual index downloads passed outside the checkout. The published uvx
-launcher passed with an empty cache: version 0.4.0, exactly three tools, and
-live calls to `ask_noul`, `ask_choice` and `ask_score`.
+of actual index downloads passed outside the checkout: library examples,
+CLI help, live mixed CLI judgment, six offline CLI process cases, and all three
+MCP tools. Base installs omit MCP and the wheel includes `py.typed`.
 
-[Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/issues/121#issuecomment-5776734827)
-records hashes, commands, limits and an initial probe-environment failure.
-Native tools were available and dogfooded during development. Fresh transport
-checks do not prove an already-running native agent session reloaded.
+The published uvx launcher passed from a temporary working directory with an
+empty cache: version 0.4.1, exactly three tools, and live calls to `ask_noul`,
+`ask_choice` and `ask_score`. Its first probe returned a sanitized transport
+failure; a help probe and fresh empty-cache transport retry passed without a
+product/config change. Cause remains unproven. Fresh transport checks do not
+prove an already-running native agent session reloaded.
+
+[Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/issues/124#issuecomment-5777743633)
+records commands, hashes, runs and limits. The installation guide now pins the
+verified published version. Native tools were available and dogfooded during
+#123 development; judgment output was advisory, never a substitute for gates.
 
 ## Delivered scope
 
-- [#103](https://github.com/Alberto-Codes/judgevet/issues/103): typed `nouls`,
-  `choices` and `scores` accessors. Each read returns a fresh ordered dictionary
-  of the same answer objects. Selection edits leave `answers` unchanged;
-  subsequent source edits appear on the next read. Missing/wrong-variant keys
-  raise `KeyError`. Nested answer values remain shared. Eighteen tests started
-  red; actual ty checks and filter/type mutations prove the contract.
-- [#16](https://github.com/Alberto-Codes/judgevet/issues/16): public CLI help
-  retains usage, descriptions and defaults without developer sections. Complete
-  developer docstrings remain. Two behavioral tests started red; removing
-  explicit help makes them fail. Installed base-wheel help also passed.
-- [#97](https://github.com/Alberto-Codes/judgevet/issues/97): explicit `--judge`
-  enrichment in companion pi-forensics tooling. It lives in bazzite-dotfiles,
-  not this distribution. The default remains stdlib-only; key presence does
-  not enable paid calls. Gates and regex findings remain authoritative.
+- [#123](https://github.com/Alberto-Codes/judgevet/issues/123): the installed
+  CLI exits 1 for handled failures and 0 for success. Direct helpers and the
+  non-standalone success callback retain integer return contracts. Existing
+  arguments/output and adapter cleanup remain compatible. Twenty-six offline
+  cases cover observed requests, all answer types, errors and lifecycle.
+  Eighteen process cases started red. Removing exit propagation causes 18
+  failures; removing closure causes four. Commit `97fff00`.
+- [#30](https://github.com/Alberto-Codes/judgevet/issues/30): one opt-in live
+  installed-console request covers Noul, Choice and Score with typed output,
+  model/usage/legend and stream checks. Seventeen offline oracle checks cover
+  corrupt output, missing key/executable, configured failure and real-child
+  cleanup. Model-check and cleanup mutations fail. Default collection excludes
+  live tests even with a configured key. Actual downloaded TestPyPI and PyPI
+  wheels passed this live path. Commit `dd23d59`.
+- Backlog reconciliation preserved historical issue bodies and posted current
+  acceptance. #34 async support, #22 release history and #19 Noul criteria are
+  fulfilled. #3 remains the logging parent; #27 wiring/real-stream proof remains.
+  #43/#67/#68 now distinguish existing features from remaining design work.
+  #8's acceptance and title use hard limits of 300/50 code lines. Obsolete
+  blocked/pi-fit labels were corrected. Commit `5f2c346`.
 
-Shared tooling shipped as
-[`5ba51d9`](https://github.com/Alberto-Codes/bazzite-dotfiles/commit/5ba51d9)
-on its default `develop` branch. An isolated checkout excluded two unrelated
-local commits. Existing local skills, templates, logs and submodule changes
-were preserved. Judgevet work went directly to `main`; the only PR was the
-release-please release PR.
-
-The optional worker has a 45-second communication deadline, including imports,
-request and cleanup. Missing input/key/dependency, malformed answers, API errors
-and timeout retain the core report. Unexpected worker exits become fixed
-`worker_failure` diagnostics. Eighteen offline tests pass, including actual
-process reaping and secret-containing exception containment. Mutations removing
-opt-in, failed-gate exit or timeout each fail acceptance tests.
-
-Historical dogfood reconstructed #95's final TOML to recorded Git blob
-`e058e8e14a4ba51b44bc72c2fffc986d7c44f23d`; its original checker exited 1 for
-14 suppression codes against a budget of 10. Published judgevet 0.3.0 returned
-probability 0.65 for its conflicting completion claim, resolved model
-`jev-1.13.0`, 685 input/20 output tokens. Regex returned no claim warning,
-so the report showed disagreement. This is one observation, not an accuracy
-estimate. Historical failures were labelled separately from current green gates.
+#68 CLI ergonomics remains a later goal. #125 records release-please's generated
+"closes" wording for `Refs` links. Reviewed release notes distinguish references
+from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**554 tests pass, 6 live tests deselected, 95.63% coverage.**
-The #30 local full-suite run confirms these figures. Published 0.4.0
-[release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35728612308)
-records its earlier baseline of 511 tests and 95.61% coverage. All eleven configured local gates passed:
-suppressions, dependencies, test hygiene, ruff check/format, ty, import-linter,
-docvet diff/all, pytest, and pytest with coverage. Commit and push hooks remain
-enabled. Shared tooling also passes its unittest, lint and format checks.
+**554 tests pass, 6 live tests deselected, 95.63% coverage.** All eleven configured
+local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
+ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
+push hooks remain enabled. Main, candidate and
+[release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35735621182)
+passed. Final evidence-commit CI is recorded on tracker #124.
 
 Reasoning used Qwen3.8-27B-UD-Q4_K_M with explicit medium thinking; coding used
-Qwen3-Coder-Next-UD-IQ4_XS with thinking off. Original prompts, raw returns,
-accepted/revised specifications, red/green proofs and gatekeeper repairs are
-preserved on each issue. Factual `Specified-By` and `Generated-By` trailers
-keep roles separate and name gatekeeper-authored tests and corrections.
-Measured limitations and outcomes are persisted in the delegation skill/log.
+Qwen3-Coder-Next-UD-IQ4_XS with thinking off. Prompts, original returns, accepted
+and revised specifications, red/green proofs and named corrections live on the
+issues. Factual `Specified-By` and `Generated-By` trailers keep roles separate
+and identify gatekeeper tests, integration and repairs. Rejected returns were
+not credited as working implementation.
 
-Existing [broken-library](https://github.com/Alberto-Codes/judgevet/actions/runs/35686353515)
+The #123 full suite caught a callback-return requirement missed by the initial
+specification. The #30 positive fixture rejected a validator whose negative
+checks otherwise passed. Whole-file coder returns invented source fields;
+bounded artifacts still needed semantic corrections. These observations do not
+establish general model accuracy or the cause of improvement between prompts.
+
+Seven task-specific delegation records and scoped skill observations shipped
+as [3992e38](https://github.com/Alberto-Codes/bazzite-dotfiles/commit/3992e38) on the
+shared tooling default `develop` branch. An isolated checkout excluded unrelated
+local commits, templates and submodule changes. Local `.serena/`, ignored
+`.codex/config.toml` and unrelated shared work remain preserved.
+
+The existing [broken-library](https://github.com/Alberto-Codes/judgevet/actions/runs/35686353515)
 and [broken-MCP](https://github.com/Alberto-Codes/judgevet/actions/runs/35699666984)
-proofs show failed smoke checks prevent upload. #101 and #107 are complete.
-#109 completed the remaining console-detector proof for #106 and #99; those
-already-landed changes were not rebuilt. #111 closed the ty-suppression gap.
-The suppression budget remains 18; this release did not weaken gates.
+proofs show failed smoke checks prevent upload. #101/#107 and the remaining
+#109 console-detector proof for #106/#99 were already complete and not rebuilt.
+#97's optional companion pi-forensics audit shipped with the earlier goal.
+No suppression budget or gate was weakened.
 
 ## What is verified, and what is not
 
 | claim | status |
 |---|---|
-| installed CLI sends a mixed live request and renders typed answers with success status and clean stderr | verified — #30 live test on development install and isolated local wheel |
+| installed CLI sends a mixed live request and renders typed answers with success status and clean stderr | verified — #30 live test on development install and actual TestPyPI/PyPI wheels |
 | endpoint, auth header, three answer shapes, usage | verified — probe + official reference |
 | noul has no confidence; score is continuous; legend is a map | verified — both sources |
 | noul criteria keys `true`/`false` are read by the service — inverted criteria moved the measured answer by ≥ 0.13, while `yes`/`no` (normal and inverted) did not move it | **verified** — live differential test, issue #105 |
@@ -196,7 +143,6 @@ way nobody planned.
 
 ## Remaining work
 
-The implementation and artifact-verification scope of tracker #121 is
-fulfilled. Final evidence-commit CI and milestone closure are recorded on that
-tracker. Tracker #124 now owns the CLI patch described above. Unseen API bodies remain
-inferred; no documentation is promoted to stable by this release.
+Tracker #124's implementation and artifact-verification scope is fulfilled.
+Final evidence-commit CI and milestone closure are recorded on that tracker.
+Unseen API bodies remain inferred; no documentation becomes stable here.
