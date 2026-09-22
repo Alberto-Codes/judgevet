@@ -1,4 +1,4 @@
-"""Compose an opt-in policy judgment without changing legacy CLI helpers.
+"""Compose an opt-in policy judgment with handled service and rate-limit errors.
 
 Examples:
     ```python
@@ -27,6 +27,7 @@ from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.errors import (
     JevAuthError,
+    JevRateLimitError,
     JevRequestError,
     JevResponseError,
     JevServiceError,
@@ -127,7 +128,7 @@ def run_policy(
     policy_file: str,
     callbacks: CliCallbacks,
 ) -> int:
-    """Validate policy before constructing an adapter and close it after judgment.
+    """Validate policy, handle rate limits and close the adapter after judgment.
 
     Args:
         state: Existing state string interpretation.
@@ -165,7 +166,13 @@ def run_policy(
             adapter.close()
     except InputFailure as error:
         message = str(error)
-    except (JevAuthError, JevRequestError, JevResponseError, JevServiceError) as error:
+    except (
+        JevAuthError,
+        JevRateLimitError,
+        JevRequestError,
+        JevResponseError,
+        JevServiceError,
+    ) as error:
         message = str(error)
     except (ValueError, TypeError, KeyError, AttributeError):
         message = "Invalid state, questions or configuration for policy judgment"

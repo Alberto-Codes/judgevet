@@ -4,6 +4,7 @@ The command wrapper propagates failure status to the process while helpers
 return integer codes and the composition root closes its adapter. Explicit
 file and stdin sources are validated before adapter construction. Explicit
 policies use a separate composition path and distinguish unmet policy from errors.
+Both paths render rate limits as handled failures.
 
 Examples:
     ```python
@@ -42,6 +43,7 @@ from judgevet.domain.answers import (
 )
 from judgevet.domain.errors import (
     JevAuthError,
+    JevRateLimitError,
     JevRequestError,
     JevResponseError,
     JevServiceError,
@@ -173,7 +175,7 @@ def run_cli(
     model: str = "jev-latest",
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> int:
-    """Run the CLI with a port.
+    """Run the CLI with a port and render handled errors, including rate limits.
 
     Args:
         port: The SystemOnePort implementation to use for API calls.
@@ -184,12 +186,6 @@ def run_cli(
 
     Returns:
         Exit code: 0 for success, 1 for error.
-
-    Raises:
-        JevAuthError: If authentication fails.
-        JevRequestError: If the request fails with 4xx.
-        JevServiceError: If the service fails with 5xx or transport error.
-        JevResponseError: If the response body cannot be parsed.
     """
     try:
         state_data = json.loads(state) if state.startswith(("{", "[")) else state
@@ -208,6 +204,7 @@ def run_cli(
         TypeError,
         KeyError,
         JevAuthError,
+        JevRateLimitError,
         JevRequestError,
         JevResponseError,
         JevServiceError,

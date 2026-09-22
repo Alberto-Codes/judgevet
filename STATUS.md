@@ -94,6 +94,13 @@ mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
+- #135: both CLI paths handle synthetic rate limits with status 1, empty stdout
+  and text/JSON stderr diagnostics. Eight offline process/lifecycle cases cover
+  both paths and output modes, secrecy and exact adapter closure. All eight
+  started red; removing either handler addition causes four failures. Live 429
+  remains unseen. The current coverage measurement is from the local hook run;
+  the earlier release measurement remains historical evidence.
+
 - [#123](https://github.com/Alberto-Codes/judgevet/issues/123): the installed
   CLI exits 1 for handled failures and 0 for success. Direct helpers and the
   non-standalone success callback retain integer return contracts. Existing
@@ -121,7 +128,7 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**795 tests pass, 6 live tests deselected, 95.13% coverage** (1173/1233 statements). All eleven configured
+**803 tests pass, 6 live tests deselected, 92.30% coverage** (1138/1233 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
