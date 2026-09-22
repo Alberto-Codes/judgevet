@@ -149,9 +149,18 @@ Specifications, raw returns, corrections and measurements are on #115 and in
 the shared delegation log. Prior transport tests and local MCP config retain
 their recorded hashes; the shared skill records the observed limitations.
 
-#115 remains open: TestPyPI Actions must reject a broken MCP artifact before
-upload, and the final fresh-version candidate must pass. Release-please currently
-proposes 0.3.0; no new version has been published by this round.
+The [TestPyPI failure proof](https://github.com/Alberto-Codes/judgevet/actions/runs/35699666984)
+now passes its acceptance criterion: build and base-only smoke succeeded, MCP
+smoke failed, and upload was skipped. Proof branch `proof/mcp-artifact-115`
+removes only the MCP console entry point during build; it must not merge into
+main. The downloaded Actions wheel retains the base console entry and lacks
+the MCP entry. SHA-256:
+`c27881cf2d8ad5a7c2bb52bb9d00ef577888b11324a427e736e048853391df11`.
+This deliberately broken artifact was not published to an index.
+
+#115 remains open for the final clean fresh-version candidate passing the
+publishing path. Release-please currently proposes 0.3.0; no new version has
+been published. Finish the other #116 children before reserving that version.
 
 ## The headline
 
