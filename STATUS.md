@@ -1,6 +1,6 @@
 # STATUS
 
-Last written: 2026-09-21. A session overwrites this file.
+Last written: 2026-09-22. A session overwrites this file.
 
 ## Next-release MCP command (#25)
 
@@ -90,6 +90,36 @@ The coder drafted the guide but mislabeled config scope and confused tool
 inputs with outputs. Codex corrected those errors and missing requirements.
 Original prompts, accepted spec, returned draft and installation outputs are
 on #37. The shared skill now calls for one consolidated accepted checklist.
+
+## MCP artifact transport checker (#115, first round)
+
+The new stdlib transport helper initializes an installed MCP command, checks
+its installed version and exact three-tool discovery, and validates all three
+structured answers. One deadline covers spawn and protocol work. Cleanup drains
+stdout while terminating and reaping the child with separate bounded waits.
+Diagnostics are fixed; child stderr is discarded and stdout must be protocol.
+
+Thirty-six offline regressions bring the suite to **426 passed, 5 deselected,
+95.55% coverage**. A real installed command makes three observed loopback HTTP
+requests. Controlled child processes prove malformed frames, invalid numeric
+answers, missing tools, stale versions, early EOF, failed exits, output pressure,
+timeouts and cancellation fail or clean up as specified. A final truncated-frame
+regression failed before enforcing newline termination. Deliberately skipping
+tool calls, accepting negative probabilities, and removing the spawn deadline
+each made its regression fail. The unmodified suite and all eleven gates pass.
+
+The reasoning model supplied the corrected accepted specification on #115.
+Coder drafts and tool-less repairs needed gatekeeper corrections; Codex wrote
+the retained tests and repaired numeric validation, framing, public errors and
+process cleanup. Raw prompts, returns and measurements are preserved on #115
+and in the shared delegation log. The shared skill records the observed limits.
+A native judgevet Choice call succeeded, classifying this evidence as transport
+only; that advisory answer is not a release gate or native reload proof.
+
+This helper is not yet wired into publishing. #115 remains open for a separate
+MCP-extra environment using the exact downloaded wheel, live tool calls before
+upload, and a broken-artifact Actions proof followed by a clean candidate.
+The existing base-only artifact smoke remains unchanged.
 
 ## The headline
 
