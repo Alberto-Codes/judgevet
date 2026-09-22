@@ -111,7 +111,7 @@ launches `judgevet-mcp`, discovers exactly three tools, and calls all three
 against the live service. A local source build is not index verification.
 
 Record commands, candidate SHA, run URL, hashes, live results and limits on
-[tracker #116](https://github.com/Alberto-Codes/judgevet/issues/116). Preserve
+the active release tracker. Preserve
 these downloads through production verification.
 
 ## Merge the accepted candidate
@@ -185,7 +185,7 @@ Confirm the production base/MCP steps and upload succeeded. A hash mismatch
 requires investigation; it does not authorize replacement of immutable files.
 Do not call the release verified until actual PyPI checks pass.
 
-Record final evidence on #116 and measured results in `STATUS.md`. Update the
+Record final evidence on the active release tracker and measured results in `STATUS.md`. Update the
 installation guide after the published MCP command is verified. A fresh
 transport probe does not prove the current Codex session reloaded its native
 tools. Leave unseen 429/529 bodies inferred.

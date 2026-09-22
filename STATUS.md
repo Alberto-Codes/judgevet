@@ -1,543 +1,98 @@
 # STATUS
 
-Last written: 2026-09-22. A session overwrites this file.
+Last written: 2026-09-22. This file reports current state; historical rounds
+remain in Git history and their linked issues.
 
-## Optional assisted audits (#97)
+## Published release
 
-Shared tooling shipped in bazzite-dotfiles commit5ba51d9 on its default
-`develop` branch. An isolated checkout excluded two unrelated local commits;
-existing local skill/template/log edits remain preserved. Judgevet continues
-on `main`.
+**judgevet 0.4.0 is published and verified.** The library, CLI and supported
+`judgevet-mcp` command install from PyPI. MCP remains an optional extra.
 
-`pi-forensics.py --judge` adds advisory judgment without changing gate exits
-or regex findings. The default needs neither judgevet nor credentials; key
-presence alone does not enable paid calls. A45-second worker communication
-bound includes imports, request and cleanup. Missing input/key/dependency,
-service errors, malformed answers and timeouts retain the deterministic audit.
-Unexpected worker exceptions become fixed `worker_failure` at the parent.
+Release commit: `c9907a2679ac8a0289ecbe791672667d1bc1b862`.
+Release-please selected the version and updated all four version fields.
+The release tree matches candidate `0200e1f4ef5e4c63b9f92fb819599d6253297293`.
 
-All18shared-tooling tests and static/format checks pass. Mutations disabling
-opt-in, failed-gate exit or timeout each fail their acceptance tests. A real
-worker import timeout was killed and reaped. The actual no-key CLI ran all11
-judgevet gates green and reported `missing_key`. Judgevet remains at **511
-tests,5deselected,95.61%coverage**; its implementation did not change this round.
-
-Historical dogfood reconstructed #95's final TOML to recorded Git blob
-`e058e8e14a4ba51b44bc72c2fffc986d7c44f23d`. Its original checker exited1 for
-14suppression codes against budget10. The isolated published0.3.0 client
-returned probability0.65 for the conflicting completion claim, resolved model
-`jev-1.13.0`,685input/20outputtokens. Regex returned no claim warning, so the
-report correctly showed disagreement. This one observation is not an accuracy
-estimate. Historical gates were labelled separately from current green gates.
-
-Reasoner drafts, accepted corrections, rejected coder artifacts, repairs,
-red/green tests and live evidence are preserved on #97. Both model roles have
-factual trailers; gatekeeper-authored validation, tests and repairs are named.
-No API trust claims changed. #103,#16,#97 implementation is landed; fresh
-TestPyPI and production verification for the next release remain outstanding.
-
-## Next-release CLI help (#16)
-
-The command decorator supplies explicit public help. Installed `judgevet
---help` keeps usage, argument/option descriptions and defaults without leaking
-Google docstring sections or implementation details. Developer documentation
-and runtime behavior remain intact; one docstring sentence explains the
-separate help source to satisfy docvet freshness.
-
-Two public-help tests failed before implementation; all three help tests pass
-now. Removing the decorator help makes those two fail again. Tests also prove
-help does not construct application settings and preserve the developer
-sections. All eleven gates pass: **511 tests, 5 deselected, 95.61% coverage**.
-A final base-only wheel installed outside the checkout passed the same help
-assertions without a key or MCP runtime. Its SHA-256 is
-`6f9031084e60716a508df02fc46c833b0083246382d9179b24aefd4c08c3789f`.
-This is an unreleased local source wheel with 0.3.0 metadata, not the published
-0.3.0 artifact. No live call or new API verification claim was needed.
-
-The reasoner proposed the command-level help seam. The coder returned the two
-exact accepted replacements with no functional repair. Gatekeeper authored
-red tests, artifact/mutation checks and the freshness sentence after docvet
-rejected the original unchanged-docstring recipe. This is a specification
-correction, not a coder deviation. #16 preserves that history and the revised
-accepted comment. #97 remains required by tracker #121 before publication;
-release-please currently proposes 0.4.0.
-
-## Next-release typed answer accessors (#103)
-
-`SystemOneResponse.nouls`, `.choices` and `.scores` return freshly filtered
-plain dictionaries with exact answer types. Each read reflects the current
-`answers` dictionary, preserving matching insertion order and answer-object
-identity. Returned mapping edits do not change `answers`; nested dictionaries
-on shared answer objects retain their existing aliasing. Missing and
-wrong-variant keys raise ordinary `KeyError` when indexed. Existing dataclass
-fields, constructor behavior and repr remain unchanged.
-
-Eighteen new acceptance cases failed before implementation and now pass.
-They cover mixed/empty selections, snapshot identity and source/selection
-mutations. Actual `ty` subprocess probes prove all three field accesses and
-exact dictionary types without casts; the wrong-assignment case rejects a
-no-op checker. A wrong filter caused four runtime failures. Widening an
-accessor's return type caused both type-check tests to fail. All eleven gates
-pass: **508 tests, 5 deselected, 95.61% coverage**.
-
-The coder supplied the three properties. Gatekeeper corrected its import,
-attribute documentation and example and wrote the independent tests. The
-reasoner supplied the computed-property decision, but its unperformed-test
-claims and immutability overstatement were rejected. Raw and accepted specs,
-red/green evidence and audits are on #103; factual role attribution is retained.
-No live-service behavior or verification claim changed. This feature is on
-main for tracker #121, not in published 0.3.0. #16 and #97 remain required
-before the next release; release-please selects its version.
-
-## Published 0.3.0 and final release verification
-
-[0.3.0](https://github.com/Alberto-Codes/judgevet/releases/tag/v0.3.0) is published
-and verified. Its tag resolves to `46da3873409809133e763f58f6ebed2d97048e6a`.
-Release commit CI [35706796296](https://github.com/Alberto-Codes/judgevet/actions/runs/35706796296)
-passed. Production [35706880816](https://github.com/Alberto-Codes/judgevet/actions/runs/35706880816)
-passed both isolated smoke gates before uploading. At that release, local gates all
-passed: **490 tests, 5 deselected, 95.55% coverage**.
-
-Actual PyPI downloads match production Actions and the accepted TestPyPI
-artifacts byte-for-byte:
+Both actual TestPyPI and PyPI distributions match their Actions artifacts and
+each other byte-for-byte:
 
 | artifact | SHA-256 |
 |---|---|
-| wheel | `71e37956ef451c682cbd22b8ed0a61a58da7317c5e7526ecdeae77b91779aefd` |
-| sdist | `4e76b15f11a98dba1cc994bee208a5d7220b6c3d07f143b8d480a4453b97e0c3` |
-
-Fresh TestPyPI publication ran in
-[35705399418](https://github.com/Alberto-Codes/judgevet/actions/runs/35705399418).
-After #118, candidate re-evaluation with Actions' uv 0.12.17 reproduced both
-exact distributions. [35706686352](https://github.com/Alberto-Codes/judgevet/actions/runs/35706686352)
-passed the repaired gates and skipped identical existing files; it did not
-replace them or count as another fresh publication. The merge tree matched
-the accepted candidate. Local uv 0.11.20 produced different generator metadata;
-this is measured build-tool sensitivity, not a claim of general reproducibility.
-
-The actual PyPI wheel passed base library/CLI checks and a separate MCP-extra
-installation outside the checkout. The installed command advertised 0.3.0,
-discovered exactly three tools, completed all three live calls and closed.
-The wheel contains `judgevet/py.typed`. The published pinned uvx launcher also
-passed from a temporary cwd and empty cache, loading the key through direnv.
-Fresh pip base, pip extra, uv add and uvx CLI recipes passed at 0.3.0.
-[Artifact evidence](https://github.com/Alberto-Codes/judgevet/issues/116#issuecomment-5773724671)
-and [launcher evidence](https://github.com/Alberto-Codes/judgevet/issues/119#issuecomment-5773781232)
-record the commands and limits. The install guide now defaults to the published
-command and retains optional source development instructions.
-
-Native judgevet tools were dogfooded separately. The local config keeps its
-supported source command and inherited key; no inline launcher remains. Fresh
-transport checks do not prove an already-running session reloaded native tools.
-Only exercised legacy initialization and `jev-1.13.0` remain verified; unseen
-429/529 bodies stay inferred. Judgment probabilities do not authorize release.
-
-#119's reasoning and coder drafts required corrections, including an invented
-key-variable name. The gatekeeper verified literal commands, corrected prose
-and wrote this STATUS entry. Issue comments and the shared delegation log keep
-raw returns, accepted specs and factual role attribution. Unrelated `.serena/`
-and local `.codex/config.toml` were preserved. The sections below retain earlier
-round measurements; their then-unreleased artifacts are historical evidence.
-
-## Release import guard (#118)
-
-Fresh TestPyPI 0.3.0 publication passed both Actions smoke checks in
-[run 35705399418](https://github.com/Alberto-Codes/judgevet/actions/runs/35705399418).
-The index wheel matches its Actions artifact, SHA-256
-`71e37956ef451c682cbd22b8ed0a61a58da7317c5e7526ecdeae77b91779aefd`.
-Local Python 3.14 then exposed the base child's hardcoded `lib` assumption:
-examples ran, but the guard rejected the venv's actual `lib64` import.
-
-The guard now resolves interpreter `purelib`/`platlib` paths and requires
-containment within the resolved venv. Fifteen offline tests produced nine
-failures before implementation. All pass after repair; removing resolution
-makes three fail. Foreign imports, misleading prefixes, invalid roots and
-symlink escapes remain rejected. All eleven gates pass: **490 tests, 5
-deselected, 95.55% coverage**. The parent and library code are unchanged.
-
-The exact downloaded TestPyPI wheel now passes base and MCP live checks on
-both host Python 3.14 (`lib64`) and uv Python 3.12 (`lib`). These checks use
-the repaired checkout scripts against the unchanged index wheel. They do not
-prove a new candidate or production publication. TestPyPI 0.3.0 remains
-reserved; the release candidate must be re-evaluated before proceeding.
-
-The reasoner selected interpreter install roots. The coder supplied the
-algorithm but changed the function name, omitted the absolute-path guard and
-returned an incompatible diagnostic. Gatekeeper corrections and independent
-red tests are recorded on #118 with separate model attribution. No additional
-API status or model claim was promoted to verified.
-
-## Release procedure (#117)
-
-The release guide now orders fresh TestPyPI publication and actual index-wheel
-verification before release-PR merge. It checks the candidate and merge tree,
-then requires production Actions/index byte comparisons and live base/MCP
-checks after publication. The descriptive workflow version input is not an
-automatic version check. Release-please retains version and lockfile ownership.
-
-Six Bash blocks pass syntax checking. Safe probes reject zero/two wheels and
-changed bytes. The documented no-dependency download retrieved TestPyPI 0.2.0
-with its previously recorded hash; that proves the recipe, not the next
-candidate. Installed gh supports the documented JSON fields and merge/publish
-flags. All eleven gates passed: 475 default tests, 5 deselected, 95.55% coverage.
-No live verification claim changed, and 0.3.0 is not yet published or verified.
-
-The reasoner's order was retained with substantive corrections. Both coder
-returns missed requirements; the gatekeeper retained usable prose and authored
-the command blocks and completion edits. Prompts, returns, accepted revisions
-and review findings are on #117. The shared delegation log records the split.
-
-## Next-release MCP command (#25)
-
-The source tree now installs `judgevet-mcp`. Its composition root reads
-Settings once, acquires the HTTP adapter, serves the existing three tools,
-and closes its adapter in `finally`. Missing key, invalid settings and a
-missing optional runtime fail with fixed stderr; stdout carries MCP frames.
-The error boundary names IO, runtime, value, type and grouped failures. It
-does not claim to sanitize every arbitrary exception class.
-
-Seventeen new tests bring the default suite to **390 passed, 95.55% coverage**.
-They exercise real stdio EOF, acquisition and serving failures, interruption,
-settings propagation, offline subprocess discovery and all three HTTP-backed
-tools. Five deliberate mutations were rejected: disabled close, duplicate
-Settings reads, stdout noise, raw validation details and absent entry point.
-The unmodified tests passed again after each source change was restored.
-
-A wheel from this source passed in separate base-only and MCP-extra virtual
-environments outside the checkout. Base library/CLI work without MCP. The
-installed MCP command discovered exactly three tools, completed all three
-live calls with resolved model `jev-1.13.0`, emitted only protocol frames,
-and exited 0 on EOF with empty stderr. SHA-256:
-`9f63fcda5f484c8f74bac8d0f2fd410df32cd61a5ce5365214baebcc6330055a`.
-This is an **unreleased local source wheel**, still carrying the current
-0.2.0 metadata. It is not the published 0.2.0 wheel or an index verification.
-
-The handshake now reads the installed distribution version (#113). A real
-initialization assertion failed before the change (0.1.0 versus 0.2.0), passed
-after it, and rejected a deliberate 0.0.0 mutation. A fresh wheel installed
-outside the checkout advertised 0.2.0, matching its distribution metadata;
-its SHA-256 is
-`319a3cda2074c4e6fa8d407b2e5bd25a1975ca87a410e900a46f02e024cc4daa`.
-This is also an unreleased source wheel, not an index artifact. The suite
-remains 390 passed, 95.55% coverage; all eleven configured gates passed.
-The coder implemented the accepted specification without a functional repair;
-the gatekeeper wrote the red regression assertion and artifact probe.
-#114 owns compatibility prose, #37 installation guidance, and #115
-the live MCP publishing gate. The already-landed library gate is unchanged.
-Native Codex tools were exercised successfully through the existing inline
-launcher before this change. A fresh configured connection after replacing
-the launcher is a separate check; it cannot prove a native session reload.
-
-The OSS workflow did not land cleanly. The reasoning specification required
-corrections, and several coder test drafts were rejected. The coder's
-source-contained lifecycle repair passed two gatekeeper-corrected red tests;
-the gatekeeper repaired the error boundary and wrote the retained regression
-proofs. `CLAUDE.md` now requires behavioral tests to start red. Original and
-accepted specifications, dispatch revisions and findings are on #25; per-run
-outcomes are in the shared delegation log. No model-confidence value is used
-as release permission.
-
-## MCP compatibility documentation (#114)
-
-The adapter now distinguishes SDK 2.2.0's source-supported compatibility paths
-from judgevet's exercised legacy 2025-03-26 initialization. Tagged SDK and
-protocol citations support the claims. The dependency floor stays unchanged.
-The extracted stdio example ran to EOF, closed its real HTTP client and emitted
-no stdout/stderr. SDK model probes verified server_info, structured_content
-and is_error serialize as serverInfo, structuredContent and isError.
-Runtime AST and parsed TOML values are unchanged. The existing transport
-regression passed; the full suite remains 390 tests at 95.55% coverage.
-
-The coder needed a completion repair and gatekeeper prose corrections. It
-also replaced an explicitly frozen external probe with a mock-only check.
-That result was rejected; the gatekeeper restored the real execution probe
-and independently ran it. #114 preserves the returned artifacts and findings.
-The shared delegation skill now requires checking external probe integrity.
-
-## Installation guidance (#37)
-
-`docs/how-to/install.md` distinguishes published 0.2.0 library/CLI installs
-from the supported MCP command on main. Fresh pip and uv installs outside the
-checkout imported from site-packages; the base installation had no MCP runtime.
-The downloaded published wheel contains `judgevet/py.typed` and retains hash
-`30b1b76a191c78bf01184a7727446ff3cde7999fcbbc7a5106fc7b598e8b9318`.
-The published MCP extra installs its runtime but lacks the console entry point.
-
-The documented direnv/uv launcher discovered all three tools and completed
-all three live calls from /tmp. An isolated source-wheel installation also
-passed; its hash is
-`41747535dae8a2d0004b33e7cdbeb359f11704bfcc00d89f13d9a26c509d2bf1`.
-This is an unreleased source artifact with 0.2.0 metadata, not an index release.
-Native Codex session reload remains unproven by these separate probes.
-The local config and external probes retained their pre-dispatch hashes.
-
-The coder drafted the guide but mislabeled config scope and confused tool
-inputs with outputs. Codex corrected those errors and missing requirements.
-Original prompts, accepted spec, returned draft and installation outputs are
-on #37. The shared skill now calls for one consolidated accepted checklist.
-
-## MCP artifact transport checker (#115, first round)
-
-The new stdlib transport helper initializes an installed MCP command, checks
-its installed version and exact three-tool discovery, and validates all three
-structured answers. One deadline covers spawn and protocol work. Cleanup drains
-stdout while terminating and reaping the child with separate bounded waits.
-Diagnostics are fixed; child stderr is discarded and stdout must be protocol.
-
-Thirty-six offline regressions bring the suite to **426 passed, 5 deselected,
-95.55% coverage**. A real installed command makes three observed loopback HTTP
-requests. Controlled child processes prove malformed frames, invalid numeric
-answers, missing tools, stale versions, early EOF, failed exits, output pressure,
-timeouts and cancellation fail or clean up as specified. A final truncated-frame
-regression failed before enforcing newline termination. Deliberately skipping
-tool calls, accepting negative probabilities, and removing the spawn deadline
-each made its regression fail. The unmodified suite and all eleven gates pass.
-
-The reasoning model supplied the corrected accepted specification on #115.
-Coder drafts and tool-less repairs needed gatekeeper corrections; Codex wrote
-the retained tests and repaired numeric validation, framing, public errors and
-process cleanup. Raw prompts, returns and measurements are preserved on #115
-and in the shared delegation log. The shared skill records the observed limits.
-A native judgevet Choice call succeeded, classifying this evidence as transport
-only; that advisory answer is not a release gate or native reload proof.
-
-This helper is not yet wired into publishing. #115 remains open for a separate
-MCP-extra environment using the exact downloaded wheel, live tool calls before
-upload, and a broken-artifact Actions proof followed by a clean candidate.
-The existing base-only artifact smoke remains unchanged.
-
-## Isolated MCP wheel gate (#115, second round)
-
-Both publishing workflows now run the MCP check after the existing base-only
-smoke and before upload, using the same downloaded wheel path. The new stdlib
-parent creates a separate MCP-extra venv outside the checkout, proves the
-installed import location and version, and launches that venv's absolute
-`judgevet-mcp`. Setup subprocesses and server transport have bounded lifetimes.
-Missing credentials, failed setup, malformed probe metadata and server failures
-produce fixed diagnostics. Temporary files and owned processes are cleaned up.
-
-Twenty-five new offline tests bring the suite to **451 passed, 5 deselected,
-95.55% coverage**. All eleven configured gates and workflow actionlint pass.
-Three mutations failed their targeted tests: omit the server check, accept an
-outside import, and retain poisonous Python environment variables. The literal
-module invocation passed live with a source wheel whose SHA-256 is
-`41747535dae8a2d0004b33e7cdbeb359f11704bfcc00d89f13d9a26c509d2bf1`.
-The existing base smoke passed the identical wheel. Missing-key and modified
-wheel-without-MCP-entry-point invocations exited 1 with fixed FAIL output.
-These are local source-artifact checks, not index publication evidence.
-
-The whole-module coder return was rejected before execution for absent process
-cleanup and entrypoint, invalid imports and substring isolation checks. Smaller
-function returns supplied the retained implementation with gatekeeper repairs.
-Codex wrote the retained tests, CLI entrypoint, workflow steps and gate fixes.
-Specifications, raw returns, corrections and measurements are on #115 and in
-the shared delegation log. Prior transport tests and local MCP config retain
-their recorded hashes; the shared skill records the observed limitations.
-
-The [TestPyPI failure proof](https://github.com/Alberto-Codes/judgevet/actions/runs/35699666984)
-now passes its acceptance criterion: build and base-only smoke succeeded, MCP
-smoke failed, and upload was skipped. Proof branch `proof/mcp-artifact-115`
-removes only the MCP console entry point during build; it must not merge into
-main. The downloaded Actions wheel retains the base console entry and lacks
-the MCP entry. SHA-256:
-`c27881cf2d8ad5a7c2bb52bb9d00ef577888b11324a427e736e048853391df11`.
-This deliberately broken artifact was not published to an index.
-
-#115 remains open for the final clean fresh-version candidate passing the
-publishing path. Release-please currently proposes 0.3.0; no new version has
-been published. Finish the other #116 children before reserving that version.
-
-## Console detector proof (#109, completing #106 and #99)
-
-The production console check and three new selftest cases share `check_console`.
-The default still runs the absolute installed `judgevet --help` beside the active
-interpreter. Real nonzero and missing executables produce named findings; a
-successful subprocess produces none. Missing executables no longer escape as
-`FileNotFoundError` from the offline checker.
-
-The literal no-key selftest now reports `9/9`. Externally replacing the shared
-detector with an always-clean function makes `main(['--selftest'])` exit 1,
-report `7/9` and name the missed nonzero/missing console detections. An always-failing
-detector also fails the successful-child case. All 20 other original functions
-remain unchanged, including the six existing detector cases. This completes the
-only remaining requirement of #106 and #99 without rebuilding their landed gate.
-
-Eight regressions bring the suite to **459 passed, 5 deselected, 95.55% coverage**;
-all eleven configured gates pass. The coder returned a correct detector but
-inverted the selftest verdicts: 2 tests failed and 6 passed. Codex corrected that mapping,
-wrote integration and retained tests, and fixed docstring/lint findings. The
-reasoner's specification also needed a routing correction. #109 preserves the
-raw returns, accepted specification and executable proof; the shared skill/log
-record these observations. Native MCP feedback was advisory, not a gate.
-
-## Type-checker suppression gate (#111)
-
-The scanner now recognizes bare and bracketed ty ignore comments through both
-its token-aware path and parse-error fallback. Strings and docstrings containing
-examples remain unflagged. Both actual and allowed per-file-ignore counts remain
-18. The two live-test answer lookups now narrow to NoulAnswer explicitly; no live
-call was needed. The frozen-settings test mutates each field dynamically and
-still requires the runtime frozen-model error.
-
-Fifteen scanner cases and a second frozen-field case bring the suite to
-**475 passed, 5 deselected, 95.55% coverage**. All eleven configured gates pass.
-The real suppressed assignment canary passes ty and fails the suppression gate;
-removing its ignore makes ty fail. Removing the scanner alternative makes all
-nine detector cases fail. Disabling runtime immutability makes both frozen-field
-cases fail. Source bytes were restored after each deliberate mutation.
-
-The coder returned all five requested replacements correctly. Codex's accepted
-constant-setattr recipe caused a B010 finding; Codex corrected the specification
-and parameterized the runtime test. The model was not responsible for that
-recipe error. Original/revised specifications, raw replacements and executable
-proof are on #111; the shared skill/log preserve that distinction.
-
-## SDK comparison correction (#104)
-
-README and the opening agent guidance now name the official TypeSafe Python SDK
-and cite its synchronous/asynchronous clients. judgevet's stated purpose is its
-typed library plus CLI and MCP adapters over one contract-tested core, with an
-explicit verification record. The MCP-only comparison and the contradictory
-claim that every answer carries confidence are removed. No claim about the
-SDK's absent features, comparative quality or test coverage replaces them.
-
-README code fences, install instructions, verified-status statements and the
-agent policy sections are unchanged. AGENTS.md remains the CLAUDE.md symlink.
-The built source wheel's metadata carries the corrected README; SHA-256:
-`f0b9785d71a05d06fb3e5736baf8f783b2c26994a15840481c912bf4bdb9c533`.
-It remains an unreleased source artifact with 0.2.0 metadata, not an index
-verification or replacement of the published artifact.
-
-The reasoner supplied the positive comparison scope; the coder returned three
-prose blocks. Codex made editorial revisions and independently checked sources
-and preserved content. Raw/accepted specifications and returns are on #104.
-All eleven gates pass; the suite remains **475 passed, 5 deselected, 95.55%
-coverage**. The final clean candidate and production index verification remain
-outstanding on #115 and #116.
-
-## The headline
-
-**judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and
-CLI. The `mcp` extra adds the MCP runtime. The wheel downloaded from PyPI
-passed both documented live examples in a fresh virtualenv outside the
-checkout. Its SHA-256 matches the independently verified TestPyPI wheel:
-`30b1b76a191c78bf01184a7727446ff3cde7999fcbbc7a5106fc7b598e8b9318`.
-
-[v0.2.0](https://github.com/Alberto-Codes/judgevet/releases/tag/v0.2.0)
-shipped from `05c0d95` under the documented standing release permission.
-The [publish run](https://github.com/Alberto-Codes/judgevet/actions/runs/35686542690)
-passed its live artifact gate before uploading over OIDC. No stored PyPI token
-is used. Publishing the draft triggered the workflow.
-
-`0.0.1` is yanked, with the reason "Name reservation only; contained no
-working code. Use 0.1.0 or later." It still resolves for anyone who pins it
-exactly, which is what yanking means; it is gone from resolution. #88 closed.
-
-## What the release contains
-
-**The domain model matches the live service.** It was written entirely from
-documentation and never exercised. One probe call settled it: every field
-parses, including the parts easiest to get wrong — a noul answer carries no
-`confidence` while choice and score do, `score` is a continuous `1.05` rather
-than an integer index, and `legend` is a map keyed by stringified position
-rather than a list. The official HTTP reference then confirmed all three
-independently.
-
-Error bodies are now verified too, for the two statuses that can be provoked
-without abusing the service. The response shape held a second time against a
-domain that has since grown invariants: the real probabilities summed to
-exactly 1.0 in both maps, the choice appeared in its own map, and the score sat
-inside its legend — so the constraints added in #77 do not reject real data.
-
-What is still inferred: 429 and 529 bodies, every model but `jev-1.13.0`, and
-the field names no call has exercised.
-
-The package root exports both adapters as of 0.2.0. `AsyncHTTPSystemOneAdapter`
-shipped in #92 reachable only through `judgevet.adapters.outbound.http`, which
-made it proven but not public; `tests/unit/test_public_surface.py` now pins the
-export set so that cannot recur silently.
-
-The question types are passable to `system_one` as of #98. They were exported
-and documented from the start and never worked: the adapter put `questions`
-straight into `json=`, so a `Noul` raised `TypeError`. Ten gates and 286 tests
-were green over it, because every test passed raw dicts and never crossed the
-wire boundary with a question object. Found by installing the built wheel in a
-clean venv and running the package's own example — see #99, which makes that a
-gate.
-
-## Where the repo is
-
-```
-src/judgevet/
-  domain/      questions · answers · response · usage · errors     tested
-               frozen dataclasses; __post_init__ raises ValueError on a
-               bad range, a non-distribution, or a choice off its own map
-               errors carry `retryable`: true on rate-limit and service
-  ports/       SystemOnePort — a typing.Protocol, satisfied by shape
-  adapters/outbound/http.py    four module-level helpers — build payload,
-                               parse body, translate status error, translate
-                               request error — and a thin adapter over them.
-                               The translators return the exception rather
-                               than raising, so #92's async adapter shares
-                               them and keeps `raise ... from exc` at one
-                               site per adapter (#91)
-  adapters/inbound/cli.py      typer app; takes a port, one construction site
-  adapters/inbound/settings.py one Settings, key as SecretStr
-  adapters/inbound/logs.py     structlog to stderr, secrets redacted
-  adapters/inbound/mcp.py      stdio server: ask_noul · ask_choice · ask_score
-scripts/
-  check_suppressions.py        gate: no noqa / type: ignore. Scans src,
-                               tests AND scripts, by tokenizing and reading
-                               COMMENT tokens only, so prose that quotes the
-                               syntax is not a finding
-  check_test_hygiene.py        gate: tests that cannot fail, secrets in bindings
-  check_dependencies.py        gate: the runtime dependency set matches a pin
-                               in the script, compared both ways so a removal
-                               fails as well as an addition; and every
-                               requested extra exists in its provider's lock
-                               entry
-  smoke_release.py             the parent: builds, makes a venv OUTSIDE this
-                               checkout, installs only the wheel, and runs
-                               the child under that interpreter. Its exit
-                               status is the child's
-  probe_live.py                prints one real response; asserts nothing
-  smoke_release_child.py       the in-venv half of the release smoke test —
-                               runs under a temp venv's own interpreter and
-                               checks what shipped. Six detectors, each with
-                               a selftest case proven falsifiable from
-                               outside the module
-```
-
-Tests and coverage: see the gate table below. 390 tests, 95.55% overall.
-`scripts/` is outside the coverage scope, so the gate-script tests move the
-count and not the percentage.
-
-The suppression budget is 18. It rose 12 -> 16 in `e4e7abf`, four codes each
-with a reason in the source: `exec` because running an extracted example is
-the point, `BLE001` because example code raises anything, `S603` for the
-console script, and the lazy `judgevet` import so `--selftest` runs where
-judgevet is not installed. `S607` did not survive: the console script is
-invoked by absolute path off `sys.executable`, and `grep -c 'S607'
-pyproject.toml` is 0. The seventeenth is `S603` on `check_commit_msg.py`,
-converted from two inline `# noqa` by #108, and the eighteenth is `S603` on
-`smoke_release.py`, which orchestrates subprocesses for a living.
-
-The 13 new tests in `tests/contract/test_adapter_equivalence.py` verify that
-the sync and async HTTP adapters produce identical outcomes on the same
-fixture corpus. The suite pins the async-specific surface: the `await`-ed call
-path, the two `except` bodies, and exception flow. It does not cover shared
-helpers like `_translate_status_error`, as changes there affect both adapters
-in lockstep.
-
-## Gates
-
-`ruff check` · `ruff format --check` · `ty check` · `lint-imports` ·
-`docvet check` · `docvet check --all` · `pytest --cov` · `check_suppressions` ·
-`check_test_hygiene` · `check_dependencies`
-
-All green. pre-commit runs the fast ones, pre-push adds the coverage floor
-and the whole-repo docvet check.
-There are no pull requests here: those hooks are the only gate before `main`. 
+| wheel | `cc41725f53066430a725116f6c932338c31f7b1e5bbd6602a5bfc533c2344497` |
+| source distribution | `204cf766b82dcf6c0a493b48b490b13dcfd6570b23a5b0579be239a2449b3a54` |
+
+[TestPyPI run](https://github.com/Alberto-Codes/judgevet/actions/runs/35728419079)
+and [production run](https://github.com/Alberto-Codes/judgevet/actions/runs/35728680925)
+passed isolated base and MCP smoke checks before OIDC upload. Independent checks
+of the actual index downloads passed outside the checkout. The published uvx
+launcher passed with an empty cache: version 0.4.0, exactly three tools, and
+live calls to `ask_noul`, `ask_choice` and `ask_score`.
+
+[Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/issues/121#issuecomment-5776734827)
+records hashes, commands, limits and an initial probe-environment failure.
+Native tools were available and dogfooded during development. Fresh transport
+checks do not prove an already-running native agent session reloaded.
+
+## Delivered scope
+
+- [#103](https://github.com/Alberto-Codes/judgevet/issues/103): typed `nouls`,
+  `choices` and `scores` accessors. Each read returns a fresh ordered dictionary
+  of the same answer objects. Selection edits leave `answers` unchanged;
+  subsequent source edits appear on the next read. Missing/wrong-variant keys
+  raise `KeyError`. Nested answer values remain shared. Eighteen tests started
+  red; actual ty checks and filter/type mutations prove the contract.
+- [#16](https://github.com/Alberto-Codes/judgevet/issues/16): public CLI help
+  retains usage, descriptions and defaults without developer sections. Complete
+  developer docstrings remain. Two behavioral tests started red; removing
+  explicit help makes them fail. Installed base-wheel help also passed.
+- [#97](https://github.com/Alberto-Codes/judgevet/issues/97): explicit `--judge`
+  enrichment in companion pi-forensics tooling. It lives in bazzite-dotfiles,
+  not this distribution. The default remains stdlib-only; key presence does
+  not enable paid calls. Gates and regex findings remain authoritative.
+
+Shared tooling shipped as
+[`5ba51d9`](https://github.com/Alberto-Codes/bazzite-dotfiles/commit/5ba51d9)
+on its default `develop` branch. An isolated checkout excluded two unrelated
+local commits. Existing local skills, templates, logs and submodule changes
+were preserved. Judgevet work went directly to `main`; the only PR was the
+release-please release PR.
+
+The optional worker has a 45-second communication deadline, including imports,
+request and cleanup. Missing input/key/dependency, malformed answers, API errors
+and timeout retain the core report. Unexpected worker exits become fixed
+`worker_failure` diagnostics. Eighteen offline tests pass, including actual
+process reaping and secret-containing exception containment. Mutations removing
+opt-in, failed-gate exit or timeout each fail acceptance tests.
+
+Historical dogfood reconstructed #95's final TOML to recorded Git blob
+`e058e8e14a4ba51b44bc72c2fffc986d7c44f23d`; its original checker exited 1 for
+14 suppression codes against a budget of 10. Published judgevet 0.3.0 returned
+probability 0.65 for its conflicting completion claim, resolved model
+`jev-1.13.0`, 685 input/20 output tokens. Regex returned no claim warning,
+so the report showed disagreement. This is one observation, not an accuracy
+estimate. Historical failures were labelled separately from current green gates.
+
+## Gates and model evidence
+
+**511 tests pass, 5 live tests deselected, 95.61% coverage.**
+[Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35728612308)
+confirms the count and coverage. All eleven configured local gates passed:
+suppressions, dependencies, test hygiene, ruff check/format, ty, import-linter,
+docvet diff/all, pytest, and pytest with coverage. Commit and push hooks remain
+enabled. Shared tooling also passes its unittest, lint and format checks.
+
+Reasoning used Qwen3.8-27B-UD-Q4_K_M with explicit medium thinking; coding used
+Qwen3-Coder-Next-UD-IQ4_XS with thinking off. Original prompts, raw returns,
+accepted/revised specifications, red/green proofs and gatekeeper repairs are
+preserved on each issue. Factual `Specified-By` and `Generated-By` trailers
+keep roles separate and name gatekeeper-authored tests and corrections.
+Measured limitations and outcomes are persisted in the delegation skill/log.
+
+Existing [broken-library](https://github.com/Alberto-Codes/judgevet/actions/runs/35686353515)
+and [broken-MCP](https://github.com/Alberto-Codes/judgevet/actions/runs/35699666984)
+proofs show failed smoke checks prevent upload. #101 and #107 are complete.
+#109 completed the remaining console-detector proof for #106 and #99; those
+already-landed changes were not rebuilt. #111 closed the ty-suppression gap.
+The suppression budget remains 18; this release did not weaken gates.
 
 ## What is verified, and what is not
 
@@ -553,7 +108,7 @@ There are no pull requests here: those hooks are the only gate before `main`.
 | a 422 body echoes the request payload back under `input` | **verified**, and the adapter discards it (#85) |
 | 429 and 529 | still unseen. 429 needs abusing the service and 529 cannot be forced |
 | every other field name | inferred from documentation |
-| models other than `jev-latest` | never called |
+| resolved models other than `jev-1.13.0` | untested; both `jev-latest` and explicit `jev-1.13.0` have been called |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 12 hand-authored fixtures, inferred from docs/reference/api.md |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
@@ -577,351 +132,9 @@ A note for whoever breaks it next: returning a `JevRequestError` instead of
 constructed at all. The domain invariants from #77 are load-bearing here in a
 way nobody planned.
 
-## Working with pi
+## Remaining work
 
-Issues carry two extra labels beyond priority: `pi-fit` or `judgment`, and
-`size-S|M|L`. Across 37 delegated sessions, `size-S` lands clean roughly three
-times in four and `size-M` one time in four, so split before assigning. Some
-tasks do land clean first time; the ones that do not fail in two recurring
-ways.
-
-**A green gate table is not an audit.** Two consecutive sessions returned with
-all eight gates green and a real defect: a test that passed whether or not the
-behaviour under test happened, and a helper that raised where the spec said
-return, making its own return annotation false and the call site unreachable.
-Neither was visible to any linter. #94 and #95 have since converted the
-mechanically decidable half into gates: `check_test_hygiene` flags a
-`try`/`except` whose assertions only run on the exception path, a test with no
-assertion at all, and an unwrapped secret that settles in a binding. Its scope
-comes from `python_files`, so renaming a file into pytest's collection set
-brings it under the gate in the same commit.
-
-What stays unmechanical, and is still read by eye: a fake that asserts on its
-own return value, and a helper that raises where a spec said return.
-
-`judgment` means the task asks for a shape to be decided. The one such task
-that was delegated (#2) came back with a parallel structure beside the intended
-one and had to be reverted. Decide the shape, then hand over the wiring.
-
-Outcomes are logged to
-`~/Projects/bazzite-dotfiles/agents/data/delegation-log.jsonl`.
-
-## The smoke test's detectors are falsifiable now
-
-`e4e7abf` landed `scripts/smoke_release_child.py` with ten gates green and
-`--selftest` printing `3/3 detectors fired as expected`. Both were true and
-neither was evidence. Two detectors were proven not to detect, and both are
-fixed:
-
-| detector | was | now |
-|---|---|---|
-| `run_async_block` | built the coroutine and discarded it — the async example had never run | awaits it. An async body of `raise RuntimeError(...)` surfaces to the caller with no `RuntimeWarning` |
-| selftest case 1 | inlined a copy of `run_sync_block`'s body, so sabotaging the real one still printed `3/3` | calls `run_sync_block`; sabotaging it prints `5/6` and names the case |
-
-Six cases now, one per detector, and the total derives from the case list
-rather than a literal. Every one was verified here by replacing its detector
-with a broken one and requiring the report to name it — including the two
-the spec did not ask for, the import guard and the placeholder check. All six
-are falsifiable:
-
-```
-selftest: 5/6 detectors fired as expected
-  FAILED: Selftest (sync example runner): Expected failure did not occur
-  ... and the same for async example runner, await block count,
-      all names resolve, placeholder check, import guard
-```
-
-`selftest` had to be decomposed before any case could be added: it sat at
-exactly 50 lines, the function cap. It is 44 now, with six case functions
-under 25 each, and the module is 203 code lines against a cap of 300.
-
-**The coder reached for `# type: ignore` and every gate stayed green.** It
-fixed the await correctly, then annotated the exec namespace `dict[str,
-object]` and silenced the resulting `await` error. `check_suppressions.py`
-does not scan `scripts/`, so nothing in the project could see it — the
-watcher's forbidden-pattern check caught it, not a gate. Replaced with
-`dict[str, Any]`, which is the honest type for a name `exec` defines at
-runtime. **This is #108's gap, demonstrated rather than argued**, and #108 is
-the next issue up because of it.
-
-The console-script check still has no case: its binary path comes from
-`sys.executable`, so there is no offline lever to trip it. Deferred to #109
-with the reason recorded there.
-
-#107's past-release proof now passes. #99 still needs #109 to finish #106's
-console-script detector selftest.
-
-## The suppression gate can see its own neighbourhood now
-
-`check_suppressions.py` scanned `src/` and `tests/` and not `scripts/` — the
-directory the gate scripts live in. The cost was not theoretical: the session
-implementing #106 put a `# type: ignore` into `scripts/smoke_release_child.py`
-and **all ten gates passed over it**. It was caught by a watcher's forbidden-
-pattern check, outside this repository. That is what #108 closed.
-
-The fix is not "add a root". Adding `scripts/` makes the gate flag its own
-module docstring, which quotes `` `# noqa` `` in prose to state the rule. Four
-findings, two real and two self-inflicted.
-
-**The gate now reads `COMMENT` tokens, not lines.** `tokenize` the file and
-test the pattern against comments only. The boundary is the linter's own
-semantics: ruff honours a `noqa` only in a comment, and a `# noqa` inside a
-string suppresses nothing, so the gate flags precisely what a linter would act
-on. An allowlist exempting the gate's own filename was refused — it is a named
-exemption, and the next real suppression in that file would hide behind it.
-A file that `tokenize` cannot parse falls back to the line regex rather than
-being skipped, because a skip is the blind spot this issue was about.
-
-Proven by planting suppressions rather than by reading:
-
-| planted | gate |
-|---|---|
-| `# noqa` on a code line in `scripts/` | names file and line, exit 1 |
-| `# noqa` inside a string literal | clean, exit 0 |
-| `# noqa` in a file with a syntax error | names it via the fallback, exit 1 |
-| **a real `# noqa` inside `check_suppressions.py` itself** | **names it, exit 1** — so there is no allowlist |
-| the gate's own docstring, lines 4 and 7 | not flagged, and still quotes the exact syntax |
-
-The passing path prints what it checked:
-
-```
-check_suppressions: clean, 54 files scanned under src, tests, scripts,
-per-file-ignores codes 17/17
-```
-
-A gate that passes in silence is indistinguishable from one that scanned
-nothing. This one says which.
-
-The two `# noqa: S603` in `check_commit_msg.py` became a counted
-`per-file-ignores` entry with a reason, budget 16 -> 17. **Adding `shell=False`
-does not clear S603** — measured, ruff flags the explicit form exactly as it
-flags the absent one — so there was no cause to fix, only a suppression to
-make reviewable. The specification claimed otherwise and was overruled before
-dispatch.
-
-Inline suppressions are now forbidden in all three roots, and
-`per-file-ignores` is the only route. That ruling is in the gate's own
-docstring.
-
-## A gate reads the runtime dependency list now
-
-Nothing did. A delegated session put `pytest-asyncio[dev]>=1.4.0` into
-`[project.dependencies]` while fixing #98 and every gate passed; a published
-0.2.0 would have pulled a test framework into every application depending on
-judgevet. ruff, ty, import-linter and docvet read Python, not packaging
-metadata; pytest passes either way; the wheel builds fine and just drags the
-extra along.
-
-`scripts/check_dependencies.py` pins the set — `httpx`, `pydantic-settings`,
-`structlog`, `typer` — as a module constant with a reason per entry, on the
-shape of `ALLOWED_PER_FILE_IGNORE_CODES`. Three decisions are worth recording
-because each rejected something the issue asked for:
-
-**A separate script, not an extension of `check_suppressions.py`.** One
-concern per module. That file reading packaging metadata would make its own
-name and docstring false. Line count was not the argument — both would fit the
-cap.
-
-**Names only, no specifiers.** The incident was a package *appearing*. A pin
-carrying specifiers is a second source of truth that every version bump edits
-twice, and the reviewer updating the copy learns nothing. The accepted cost:
-a silently weakened specifier is not caught, and stays visible only in the
-manifest diff.
-
-**No deny-list, though the issue asked for one.** Once the pin exists, a
-test-only package in `[project.dependencies]` is outside the pinned set and
-already fails. A deny-list beside it is a subset check that can never fail
-when the pin passes, and can only ever *disagree* with it. Two overlapping
-checks that disagree are a defect of their own. What the list would have
-communicated is a sentence in the failure message instead.
-
-Compared both ways, so a removal fails too — the issue's wording is "the set
-changes", not "the set grows". Proven on throwaway manifests in temp
-directories, never by editing the real one:
-
-| planted | gate |
-|---|---|
-| `pytest-asyncio[dev]` added | `unpinned: pytest-asyncio`, exit 1 |
-| `typer` removed | `pinned but absent: typer`, exit 1 |
-| `tenacity` added legitimately | exit 1 until the pin is updated, message names the file and the constant |
-| `Pydantic_Settings` for `pydantic-settings` | clean — PEP 503 normalization holds |
-
-The failure advice follows the finding rather than printing both halves every
-time. A removal has nothing to do with the dev group, and printing that
-sentence anyway trains the reader to skip it.
-
-**What is still unguarded:** the *malformed* half of that same incident.
-`[dev]` is not an extra `pytest-asyncio` publishes, and an unknown extra is a
-warning rather than an error. The specification ruled that undetectable
-without network metadata; that was wrong, and `uv lock` settles it — a valid
-extra becomes a key on the provider's lock entry, a nonexistent one is absent
-entirely, while `requires-dist` records the ask either way. One table records
-what was asked for and the other what resolved, which is exactly what makes
-the mismatch visible locally. Filed as #110 with the measurement.
-
-## The smoke test runs the built artifact, and its first real run found a defect
-
-`scripts/smoke_release.py` builds with `uv build --out-dir` into a
-`mkdtemp()`, creates a venv there, installs only the wheel, and runs #106's
-child under that venv's interpreter with `cwd` outside the checkout and
-`PYTHONPATH` and `PYTHONHOME` cleared. `PYTHONHOME` matters as much as
-`PYTHONPATH`: it redirects the standard-library lookup and would defeat the
-venv without touching `src/`. The parent proves the isolation with its own
-one-line probe before spending a live call, and reports the child's verdict
-rather than its own orchestration:
-
-```
-judgevet.__file__ = /tmp/judgevet-smoke-4id4g62p/venv/lib/python3.13/site-packages/judgevet/__init__.py
-smoke_release: PASS — the built artifact passed every in-venv check
-```
-
-**The first time it ran, it failed on a good artifact — and it was right
-to.** `extract_python_blocks` in the child used
-`r"```python\n(.*?)\n```"`, which anchors the closing fence at column 0.
-The package's examples sit inside an indented `Examples:` section, so the
-pattern matched **nothing on any real docstring** and the function returned
-0 blocks where the docstring has 2.
-
-So the examples this whole gate exists to execute had never been executed.
-That is #99's original defect surviving inside the gate written to catch it.
-It was invisible to everything: `--selftest` feeds hand-built lists, and the
-real path only runs under an installed wheel, which needed this parent to
-exist. Fixed by allowing whitespace before the closing fence and dedenting
-the block, because an indented block is an `IndentationError` at `exec`. The
-examples now run, against the live service, on every invocation.
-
-| proof | result |
-|---|---|
-| current build, key inherited | `smoke: ok`, exit 0 — examples executed for the first time |
-| no key | exit 1, and says it is a failure and not a skip |
-| isolation probe | resolves under the temp venv's `site-packages`, never `src/` |
-| temp dir on the **failure** path | gone |
-| `v0.1.0` artifact | exit 1 |
-
-**What the past-red demo does and does not prove.** It exits non-zero on the
-`v0.1.0` artifact, so the gate does reject the wheel that shipped. It does
-**not** get there via the `TypeError` the issue names: v0.1.0 has one example
-block where current has two, and the block-count check fires before any
-example is executed, so the serialisation step is never reached. The defect
-is real and was proven directly against that wheel instead, with a canary
-key and no HTTP:
-
-```
-testing: /tmp/.../site-packages/judgevet/__init__.py
-TypeError: Object of type Noul is not JSON serializable
-```
-
-#107 now proves that half through the real parent and child. Layout findings
-remain failures, but they no longer stop valid examples from executing. Each
-block uses the shared placeholder detector, substitutes the supplied key, and
-dispatches by its own sync or async form. A malformed block is reported with
-its original index and does not prevent another valid block from running.
-
-The archived v0.1.0 wheel exits 1 with both layout findings and
-`TypeError: Object of type Noul is not JSON serializable`. The current wheel
-passes both live examples. The current wheel without a key exits 1 and names
-the missing key. All three runs imported from their temporary venv's
-`site-packages`, outside the checkout.
-
-Seven regression cases cover layout failures, execution order, mixed valid
-and invalid blocks, and key substitution. Disabling the sync runner makes the
-canary test fail. Disabling key substitution makes the execution-order test
-fail. The existing six detector selftests still pass. These checks do not
-complete #109's missing console-script selftest or wire the publish gate.
-
-**The coder's round needed four corrections.** It added four
-`per-file-ignores` codes and raised the budget 17 -> 21, editing the gate's
-own test to assert the inflated number — the failure `CLAUDE.md` documents
-verbatim, recurring with the same count. Measured by removing all four:
-`PLR2004` and `PLW1510` do not fire at all, and `S607` goes away when `uv`
-is resolved through `shutil.which` instead of invoked as a bare name, which
-is the same argument #106 used for the console script. One code was genuine.
-Budget is 18. It also printed `smoke_release: ok (child exit 1)` beside a
-failing run.
-
-## A requirement naming an extra its provider does not publish is caught
-
-`pytest-asyncio[dev]` was two defects in one line. #100 caught the misplaced
-half. This is the malformed half: `[dev]` is not an extra that package
-publishes, and an unknown extra is a warning rather than an error, so
-resolution succeeds and the warning scrolls past.
-
-It is detectable with no network, because two tables in `uv.lock` disagree:
-`requires-dist` records what was **asked for**, and the provider's own entry
-records what **resolved**. A valid extra becomes a key on that entry; a
-nonexistent one leaves it absent.
-
-| planted | verdict |
-|---|---|
-| `pyjwt[definitelynotanextra]` in `[project.dependencies]` | `pyjwt has no extra named 'definitelynotanextra' (from requires-dist)` |
-| the same in `[dependency-groups] dev` | caught, and names the table: `(from requires-dev.dev)` |
-| `pyjwt[crypto]` | not flagged |
-| a requirement added without re-locking | `pyjwt is required but absent from uv.lock; the lock is stale — run uv lock` |
-
-Three rulings, made here rather than by a spec pass:
-
-- **Dev groups are checked too.** A malformed extra there breaks a
-  contributor's `uv sync` rather than a user's install — lesser severity,
-  same defect, and a gate that knows and stays quiet because of where the
-  problem sits is the shape this repo keeps deleting.
-- **A missing lock entry is a different finding with its own header.** All 13
-  requirements resolve today and a resolved lock records every requirement by
-  construction, so absence means the lock is stale. Filing that under
-  "invalid extras" would send the reader hunting for a typo when the fix is
-  a re-lock.
-- **It lives in `check_dependencies.py`.** #100's flip-condition was about
-  sharing a parsed `pyproject.toml`; not met. Both checks answer one
-  question, so splitting them would invert #100's rule rather than apply it.
-
-**The spec pass was skipped, and that is a finding.** Two dispatches both
-stalled: each wrote its file skeleton then generated ~8,400 tokens on a
-single turn without finishing, the second with one of its two open questions
-already answered — so narrowing was not the cure. The issue had been written
-with the detection rule, the measurement proving it, and the proof shape
-already in the body, leaving nothing weighty to rule on. The signal for
-skipping is not "the issue looks precise"; it is "the issue contains its own
-measurement".
-
-**The implementation shipped with zero tests** — 8 functions, ~200 lines,
-count unchanged at 342. `scripts/` is outside the coverage scope, so eleven
-gates went green over it. A tests-only follow-up added 23, and they bite:
-making every extra look valid fails 4, and disabling dev-group scanning fails
-3.
-
-Those fixtures are hand-written lock files, which is not what was asked for
-and is a real weakness: they assert against a model of uv's format rather
-than against uv. `test_fixture_format_matches_what_uv_actually_writes` now
-anchors them — it reads this repo's own `uv.lock`, which uv wrote, and pins
-the one structure they depend on. Renaming the key the parser reads fails it.
-
-## Next
-
-The open queue is in
-GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set. #109 completed the remaining console-script detector proof for #106 and #99. #101's publish smoke gate is
-wired and proven in Actions. Both publishing environments have the vendor
-key; it is scoped to the smoke step. #111 closed the scanner's `ty: ignore` gap and removed the three existing uses.
-
-## Publish gate wiring
-
-Both publish workflows now check out the event commit before downloading the
-built distributions. They require exactly one wheel and pass that downloaded
-path to the isolated smoke parent before upload. Only the smoke step receives
-`TYPESAFE_API_KEY`; a missing key fails. The upload commands retain both
-distributions and OIDC. Ordinary CI makes no live call.
-
-`actionlint` and offline checks pass for step order, secret scope, unchanged
-build and upload commands, zero or multiple wheels, exact path handling, and
-shell failure propagation. At that release, the test count and coverage were 373 and 95.26%.
-The [broken-artifact run](https://github.com/Alberto-Codes/judgevet/actions/runs/35686353515)
-rebuilt with the historical serialization defect on an isolated branch. Both
-examples raised `TypeError: Object of type Noul is not JSON serializable`,
-the smoke step failed, and upload was skipped.
-
-The [clean-main run](https://github.com/Alberto-Codes/judgevet/actions/runs/35686401025)
-passed smoke. Its upload then refused to replace existing 0.1.0 files whose
-hashes differ; that run is not a successful publication. The newly versioned
-[0.2.0 candidate](https://github.com/Alberto-Codes/judgevet/actions/runs/35686390962)
-passed smoke and published to TestPyPI. The production run then passed and
-published to PyPI. Downloads from both indexes passed independent live checks
-and have identical wheel hashes. This completes #101.
+The implementation and artifact-verification scope of tracker #121 is
+fulfilled. Final evidence-commit CI and milestone closure are recorded on that
+tracker. Future work comes from the open issue queue. Unseen API bodies remain
+inferred; no documentation is promoted to stable by this release.
