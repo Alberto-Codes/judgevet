@@ -89,7 +89,7 @@ scripts/
                                outside the module
 ```
 
-Tests and coverage: see the gate table below. 366 tests, 95.26% overall.
+Tests and coverage: see the gate table below. 373 tests, 95.26% overall.
 `scripts/` is outside the coverage scope, so the gate-script tests move the
 count and not the percentage.
 
@@ -229,7 +229,8 @@ The console-script check still has no case: its binary path comes from
 `sys.executable`, so there is no offline lever to trip it. Deferred to #109
 with the reason recorded there.
 
-#107 is unblocked. #99 still needs both halves.
+#107's past-release proof now passes. #99 still needs #109 to finish #106's
+console-script detector selftest.
 
 ## The suppression gate can see its own neighbourhood now
 
@@ -391,9 +392,23 @@ testing: /tmp/.../site-packages/judgevet/__init__.py
 TypeError: Object of type Noul is not JSON serializable
 ```
 
-#107 therefore stays open for that half. Proving the named error through the
-child needs the child to reach serialisation on an artifact whose docstring
-shape also differs, which is a shape decision rather than wiring.
+#107 now proves that half through the real parent and child. Layout findings
+remain failures, but they no longer stop valid examples from executing. Each
+block uses the shared placeholder detector, substitutes the supplied key, and
+dispatches by its own sync or async form. A malformed block is reported with
+its original index and does not prevent another valid block from running.
+
+The archived v0.1.0 wheel exits 1 with both layout findings and
+`TypeError: Object of type Noul is not JSON serializable`. The current wheel
+passes both live examples. The current wheel without a key exits 1 and names
+the missing key. All three runs imported from their temporary venv's
+`site-packages`, outside the checkout.
+
+Seven regression cases cover layout failures, execution order, mixed valid
+and invalid blocks, and key substitution. Disabling the sync runner makes the
+canary test fail. Disabling key substitution makes the execution-order test
+fail. The existing six detector selftests still pass. These checks do not
+complete #109's missing console-script selftest or wire the publish gate.
 
 **The coder's round needed four corrections.** It added four
 `per-file-ignores` codes and raised the budget 17 -> 21, editing the gate's
@@ -464,6 +479,7 @@ the one structure they depend on. Renaming the key the parser reads fails it.
 
 The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set. #107 stays open for the past-red half and #109 for the
-console-script selftest case. #101 is blocked on a human adding the
-`TYPESAFE_API_KEY` environment secret.
+set. #109 owns the console-script selftest case. #101 owns the publish smoke
+gate; the `pypi` environment now has `TYPESAFE_API_KEY`, verified by reading
+secret metadata without its value. #111 tracks the suppression scanner's
+unrecognized `ty: ignore` comments and the three existing occurrences.

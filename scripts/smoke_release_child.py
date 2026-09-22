@@ -185,6 +185,57 @@ async def run_async_block(code: str) -> None:
     await local_ns["__tmp_async"]()
 
 
+def _dispatch_block(code: str) -> tuple[str, str | None]:
+    """Execute a code block and return (type, failure_message | None).
+
+    Args:
+        code: The Python code to execute.
+
+    Returns:
+        A tuple of (block_type, failure_message). block_type is 'sync' or
+        'async'. failure_message is None on success or the exception's class
+        name and message on failure.
+    """
+    if "await" in code:
+        result = _run_async_block_safe(code)
+        return ("async", result)
+    else:
+        result = _run_sync_block_safe(code)
+        return ("sync", result)
+
+
+def _run_sync_block_safe(code: str) -> str | None:
+    """Run a sync block, returning None on success or an error message.
+
+    Args:
+        code: The Python code to execute.
+
+    Returns:
+        None on success, or a formatted error message on failure.
+    """
+    try:
+        run_sync_block(code)
+    except Exception as e:
+        return f"{type(e).__name__}: {e}"
+    return None
+
+
+def _run_async_block_safe(code: str) -> str | None:
+    """Run an async block, returning None on success or an error message.
+
+    Args:
+        code: The Python code to execute.
+
+    Returns:
+        None on success, or a formatted error message on failure.
+    """
+    try:
+        asyncio.run(run_async_block(code))
+    except Exception as e:
+        return f"{type(e).__name__}: {e}"
+    return None
+
+
 def run_live_checks(api_key: str) -> list[str]:
     """Run the live examples and return a list of failure messages.
 
@@ -199,38 +250,28 @@ def run_live_checks(api_key: str) -> list[str]:
     docstring = judgevet_module.__doc__
     blocks = extract_python_blocks(docstring)
 
+    # Layout checks: report but do not return early
     if len(blocks) != _NUM_PYTHON_BLOCKS:
         failures.append(
             f"Expected {_NUM_PYTHON_BLOCKS} python blocks, found "
             f"{len(blocks)} in judgevet.__doc__"
         )
-        return failures
 
     if count_await_blocks(blocks) != 1:
         failures.append(
             f"Expected exactly 1 block with 'await', found {count_await_blocks(blocks)}"
         )
-        return failures
 
-    try:
-        check_placeholder_present(blocks)
-    except ValueError as e:
-        failures.append(f"Placeholder check failed: {e}")
-        return failures
-
-    substituted = substitute_key(blocks, api_key)
-
-    # Run sync block
-    try:
-        run_sync_block(substituted[0])
-    except Exception as e:
-        failures.append(f"Sync example failed: {e}")
-
-    # Run async block
-    try:
-        asyncio.run(run_async_block(substituted[1]))
-    except Exception as e:
-        failures.append(f"Async example failed: {e}")
+    # A malformed block must not prevent valid examples from running.
+    for i, block in enumerate(blocks):
+        try:
+            check_placeholder_present([block])
+        except ValueError:
+            failures.append(f"Block {i} missing key placeholder")
+            continue
+        block_type, failure = _dispatch_block(substitute_key([block], api_key)[0])
+        if failure is not None:
+            failures.append(f"{block_type} example {i} failed: {failure}")
 
     return failures
 
@@ -379,37 +420,17 @@ def selftest() -> list[str]:
     Returns:
         A list of failure messages; empty if every detector fired.
     """
-    # Run all cases
     cases: list[tuple[str, str | None]] = []
+    cases.append(("sync example runner", _selftest_sync_example_runner()))
+    cases.append(("import guard", _selftest_import_guard()))
+    cases.append(("placeholder check", _selftest_placeholder_check()))
+    cases.append(
+        ("async example runner", asyncio.run(_selftest_async_example_runner()))
+    )
+    cases.append(("all names resolve", _selftest_assert_all_names_resolve()))
+    cases.append(("await block count", _selftest_count_await_blocks()))
 
-    # Sync example runner
-    msg = _selftest_sync_example_runner()
-    cases.append(("sync example runner", msg))
-
-    # Import guard
-    msg = _selftest_import_guard()
-    cases.append(("import guard", msg))
-
-    # Placeholder check
-    msg = _selftest_placeholder_check()
-    cases.append(("placeholder check", msg))
-
-    # Async example runner
-    msg = asyncio.run(_selftest_async_example_runner())
-    cases.append(("async example runner", msg))
-
-    # All names resolve
-    msg = _selftest_assert_all_names_resolve()
-    cases.append(("all names resolve", msg))
-
-    # Await block count
-    msg = _selftest_count_await_blocks()
-    cases.append(("await block count", msg))
-
-    # Build failure list
     failures = [f"Selftest ({label}): {msg}" for label, msg in cases if msg is not None]
-
-    # Report what ran
     print(
         f"selftest: {len(cases) - len(failures)}/{len(cases)} detectors fired as expected"
     )
