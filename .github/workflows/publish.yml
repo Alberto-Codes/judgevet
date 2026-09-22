@@ -41,6 +41,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
       - uses: actions/download-artifact@v4
         with:
           name: dist
@@ -52,5 +56,24 @@ jobs:
           enable-cache: true
 
       - run: uv python install 3.12
+
+      - name: Verify exactly one wheel
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          count=${#wheels[@]}
+          if (( count != 1 )); then
+            echo "::error::expected exactly one wheel in dist/, found ${count}"
+            ls -la dist/
+            exit 1
+          fi
+          printf 'WHEEL=%s\n' "${wheels[0]}" >> "$GITHUB_ENV"
+
+      - name: Smoke test the wheel
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: |
+          "$(uv python find 3.12)" scripts/smoke_release.py --wheel "$WHEEL"
 
       - run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/

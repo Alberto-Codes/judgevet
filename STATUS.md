@@ -483,3 +483,18 @@ set. #109 owns the console-script selftest case. #101 owns the publish smoke
 gate; the `pypi` environment now has `TYPESAFE_API_KEY`, verified by reading
 secret metadata without its value. #111 tracks the suppression scanner's
 unrecognized `ty: ignore` comments and the three existing occurrences.
+
+## Publish gate wiring
+
+Both publish workflows now check out the event commit before downloading the
+built distributions. They require exactly one wheel and pass that downloaded
+path to the isolated smoke parent before upload. Only the smoke step receives
+`TYPESAFE_API_KEY`; a missing key fails. The upload commands retain both
+distributions and OIDC. Ordinary CI makes no live call.
+
+`actionlint` and offline checks pass for step order, secret scope, unchanged
+build and upload commands, zero or multiple wheels, exact path handling, and
+shell failure propagation. The test count and coverage remain 373 and 95.26%.
+#101 remains open until Actions proves a broken artifact fails the smoke step
+and skips upload, and the clean candidate passes. No new release is published
+by this wiring commit.

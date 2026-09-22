@@ -41,6 +41,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: testpypi
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
       - uses: actions/download-artifact@v4
         with:
           name: dist
@@ -53,19 +57,26 @@ jobs:
 
       - run: uv python install 3.12
 
-      # This job never checks out the repository — it only downloads the
-      # artifact the build job produced. So there is no pyproject.toml here
-      # and `--index testpypi` cannot resolve:
-      #
-      #   error: No indexes were found, can't use index: `testpypi`
-      #
-      # publish.yml has the same shape and works because it passes explicit
-      # URLs rather than an index name. The [[tool.uv.index]] entry in
-      # pyproject.toml stays useful for publishing by hand from a checkout;
-      # it is simply not reachable from here.
-      #
-      # --publish-url and --check-url are independent flags and may be used
-      # together. It is --index that is mutually exclusive with --check-url.
+      - name: Verify exactly one wheel
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          count=${#wheels[@]}
+          if (( count != 1 )); then
+            echo "::error::expected exactly one wheel in dist/, found ${count}"
+            ls -la dist/
+            exit 1
+          fi
+          printf 'WHEEL=%s\n' "${wheels[0]}" >> "$GITHUB_ENV"
+
+      - name: Smoke test the wheel
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: |
+          "$(uv python find 3.12)" scripts/smoke_release.py --wheel "$WHEEL"
+
+      # Keep explicit endpoints; --index cannot be combined with --check-url.
       - run: |
           uv publish --trusted-publishing always \
             --publish-url https://test.pypi.org/legacy/ \
