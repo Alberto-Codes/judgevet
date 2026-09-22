@@ -1,5 +1,8 @@
 """Inbound CLI adapter.
 
+The command wrapper propagates failure status to the process while helpers
+return integer codes and the composition root closes its adapter.
+
 Examples:
     ```python
     from judgevet.adapters.inbound.cli import app
@@ -213,6 +216,40 @@ def run_cli(
 
 
 @app.command(help="Call the Jev System One API.")
+def _cli_command(
+    state: str = typer.Argument(..., help="State to evaluate (JSON string or text)"),
+    questions: str = typer.Argument(..., help="Questions as JSON string"),
+    model: str = typer.Option("jev-latest", help="Model to use"),
+    api_key: str | None = typer.Option(None, help="TypeSafe API key"),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> int:
+    """Call the Jev System One API.
+
+    Args:
+        state: State to evaluate (JSON string or text).
+        questions: Questions as JSON string.
+        model: Model to use.
+        api_key: TypeSafe API key.
+        json_output: Output as JSON.
+
+    Returns:
+        0 on success. Failures raise typer.Exit.
+
+    Raises:
+        typer.Exit: Raised with non-zero exit code if main returns a nonzero value.
+    """
+    code = main(
+        state=state,
+        questions=questions,
+        model=model,
+        api_key=api_key,
+        json_output=json_output,
+    )
+    if code != 0:
+        raise typer.Exit(code=code)
+    return code
+
+
 def main(
     state: str = typer.Argument(..., help="State to evaluate (JSON string or text)"),
     questions: str = typer.Argument(..., help="Questions as JSON string"),
@@ -225,7 +262,7 @@ def main(
     Reads Settings, lets an explicit --api-key override the settings key,
     constructs HTTPSystemOneAdapter once with timeout from Settings, calls
     run_cli with it as the port, and closes the adapter in finally.
-    The command decorator supplies separate user-facing help.
+    The command wrapper supplies separate help and propagates failure status.
 
     Args:
         state: State to evaluate (JSON string or text).

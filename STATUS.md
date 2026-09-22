@@ -7,9 +7,28 @@ remain in Git history and their linked issues.
 
 Published 0.4.0 remains artifact-verified, but a post-release process test found
 #123: malformed question JSON produces an error on stderr and exits 0. The
-exact downloaded PyPI wheel reproduces it without a live request. Fixing that
-exit contract and completing #30's real installed-CLI live coverage are the
-next release scope. No fix or new release has landed yet.
+exact downloaded PyPI wheel reproduces it without a live request. This commit fixes that
+exit contract through a thin Typer wrapper. Direct helpers retain integer
+returns, the non-standalone callback retains success0, and adapter cleanup
+still occurs before exit. #30's opt-in live installed-CLI coverage and the
+next release remain pending. Published 0.4.0 still contains the defect.
+
+Twenty-six new offline cases cover local failures with zero observed requests,
+controlled HTTP failures, all three answer types, and helper/lifecycle behavior.
+Before implementation, 18 process cases failed on exit0 and eight cases passed.
+Removing exit propagation causes 18 failures; removing closure causes four.
+The final base wheel passes six installed-console cases outside the checkout,
+with isolated package import/entrypoint and no MCP runtime. These are synthetic
+HTTP fixtures, not new live API trust claims.
+
+The coder's first diff was rejected without application. The next function
+matched the initial specification, but the full suite exposed a missing
+callback-return compatibility requirement. Revised accepted specification
+[5777155848](https://github.com/Alberto-Codes/judgevet/issues/123#issuecomment-5777155848)
+preserves the existing test. Gatekeeper tests, integration and documentation
+corrections are distinguished from model-generated wrapper code. Native MCP
+claim-audit dogfood returned probability0.05 for release completion; this is
+advisory evidence, and the release remains incomplete.
 
 Backlog acceptance was reconciled while preserving historical issue bodies.
 #34's async client/equivalence work, #22's release history and #19's documented
@@ -95,9 +114,10 @@ estimate. Historical failures were labelled separately from current green gates.
 
 ## Gates and model evidence
 
-**511 tests pass, 5 live tests deselected, 95.61% coverage.**
-[Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35728612308)
-confirms the count and coverage. All eleven configured local gates passed:
+**537 tests pass, 5 live tests deselected, 95.63% coverage.**
+The #123 local full-suite run confirms these figures. Published 0.4.0
+[release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35728612308)
+records its earlier baseline of 511 tests and 95.61% coverage. All eleven configured local gates passed:
 suppressions, dependencies, test hygiene, ruff check/format, ty, import-linter,
 docvet diff/all, pytest, and pytest with coverage. Commit and push hooks remain
 enabled. Shared tooling also passes its unittest, lint and format checks.
