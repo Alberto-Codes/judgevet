@@ -162,6 +162,29 @@ This deliberately broken artifact was not published to an index.
 publishing path. Release-please currently proposes 0.3.0; no new version has
 been published. Finish the other #116 children before reserving that version.
 
+## Console detector proof (#109, completing #106 and #99)
+
+The production console check and three new selftest cases share `check_console`.
+The default still runs the absolute installed `judgevet --help` beside the active
+interpreter. Real nonzero and missing executables produce named findings; a
+successful subprocess produces none. Missing executables no longer escape as
+`FileNotFoundError` from the offline checker.
+
+The literal no-key selftest now reports `9/9`. Externally replacing the shared
+detector with an always-clean function makes `main(['--selftest'])` exit 1,
+report `7/9` and name the missed nonzero/missing console detections. An always-failing
+detector also fails the successful-child case. All 20 other original functions
+remain unchanged, including the six existing detector cases. This completes the
+only remaining requirement of #106 and #99 without rebuilding their landed gate.
+
+Eight regressions bring the suite to **459 passed, 5 deselected, 95.55% coverage**;
+all eleven configured gates pass. The coder returned a correct detector but
+inverted the selftest verdicts: 2 tests failed and 6 passed. Codex corrected that mapping,
+wrote integration and retained tests, and fixed docstring/lint findings. The
+reasoner's specification also needed a routing correction. #109 preserves the
+raw returns, accepted specification and executable proof; the shared skill/log
+record these observations. Native MCP feedback was advisory, not a gate.
+
 ## The headline
 
 **judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and
@@ -645,7 +668,7 @@ the one structure they depend on. Renaming the key the parser reads fails it.
 
 The open queue is in
 GitHub issues; `gh issue list --label ready --label pi-fit` is the assignable
-set. #109 owns the console-script selftest case. #101's publish smoke gate is
+set. #109 completed the remaining console-script detector proof for #106 and #99. #101's publish smoke gate is
 wired and proven in Actions. Both publishing environments have the vendor
 key; it is scoped to the smoke step. #111 tracks the suppression scanner's
 unrecognized `ty: ignore` comments and the three existing occurrences.

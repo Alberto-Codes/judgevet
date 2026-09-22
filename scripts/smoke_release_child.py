@@ -39,6 +39,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import textwrap
 from pathlib import Path
 from typing import Any
@@ -276,6 +277,63 @@ def run_live_checks(api_key: str) -> list[str]:
     return failures
 
 
+def check_console(command: list[str] | None = None) -> str | None:
+    """Run console check for judgevet executable.
+
+    Args:
+        command: Command list to execute. If None, uses default judgevet --help.
+
+    Returns:
+        None if command exits with 0; error string otherwise.
+    """
+    if command is None:
+        command = [str(Path(sys.executable).absolute().parent / "judgevet"), "--help"]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, check=False)
+    except OSError:
+        return "judgevet --help executable unavailable"
+    if result.returncode == 0:
+        return None
+    return f"judgevet --help failed with exit code {result.returncode}"
+
+
+def _selftest_console_cases() -> list[tuple[str, str | None]]:
+    """Generate console detector selftest cases.
+
+    Returns:
+        Case labels paired with selftest failures, or None when a case passes.
+    """
+    cases = []
+
+    # Nonzero exit case
+    finding = check_console([sys.executable, "-c", "raise SystemExit(7)"])
+    cases.append(
+        (
+            "console nonzero exit",
+            None if finding is not None else "Expected console failure did not occur",
+        )
+    )
+
+    # Missing executable case
+    with tempfile.TemporaryDirectory() as tmpdir:
+        missing_path = str(Path(tmpdir) / "nonexistent_executable_xyz123")
+        finding = check_console([missing_path, "--help"])
+        cases.append(
+            (
+                "console missing executable",
+                None
+                if finding is not None
+                else "Expected console failure did not occur",
+            )
+        )
+
+    # Success case
+    finding = check_console([sys.executable, "-c", "pass"])
+    cases.append(("console success", finding))
+
+    return cases
+
+
 def run_checks_offline() -> list[str]:
     """Run all checks that do not require an API key.
 
@@ -296,19 +354,9 @@ def run_checks_offline() -> list[str]:
     except AttributeError as e:
         failures.append(f"__all__ check failed: {e}")
 
-    # judgevet --help
-    # Derive absolute path from sys.executable to avoid PATH ambiguity
-    venv_python = Path(sys.executable).absolute()
-    venv_bin_dir = venv_python.parent
-    judgevet_bin = venv_bin_dir / "judgevet"
-    result = subprocess.run(
-        [str(judgevet_bin), "--help"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        failures.append(f"judgevet --help failed with exit code {result.returncode}")
+    finding = check_console()
+    if finding is not None:
+        failures.append(finding)
 
     return failures
 
@@ -429,6 +477,7 @@ def selftest() -> list[str]:
     )
     cases.append(("all names resolve", _selftest_assert_all_names_resolve()))
     cases.append(("await block count", _selftest_count_await_blocks()))
+    cases.extend(_selftest_console_cases())
 
     failures = [f"Selftest ({label}): {msg}" for label, msg in cases if msg is not None]
     print(
