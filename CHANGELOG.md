@@ -3,6 +3,30 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.3.0](https://github.com/Alberto-Codes/judgevet/compare/v0.2.0...v0.3.0) (2026-09-22)
+
+
+### Features
+
+* **mcp:** ship the supported stdio command ([f94dc70](https://github.com/Alberto-Codes/judgevet/commit/f94dc7028da5d3b38b51191b40763f5b203aa5c7)), closes [#25](https://github.com/Alberto-Codes/judgevet/issues/25)
+
+
+### Fixes
+
+* **gates:** detect ty suppressions and remove existing uses ([d6fce1c](https://github.com/Alberto-Codes/judgevet/commit/d6fce1cb905cbf67818c2bd1d5ae82e8d804585d)), closes [#111](https://github.com/Alberto-Codes/judgevet/issues/111)
+* **mcp:** advertise the installed distribution version ([e70da9b](https://github.com/Alberto-Codes/judgevet/commit/e70da9b4ef2a766dfbd5bad6faea357f6615646c)), closes [#113](https://github.com/Alberto-Codes/judgevet/issues/113)
+* recognize interpreter install roots in release smoke ([fbb19fd](https://github.com/Alberto-Codes/judgevet/commit/fbb19fd4a7fc218a8ba9408b36c021447d7adabd)), closes [#118](https://github.com/Alberto-Codes/judgevet/issues/118) [#115](https://github.com/Alberto-Codes/judgevet/issues/115) [#116](https://github.com/Alberto-Codes/judgevet/issues/116)
+
+
+### Documentation
+
+* correct the official SDK comparison ([85ed059](https://github.com/Alberto-Codes/judgevet/commit/85ed059d4b12f21c0ed323ce4a1298cc6c9226b5)), closes [#104](https://github.com/Alberto-Codes/judgevet/issues/104)
+* document candidate and index release verification ([8b46302](https://github.com/Alberto-Codes/judgevet/commit/8b46302c15a6fef87c4a986e514f8688278d21b1)), closes [#117](https://github.com/Alberto-Codes/judgevet/issues/117) [#116](https://github.com/Alberto-Codes/judgevet/issues/116)
+* explain verified installs and source MCP setup ([cd3514c](https://github.com/Alberto-Codes/judgevet/commit/cd3514c61927a3fb89cb764a48fc7da4930ea871)), closes [#37](https://github.com/Alberto-Codes/judgevet/issues/37)
+* **mcp:** distinguish tested initialization from SDK compatibility ([8d7afde](https://github.com/Alberto-Codes/judgevet/commit/8d7afde607c6d2997a3b6f13d4f71554e3e0a0c8)), closes [#114](https://github.com/Alberto-Codes/judgevet/issues/114)
+* **release:** record rejected MCP artifact in Actions ([c42ab96](https://github.com/Alberto-Codes/judgevet/commit/c42ab96cbad29a6d30266c1817a62a16c3ff3109)), closes [#115](https://github.com/Alberto-Codes/judgevet/issues/115) [#116](https://github.com/Alberto-Codes/judgevet/issues/116)
+* **release:** record verified 0.2.0 publication and artifact gate ([9725035](https://github.com/Alberto-Codes/judgevet/commit/9725035479b032ac145fecc3efedddefa24c11e6)), closes [#101](https://github.com/Alberto-Codes/judgevet/issues/101)
+
 ## [0.2.0](https://github.com/Alberto-Codes/judgevet/compare/v0.1.0...v0.2.0) (2026-09-22)
 
 
