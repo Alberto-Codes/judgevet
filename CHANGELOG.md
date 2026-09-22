@@ -3,6 +3,49 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.2.0](https://github.com/Alberto-Codes/judgevet/compare/v0.1.0...v0.2.0) (2026-09-22)
+
+
+### Features
+
+* export the async adapter from the package root ([14ba30a](https://github.com/Alberto-Codes/judgevet/commit/14ba30a7cbebc9b005c4bdd73e4ffbbd96d78200))
+* **gate:** refuse a commit from an author this repository does not know ([2ec221c](https://github.com/Alberto-Codes/judgevet/commit/2ec221c570800c2631a622d72977f69aa7133b4d)), closes [#90](https://github.com/Alberto-Codes/judgevet/issues/90)
+* **gates:** a gate reads the runtime dependency list ([028d27d](https://github.com/Alberto-Codes/judgevet/commit/028d27d94ac70cf52614faccaf1361827c0b266e))
+* **gates:** catch a requirement naming an extra nobody publishes ([a0a72bb](https://github.com/Alberto-Codes/judgevet/commit/a0a72bbac349dcc08fce6f8429ed879366630068))
+* **http:** an async outbound adapter and its port ([d6a64ea](https://github.com/Alberto-Codes/judgevet/commit/d6a64eac3add85f507ccc0f0ca106c7787139db4))
+* **smoke:** run the built artifact, outside this checkout ([ed9df97](https://github.com/Alberto-Codes/judgevet/commit/ed9df974d4aa213feb74a765d5641a8c0e9da1ea))
+* **tests:** redact the API key from pytest reports ([2e1ab1f](https://github.com/Alberto-Codes/judgevet/commit/2e1ab1f08d167ff5b142c93d39c76d4123e77210))
+
+
+### Fixes
+
+* **ci:** test-publish cannot use an index name, it has no checkout ([a84c1a1](https://github.com/Alberto-Codes/judgevet/commit/a84c1a15ac9f46f90fb39b0744faa55a3fafb7cb)), closes [#101](https://github.com/Alberto-Codes/judgevet/issues/101)
+* **ci:** test-publish passed two mutually exclusive uv flags ([d314611](https://github.com/Alberto-Codes/judgevet/commit/d314611d3f59ddc770b5269e46c8f48a074d193a)), closes [#101](https://github.com/Alberto-Codes/judgevet/issues/101)
+* **domain:** a noul's criteria keys are true and false, not yes and no ([d5fc98a](https://github.com/Alberto-Codes/judgevet/commit/d5fc98a6fc53967706154443a572ec0ced35a89a))
+* **gate:** read the recorded author in range mode, not the pending one ([5d893fb](https://github.com/Alberto-Codes/judgevet/commit/5d893fb475f7fbbe7fc5977d00d1c1dc81cd7243)), closes [#90](https://github.com/Alberto-Codes/judgevet/issues/90)
+* **gates:** the suppression gate reads scripts/, and reads comments ([28f61e0](https://github.com/Alberto-Codes/judgevet/commit/28f61e00f44e476ca1df7e8d653bd733909e1145))
+* **gate:** the release PR's own commits are release-please's, not a human's ([a866ac2](https://github.com/Alberto-Codes/judgevet/commit/a866ac246eb7d4ed302e9c45f542792ee888f4ea)), closes [#90](https://github.com/Alberto-Codes/judgevet/issues/90)
+* **http:** convert the documented question types to wire dicts ([bee1a09](https://github.com/Alberto-Codes/judgevet/commit/bee1a097b0f44c8a1687b25f88caa4fa2d2e1827))
+* **smoke:** execute valid examples after layout findings ([0db29a3](https://github.com/Alberto-Codes/judgevet/commit/0db29a3e3010c5fc2e7b2f1ac8c70ded64394de3)), closes [#107](https://github.com/Alberto-Codes/judgevet/issues/107)
+* **status:** correct a test count I typed instead of measured ([78e2742](https://github.com/Alberto-Codes/judgevet/commit/78e2742c1ba24551a672defa23ede6519fa311e0))
+
+
+### Refactoring
+
+* **http:** extract the sync-independent half of system_one ([90b5482](https://github.com/Alberto-Codes/judgevet/commit/90b5482002c069816dc6d4aba490c0d9a6a3fc44))
+
+
+### Documentation
+
+* delete NEXT_PROMPT.md, keep what it knew ([8dacf40](https://github.com/Alberto-Codes/judgevet/commit/8dacf400ec959d5ee1320b30f7afd0fd13522a58))
+* **readme:** stop the PyPI page announcing itself as a draft ([e60962d](https://github.com/Alberto-Codes/judgevet/commit/e60962d8e19cd5ecaf653f0fad9c638e552d1ae2))
+* record that 0.1.0 shipped ([c75549b](https://github.com/Alberto-Codes/judgevet/commit/c75549bba6370f82d388ad210c7d0a926eabf2bd)), closes [#88](https://github.com/Alberto-Codes/judgevet/issues/88)
+* **release:** record the standing permission and the bar for using it ([1da21da](https://github.com/Alberto-Codes/judgevet/commit/1da21da64acfb2da43f8edb4c53097b6fa6a0a77))
+* **status:** record the test-hygiene gate ([85df678](https://github.com/Alberto-Codes/judgevet/commit/85df67894326f960113bf9d9426ea7500e658e9d))
+* **status:** refresh the facts that went stale ([e8fa42e](https://github.com/Alberto-Codes/judgevet/commit/e8fa42e5820998b56633b659a188995be32ad03a))
+* **status:** the 3xx fallthrough is pinned now ([16ef80b](https://github.com/Alberto-Codes/judgevet/commit/16ef80b827c593a23482e4a8367954cb285c9865))
+* **status:** the smoke test's two detectors do not detect ([dd130b7](https://github.com/Alberto-Codes/judgevet/commit/dd130b798bcf678571dcbbed3c61ce137f7cbbde)), closes [#106](https://github.com/Alberto-Codes/judgevet/issues/106)
+
 ## [0.1.0](https://github.com/Alberto-Codes/judgevet/compare/v0.0.1...v0.1.0) (2026-09-21)
 
 **The first release of this library.** `0.0.1` on PyPI was a name reservation
