@@ -3,6 +3,28 @@
 Last written: 2026-09-22. This file reports current state; historical rounds
 remain in Git history and their linked issues.
 
+## Active CLI patch (#124)
+
+Published 0.4.0 remains artifact-verified, but a post-release process test found
+#123: malformed question JSON produces an error on stderr and exits 0. The
+exact downloaded PyPI wheel reproduces it without a live request. Fixing that
+exit contract and completing #30's real installed-CLI live coverage are the
+next release scope. No fix or new release has landed yet.
+
+Backlog acceptance was reconciled while preserving historical issue bodies.
+#34's async client/equivalence work, #22's release history and #19's documented
+Noul criteria are fulfilled. A focused async/contract/public-surface/logging
+run passed 53 tests; the existing all-question-types live test passed with
+true/false criteria. These audits add no new API trust claims.
+
+#3 remains the logging parent: #26 configuration exists, while #27 call-site
+wiring and real-stream proof remain. Its named stderr test uses an explicit
+StringIO and never captures actual stdout, so its name alone is not evidence
+of default stderr behavior. #27 and #43 lost obsolete blocked labels. Current
+acceptance for #43/#67/#68 reflects the released README, exports and clean CLI
+help. #8 now requires the AGENTS.md hard limit of 300 code lines, not 320;
+actual baseline inventory and decomposition must precede a green size gate.
+
 ## Published release
 
 **judgevet 0.4.0 is published and verified.** The library, CLI and supported
@@ -136,5 +158,5 @@ way nobody planned.
 
 The implementation and artifact-verification scope of tracker #121 is
 fulfilled. Final evidence-commit CI and milestone closure are recorded on that
-tracker. Future work comes from the open issue queue. Unseen API bodies remain
+tracker. Tracker #124 now owns the CLI patch described above. Unseen API bodies remain
 inferred; no documentation is promoted to stable by this release.
