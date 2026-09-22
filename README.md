@@ -48,17 +48,17 @@ calibrated probability:
 | `Choice` | one option from a set you defined, with per-option probabilities |
 | `Score` | a position on a scale you defined, with a legend |
 
-Every answer carries a confidence. That makes it a decision primitive your code
-can branch on, sort by, and route with — a smart `if` rather than a paragraph.
+Typed answers let code branch, sort and route without parsing prose.
 
 ## Why this client exists
 
-Several MCP servers for Jev appeared within days of its launch, all
-MCP-only. An MCP server cannot be called from a script, a pre-commit hook, or
-CI without standing up a client first.
+The [official TypeSafe Python SDK](https://docs.typesafe.ai/sdk/python)
+provides synchronous and asynchronous clients.
 
-Here the **library is the artifact**. The CLI and the MCP server are two
-inbound adapters over one contract-tested core:
+judgevet combines a typed library with two inbound adapters, CLI and MCP,
+over one contract-tested core. The **library is the artifact**: scripts, hooks
+and CI can call it directly. [STATUS.md](STATUS.md) separates verified claims
+from inferences.
 
 ```
 domain/              question and answer types, calibrated probabilities  — pure

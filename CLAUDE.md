@@ -7,11 +7,11 @@ Guidance for coding agents in this repository. `AGENTS.md` is the same file.
 **judgevet** is a typed client for TypeSafe's Jev (System One) judgment
 model, plus two inbound adapters over it: a CLI and an MCP server.
 
-The **library is the artifact**. Jev answers typed questions with calibrated
-probabilities, which makes it useful to scripts, pre-commit hooks and CI — not
-only to agents. Every published Jev integration so far is MCP-only, and an MCP
-server cannot be called from a shell script. Here MCP is one inbound adapter
-beside the CLI, over one contract-tested core.
+The **library is the artifact**. Scripts, pre-commit hooks and CI can call
+the typed library directly. The CLI and MCP server are two inbound adapters
+over one contract-tested core. The
+[official TypeSafe Python SDK](https://docs.typesafe.ai/sdk/python) also
+provides synchronous and asynchronous clients.
 
 Conventions are inherited from the sister projects
 [automarket](https://github.com/Alberto-Codes/automarket),

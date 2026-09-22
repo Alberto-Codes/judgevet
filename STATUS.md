@@ -207,6 +207,29 @@ and parameterized the runtime test. The model was not responsible for that
 recipe error. Original/revised specifications, raw replacements and executable
 proof are on #111; the shared skill/log preserve that distinction.
 
+## SDK comparison correction (#104)
+
+README and the opening agent guidance now name the official TypeSafe Python SDK
+and cite its synchronous/asynchronous clients. judgevet's stated purpose is its
+typed library plus CLI and MCP adapters over one contract-tested core, with an
+explicit verification record. The MCP-only comparison and the contradictory
+claim that every answer carries confidence are removed. No claim about the
+SDK's absent features, comparative quality or test coverage replaces them.
+
+README code fences, install instructions, verified-status statements and the
+agent policy sections are unchanged. AGENTS.md remains the CLAUDE.md symlink.
+The built source wheel's metadata carries the corrected README; SHA-256:
+`f0b9785d71a05d06fb3e5736baf8f783b2c26994a15840481c912bf4bdb9c533`.
+It remains an unreleased source artifact with 0.2.0 metadata, not an index
+verification or replacement of the published artifact.
+
+The reasoner supplied the positive comparison scope; the coder returned three
+prose blocks. Codex made editorial revisions and independently checked sources
+and preserved content. Raw/accepted specifications and returns are on #104.
+All eleven gates pass; the suite remains **475 passed, 5 deselected, 95.55%
+coverage**. The final clean candidate and production index verification remain
+outstanding on #115 and #116.
+
 ## The headline
 
 **judgevet 0.2.0 is on PyPI.** `pip install judgevet` installs the library and
