@@ -1,119 +1,208 @@
 # Cut a release
 
-release-please cuts every release from the commit history. You never edit a
-version by hand. The release is created as a **draft**, so nothing reaches
-PyPI until you publish it yourself. This page shows what runs, in what order,
-and where you are expected to intervene.
+release-please manages the version and changelog. Its Python strategy updates
+`pyproject.toml`; `extra-files` updates `src/judgevet/__init__.py`. It also
+updates `.release-please-manifest.json`. The separate `update-lockfile` job
+refreshes `uv.lock` on the release branch. Never edit a version by hand.
 
-## The flow
+Merging the release PR creates a draft and tag. Publishing the draft triggers
+`publish.yml`. A draft permits a pause; it does not upload to PyPI.
 
-```mermaid
-flowchart TD
-    accTitle: How a merged change reaches PyPI
-    accDescr {
-        A push to main runs ci.yml, which holds four jobs: lint, type-check,
-        test and docvet. The same push starts release-please.yml, which opens
-        a release pull request carrying the version bump and the CHANGELOG
-        entry. An update-lockfile job then commits uv.lock onto that same
-        release pull request, because release-please bumps pyproject.toml and
-        leaves the lockfile behind. Merging the release pull request makes
-        release-please cut a GitHub Release as a draft. A draft carries no
-        published release event, so nothing downstream runs. You edit the
-        draft notes and publish the release by hand. Publishing emits the
-        release published event, which starts publish.yml: it builds the
-        distribution and uploads it to PyPI over OIDC trusted publishing,
-        with no stored token anywhere in the path.
-    }
+## Authority and prerequisites
 
-    push["Push to main"] --> ci["ci.yml<br/>lint · type-check · test · docvet"]
-    push --> rp["release-please.yml"]
-    rp --> relpr["Release PR<br/>version bump and CHANGELOG"]
-    relpr --> lock["update-lockfile job<br/>commits uv.lock"]
-    lock --> mergerel["You merge the release PR"]
-    mergerel --> draft(["Draft release and tag.<br/>No published event.<br/>Nothing downstream runs."])
-    draft --> human["You edit the notes,<br/>then publish by hand"]
-    human --> pub(["publish.yml<br/>build, then PyPI over OIDC"])
+Standing authorization permits merging and publishing a release that meets
+these criteria without another approval:
+
+- Main and candidate CI are green. Required local gates pass.
+- The changelog describes the release and its user-visible changes.
+- `STATUS.md` reports measured tests, coverage and verified-versus-inferred
+  claims. No inferred claim becomes verified without an exercising call.
+- The candidate downloaded from TestPyPI passes isolated base and MCP checks.
+- No unresolved release requirement affects the installation being shipped.
+
+Hold for a human decision if the change breaks a published API, changes what
+users should trust in the verified table, or needs unavailable credentials.
+The published 0.2.0 files remain immutable. TestPyPI is also a real publication
+to an immutable index, not a dry run.
+
+Run the following Bash blocks in one shell from the repository root, with
+Python 3.12 or newer, `gh`, `uv`, and configured `direnv`. Inherit the vendor
+key through the approved environment. Never print it or put it in a command
+or checked-in configuration. Do not enable shell tracing.
+
+## Freeze the candidate
+
+Choose the release-please PR and version from its reviewed diff. Read each
+operator input before continuing; run IDs below must identify the intended
+workflow and commit, not merely the newest run.
+
+```bash
+set -euo pipefail
+shopt -s nullglob
+read -r -p 'Release PR number: ' PR
+read -r -p 'Intended version: ' VERSION
+RELEASE_BRANCH=$(gh pr view "$PR" --json headRefName --jq .headRefName)
+HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+BASE_SHA=$(gh pr view "$PR" --json baseRefOid --jq .baseRefOid)
+gh pr checks "$PR"
+git fetch origin "$RELEASE_BRANCH" main
+git cat-file -e "$HEAD_SHA^{commit}"
+for file in pyproject.toml src/judgevet/__init__.py .release-please-manifest.json uv.lock; do
+  git show "$HEAD_SHA:$file"
+done
+git show "$HEAD_SHA:CHANGELOG.md"
+gh run list --workflow ci.yml --commit "$BASE_SHA"
 ```
 
-## What you do, and what you never do
+Inspect all four version values: project version, root `__version__`, manifest
+root entry, and the root `judgevet` package version in `uv.lock`. All must equal
+`VERSION`. Review the changelog and STATUS trust table. Inspect the identified
+main CI run and require completed success. Fetching does not replace local
+files or discard unrelated work.
 
-| step | who |
-|---|---|
-| land conventional commits on `main` | you, normally |
-| open the release PR, bump versions, write the CHANGELOG | release-please |
-| refresh `uv.lock` on the release branch | the `update-lockfile` job |
-| merge the release PR | **you** |
-| cut the draft release and its tag | release-please |
-| edit the draft notes and publish | **you** |
-| build and upload to PyPI | `publish.yml`, over OIDC |
+## Publish and verify the TestPyPI candidate
 
-Never edit a version by hand. Four places carry it — `pyproject.toml`,
-`__version__` in `src/judgevet/__init__.py`, `.release-please-manifest.json`
-and `uv.lock` — and release-please moves all four together. Editing one makes
-them disagree silently.
+Verify TestPyPI before merging. This checks what the index serves before using
+standing production-release authority. The workflow's `version` input is
+**descriptive, not enforced**. The checkout determines the actual version.
 
-## Before you merge the release PR
+```bash
+gh workflow run test-publish.yml --ref "$RELEASE_BRANCH" -f "version=$VERSION"
+gh run list --workflow test-publish.yml --branch "$RELEASE_BRANCH" \
+  --json databaseId,headSha,createdAt,status,url
+read -r -p 'TestPyPI run ID for this dispatch: ' TEST_RUN
+test "$(gh run view "$TEST_RUN" --json headSha --jq .headSha)" = "$HEAD_SHA"
+gh run watch "$TEST_RUN" --exit-status
+test "$(gh run view "$TEST_RUN" --json conclusion --jq .conclusion)" = success
+gh run view "$TEST_RUN" --verbose
+```
 
-The PR body carries the checklist. The item worth dwelling on is
-`STATUS.md`'s verified-versus-inferred table: a release publishes claims, and
-that table is where this project records which claims a call has actually
-exercised. If a line moved from inferred to verified without a call that did
-it, stop.
+Confirm both smoke steps succeeded before upload. Both publishing workflows
+build distributions once, download their `dist` artifact in the publishing
+job, require exactly one wheel, and pass that path to the base and MCP smoke
+runners before OIDC upload. Each smoke step receives the key separately.
+Ordinary CI makes no live call.
 
-## Standing permission, and its limits
+Download only judgevet from TestPyPI. Dependencies for the isolated installs
+come from normal PyPI through the existing runners.
 
-Alberto granted standing permission on 2026-09-21 to merge the release PR,
-edit the draft and publish, without asking each time. The bar for using it:
+```bash
+EVIDENCE_DIR=$(mktemp -d /tmp/judgevet-release.XXXXXXXX)
+TEST_ARTIFACT="$EVIDENCE_DIR/test-artifact"
+TEST_INDEX="$EVIDENCE_DIR/test-index"
+gh run download "$TEST_RUN" --name dist --dir "$TEST_ARTIFACT"
+uvx --from pip pip download --index-url https://test.pypi.org/simple/ \
+  --no-deps --only-binary=:all: "judgevet==$VERSION" --dest "$TEST_INDEX"
+test_artifacts=("$TEST_ARTIFACT"/*.whl)
+test_downloads=("$TEST_INDEX"/*.whl)
+(( ${#test_artifacts[@]} == 1 ))
+(( ${#test_downloads[@]} == 1 ))
+TEST_WHEEL=${test_downloads[0]}
+cmp "${test_artifacts[0]}" "$TEST_WHEEL"
+sha256sum "${test_artifacts[0]}" "$TEST_WHEEL"
+direnv exec . python3 scripts/smoke_release.py --wheel "$TEST_WHEEL"
+direnv exec . python3 -m scripts.smoke_mcp_release --wheel "$TEST_WHEEL"
+```
 
-**Cut a release when** CI is green on `main`; the wheel installs and works in
-a clean virtualenv built from the published artifact, not the local build;
-`STATUS.md`'s verified-versus-inferred table is accurate, with no line moved
-to verified without a call that did it; nothing open would be hit by someone
-running `pip install judgevet`; and the changelog entry reads as something a
-stranger can use.
+The runners create separate virtual environments outside the checkout and
+install the exact wheel. The base check executes library examples and CLI
+help. The MCP check installs `[mcp]`, checks installed path and metadata,
+launches `judgevet-mcp`, discovers exactly three tools, and calls all three
+against the live service. A local source build is not index verification.
 
-**Hold and ask instead when** a change breaks an API that is already
-published — 0.1.0 is on the index, so that bar is real from here rather than
-theoretical; when the verified-versus-inferred table changes in a way that
-alters what a user should trust; or when a step needs a credential or a
-decision only a human has.
+Record commands, candidate SHA, run URL, hashes, live results and limits on
+[tracker #116](https://github.com/Alberto-Codes/judgevet/issues/116). Preserve
+these downloads through production verification.
 
-Publishing is the one irreversible step in this repository. A version can be
-yanked but never replaced, so the check that matters most is the clean-venv
-install from the index, because it is the only one that tests what a user
-actually receives.
+## Merge the accepted candidate
 
-## Publishing the draft
+Stop if the candidate or main changed. Re-evaluate changed source or artifacts;
+changed published bytes need a fresh version through release-please. Do not
+blindly retry a reserved version, overwrite index files, or disable upload
+hash checks.
 
-Publishing is the only irreversible step, and it is deliberately manual.
-`publish.yml` triggers on `release: types: [published]` — not on a push, not
-on a tag, not on a merge. Until someone clicks publish, nothing can reach the
-index.
+```bash
+test "$(gh pr view "$PR" --json headRefOid --jq .headRefOid)" = "$HEAD_SHA"
+test "$(gh pr view "$PR" --json baseRefOid --jq .baseRefOid)" = "$BASE_SHA"
+gh pr checks "$PR"
+gh pr merge "$PR" --merge --match-head-commit "$HEAD_SHA"
+RELEASE_SHA=$(gh pr view "$PR" --json mergeCommit --jq .mergeCommit.oid)
+git fetch origin main
+git diff --exit-code "$HEAD_SHA" "$RELEASE_SHA" --
+gh run list --commit "$RELEASE_SHA"
+```
 
-Edit the draft notes first. The generated CHANGELOG says what changed;
-the release notes should say what the release is *for*.
+Inspect the release commit's CI and release-please runs; require completed
+success before publishing. The tree comparison must be empty. Verify the
+expected draft, tag, and version. Release-please must have created the tag at
+`RELEASE_SHA`; a mismatched tag is a stop condition.
 
-## Testing the path without publishing
+```bash
+TAG="v$VERSION"
+gh release view "$TAG" --json tagName,isDraft,targetCommitish,url
+git fetch origin "refs/tags/$TAG:refs/tags/$TAG"
+test "$(git rev-parse "$TAG^{commit}")" = "$RELEASE_SHA"
+read -r -p 'Path to reviewed release notes: ' NOTES_FILE
+gh release edit "$TAG" --notes-file "$NOTES_FILE"
+gh release edit "$TAG" --draft=false
+```
 
-`test-publish.yml` is `workflow_dispatch` only and uploads to TestPyPI. The
-`testpypi` index in `pyproject.toml` sets `explicit = true`, so dependency
-resolution never reaches it — that is a supply-chain property, not a
-convenience, and it should stay.
+The generated changelog describes changes. Release notes explain what the
+release is for. Publishing the draft is the production trigger; do not bypass
+the workflow with a local upload.
 
-## When release-please fails
+## Verify production publication
 
-If the run fails with `Resource not accessible by personal access token`,
-`RELEASE_PLEASE_TOKEN` is under-scoped. It needs three permissions, not two:
+Production rebuilds from the release commit. Do not assume its bytes match the
+accepted candidate before comparing the actual artifacts.
 
-| token type | what to set |
-|---|---|
-| fine-grained | Contents read/write, Pull requests read/write, **Issues read/write**, scoped to this repository |
-| classic | `repo` |
+```bash
+gh run list --workflow publish.yml --commit "$RELEASE_SHA" \
+  --json databaseId,headSha,createdAt,status,url
+read -r -p 'Production publish run ID: ' PROD_RUN
+test "$(gh run view "$PROD_RUN" --json headSha --jq .headSha)" = "$RELEASE_SHA"
+gh run watch "$PROD_RUN" --exit-status
+test "$(gh run view "$PROD_RUN" --json conclusion --jq .conclusion)" = success
+gh run view "$PROD_RUN" --verbose
+PROD_ARTIFACT="$EVIDENCE_DIR/prod-artifact"
+PROD_INDEX="$EVIDENCE_DIR/prod-index"
+gh run download "$PROD_RUN" --name dist --dir "$PROD_ARTIFACT"
+uvx --from pip pip download --index-url https://pypi.org/simple/ \
+  --no-deps --only-binary=:all: "judgevet==$VERSION" --dest "$PROD_INDEX"
+prod_artifacts=("$PROD_ARTIFACT"/*.whl)
+prod_downloads=("$PROD_INDEX"/*.whl)
+(( ${#prod_artifacts[@]} == 1 ))
+(( ${#prod_downloads[@]} == 1 ))
+PROD_WHEEL=${prod_downloads[0]}
+cmp "${prod_artifacts[0]}" "$PROD_WHEEL"
+cmp "$TEST_WHEEL" "$PROD_WHEEL"
+sha256sum "${prod_artifacts[0]}" "$TEST_WHEEL" "$PROD_WHEEL"
+direnv exec . python3 scripts/smoke_release.py --wheel "$PROD_WHEEL"
+direnv exec . python3 -m scripts.smoke_mcp_release --wheel "$PROD_WHEEL"
+```
 
-Issues is the one that gets missed: GitHub routes pull request *labels*
-through the Issues API, and release-please labels its release PRs.
+Confirm the production base/MCP steps and upload succeeded. A hash mismatch
+requires investigation; it does not authorize replacement of immutable files.
+Do not call the release verified until actual PyPI checks pass.
 
-**Never test a token change by re-running the failed job.** A re-run reuses
-that run's secret snapshot, so the old token is used again and the fix looks
-like it did nothing. Push a commit instead — release-please runs on every push
-to `main`, so the next one tests it for free.
+Record final evidence on #116 and measured results in `STATUS.md`. Update the
+installation guide after the published MCP command is verified. A fresh
+transport probe does not prove the current Codex session reloaded its native
+tools. Leave unseen 429/529 bodies inferred.
+
+The existing [broken-library proof](https://github.com/Alberto-Codes/judgevet/actions/runs/35686353515)
+and [broken-MCP proof](https://github.com/Alberto-Codes/judgevet/actions/runs/35699666984)
+show failed smoke checks prevented upload. Link them; do not recreate them for
+each release.
+
+## Credential troubleshooting
+
+For `Resource not accessible by personal access token`, check
+`RELEASE_PLEASE_TOKEN` repository scope and permissions. A fine-grained token
+needs Contents, Pull requests and Issues read/write; a classic token needs
+`repo`. Pull request labels use the Issues API.
+
+Test changed credentials with a fresh workflow run. Do not infer which secret
+value a previous attempt used. Keep credential values out of logs and issue
+evidence. Missing artifact downloads require checking the selected run and
+artifact; failed smoke checks require investigating the artifact and isolation.

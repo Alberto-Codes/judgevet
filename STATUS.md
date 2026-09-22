@@ -2,6 +2,26 @@
 
 Last written: 2026-09-22. A session overwrites this file.
 
+## Release procedure (#117)
+
+The release guide now orders fresh TestPyPI publication and actual index-wheel
+verification before release-PR merge. It checks the candidate and merge tree,
+then requires production Actions/index byte comparisons and live base/MCP
+checks after publication. The descriptive workflow version input is not an
+automatic version check. Release-please retains version and lockfile ownership.
+
+Six Bash blocks pass syntax checking. Safe probes reject zero/two wheels and
+changed bytes. The documented no-dependency download retrieved TestPyPI 0.2.0
+with its previously recorded hash; that proves the recipe, not the next
+candidate. Installed gh supports the documented JSON fields and merge/publish
+flags. All eleven gates passed: 475 default tests, 5 deselected, 95.55% coverage.
+No live verification claim changed, and 0.3.0 is not yet published or verified.
+
+The reasoner's order was retained with substantive corrections. Both coder
+returns missed requirements; the gatekeeper retained usable prose and authored
+the command blocks and completion edits. Prompts, returns, accepted revisions
+and review findings are on #117. The shared delegation log records the split.
+
 ## Next-release MCP command (#25)
 
 The source tree now installs `judgevet-mcp`. Its composition root reads
