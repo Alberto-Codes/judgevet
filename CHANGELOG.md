@@ -3,6 +3,24 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.4.0](https://github.com/Alberto-Codes/judgevet/compare/v0.3.0...v0.4.0) (2026-09-22)
+
+
+### Features
+
+* add typed answer accessors to responses ([4362721](https://github.com/Alberto-Codes/judgevet/commit/4362721accd400405bd01f992de0b52c76dbeec2)), closes [#103](https://github.com/Alberto-Codes/judgevet/issues/103) [#121](https://github.com/Alberto-Codes/judgevet/issues/121)
+
+
+### Fixes
+
+* **cli:** separate public help from developer docstrings ([a4bfafa](https://github.com/Alberto-Codes/judgevet/commit/a4bfafa403357656cb315b662ff2501b8b076ad5)), closes [#16](https://github.com/Alberto-Codes/judgevet/issues/16) [#121](https://github.com/Alberto-Codes/judgevet/issues/121)
+
+
+### Documentation
+
+* record verified 0.3.0 installation and release ([2aae183](https://github.com/Alberto-Codes/judgevet/commit/2aae18309241b69595fb79e3f7eb65e64cd1236b)), closes [#119](https://github.com/Alberto-Codes/judgevet/issues/119) [#115](https://github.com/Alberto-Codes/judgevet/issues/115) [#116](https://github.com/Alberto-Codes/judgevet/issues/116)
+* record verified optional assisted audit ([cd79dd0](https://github.com/Alberto-Codes/judgevet/commit/cd79dd06bacd8aac10468957b19d173cf858af42)), closes [#97](https://github.com/Alberto-Codes/judgevet/issues/97) [#121](https://github.com/Alberto-Codes/judgevet/issues/121)
+
 ## [0.3.0](https://github.com/Alberto-Codes/judgevet/compare/v0.2.0...v0.3.0) (2026-09-22)
 
 
