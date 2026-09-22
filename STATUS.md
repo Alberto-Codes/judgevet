@@ -2,6 +2,34 @@
 
 Last written: 2026-09-22. A session overwrites this file.
 
+## Release import guard (#118)
+
+Fresh TestPyPI 0.3.0 publication passed both Actions smoke checks in
+[run 35705399418](https://github.com/Alberto-Codes/judgevet/actions/runs/35705399418).
+The index wheel matches its Actions artifact, SHA-256
+`71e37956ef451c682cbd22b8ed0a61a58da7317c5e7526ecdeae77b91779aefd`.
+Local Python 3.14 then exposed the base child's hardcoded `lib` assumption:
+examples ran, but the guard rejected the venv's actual `lib64` import.
+
+The guard now resolves interpreter `purelib`/`platlib` paths and requires
+containment within the resolved venv. Fifteen offline tests produced nine
+failures before implementation. All pass after repair; removing resolution
+makes three fail. Foreign imports, misleading prefixes, invalid roots and
+symlink escapes remain rejected. All eleven gates pass: **490 tests, 5
+deselected, 95.55% coverage**. The parent and library code are unchanged.
+
+The exact downloaded TestPyPI wheel now passes base and MCP live checks on
+both host Python 3.14 (`lib64`) and uv Python 3.12 (`lib`). These checks use
+the repaired checkout scripts against the unchanged index wheel. They do not
+prove a new candidate or production publication. TestPyPI 0.3.0 remains
+reserved; the release candidate must be re-evaluated before proceeding.
+
+The reasoner selected interpreter install roots. The coder supplied the
+algorithm but changed the function name, omitted the absolute-path guard and
+returned an incompatible diagnostic. Gatekeeper corrections and independent
+red tests are recorded on #118 with separate model attribution. No additional
+API status or model claim was promoted to verified.
+
 ## Release procedure (#117)
 
 The release guide now orders fresh TestPyPI publication and actual index-wheel

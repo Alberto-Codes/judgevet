@@ -34,11 +34,11 @@ See Also:
 """
 
 import asyncio
-import glob
 import os
 import re
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import textwrap
 from pathlib import Path
@@ -48,26 +48,34 @@ _NUM_PYTHON_BLOCKS = 2
 
 
 def assert_in_site_packages() -> None:
-    """Assert judgevet was imported from site-packages, not src/.
+    """Verify resolved imports belong to this interpreter's install directories.
 
     Raises:
-        RuntimeError: If judgevet.__file__ is not under the venv's
-            site-packages directory.
+        RuntimeError: If the imported file is not below a resolved purelib or
+            platlib directory within the interpreter's environment.
     """
-    judgevet_module = __get_judgevet_module()
-    judgevet_file = Path(judgevet_module.__file__)
-    site_packages = Path(sys.prefix) / "lib" / "python*" / "site-packages"
+    module = __get_judgevet_module()
+    module_file = Path(module.__file__).resolve()
+    prefix = Path(sys.prefix).resolve()
+    paths = sysconfig.get_paths()
 
-    globbed = glob.glob(str(site_packages))
-    if not globbed:
-        raise RuntimeError(f"site-packages pattern not found: {site_packages}")
-
-    for sp_dir in globbed:
-        if judgevet_file.is_relative_to(sp_dir):
+    for key in ("purelib", "platlib"):
+        raw = paths.get(key)
+        if not isinstance(raw, str) or not raw:
+            continue
+        root = Path(raw)
+        if not root.is_absolute():
+            continue
+        root = root.resolve()
+        if (
+            root != prefix
+            and root.is_relative_to(prefix)
+            and module_file.is_relative_to(root)
+        ):
             return
 
     raise RuntimeError(
-        f"judgevet imported from {judgevet_file}, not under site-packages"
+        f"judgevet imported from {module_file}, not under interpreter install directories"
     )
 
 
