@@ -1,4 +1,4 @@
-"""HTTP outbound adapter implementation.
+"""HTTP outbound adapter with one safe terminal debug event per call.
 
 Error handling:
     The API error `detail` field is polymorphic:
@@ -68,6 +68,7 @@ from typing import Any, Self
 
 import httpx
 
+from judgevet.adapters.outbound.http_events import call_event
 from judgevet.domain.errors import (
     JevAuthError,
     JevError,
@@ -369,7 +370,7 @@ class HTTPSystemOneAdapter:
         questions: Mapping[str, Any],
         model: str | None = None,
     ) -> SystemOneResponse:
-        """Call the Jev System One API via HTTP.
+        """Call Jev via HTTP and emit terminal metadata to configured debug logging.
 
         Args:
             state: The content to evaluate.
@@ -406,18 +407,23 @@ class HTTPSystemOneAdapter:
             Uses helper functions for payload building, response parsing,
             and error translation to ensure consistent behavior across adapters.
         """
-        payload = _build_payload(state, questions, model, self._default_model)
-        try:
-            response = self._client.post("/v1/systemone", json=payload)
-            response.raise_for_status()
-            return _parse_body(response)
-        except httpx.HTTPStatusError as exc:
-            translated = _translate_status_error(exc)
-            if translated is None:
-                raise
-            raise translated from exc
-        except httpx.RequestError as exc:
-            raise _translate_request_error(exc) from exc
+        with call_event(model or self._default_model, len(questions)) as event:
+            payload = _build_payload(state, questions, model, self._default_model)
+            try:
+                response = self._client.post("/v1/systemone", json=payload)
+                event.status_code = response.status_code
+                response.raise_for_status()
+                answer = _parse_body(response)
+            except httpx.HTTPStatusError as exc:
+                translated = _translate_status_error(exc)
+                if translated is None:
+                    raise
+                raise translated from exc
+            except httpx.RequestError as exc:
+                raise _translate_request_error(exc) from exc
+            else:
+                event.outcome = "success"
+                return answer
 
     def close(self) -> None:
         """Close the HTTP client."""
@@ -536,7 +542,7 @@ class AsyncHTTPSystemOneAdapter:
         questions: Mapping[str, Any],
         model: str | None = None,
     ) -> SystemOneResponse:
-        """Call the Jev System One API via HTTP asynchronously.
+        """Call Jev asynchronously and emit terminal metadata to debug logging.
 
         Args:
             state: The content to evaluate.
@@ -569,18 +575,23 @@ class AsyncHTTPSystemOneAdapter:
             may be double-billed because the service may still be processing
             the first attempt.
         """
-        payload = _build_payload(state, questions, model, self._default_model)
-        try:
-            response = await self._client.post("/v1/systemone", json=payload)
-            response.raise_for_status()
-            return _parse_body(response)
-        except httpx.HTTPStatusError as exc:
-            translated = _translate_status_error(exc)
-            if translated is None:
-                raise
-            raise translated from exc
-        except httpx.RequestError as exc:
-            raise _translate_request_error(exc) from exc
+        with call_event(model or self._default_model, len(questions)) as event:
+            payload = _build_payload(state, questions, model, self._default_model)
+            try:
+                response = await self._client.post("/v1/systemone", json=payload)
+                event.status_code = response.status_code
+                response.raise_for_status()
+                answer = _parse_body(response)
+            except httpx.HTTPStatusError as exc:
+                translated = _translate_status_error(exc)
+                if translated is None:
+                    raise
+                raise translated from exc
+            except httpx.RequestError as exc:
+                raise _translate_request_error(exc) from exc
+            else:
+                event.outcome = "success"
+                return answer
 
     async def aclose(self) -> None:
         """Close the HTTP async client."""

@@ -1,4 +1,4 @@
-"""Compose an opt-in policy judgment with handled service and rate-limit errors.
+"""Compose policy judgments with stderr logging and handled service errors.
 
 Examples:
     ```python
@@ -23,6 +23,7 @@ from typing import Any
 from judgevet.adapters.inbound.cli_inputs import InputFailure
 from judgevet.adapters.inbound.cli_policy import Rule, parse_policy
 from judgevet.adapters.inbound.cli_policy_eval import evaluate_policy
+from judgevet.adapters.inbound.logs import configure
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.errors import (
@@ -128,7 +129,7 @@ def run_policy(
     policy_file: str,
     callbacks: CliCallbacks,
 ) -> int:
-    """Validate policy, handle rate limits and close the adapter after judgment.
+    """Validate policy, configure logging and close the adapter after judgment.
 
     Args:
         state: Existing state string interpretation.
@@ -147,6 +148,7 @@ def run_policy(
         rules = _load_policy(policy_file, typed_questions)
         state_data = json.loads(state) if state.startswith(("{", "[")) else state
         settings = Settings()
+        configure(settings.log)
         adapter = HTTPSystemOneAdapter(
             api_key=api_key
             if api_key is not None

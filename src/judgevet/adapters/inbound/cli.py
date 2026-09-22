@@ -4,7 +4,7 @@ The command wrapper propagates failure status to the process while helpers
 return integer codes and the composition root closes its adapter. Explicit
 file and stdin sources are validated before adapter construction. Explicit
 policies use a separate composition path and distinguish unmet policy from errors.
-Both paths render rate limits as handled failures.
+Both paths render rate limits as handled failures and configure stderr logging.
 
 Examples:
     ```python
@@ -33,6 +33,7 @@ import typer
 
 from judgevet.adapters.inbound.cli_inputs import InputFailure, resolve_inputs
 from judgevet.adapters.inbound.cli_policy_run import CliCallbacks, run_policy
+from judgevet.adapters.inbound.logs import configure
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.answers import (
@@ -356,7 +357,7 @@ def main(
 ) -> int:
     """Call the Jev System One API.
 
-    Reads Settings, lets an explicit --api-key override the settings key,
+    Reads Settings, configures stderr logging, lets an explicit --api-key override the settings key,
     constructs HTTPSystemOneAdapter once with timeout from Settings, calls
     run_cli with it as the port, and closes the adapter in finally.
     The command wrapper supplies separate help and propagates failure status.
@@ -372,6 +373,7 @@ def main(
         Exit code: 0 for success, 1 for error.
     """
     settings = Settings()
+    configure(settings.log)
     timeout_seconds = settings.api.timeout_seconds
     base_url = settings.api.base_url
     key = settings.api.key.get_secret_value() if settings.api.key else None

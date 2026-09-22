@@ -1,7 +1,7 @@
 """MCP stdio entry point for judgevet.
 
 This module provides the composition root for the MCP stdio server.
-It reads Settings once, builds the HTTP adapter, and runs the MCP server
+It reads Settings once, configures stderr logging, builds the HTTP adapter, and runs the MCP server
 over stdio. It closes the acquired HTTP adapter when serving ends.
 
 Examples:
@@ -28,6 +28,7 @@ import sys
 
 from pydantic import ValidationError
 
+from judgevet.adapters.inbound.logs import configure, configure_mcp_logging
 from judgevet.adapters.inbound.mcp import create_mcp_server
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
@@ -83,7 +84,7 @@ async def run_stdio(port: SystemOnePort) -> None:
 def main() -> int:
     """MCP stdio server entry point.
 
-    Reads Settings once, validates API key, builds adapter, runs MCP server,
+    Reads Settings once, configures logging, validates the key and runs MCP,
     and ensures adapter cleanup.
 
     Returns:
@@ -110,6 +111,8 @@ def main() -> int:
             )
             return 2
 
+        configure(settings.log)
+        configure_mcp_logging()
         if settings.api.key is None or not settings.api.key:
             print(
                 "judgevet-mcp: set JEV_API__KEY or TYPESAFE_API_KEY",

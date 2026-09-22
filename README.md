@@ -103,6 +103,17 @@ See [file inputs](docs/how-to/use-cli-files.md),
 [opt-in staged-diff example](docs/how-to/review-staged-diff.md).
 [Installation](docs/how-to/install.md) covers the library, CLI and MCP command.
 
+CLI and MCP diagnostics stay quiet at the default log level. Set
+`JEV_LOG__LEVEL=debug` to emit one `http.call` event per HTTP call to stderr.
+Events contain the requested model, question count, HTTP status (or null before
+an answer arrives), and success/error outcome. They exclude caller payloads,
+headers and exception text. Non-TTY diagnostics use JSON lines; `JEV_LOG__FORMAT`
+can force `json` or `console`. MCP SDK warnings/errors use a safe `mcp.runtime`
+event with severity only. Debug CLI failures have a diagnostic line followed by
+the existing error envelope on stderr; stdout retains its existing JSON shape.
+Library imports do not configure logging, and unconfigured library calls stay
+silent. Applications may configure structlog themselves to receive events.
+
 ## Gates
 
 ```bash

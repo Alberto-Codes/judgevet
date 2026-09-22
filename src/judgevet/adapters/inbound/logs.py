@@ -1,4 +1,4 @@
-"""Structured logging, configured once by the composition root.
+"""Structured logging and safe SDK diagnostics, configured by composition roots.
 
 Logs are diagnostics, not evidence. Telemetry is evidence: append-only,
 raw responses, every row stamped (ADR-0006). A verdict never reads a log
@@ -276,3 +276,34 @@ def bind_invocation(command: str, run_id: str) -> None:
         ```
     """
     structlog.contextvars.bind_contextvars(command=command, run_id=run_id)
+
+
+class _McpRuntimeHandler(logging.Handler):
+    """Forward SDK severity without untrusted messages, arguments or tracebacks.
+
+    Examples:
+        ```python
+        handler = _McpRuntimeHandler()
+        assert isinstance(handler, logging.Handler)
+        ```
+    """
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Render only a fixed event and the SDK's severity.
+
+        Args:
+            record: SDK diagnostic whose payload is deliberately not forwarded.
+        """
+        structlog.get_logger().log(record.levelno, "mcp.runtime")
+
+
+def configure_mcp_logging() -> None:
+    """Route SDK warnings and errors through the configured safe stderr renderer.
+
+    The SDK's exception logger otherwise writes raw exception text to stderr.
+    Only the MCP composition root calls this; library imports change nothing.
+    """
+    logger = logging.getLogger("mcp")
+    logger.handlers = [_McpRuntimeHandler()]
+    logger.propagate = False
+    logger.setLevel(logging.WARNING)

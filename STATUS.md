@@ -94,6 +94,17 @@ mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
+- #27/#3: the CLI (both paths) and MCP roots configure existing stderr logging
+  exactly once. Sync/async HTTP calls emit one opt-in debug terminal event with
+  requested model, question count, status and outcome. Default output stays quiet;
+  library imports do not configure logging and unconfigured calls stay silent.
+  SDK warning/error diagnostics contain only a fixed event and severity, not raw
+  exception text. Twenty-six new process/root cases prove streams, metadata,
+  framing, canary exclusion and configuration ownership. Independent removal of
+  events causes twenty failures, root configuration nine, and safe SDK routing
+  one. All mutations were restored. MCP protocol error content is unchanged;
+  this is a diagnostic non-disclosure contract, not a new protocol error schema.
+
 - #133: the launcher probe reports fixed stage/reason labels for spawn,
   initialization, discovery, each tool call, shutdown and cleanup. A cleanup
   failure cannot replace the first session failure. Fourteen deterministic
@@ -134,7 +145,7 @@ mutations detecting duplicate-key and early state-validation removal.
   wheels passed this live path. Commit `dd23d59`.
 - Backlog reconciliation preserved historical issue bodies and posted current
   acceptance. #34 async support, #22 release history and #19 Noul criteria are
-  fulfilled. #3 remains the logging parent; #27 wiring/real-stream proof remains.
+  fulfilled. #3 and #27 are now fulfilled by logging wiring and real-stream proof.
   #43/#67/#68 now distinguish existing features from remaining design work.
   #8's acceptance and title use hard limits of 300/50 code lines. Obsolete
   blocked/pi-fit labels were corrected. Commit `5f2c346`.
@@ -145,7 +156,7 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**895 tests pass, 6 live tests deselected, 95.38% coverage** (1176/1233 statements). All eleven configured
+**921 tests pass, 6 live tests deselected, 95.44% coverage** (1214/1272 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
