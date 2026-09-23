@@ -77,3 +77,54 @@ def prepare_cli(root: Path, workdir: Path) -> None:
                 }
             )
     (workdir / "cli_examples.json").write_text(json.dumps(jobs))
+
+
+def prepare_continuations(root: Path, workdir: Path) -> None:
+    """Collect exact tutorial programs, commands and checkout script files.
+
+    Args:
+        root: Documentation and example source root.
+        workdir: Isolated destination directory.
+
+    Raises:
+        ValueError: If a required source block is absent or has another language.
+    """
+    pages = discover(root)
+    jobs = []
+    for name, program_number, command_number in (
+        ("first-judgment", 3, 4),
+        ("first-policy", 1, 2),
+    ):
+        page = f"docs/tutorials/{name}.md"
+        command = source_block(pages, page, command_number, "bash")
+        expected = source_block(pages, page, command_number + 1, "text").text
+        if name == "first-judgment":
+            expected = (
+                "Probability of billing: 0.85\n"
+                "Resolved model: jev-1.13.0\nInput tokens: 10\n"
+            )
+        jobs.append(
+            {
+                "kind": "tutorial",
+                "label": f"{page}:{command.line}",
+                "command": command.text,
+                "filename": name.replace("-", "_") + ".py",
+                "program": source_block(pages, page, program_number, "python").text,
+                "expected": expected,
+            }
+        )
+    page = "docs/how-to/review-staged-diff.md"
+    command = source_block(pages, page, 2, "bash")
+    files = {
+        name: (root / "examples/staged-review" / name).read_text()
+        for name in ("review-staged.sh", "questions.json", "policy.json")
+    }
+    jobs.append(
+        {
+            "kind": "staged",
+            "label": f"{page}:{command.line}",
+            "command": command.text,
+            "files": files,
+        }
+    )
+    (workdir / "continuations.json").write_text(json.dumps(jobs))

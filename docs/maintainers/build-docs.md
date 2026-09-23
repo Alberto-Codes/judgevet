@@ -109,11 +109,40 @@ policy pass/unmet/service-failure outcomes, and redirected automation output.
 An invalid documented option fails the check. The shared subprocess helper
 retains release-runner behavior; CLI examples have a 60-second deadline.
 
-The explicit workflow selection is in `scripts/doc_cli_prepare.py`. Installation,
-credential setup, host templates, tutorial continuation commands and staged-Git
-examples are not run by this shell executor. Their inventory reasons remain
-visible; setup needs disposable-environment verification, and credential/host
-commands must not be executed generically. Staged/tutorial continuations and setup coverage remain #153 work.
+The explicit workflow selection is in `scripts/doc_cli_prepare.py`. The same
+check runs both tutorial shell continuations against their exact saved Python
+programs. It compares policy tutorial output literally and judgment output with
+synthetic fixture values. A temporary startup helper routes tutorial HTTPX
+clients to loopback. The staged-review continuation uses the three checkout
+example files in a temporary Git repository and checks clean, met and unmet
+outcomes. A wrong tutorial filename fails with its source page and fence line.
+
+Installation commands require separate disposable-environment verification.
+They may access package indexes and do not belong in the offline executor.
+Use temporary virtual environments, uv cache/tool directories and a disposable
+checkout for the README development commands. Verify each command's exit and
+output; a shell block without `set -e` can hide an earlier failure. Do not pass
+API credentials into development gates. For the README server startup command,
+use a dummy key and closed stdin; that verifies startup and shutdown, not MCP
+host connectivity. Credential acquisition and configured-host shell templates
+remain unexecuted, with explicit inventory reasons.
+
+The current 50-block scope is accounted for as follows:
+
+| Blocks | Verification |
+|---|---|
+| 15 Python programs | Isolated execution and typing |
+| 7 CLI shell workflows | Exact local inputs, output and exit checks |
+| 3 shell continuations | Saved tutorial programs and staged Git cases |
+| 9 JSON/TOML blocks | Decoder, discovery schema or contextual validation |
+| 10 installation/development blocks | Separate disposable setup audit |
+| 4 credential/host shell templates | Explicit substitution requirements; not executed |
+| 2 text outputs | Exact policy output; synthetic judgment output with live placeholders retained |
+
+Repeat the setup audit when installation instructions or packaging changes.
+Record commands and outcomes on the tracking issue. Routine gates do not prove
+package-index availability, a user's credential setup or a configured host's
+connection.
 
 
 ## Validate documented data and MCP arguments

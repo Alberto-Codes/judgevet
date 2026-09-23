@@ -66,7 +66,11 @@ def handler(probability: float, status: int) -> type[BaseHTTPRequestHandler]:
 
 
 def execute(
-    text: str, directory: Path, probability: float, status: int
+    text: str,
+    directory: Path,
+    probability: float,
+    status: int,
+    bootstrap: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Execute one unchanged shell block against a temporary local endpoint.
 
@@ -75,6 +79,7 @@ def execute(
         directory: Isolated directory containing documented input files.
         probability: Synthetic Noul probability.
         status: Synthetic HTTP status.
+        bootstrap: Optional isolated tutorial startup helper directory.
 
     Returns:
         Actual process status and captured streams.
@@ -95,6 +100,8 @@ def execute(
         "JEV_API__KEY": "synthetic-doc-key",
         "JEV_API__BASE_URL": f"http://127.0.0.1:{server.server_port}",
     }
+    if bootstrap is not None:
+        environment["PYTHONPATH"] = str(bootstrap)
     try:
         return run_process([bash, str(script)], environment, directory, timeout=60)
     finally:

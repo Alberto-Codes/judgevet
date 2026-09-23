@@ -89,12 +89,16 @@ question/policy JSON; four acceptance cases cover pipe input, invalid options
 and policy exits. A separate optional-runtime gate validates all nine JSON/TOML blocks
 against input decoders, MCP discovery and template/report contracts, with six
 acceptance cases. The shared wheel builder now rejects nonempty output before building, with four
-selection acceptance cases and a stale-artifact failure proof. Remaining
-continuation/setup checks are in progress; offline examples do not verify live service behavior.
+selection acceptance cases and a stale-artifact failure proof. Three continuation
+acceptance cases cover exact saved tutorial commands and clean/met/unmet staged
+review. A wrong-filename mutation fails the isolated command and restoration
+passes. Separate disposable setup verification accounts for ten installation
+and development blocks; four credential/host shell templates remain explicitly
+unexecuted. Offline examples do not verify live service behavior.
 
 ## Gates
 
-**1112 tests pass, 6 live tests deselected.** The last measured coverage is
+**1115 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

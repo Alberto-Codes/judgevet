@@ -13,7 +13,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from scripts.doc_cli_prepare import prepare_cli
+from scripts.doc_cli_prepare import prepare_cli, prepare_continuations
 from scripts.doc_example_inventory import discover, validate
 from scripts.smoke_release import (
     build_wheel,
@@ -78,6 +78,7 @@ def check(root: Path, workdir: Path) -> int:
     """
     paths = prepare(root, workdir)
     prepare_cli(root, workdir)
+    prepare_continuations(root, workdir)
     wheel = build_wheel(workdir / "dist")
     python = create_venv(workdir)
     install_wheel(python, wheel)
@@ -88,10 +89,7 @@ def check(root: Path, workdir: Path) -> int:
     shutil.copy(Path(__file__).with_name("smoke_release_child.py"), workdir / "scripts")
     if run_child(python, workdir / "doc_python_child.py", environment, workdir):
         return 1
-    shutil.copy(Path(__file__).with_name("smoke_release.py"), workdir / "scripts")
-    shutil.copy(Path(__file__).with_name("doc_cli_child.py"), workdir)
-    environment["PATH"] += ":/usr/bin:/bin"
-    if run_child(python, workdir / "doc_cli_child.py", environment, workdir):
+    if run_shell_checks(python, environment, workdir):
         return 1
     checker = shutil.which("ty")
     if checker is None:
@@ -103,6 +101,32 @@ def check(root: Path, workdir: Path) -> int:
         print(finding)
         return 1
     print(f"Python documentation: {len(paths)} isolated programs type-checked")
+    return 0
+
+
+def run_shell_checks(python: Path, environment: dict[str, str], workdir: Path) -> int:
+    """Run CLI and continuation helpers with the same isolated installation.
+
+    Args:
+        python: Installed-wheel interpreter.
+        environment: Controlled child environment.
+        workdir: Prepared execution directory.
+
+    Returns:
+        One if either shell workflow check fails, otherwise zero.
+    """
+    for name in ("smoke_release.py", "doc_cli_child.py"):
+        shutil.copy(Path(__file__).with_name(name), workdir / "scripts")
+    for name in (
+        "doc_cli_child.py",
+        "doc_continuations.py",
+        "doc_tutorial_bootstrap.py",
+    ):
+        shutil.copy(Path(__file__).with_name(name), workdir)
+    environment["PATH"] += ":/usr/bin:/bin"
+    for name in ("doc_cli_child.py", "doc_continuations.py"):
+        if run_child(python, workdir / name, environment, workdir):
+            return 1
     return 0
 
 
