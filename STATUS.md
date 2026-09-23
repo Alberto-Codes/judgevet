@@ -55,7 +55,9 @@ accuracy, calibration or new live-service claim is made.
 
 #11 explains the library-first architecture, entry-point choices, typed ports,
 explicit ownership and optional MCP runtime. Source and lifecycle tests support
-the package claims; they do not promote service behavior. Diagrams remain #73.
+the package claims; they do not promote service behavior. #73 adds accessible SVG
+call-path and disclosure diagrams with text equivalents. They distinguish the
+structural contract, remote transfer and optional local policy evaluation.
 
 #148 adds first-judgment and offline first-policy tutorials with explicit setup,
 checkpoints, output interpretation and recovery guidance. Exact Python examples

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="575" viewBox="0 0 320 575" role="img" aria-labelledby="title desc">
+<title id="title">Entry points and the shared library contract</title><desc id="desc">Top to bottom: Python callers, CLI runner or optional MCP server call through the synchronous or asynchronous typed contract to an HTTP adapter. Domain questions, answers and policies are pure shared types, not another network hop.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/></marker></defs>
+<rect width="320" height="575" fill="#ffffff"/>
+<rect x="12" y="12" width="296" height="116" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="160" y="37" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Entry points</text>
+<text x="160" y="60" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Python application</text>
+<text x="160" y="83" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">CLI runner: judgevet</text>
+<text x="160" y="106" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Optional MCP server</text>
+<path d="M160 128 V158" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="12" y="160" width="296" height="93" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="160" y="185" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Typed call contract</text>
+<text x="160" y="208" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">SystemOnePort (sync)</text>
+<text x="160" y="231" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">AsyncSystemOnePort (async)</text>
+<path d="M160 253 V283" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="12" y="285" width="296" height="93" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="160" y="310" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Outbound HTTP adapter</text>
+<text x="160" y="333" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Sync or async system_one</text>
+<text x="160" y="356" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Serialization and network I/O</text>
+<rect x="12" y="404" width="296" height="93" rx="9" fill="#f0fdf4" stroke="#15803d" stroke-width="1.5"/>
+<text x="160" y="429" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Pure domain</text>
+<text x="160" y="452" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Questions and typed answers</text>
+<text x="160" y="475" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Local policy comparisons</text>
+<path d="M24 388 H296" stroke="#64748b" stroke-dasharray="4 4"/>
+<text x="160" y="526" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#334155">Arrows: calls, not imports.</text>
+<text x="160" y="549" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#334155">Domain types support the call path.</text>
+</svg>

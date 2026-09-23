@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="688" viewBox="0 0 320 688" role="img" aria-labelledby="title desc">
+<title id="title">Request disclosure and local policy evaluation</title><desc id="desc">Supplied content, questions and requested model leave the process as JSON with a bearer credential header. The configured remote service returns answers, model and usage. The client parses typed answers. Python or CLI can evaluate a policy locally; MCP has no policy tool. Output channels and diagnostic limits are explained in the text.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/></marker></defs>
+<rect width="320" height="688" fill="#ffffff"/>
+<rect x="12" y="12" width="296" height="93" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="160" y="37" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">1. Inside the caller process</text>
+<text x="160" y="60" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Supplied state + questions</text>
+<text x="160" y="83" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Requested model + API key</text>
+<path d="M160 105 V133" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="12" y="135" width="296" height="93" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="160" y="160" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">2. Outbound request</text>
+<text x="160" y="183" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">JSON: state, questions, model</text>
+<text x="160" y="206" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Header: Bearer credential</text>
+<path d="M160 228 V256" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="12" y="258" width="296" height="70" rx="9" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+<text x="160" y="283" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">3. Configured remote service</text>
+<text x="160" y="306" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Default transport: HTTPS</text>
+<path d="M160 328 V356" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="12" y="358" width="296" height="93" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="160" y="383" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">4. Back inside the process</text>
+<text x="160" y="406" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Returned answers, model, usage</text>
+<text x="160" y="429" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">HTTP adapter parses typed values</text>
+<path d="M160 451 V479" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="12" y="481" width="296" height="93" rx="9" fill="#f0fdf4" stroke="#15803d" stroke-width="1.5"/>
+<text x="160" y="506" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">5. Optional local policy</text>
+<text x="160" y="529" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Python or CLI comparisons</text>
+<text x="160" y="552" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Policy rules stay in the process</text>
+<path d="M160 574 V602" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="12" y="604" width="296" height="70" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="160" y="629" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">6. Caller receives the outcome</text>
+<text x="160" y="652" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#0f172a">Python return / CLI or MCP output</text>
+</svg>

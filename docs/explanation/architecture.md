@@ -57,6 +57,23 @@ same contract, including errors and return types. A test that only exercises
 the fake cannot establish that a remote call works. The
 [verification explanation](verification.md) describes what contract tests prove.
 
+## Read the call path
+
+![Entry points call through a typed contract to the HTTP adapter; pure domain types support the path.](../assets/architecture.svg)
+
+*Call direction, not import direction.* The port box names a structural contract;
+it is not an extra runtime proxy. Python callers can call the concrete adapter
+directly. The CLI runner and MCP factory accept the sync port. Async library
+callers use the async adapter and port.
+
+Text equivalent: a Python application, CLI runner or MCP server supplies state
+and questions to `system_one`. The concrete HTTP adapter sends the request and
+returns typed answers. Shared domain types describe questions, answers and local
+policies without performing I/O. The separate domain box is not a subsequent
+network step. Composition roots construct and close their adapters, as described
+below. Import-dependency rules are described under the installation boundary;
+the arrows do not represent those rules.
+
 ## The entry point owns the adapter it creates
 
 The core CLI runner and MCP server factory accept a port. Their command entry
@@ -108,6 +125,48 @@ domain. They also prevent domain, ports and outbound modules from depending
 on MCP, and keep the policy facade and JSON decoding separate from adapters.
 These are checks on package dependencies, not claims about model accuracy or
 remote-service availability.
+
+## Follow data across the process boundary
+
+![Request fields and bearer credential leave the process; typed answers return and optional policy evaluation stays local.](../assets/request-data.svg)
+
+*One successful judgment path, followed by optional local policy evaluation.*
+The diagram does not describe an automatic retry or a mandatory policy step.
+The default service host and payload follow the
+[vendor quick start](https://docs.typesafe.ai/introduction/quickstart).
+
+Text equivalent:
+
+1. The caller supplies state, named questions and the requested model. The
+   adapter receives an explicit key from the application or composition root.
+2. The HTTP adapter sends state, questions (including instructions and criteria)
+   and model as JSON. It sends the key in a Bearer authorization header.
+3. The configured remote service receives those values. The default URL uses
+   HTTPS. A replacement URL receives the same payload and credential. Direct
+   library callers own URL and transport selection; CLI/MCP settings reject
+   remote plaintext HTTP but allow loopback HTTP for testing.
+4. The service returns answers, resolved model and usage. The adapter parses
+   typed values or raises an error. Errors leave this successful path; see the
+   [error reference](../reference/errors.md).
+5. Python callers or the CLI can evaluate a policy locally. Policy rules are
+   not sent to the service. MCP exposes no policy tool and skips this step.
+6. The library returns to its caller. CLI answers use stdout; MCP sends protocol
+   content to its host over stdio. The caller or host decides subsequent actions.
+
+CLI/MCP diagnostics use stderr. Library imports do not configure logging.
+Diagnostic events are distinct from CLI error envelopes and MCP protocol error
+content. Remote text and arbitrary tracebacks can disclose content; the diagram
+does not imply universal redaction. See [diagnostic limits](../../SECURITY.md#diagnostics-and-error-content).
+The host or application can persist output outside judgevet. Service retention
+and deletion policy are not established by this client.
+
+These edges follow the [HTTP adapter](../../src/judgevet/adapters/outbound/http.py),
+[CLI](../../src/judgevet/adapters/inbound/cli.py),
+[MCP adapter](../../src/judgevet/adapters/inbound/mcp.py) and
+[local policy evaluator](../../src/judgevet/domain/policy_evaluation.py).
+The [security policy](../../SECURITY.md#data-sent-to-the-service) records the full
+transport and disclosure limits. No audit sink, automatic retry, pre-send content
+redaction or storage control is part of this path.
 
 ## Alternatives and consequences
 
