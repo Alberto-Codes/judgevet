@@ -98,7 +98,8 @@ def assert_diagnostics(stderr: str, status: int, count: int) -> None:
     assert len(events) == count + int(status != 200)
     if status != 200:
         runtime = events.pop()
-        assert set(runtime) == {"event", "level", "timestamp"}
+        assert set(runtime) == {"event", "level", "timestamp", "request_id"}
+        assert runtime["request_id"] is None
         assert runtime["event"] == "mcp.runtime"
         assert runtime["level"] == "error"
     for event in events:

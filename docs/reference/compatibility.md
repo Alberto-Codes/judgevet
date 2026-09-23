@@ -19,6 +19,7 @@ The root `__all__` declares these supported names:
 | Explicit adapters | `HTTPSystemOneAdapter`, `AsyncHTTPSystemOneAdapter` |
 | Network configuration | `NetworkConfig` |
 | Retry configuration | `RetryPolicy` |
+| Scoped diagnostic correlation | `bind_request_id` |
 | Structural ports | `SystemOnePort`, `AsyncSystemOnePort` |
 | Questions | `Question`, `Noul`, `Choice`, `Score` |
 | Answers and metadata | `Answer`, `NoulAnswer`, `ChoiceAnswer`, `ScoreAnswer`, `SystemOneResponse`, `Usage` |
@@ -65,6 +66,16 @@ now opt into command resolution. File and command resolution is explicit in
 Python and occurs once at CLI/MCP adapter construction. Commands require POSIX;
 existing literal keys and file sources do not require process-group support.
 The mandatory dependency set and optional MCP boundary are unchanged.
+
+## Diagnostic compatibility
+
+The 0.8.0 event contract adds nullable correlation, resolved-model and usage
+fields. Existing event names and terminal retry semantics remain. Diagnostic
+model values outside the documented filter now render null. Built-in events
+exclude arbitrary application context; generic application logging retains it.
+Strict event-key consumers must adopt the [documented field sets](events.md).
+The library binding API is additive. CLI output and MCP tool schemas remain
+unchanged; no gateway headers or runtime dependencies are added.
 
 ## Verification limits
 

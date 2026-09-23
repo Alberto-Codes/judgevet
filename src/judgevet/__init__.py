@@ -43,11 +43,12 @@ Examples:
     `AttributeError` on purpose, because a synchronous close would return an
     un-awaited coroutine and close nothing.
 
-The root re-exports the original domain types, errors and port protocols.
+The root exports domain types, errors, ports and scoped diagnostic correlation.
 Existing deep imports retain object identity. Callers own adapter construction
 and cleanup; importing a port does not create a client.
 
 Attributes:
+    bind_request_id (Callable): Context manager for local caller correlation.
     Answer (type): Union of the three typed answers.
     Question (type): Union of the three typed questions.
     SystemOnePort (type): Synchronous structural port protocol.
@@ -90,6 +91,7 @@ from judgevet.adapters.outbound.http import (
 )
 from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
+from judgevet.diagnostics import bind_request_id
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.errors import (
     JevAuthError,
@@ -130,4 +132,5 @@ __all__ = [
     "SystemOneResponse",
     "Usage",
     "__version__",
+    "bind_request_id",
 ]

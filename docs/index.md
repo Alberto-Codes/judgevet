@@ -36,6 +36,7 @@ Status: **draft**. Choose a path by what you need to do.
 - [Policy types, JSON grammar and evaluation](reference/policy.md).
 - [Supported imports and compatibility](reference/compatibility.md).
 - [Configuration defaults and precedence](reference/configuration.md).
+- [Diagnostic events and caller correlation](reference/events.md).
 - [Service, transport and local policy errors](reference/errors.md).
 - [Terms and meanings](reference/glossary.md).
 - [The installed typing marker](reference/py-typed-marker.md).

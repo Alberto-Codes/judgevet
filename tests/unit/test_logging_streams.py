@@ -86,6 +86,10 @@ def event_fields(event: dict, status: int | None, count: int, outcome: str) -> N
         "outcome",
         "level",
         "timestamp",
+        "resolved_model",
+        "input_tokens",
+        "output_tokens",
+        "request_id",
     }
     assert event["event"] == "http.call"
     assert event["model"] == "jev-latest"
@@ -93,6 +97,10 @@ def event_fields(event: dict, status: int | None, count: int, outcome: str) -> N
     assert event["status_code"] == status
     assert event["outcome"] == outcome
     assert event["level"] == "debug"
+    assert event["request_id"] is None
+    assert event["resolved_model"] == ("jev-1.13.0" if outcome == "success" else None)
+    assert event["input_tokens"] == (3 if outcome == "success" else None)
+    assert event["output_tokens"] == (2 if outcome == "success" else None)
 
 
 @pytest.mark.parametrize("mode", ["sync", "async"])

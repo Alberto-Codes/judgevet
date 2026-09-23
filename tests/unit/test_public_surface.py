@@ -43,6 +43,7 @@ EXPECTED_EXPORTS = {
     "Noul",
     "Score",
     "__version__",
+    "bind_request_id",
 }
 
 

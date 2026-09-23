@@ -16,20 +16,25 @@ Save this complete program as `judge_ticket.py` and run it with your installed
 Python interpreter:
 
 ```python
-from judgevet import HTTPSystemOneAdapter, Noul
+from judgevet import HTTPSystemOneAdapter, Noul, bind_request_id
+from judgevet.adapters.inbound.logs import configure
 from judgevet.adapters.inbound.settings import Settings
 
 settings = Settings()
+configure(settings.log)
 key = settings.api.resolve_key()
 if key is None:
     raise SystemExit("Configure a credential source before calling Jev")
 
-with HTTPSystemOneAdapter(
-    api_key=key.get_secret_value(),
-    base_url=settings.api.base_url,
-    network=settings.api.network_config,
-    retry=settings.api.retry_policy,
-) as adapter:
+with (
+    HTTPSystemOneAdapter(
+        api_key=key.get_secret_value(),
+        base_url=settings.api.base_url,
+        network=settings.api.network_config,
+        retry=settings.api.retry_policy,
+    ) as adapter,
+    bind_request_id("request-123"),
+):
     response = adapter.system_one(
         state="I was charged twice.",
         questions={"billing": Noul(instructions="Is this about billing?")},
@@ -39,7 +44,10 @@ with HTTPSystemOneAdapter(
 print(response.nouls["billing"].noul)
 ```
 
-Expected outcome: one probability between zero and one on stdout. Its value
+Expected outcome: one probability between zero and one on stdout.
+With `JEV_LOG__LEVEL=debug`, stderr also carries one terminal diagnostic with
+request identifier `request-123`; supply your own non-sensitive identifier.
+See the [event contract](../reference/events.md) for fields and scope lifetime. Its value
 can vary. `nouls` selects typed Noul answers; use the name supplied in
 `questions`. Noul semantics follow the [vendor definition](https://docs.typesafe.ai/primitives/noul).
 A valid answer does not prove the classification is correct.

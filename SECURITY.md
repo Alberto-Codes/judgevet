@@ -87,15 +87,18 @@ training or deletion policy.
 
 The CLI and MCP configure diagnostics on stderr. At the default level, routine
 HTTP calls emit no diagnostic. `JEV_LOG__LEVEL=debug` enables an `http.call`
-event containing the requested model, question count, status (or null), and
-success/error outcome. It excludes state, question text, headers and exception
-text. Do not put sensitive content in a model identifier: that value is logged.
+event containing filtered requested/resolved models, question count, terminal
+status/outcome, successful typed token counts and scoped caller correlation.
+It excludes state, question identifiers/text, headers and exception text.
+Arbitrary bound context is excluded from built-in events. Version-shaped model
+identifiers and caller request IDs must still contain no sensitive data.
+The [event contract](docs/reference/events.md) defines exact fields and filtering.
 `JEV_LOG__FORMAT=json` or `console` selects the renderer; automatic mode uses
 JSON off a terminal. Library imports do not configure logging; applications
 own their logging configuration.
 
 MCP SDK warning/error diagnostics become a fixed `mcp.runtime` event with
-severity, without the SDK's message or traceback. This protects **diagnostic
+severity and dedicated request correlation, without the SDK's message or traceback. This protects **diagnostic
 stderr**, not MCP JSON-RPC error content on stdout. CLI error envelopes and
 library exceptions are also separate from these diagnostic events. They can
 contain service-supplied message text. The adapter discards validation `input`

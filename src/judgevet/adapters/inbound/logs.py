@@ -1,4 +1,4 @@
-"""Structured logging and safe SDK diagnostics, configured by composition roots.
+"""Structured logging with built-in field contracts and scoped caller correlation.
 
 Logs are diagnostics, not evidence. Telemetry is evidence: append-only,
 raw responses, every row stamped (ADR-0006). A verdict never reads a log
@@ -39,6 +39,8 @@ from typing import Any
 import structlog
 from pydantic import BaseModel, ConfigDict
 from structlog.tracebacks import ExceptionDictTransformer
+
+from judgevet.diagnostics import current_request_id, filter_event_fields
 
 REDACTED = "***"
 SECRET_KEYS = frozenset(
@@ -190,7 +192,7 @@ def wants_json(settings: LogSettings, stream: Any) -> bool:
 
 
 def configure(settings: LogSettings, stream: Any = None) -> None:
-    """Wire the processor chain. The composition root calls this once.
+    """Configure rendering and built-in field filtering at the composition root.
 
     Lines go to ``stream``, which defaults to stderr so ``--json`` output
     on stdout keeps piping. Calling it again replaces the configuration,
@@ -212,6 +214,7 @@ def configure(settings: LogSettings, stream: Any = None) -> None:
     target = sys.stderr if stream is None else stream
     processors: list[Any] = [
         structlog.contextvars.merge_contextvars,
+        filter_event_fields,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso", utc=True),
     ]
@@ -279,7 +282,7 @@ def bind_invocation(command: str, run_id: str) -> None:
 
 
 class _McpRuntimeHandler(logging.Handler):
-    """Forward SDK severity without untrusted messages, arguments or tracebacks.
+    """Forward SDK severity and dedicated correlation without untrusted SDK content.
 
     Examples:
         ```python
@@ -289,12 +292,14 @@ class _McpRuntimeHandler(logging.Handler):
     """
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Render only a fixed event and the SDK's severity.
+        """Render a fixed event, scoped request identifier and SDK severity.
 
         Args:
             record: SDK diagnostic whose payload is deliberately not forwarded.
         """
-        structlog.get_logger().log(record.levelno, "mcp.runtime")
+        structlog.get_logger().log(
+            record.levelno, "mcp.runtime", request_id=current_request_id()
+        )
 
 
 def configure_mcp_logging() -> None:

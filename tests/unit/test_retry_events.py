@@ -51,6 +51,10 @@ def test_one_terminal_event(transport_failure: bool) -> None:
             "status_code": None if transport_failure else 200,
             "outcome": "error" if transport_failure else "success",
             "log_level": "debug",
+            "resolved_model": None if transport_failure else "jev-1.13.0",
+            "input_tokens": None if transport_failure else 1,
+            "output_tokens": None if transport_failure else 1,
+            "request_id": None,
         }
     finally:
         if was_configured:

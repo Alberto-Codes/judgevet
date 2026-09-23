@@ -57,6 +57,7 @@ nav:
       - Glossary: reference/glossary.md
       - Compatibility: reference/compatibility.md
       - Configuration: reference/configuration.md
+      - Diagnostic events: reference/events.md
       - Errors: reference/errors.md
       - Typing marker: reference/py-typed-marker.md
       - Python source: reference/python/index.md

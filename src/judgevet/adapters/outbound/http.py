@@ -1,4 +1,4 @@
-"""HTTP outbound adapter with explicit TLS, bounded retries and debug events.
+"""HTTP outbound adapter with TLS, retries and correlated terminal metadata.
 
 Error handling:
     The API error `detail` field is polymorphic:
@@ -382,7 +382,7 @@ class HTTPSystemOneAdapter:
         questions: Mapping[str, Any],
         model: str | None = None,
     ) -> SystemOneResponse:
-        """Call Jev with bounded retries and emit one terminal debug event.
+        """Call Jev with bounded retries and emit terminal status and typed usage.
 
         Args:
             state: The content to evaluate.
@@ -422,6 +422,9 @@ class HTTPSystemOneAdapter:
         with call_event(model or self._default_model, len(questions)) as event:
             payload = _build_payload(state, questions, model, self._default_model)
             answer = self._retry.run(lambda: self._request(payload, event))
+            event.resolved_model = answer.model
+            event.input_tokens = answer.usage.input_tokens
+            event.output_tokens = answer.usage.output_tokens
             event.outcome = "success"
             return answer
 
@@ -579,7 +582,7 @@ class AsyncHTTPSystemOneAdapter:
         questions: Mapping[str, Any],
         model: str | None = None,
     ) -> SystemOneResponse:
-        """Call Jev asynchronously with bounded retries and one terminal debug event.
+        """Call Jev asynchronously with retries and correlated typed response metadata.
 
         Args:
             state: The content to evaluate.
@@ -615,6 +618,9 @@ class AsyncHTTPSystemOneAdapter:
         with call_event(model or self._default_model, len(questions)) as event:
             payload = _build_payload(state, questions, model, self._default_model)
             answer = await self._retry.arun(lambda: self._request(payload, event))
+            event.resolved_model = answer.model
+            event.input_tokens = answer.usage.input_tokens
+            event.output_tokens = answer.usage.output_tokens
             event.outcome = "success"
             return answer
 

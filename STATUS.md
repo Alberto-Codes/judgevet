@@ -57,7 +57,7 @@ local decisions, preserve literal API names and retain observed/inferred limits.
 Terminology enforcement remains #71; no checker or service evidence changed.
 
 #10 completes the [navigation map](docs/index.md) and rendered navigation.
-All 32 authored docs pages, README and SECURITY are reachable from the map.
+All 33 authored docs pages, README and SECURITY are reachable from the map.
 Tutorials, how-to, reference and explanation remain distinct; maintainer
 procedures have a separate audience. Draft metadata and visible labels agree.
 Recovery and policy-handling paths link directly to error lookup. The final
@@ -137,8 +137,8 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1288 tests pass, 6 live tests deselected.** The last measured coverage is
-**94.45%** (1650/1747 statements).
+**1305 tests pass, 6 live tests deselected.** The last measured coverage is
+**94.75%** (1695/1789 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
@@ -180,8 +180,20 @@ wrapped traceback locals and POSIX process-group cleanup. Independent mutations
 break these limits, precedence and each composition path. Command execution is
 not a sandbox; descendants that escape the process group remain outside cleanup.
 
+#64 adds root-exported scoped `bind_request_id` correlation and the
+[diagnostic event contract](docs/reference/events.md). HTTP events include
+successful typed usage and filtered requested/resolved model identifiers.
+Built-in events exclude arbitrary bound context; application events retain it.
+Nested, concurrent and cancelled scopes restore their previous bindings.
+Real CLI/MCP stream tests retain valid stdout and exact stderr fields.
+Independent mutations break scope restoration, task isolation, field filtering
+and response metadata. A request probe confirms correlation stays out of headers
+and payloads. The artifact checker includes the new supported export identity.
+The pi attempts and their defects remain recorded separately from Codex's
+specification and implementation. No model-written specification was accepted.
+
 The complete commit/push gates include strict docs, isolated examples and
-coverage. Retry, network and credential evidence is local and synthetic; unseen service
+coverage. Runtime evidence is local and synthetic; unseen service
 errors stay inferred. No runtime dependency or version changes in this round. The 0.8.0
 release, remaining deployment settings and Pages publication are pending.
 

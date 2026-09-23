@@ -94,6 +94,7 @@ Logs use stderr. `auto` selects console output when stderr is a terminal and
 JSON otherwise. The log format is separate from CLI `--json`, which selects
 answer and handled-error rendering. Use the documented lowercase settings;
 unknown log levels are not accepted by the logging configuration.
+The [event reference](events.md) defines exact built-in fields and caller correlation.
 
 `SecretStr` masks configured keys, command specifications and resolved keys. The HTTP adapter
 retains an unwrapped key. Redaction has limits: CLI error text, protocol errors
