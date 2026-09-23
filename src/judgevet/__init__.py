@@ -106,7 +106,7 @@ from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
 from judgevet.ports import AsyncSystemOnePort, SystemOnePort
 
-__version__ = "0.7.0"  # x-release-please-version
+__version__ = "0.8.0"  # x-release-please-version
 
 __all__ = [
     "Answer",
