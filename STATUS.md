@@ -57,6 +57,11 @@ accuracy, calibration or new live-service claim is made.
 explicit ownership and optional MCP runtime. Source and lifecycle tests support
 the package claims; they do not promote service behavior. Diagrams remain #73.
 
+#148 adds first-judgment and offline first-policy tutorials with explicit setup,
+checkpoints, output interpretation and recovery guidance. Exact Python examples
+are checked in isolation. Reciprocal tutorial links finish #149's reading path.
+No additional service field or model is promoted by tutorial verification.
+
 ## Gates
 
 **1084 tests pass, 6 live tests deselected.** The last measured coverage is

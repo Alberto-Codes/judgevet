@@ -91,3 +91,5 @@ Next, read [how policies turn answers into decisions](policies.md) and
 [Python policy guide](../how-to/use-policy-library.md).
 The [glossary](../reference/glossary.md) and [API reference](../reference/api.md)
 provide lookup definitions and fields.
+
+Practice with the [first-judgment tutorial](../tutorials/first-judgment.md).

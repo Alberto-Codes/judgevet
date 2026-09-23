@@ -88,3 +88,5 @@ The [glossary's trust statuses](../reference/glossary.md#sketch-draft-and-stable
 keep these limits visible. Documentation remains draft while documented error
 bodies are unseen. Passing the documentation build proves links and references
 resolve, not that the prose teaches well or that a judgment is reliable.
+
+Practice with the [offline policy tutorial](../tutorials/first-policy.md).

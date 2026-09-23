@@ -30,6 +30,9 @@ validation:
     unrecognized_links: warn
 nav:
   - Documentation: index.md
+  - Tutorials:
+      - First judgment: tutorials/first-judgment.md
+      - First policy: tutorials/first-policy.md
   - How-to:
       - Install and connect: how-to/install.md
       - CLI files and stdin: how-to/use-cli-files.md

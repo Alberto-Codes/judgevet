@@ -89,3 +89,5 @@ For implementation, follow [typed or JSON policy construction](../how-to/use-pol
 or [CLI policy files](../how-to/use-cli-policy.md). Read
 [verification limits](verification.md) before using a passing decision to
 justify automation.
+
+Practice with the [first-policy tutorial](../tutorials/first-policy.md).

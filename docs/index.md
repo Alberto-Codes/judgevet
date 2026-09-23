@@ -8,12 +8,10 @@ Status: **draft**. Choose a path by what you need to do.
 
 ## Tutorials: learn through a first task
 
-Dedicated first-judgment and first-policy tutorials are still being written.
-For now, [install the package](how-to/install.md), then run the
-[README library quick start](../README.md#use-the-typed-library).
-The [Python policy guide](how-to/use-policy-library.md#construct-a-typed-policy)
-contains an offline example with synthetic answers. These are starting points,
-not complete guided tutorials.
+- [Make your first judgment](tutorials/first-judgment.md): install, ask one
+  Noul question and interpret its typed answer.
+- [Make your first local policy decision](tutorials/first-policy.md): compare
+  synthetic answers with an inclusive threshold, without a service call.
 
 ## How-to: complete a task
 
