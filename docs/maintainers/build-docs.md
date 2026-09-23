@@ -113,5 +113,29 @@ The explicit workflow selection is in `scripts/doc_cli_prepare.py`. Installation
 credential setup, host templates, tutorial continuation commands and staged-Git
 examples are not run by this shell executor. Their inventory reasons remain
 visible; setup needs disposable-environment verification, and credential/host
-commands must not be executed generically. Complete MCP/JSON-fragment checks,
-staged/tutorial continuations and stale-artifact proofs remain #153 work.
+commands must not be executed generically. Staged/tutorial continuations and stale-artifact proofs remain #153 work.
+
+
+## Validate documented data and MCP arguments
+
+```bash
+uv run python -m scripts.check_doc_schemas
+```
+
+This separate check builds a fresh wheel and installs its MCP extra in another
+isolated environment. It uses the installed server's discovered `ask_noul`
+schema to validate the exact README and connection-guide arguments. It makes
+no service call and does not launch or modify a user host.
+
+All current JSON/TOML fences have explicit contracts: question-file validation,
+policy decoding, rule fragments wrapped in their stated question context,
+illustrative report consistency, MCP arguments or host-template structure.
+The checker rejects new data blocks without a contract and stale selections.
+Rule fragments remain fragments; wrapping them for validation does not turn
+them into complete policy-file examples. The host template is parsed, not used
+as proof of a live connection. JSON Schema validation comes from the optional
+MCP runtime's dependency; the base Python/CLI gate remains independent of it.
+
+Push hooks and the MCP-enabled CI job run this command. Schema failures report
+the source page and fence line. Live behavior and judgment values remain outside
+these offline checks.

@@ -132,12 +132,13 @@ def create_venv(base_dir: Path) -> Path:
     return venv_python.absolute()
 
 
-def install_wheel(venv_python: Path, wheel: Path) -> None:
+def install_wheel(venv_python: Path, wheel: Path, extras: tuple[str, ...] = ()) -> None:
     """Install the wheel into the venv.
 
     Args:
         venv_python: The path to the venv's python interpreter.
         wheel: The path to the wheel to install.
+        extras: Optional extras to install for a separate adapter check.
 
     Raises:
         RuntimeError: If the install fails.
@@ -149,7 +150,7 @@ def install_wheel(venv_python: Path, wheel: Path) -> None:
             "install",
             "--python",
             str(venv_python),
-            str(wheel),
+            str(wheel) + ("[" + ",".join(extras) + "]" if extras else ""),
         ],
         capture_output=True,
         text=True,

@@ -88,6 +88,14 @@ repos:
         always_run: true
         stages: [pre-push]
 
+      - id: doc-example-schemas
+        name: isolated documentation JSON and MCP schemas
+        entry: uv run python -m scripts.check_doc_schemas
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
       - id: doc-example-inventory
         name: documentation example inventory
         entry: uv run python -m scripts.doc_example_inventory

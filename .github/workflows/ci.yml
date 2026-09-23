@@ -53,6 +53,7 @@ jobs:
       - run: uv python install 3.12
       - run: uv sync --locked --dev --extra mcp
       - run: uv run ty check
+      - run: uv run python -m scripts.check_doc_schemas
       - run: uv cache prune --ci
         if: always()
         continue-on-error: true
