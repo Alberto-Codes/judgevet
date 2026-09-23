@@ -77,7 +77,7 @@ changed languages, missing reasons, unclosed fences and an empty inventory fail
 with page/block diagnostics. The checker preserves exact body text for subsequent
 execution; it does not substitute a simpler example. Behavioral checks are separate from this classification check.
 
-## Execute Python examples
+## Execute Python and CLI examples
 
 ```bash
 uv run python -m scripts.check_doc_python
@@ -100,5 +100,18 @@ Dependency installation may use package indexes; example execution is offline.
 
 The command runs on push and in CI. It verifies Python wiring, not live-service
 behavior or judgment quality. Existing opt-in release smoke checks retain their
-separate live purpose. CLI/JSON/MCP execution and explicit stale-artifact failure
-proofs remain required work in #153.
+separate live purpose. The same isolated gate also executes seven exact shell blocks from README,
+CLI files and CLI policy guides. It supplies the documented JSON files and
+validates them through the installed decoders. Bash commands use a loopback
+HTTP fixture and synthetic credentials; no inherited key, proxy or user
+configuration is passed. It checks JSON answers, separate streams, file creation,
+policy pass/unmet/service-failure outcomes, and redirected automation output.
+An invalid documented option fails the check. The shared subprocess helper
+retains release-runner behavior; CLI examples have a 60-second deadline.
+
+The explicit workflow selection is in `scripts/doc_cli_prepare.py`. Installation,
+credential setup, host templates, tutorial continuation commands and staged-Git
+examples are not run by this shell executor. Their inventory reasons remain
+visible; setup needs disposable-environment verification, and credential/host
+commands must not be executed generically. Complete MCP/JSON-fragment checks,
+staged/tutorial continuations and stale-artifact proofs remain #153 work.

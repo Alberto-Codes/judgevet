@@ -81,7 +81,7 @@ repos:
         stages: [pre-push]
 
       - id: doc-python-examples
-        name: isolated Python documentation examples
+        name: isolated Python and CLI documentation examples
         entry: uv run python -m scripts.check_doc_python
         language: system
         pass_filenames: false

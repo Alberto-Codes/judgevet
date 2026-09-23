@@ -84,12 +84,14 @@ push and CI gates reject inventory drift. An isolated-wheel gate now executes
 and type-checks all 15 Python programs
 with synthetic HTTP, secret-free environments and client cleanup checks. Seven
 executor acceptance cases bring the inventory/executor total to fourteen.
-CLI/schema/artifact drift checks remain in progress; offline examples do not
-verify live service behavior.
+Seven CLI shell blocks now run against a loopback fixture using exact documented
+question/policy JSON; four acceptance cases cover pipe input, invalid options
+and policy exits. MCP/schema/artifact and remaining continuation checks are in
+progress; offline examples do not verify live service behavior.
 
 ## Gates
 
-**1098 tests pass, 6 live tests deselected.** The last measured coverage is
+**1102 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

@@ -211,6 +211,34 @@ def probe_import(venv_python: Path, child_env: dict, workdir: Path) -> str:
     return printed_path
 
 
+def run_process(
+    command: list[str],
+    environment: dict[str, str],
+    workdir: Path,
+    timeout: float | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Run an explicit executable and argument list with captured streams.
+
+    Args:
+        command: Executable path and arguments, without shell=True.
+        environment: Explicit child environment.
+        workdir: Isolated working directory.
+        timeout: Optional process deadline in seconds.
+
+    Returns:
+        Completed process with its real status and output streams.
+    """
+    return subprocess.run(
+        command,
+        env=environment,
+        cwd=workdir,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=timeout,
+    )
+
+
 def run_child(
     venv_python: Path, child_path: Path, child_env: dict, workdir: Path
 ) -> int:
@@ -225,14 +253,7 @@ def run_child(
     Returns:
         The child's exit status.
     """
-    result = subprocess.run(
-        [str(venv_python), str(child_path)],
-        env=child_env,
-        cwd=workdir,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    result = run_process([str(venv_python), str(child_path)], child_env, workdir)
 
     print(result.stdout, end="")
     print(result.stderr, end="")

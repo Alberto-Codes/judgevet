@@ -13,6 +13,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from scripts.doc_cli_prepare import prepare_cli
 from scripts.doc_example_inventory import discover, validate
 from scripts.smoke_release import (
     build_wheel,
@@ -76,6 +77,7 @@ def check(root: Path, workdir: Path) -> int:
         ValueError: If example inventory is invalid.
     """
     paths = prepare(root, workdir)
+    prepare_cli(root, workdir)
     wheel = build_wheel(workdir / "dist")
     python = create_venv(workdir)
     install_wheel(python, wheel)
@@ -85,6 +87,11 @@ def check(root: Path, workdir: Path) -> int:
     shutil.copy(Path(__file__).with_name("doc_python_child.py"), workdir)
     shutil.copy(Path(__file__).with_name("smoke_release_child.py"), workdir / "scripts")
     if run_child(python, workdir / "doc_python_child.py", environment, workdir):
+        return 1
+    shutil.copy(Path(__file__).with_name("smoke_release.py"), workdir / "scripts")
+    shutil.copy(Path(__file__).with_name("doc_cli_child.py"), workdir)
+    environment["PATH"] += ":/usr/bin:/bin"
+    if run_child(python, workdir / "doc_cli_child.py", environment, workdir):
         return 1
     checker = shutil.which("ty")
     if checker is None:
