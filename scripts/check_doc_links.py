@@ -131,11 +131,12 @@ def main() -> int:
     return int(bool(findings))
 
 
-def check_site(root: Path) -> list[str]:
+def check_site(root: Path, site_path: str = "/") -> list[str]:
     """Check final HTML URLs, including root-relative navigation.
 
     Args:
         root: Built site directory.
+        site_path: URL path beneath which the site is published.
 
     Returns:
         Missing file or fragment findings from rendered HTML.
@@ -153,8 +154,12 @@ def check_site(root: Path) -> list[str]:
             if url.scheme or url.netloc:
                 continue
             base = root if url.path.startswith("/") else path.parent
+            local_path = unquote(url.path)
+            prefix = "/" + site_path.strip("/")
+            if prefix != "/" and local_path.startswith(prefix + "/"):
+                local_path = local_path[len(prefix) :]
             destination = (
-                (base / unquote(url.path).lstrip("/")).resolve() if url.path else path
+                (base / local_path.lstrip("/")).resolve() if url.path else path
             )
             if destination.is_dir():
                 destination /= "index.html"
@@ -178,7 +183,7 @@ def on_post_build(config: MkDocsConfig) -> None:
     Raises:
         ValueError: If any rendered local link is broken.
     """
-    findings = check_site(Path(config.site_dir))
+    findings = check_site(Path(config.site_dir), urlsplit(config.site_url or "").path)
     if findings:
         raise ValueError("\n".join(findings))
 

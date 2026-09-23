@@ -129,7 +129,7 @@ a dummy key and closed stdin. That verifies startup and shutdown, not host
 connectivity. Credential acquisition and configured-host shell templates
 remain unexecuted, with explicit inventory reasons.
 
-The current 45-block scope is accounted for as follows:
+The current 49-block scope is accounted for as follows:
 
 | Blocks | Verification |
 |---|---|
@@ -139,6 +139,7 @@ The current 45-block scope is accounted for as follows:
 | 8 JSON/TOML blocks | Decoder, discovery schema or contextual validation |
 | 8 installation blocks | Separate disposable setup audit |
 | 4 credential/host shell templates | Explicit substitution requirements; not executed |
+| 4 container blocks | Separate source-wheel image build and synthetic runtime checks; published-wheel preparation remains a release check |
 | 2 text outputs | Exact policy output; synthetic judgment output with live placeholders retained |
 
 Repeat the setup audit when installation instructions or packaging changes.
@@ -178,3 +179,22 @@ an old wheel, source distribution or any other file fails before the builder
 runs; existing files are preserved. This prevents a successful build command
 that emits no artifact from silently selecting an old wheel. The documentation
 commands allocate fresh temporary directories automatically.
+
+
+## Deploy through GitHub Pages
+
+The [documentation workflow](../../.github/workflows/docs.yml) builds main with
+locked development dependencies and `mkdocs build --strict`. Its deployment job
+requires the successful build artifact and uses the `github-pages` environment.
+An explicit workflow dispatch also builds; only main may deploy.
+
+Pages uses the Actions publishing source. Repository visibility is public and
+this workflow does not change it. Deployment permission is limited to Pages and
+an OIDC token; the build reads repository contents and Pages configuration.
+Concurrent deployments are serialized without cancelling an active deployment.
+The project-path site URL is set in `mkdocs.yml`.
+
+After a deployment, inspect the live site in a browser. Check navigation,
+project-path assets, diagrams and generated Python reference pages. A successful
+artifact upload alone does not prove that those pages are live.
+The workflow follows [GitHub's custom-workflow guidance](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).

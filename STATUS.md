@@ -40,7 +40,8 @@ The final reader route reaches tutorials, policy tasks, error lookup and
 explanations without issue history. All authored docs remain draft. README
 package links and current example checks pass. Site publication remains the
 separate final follow-up [#41](https://github.com/Alberto-Codes/judgevet/issues/41).
-No Pages setting, deployment or repository visibility changed in this program.
+That program did not change Pages settings or repository visibility.
+The deployment-readiness follow-up below now tracks Pages publication.
 #146 landed in `b32afa2`: explicit key injection, adapter cleanup, matching
 Choice labels, standalone examples and fresh-artifact selection. Both exact API
 blocks execute offline against an isolated wheel and pass typing checks.
@@ -137,7 +138,7 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1305 tests pass, 6 live tests deselected.** The last measured coverage is
+**1307 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.75%** (1695/1789 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
@@ -149,7 +150,10 @@ local links, generated Python references and final HTML links/anchors offline.
 Nine acceptance tests cover link parsing and strict source-reference resolution.
 Independent symbol, target and anchor mutations fail the build; restoration
 passes. A fresh development-only installation builds without MCP or API keys.
-The site is local only. Example execution and editorial checks remain separate.
+Two further acceptance cases cover project-path assets and anchors while
+preserving missing-target findings. Removing the prefix mapping fails the test.
+Strict building does not prove publication. Example execution and editorial
+checks remain separate; Pages deployment is tracked below.
 
 ## Deployment-readiness work
 
@@ -205,6 +209,14 @@ The complete commit/push gates include strict docs, isolated examples and
 coverage. Runtime evidence is local and synthetic; unseen service
 errors stay inferred. No runtime dependency or version changes in this round. The 0.8.0
 release and Pages publication are pending.
+
+## Pages deployment
+
+#41 adds the strict-build Actions workflow and the project-path site URL.
+Pages is configured with `build_type=workflow`; repository visibility remains
+public. An isolated checkout with a nonexistent Python cross-reference fails
+the strict build; restoration passes. Deployment and browser verification are
+pending. README and package metadata will link the site after verification.
 
 ## Operational limits
 

@@ -256,7 +256,7 @@ change and a specification. Every gate here examines files that were
 *changed*; nothing notices a file that was *reverted*, because a revert leaves
 no diff and a clean-looking tree. See #82.
 
-Default branch is `main`. The repo is private. **No pull requests** — commit a
+Default branch is `main`. The repo is public. **No pull requests** — commit a
 finished piece of work directly to `main` and push. The pre-commit and pre-push
 hooks are the only gate between a change and the branch, so
 `uv run pre-commit install --install-hooks -t pre-commit -t pre-push -t commit-msg`

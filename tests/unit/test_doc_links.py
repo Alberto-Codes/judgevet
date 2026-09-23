@@ -88,3 +88,24 @@ def test_repository_url_missing_anchor_fails(tmp_path: Path) -> None:
     findings = check_links([page], repository_root=tmp_path)
     assert len(findings) == 1
     assert "missing anchor" in findings[0]
+
+
+def test_project_site_prefix_resolves_assets_and_anchors(tmp_path: Path) -> None:
+    (tmp_path / "index.html").write_text('<h1 id="home">Home</h1>')
+    (tmp_path / "style.css").write_text("body {}")
+    (tmp_path / "404.html").write_text(
+        '<a href="/judgevet/#home">Home</a><img src="/judgevet/style.css">'
+    )
+    assert check_doc_links.check_site(tmp_path, site_path="/judgevet/") == []
+
+
+def test_project_site_prefix_preserves_missing_targets(tmp_path: Path) -> None:
+    (tmp_path / "index.html").write_text(
+        '<a href="/judgevet/missing/">Missing</a>'
+        '<a href="/judgevet/#absent">Absent</a>'
+        '<a href="/elsewhere/">Outside</a>'
+    )
+    findings = check_doc_links.check_site(tmp_path, site_path="/judgevet/")
+    assert len(findings) == 3
+    assert any("missing rendered anchor" in item for item in findings)
+    assert sum("missing rendered target" in item for item in findings) == 2
