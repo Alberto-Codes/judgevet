@@ -27,7 +27,20 @@ passed. No unseen API body became verified.
 
 ## Documentation program
 
-[#145](https://github.com/Alberto-Codes/judgevet/issues/145) is in progress.
+[#145](https://github.com/Alberto-Codes/judgevet/issues/145) is complete.
+All 15 child deliverables landed with enabled gates and issue-hosted evidence.
+The final fresh-environment walkthrough installed published 0.7.0, ran the exact
+first-judgment tutorial live, and completed the offline policy tutorial and
+live policy workflow. The judgment returned billing probability 0.98, resolved
+model `jev-1.13.0` and 280 input tokens. The policy workflow compared Noul 0.94
+with its documented zero floor. These calls confirm those paths only; no unseen
+error body, calibration claim or other model became verified.
+
+The final reader route reaches tutorials, policy tasks, error lookup and
+explanations without issue history. All authored docs remain draft. README
+package links and current example checks pass. Site publication remains the
+separate final follow-up [#41](https://github.com/Alberto-Codes/judgevet/issues/41).
+No Pages setting, deployment or repository visibility changed in this program.
 #146 landed in `b32afa2`: explicit key injection, adapter cleanup, matching
 Choice labels, standalone examples and fresh-artifact selection. Both exact API
 blocks execute offline against an isolated wheel and pass typing checks.
