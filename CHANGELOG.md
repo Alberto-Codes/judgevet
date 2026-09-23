@@ -3,6 +3,50 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.8.0](https://github.com/Alberto-Codes/judgevet/compare/v0.7.0...v0.8.0) (2026-09-23)
+
+
+### Features
+
+* **api:** add bounded opt-in retries across adapters ([a532cb2](https://github.com/Alberto-Codes/judgevet/commit/a532cb2ebd6cc977a09b930f3464c8c40ac3f4a0)), closes [#33](https://github.com/Alberto-Codes/judgevet/issues/33)
+* **api:** add scoped correlation and diagnostic event contracts ([04b4c51](https://github.com/Alberto-Codes/judgevet/commit/04b4c5162dc97474ec92ce03665d159cbc6e8bb8)), closes [#64](https://github.com/Alberto-Codes/judgevet/issues/64)
+* **api:** configure proxies and private CA trust ([e2f584b](https://github.com/Alberto-Codes/judgevet/commit/e2f584b22ce2af706880d9b902d88ea43471d8c4)), closes [#55](https://github.com/Alberto-Codes/judgevet/issues/55)
+* **cli:** resolve file and command credential sources ([a5059d9](https://github.com/Alberto-Codes/judgevet/commit/a5059d9d21bc8e8139689de38f92acb963d687be)), closes [#61](https://github.com/Alberto-Codes/judgevet/issues/61)
+
+
+### Fixes
+
+* reject stale artifact directories before smoke builds ([ee4a30d](https://github.com/Alberto-Codes/judgevet/commit/ee4a30dd6fc973d7421d4eab215fd22942c1ae26)), closes [#153](https://github.com/Alberto-Codes/judgevet/issues/153) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+
+
+### Refactoring
+
+* **cli:** keep policy composition within the size limit ([bb592b6](https://github.com/Alberto-Codes/judgevet/commit/bb592b6fc35578268a269e5c72f45e3a5f04670f)), closes [#55](https://github.com/Alberto-Codes/judgevet/issues/55)
+
+
+### Documentation
+
+* add practical library CLI and MCP task guides ([273b94d](https://github.com/Alberto-Codes/judgevet/commit/273b94d09f735e171338aba4d06dc94876a7b57c)), closes [#150](https://github.com/Alberto-Codes/judgevet/issues/150) [#145](https://github.com/Alberto-Codes/judgevet/issues/145) [#10](https://github.com/Alberto-Codes/judgevet/issues/10)
+* complete public API CLI MCP and policy reference ([c5897f3](https://github.com/Alberto-Codes/judgevet/commit/c5897f386d58ce2e278532d8e27aaa97aeb76046)), closes [#151](https://github.com/Alberto-Codes/judgevet/issues/151) [#145](https://github.com/Alberto-Codes/judgevet/issues/145) [#10](https://github.com/Alberto-Codes/judgevet/issues/10)
+* define canonical judgment vocabulary ([4dbf542](https://github.com/Alberto-Codes/judgevet/commit/4dbf5428862f24200f243a6c61cd8cc1acb765cf)), closes [#46](https://github.com/Alberto-Codes/judgevet/issues/46) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* enforce contextual glossary terminology ([a4c48a6](https://github.com/Alberto-Codes/judgevet/commit/a4c48a6a3dc5004228551da1149eb284309a7bf0)), closes [#71](https://github.com/Alberto-Codes/judgevet/issues/71) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* enforce the local plain-English writing profile ([fd3237b](https://github.com/Alberto-Codes/judgevet/commit/fd3237b7c0632ccfc6be5991e82075b28b0cf61c)), closes [#70](https://github.com/Alberto-Codes/judgevet/issues/70) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* establish documentation navigation foundation ([49be1af](https://github.com/Alberto-Codes/judgevet/commit/49be1aff1bf521670f053db13f8dc40caa689009)), closes [#10](https://github.com/Alberto-Codes/judgevet/issues/10) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* explain container and serverless deployment ([41d0bb4](https://github.com/Alberto-Codes/judgevet/commit/41d0bb4f6e0ea53f25d1eca3f33745aae13d5e98)), closes [#58](https://github.com/Alberto-Codes/judgevet/issues/58)
+* explain judgments policies and evidence limits ([0607bfe](https://github.com/Alberto-Codes/judgevet/commit/0607bfe5dee99cfd4e7398c92611f5f358d60f1a)), closes [#149](https://github.com/Alberto-Codes/judgevet/issues/149) [#145](https://github.com/Alberto-Codes/judgevet/issues/145) [#10](https://github.com/Alberto-Codes/judgevet/issues/10)
+* explain library-first architecture and ownership ([f9ff8ed](https://github.com/Alberto-Codes/judgevet/commit/f9ff8ed954e017bf57c7197a99074e354edb4a35)), closes [#11](https://github.com/Alberto-Codes/judgevet/issues/11) [#145](https://github.com/Alberto-Codes/judgevet/issues/145) [#10](https://github.com/Alberto-Codes/judgevet/issues/10)
+* finish navigation and trust-status audit ([b37a7dc](https://github.com/Alberto-Codes/judgevet/commit/b37a7dc2f6546f4f033eda8efba388edd29130d9)), closes [#10](https://github.com/Alberto-Codes/judgevet/issues/10) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* gate strict site builds and reference integrity ([64e4489](https://github.com/Alberto-Codes/judgevet/commit/64e44899ccfee44ef81e604bf9e60f4e4954ec35)), closes [#12](https://github.com/Alberto-Codes/judgevet/issues/12) [#10](https://github.com/Alberto-Codes/judgevet/issues/10) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* illustrate call flow and data disclosure boundaries ([77a050a](https://github.com/Alberto-Codes/judgevet/commit/77a050a484861024d36b3c370179b40b54923a88)), closes [#73](https://github.com/Alberto-Codes/judgevet/issues/73) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* lead README with one typed judgment journey ([2d79dd0](https://github.com/Alberto-Codes/judgevet/commit/2d79dd009112a63dc2c5abd607bf5300fef612e9)), closes [#152](https://github.com/Alberto-Codes/judgevet/issues/152) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* link the verified public documentation site ([6c90e7f](https://github.com/Alberto-Codes/judgevet/commit/6c90e7fc868ad519690672077dfaa7051891e360)), closes [#41](https://github.com/Alberto-Codes/judgevet/issues/41)
+* record final documentation program verification ([3517e3e](https://github.com/Alberto-Codes/judgevet/commit/3517e3e8d5d432433eb613e17a845746bf05ae79)), closes [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* record verified 0.7.0 release and installation ([61212f3](https://github.com/Alberto-Codes/judgevet/commit/61212f321f6c8ac4df083e6aae1e4860ee7edf17)), closes [#143](https://github.com/Alberto-Codes/judgevet/issues/143) [#138](https://github.com/Alberto-Codes/judgevet/issues/138)
+* reference configuration and error contracts ([9053fc8](https://github.com/Alberto-Codes/judgevet/commit/9053fc8ef9ae2f708688ff989c2641a713917c97)), closes [#151](https://github.com/Alberto-Codes/judgevet/issues/151) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* repair API examples and artifact verification ([b32afa2](https://github.com/Alberto-Codes/judgevet/commit/b32afa2ab6d3e5b3d8a86cd816ba93d67c0f73b9)), closes [#146](https://github.com/Alberto-Codes/judgevet/issues/146) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* separate user guidance from maintainer records ([e96b024](https://github.com/Alberto-Codes/judgevet/commit/e96b02414266b3d72895cead8caf927db5e89306)), closes [#147](https://github.com/Alberto-Codes/judgevet/issues/147) [#145](https://github.com/Alberto-Codes/judgevet/issues/145)
+* teach first judgment and local policy decisions ([fb0169f](https://github.com/Alberto-Codes/judgevet/commit/fb0169fc05a19a9bde80853e3e3259724ca29c0e)), closes [#148](https://github.com/Alberto-Codes/judgevet/issues/148) [#149](https://github.com/Alberto-Codes/judgevet/issues/149) [#145](https://github.com/Alberto-Codes/judgevet/issues/145) [#10](https://github.com/Alberto-Codes/judgevet/issues/10)
+
 ## [0.7.0](https://github.com/Alberto-Codes/judgevet/compare/v0.6.0...v0.7.0) (2026-09-23)
 
 
