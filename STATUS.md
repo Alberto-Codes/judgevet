@@ -138,7 +138,7 @@ examples were removed; the task guides retain their executable coverage.
 ## Gates
 
 **1240 tests pass, 6 live tests deselected.** The last measured coverage is
-**94.57%** (1533/1621 statements).
+**94.58%** (1535/1623 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
@@ -167,6 +167,8 @@ hostname checks and test-only verification-off. Loopback proxy tests observe
 CONNECT selection and explicit precedence; they do not prove a deployed
 corporate proxy. CLI, policy CLI and MCP consume every new setting. Independent
 mutations break CA, proxy, secure defaults and each composition path.
+The policy composition root extracts adapter construction into a helper; its
+42 code lines remain below the 50-line function limit.
 
 The complete commit/push gates include strict docs, isolated examples and
 coverage. Retry and network evidence is local and synthetic; unseen service

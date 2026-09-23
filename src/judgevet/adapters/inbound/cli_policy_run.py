@@ -1,4 +1,4 @@
-"""Compose policy judgments with stderr logging and handled service errors.
+"""Compose policy judgments with explicit adapter ownership and safe diagnostics.
 
 Examples:
     ```python
@@ -120,6 +120,34 @@ def _render_policy(
     return 0 if passed else 3
 
 
+def _build_adapter(
+    settings: Settings, api_key: str | None, model: str
+) -> HTTPSystemOneAdapter:
+    """Construct the policy adapter with explicit connection options.
+
+    Args:
+        settings: Validated connection, retry and network settings.
+        api_key: Optional explicit key override.
+        model: Requested model.
+
+    Returns:
+        An owned HTTP adapter for one policy invocation.
+
+    Raises:
+        ValueError: If the key is absent or network configuration is invalid.
+    """
+    return HTTPSystemOneAdapter(
+        api_key=api_key
+        if api_key is not None
+        else (settings.api.key.get_secret_value() if settings.api.key else None),
+        base_url=settings.api.base_url,
+        default_model=model,
+        timeout_seconds=settings.api.timeout_seconds,
+        retry=settings.api.retry_policy,
+        network=settings.api.network_config,
+    )
+
+
 def run_policy(
     state: str,
     questions: str,
@@ -129,7 +157,7 @@ def run_policy(
     policy_file: str,
     callbacks: CliCallbacks,
 ) -> int:
-    """Validate policy, apply network/retry settings and close after judgment.
+    """Validate policy, build its configured adapter and close after judgment.
 
     Args:
         state: Existing state string interpretation.
@@ -149,16 +177,7 @@ def run_policy(
         state_data = json.loads(state) if state.startswith(("{", "[")) else state
         settings = Settings()
         configure(settings.log)
-        adapter = HTTPSystemOneAdapter(
-            api_key=api_key
-            if api_key is not None
-            else (settings.api.key.get_secret_value() if settings.api.key else None),
-            base_url=settings.api.base_url,
-            default_model=model,
-            timeout_seconds=settings.api.timeout_seconds,
-            retry=settings.api.retry_policy,
-            network=settings.api.network_config,
-        )
+        adapter = _build_adapter(settings, api_key, model)
         try:
             response = adapter.system_one(
                 state=state_data, questions=typed_questions, model=model
