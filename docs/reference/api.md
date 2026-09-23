@@ -15,6 +15,9 @@ Status: **draft**.
 Use the [glossary](glossary.md) to distinguish probability, confidence, score
 and local acceptance decisions.
 
+Generated Python signatures and source documentation are available through
+the Reference navigation in the [locally built site](../maintainers/build-docs.md).
+
 ## Question Types
 
 ### Noul

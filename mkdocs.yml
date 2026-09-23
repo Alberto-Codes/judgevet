@@ -1,0 +1,52 @@
+site_name: judgevet
+repo_url: https://github.com/Alberto-Codes/judgevet
+edit_uri: blob/main/docs/
+theme:
+  name: mkdocs
+hooks:
+  - scripts/check_doc_links.py
+  - scripts/docs_hooks.py
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - scripts/gen_ref_pages.py
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_root_heading: true
+            show_source: false
+markdown_extensions:
+  - meta
+  - fenced_code
+  - tables
+  - toc
+validation:
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
+nav:
+  - Documentation: index.md
+  - How-to:
+      - Install and connect: how-to/install.md
+      - CLI files and stdin: how-to/use-cli-files.md
+      - CLI policy: how-to/use-cli-policy.md
+      - Python policy: how-to/use-policy-library.md
+      - Staged Git changes: how-to/review-staged-diff.md
+  - Reference:
+      - API: reference/api.md
+      - Glossary: reference/glossary.md
+      - Compatibility: reference/compatibility.md
+      - Typing marker: reference/py-typed-marker.md
+      - Python source: reference/python/index.md
+      - Security: project/SECURITY.md
+  - Maintainers:
+      - Procedures: maintainers/index.md
+      - Build documentation: maintainers/build-docs.md
+      - Verify package: maintainers/verify-package.md
+      - Release: maintainers/cut-a-release.md
+      - Evidence: project/STATUS.md
+      - Repository rules: project/AGENTS.md

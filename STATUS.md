@@ -50,12 +50,19 @@ error-reference destinations land and #12 validates the rendered site.
 
 ## Gates
 
-**1075 tests pass, 6 live tests deselected.** The last measured coverage is
+**1084 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
-The #146 commit and push hooks passed all eleven local gates: suppressions,
+The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
 Ordinary tests exclude live service calls. The coverage floor is 90%.
+
+#12 adds the strict MkDocs build to commit/push hooks and CI. It checks authored
+local links, generated Python references and final HTML links/anchors offline.
+Nine acceptance tests cover link parsing and strict source-reference resolution.
+Independent symbol, target and anchor mutations fail the build; restoration
+passes. A fresh development-only installation builds without MCP or API keys.
+The site is local only. Example execution and editorial checks remain separate.
 
 ## Operational limits
 
