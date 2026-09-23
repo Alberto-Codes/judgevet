@@ -1,4 +1,8 @@
-"""Pure typed policy evaluation with complete ordered reports.
+"""Strict typed policy evaluation over shared pure comparison functions.
+
+The CLI compatibility bridge shares these comparisons while retaining its
+historical answer checks. Public evaluation validates required scalars against
+snapshotted question constraints and returns complete ordered reports.
 
 Examples:
     ```python
@@ -21,6 +25,7 @@ from collections.abc import Mapping
 
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.policy_checks import finite_number
+from judgevet.domain.policy_comparisons import choice_report, range_report
 from judgevet.domain.policy_errors import PolicyAnswerError, PolicyDefinitionError
 from judgevet.domain.policy_reports import PolicyReport, RuleReport
 from judgevet.domain.policy_rules import ChoiceRule, NoulRule, Rule, ScoreRule
@@ -77,7 +82,7 @@ def _check_answer(
 
 
 def compare_rule(rule: Rule, answer: Answer) -> RuleReport:
-    """Compute inclusive predicates for an already checked answer.
+    """Compute shared predicates for an already checked answer.
 
     Args:
         rule: Typed rule.
@@ -90,61 +95,26 @@ def compare_rule(rule: Rule, answer: Answer) -> RuleReport:
         PolicyAnswerError: If the answer does not match the rule type.
     """
     if isinstance(rule, NoulRule) and isinstance(answer, NoulAnswer):
-        return _range_report(rule, answer.noul, "noul", None)
+        return RuleReport(rule.name, *range_report(rule, answer.noul, "noul", None))
     if isinstance(rule, ChoiceRule) and isinstance(answer, ChoiceAnswer):
-        passed = answer.choice == rule.choice
-        detail = f"choice '{answer.choice}' == '{rule.choice}'"
-        if rule.min_confidence is not None:
-            passed = passed and answer.confidence >= rule.min_confidence
-            detail += f" and confidence {answer.confidence} >= {rule.min_confidence}"
-        return RuleReport(rule.name, passed, detail + _verdict(passed))
+        confidence = (
+            None
+            if rule.min_confidence is None
+            else (answer.confidence, rule.min_confidence)
+        )
+        return RuleReport(
+            rule.name, *choice_report(rule.name, rule.choice, answer.choice, confidence)
+        )
     if isinstance(rule, ScoreRule) and isinstance(answer, ScoreAnswer):
-        return _range_report(rule, answer.score, "score", answer.confidence)
+        confidence = (
+            None
+            if rule.min_confidence is None
+            else (answer.confidence, rule.min_confidence)
+        )
+        return RuleReport(
+            rule.name, *range_report(rule, answer.score, "score", confidence)
+        )
     raise PolicyAnswerError("answer type mismatch for policy question")
-
-
-def _verdict(passed: bool) -> str:
-    """Render the existing textual verdict suffix.
-
-    Args:
-        passed: Predicate outcome.
-
-    Returns:
-        The pass/fail suffix.
-    """
-    return f" -> {'pass' if passed else 'fail'}"
-
-
-def _range_report(
-    rule: NoulRule | ScoreRule, value: float, label: str, confidence: float | None
-) -> RuleReport:
-    """Compare inclusive bounds and an optional confidence floor.
-
-    Args:
-        rule: Noul or Score rule.
-        value: Selected scalar.
-        label: Fixed predicate name.
-        confidence: Score confidence, or None for Noul.
-
-    Returns:
-        Complete comparison detail and conjunction outcome.
-    """
-    passed = (rule.minimum is None or value >= rule.minimum) and (
-        rule.maximum is None or value <= rule.maximum
-    )
-    parts = []
-    if rule.minimum is not None:
-        parts.append(f"{label} {value} >= {rule.minimum}")
-    if rule.maximum is not None:
-        parts.append(f"{label} {value} <= {rule.maximum}")
-    if (
-        isinstance(rule, ScoreRule)
-        and rule.min_confidence is not None
-        and confidence is not None
-    ):
-        passed = passed and confidence >= rule.min_confidence
-        parts.append(f"confidence {confidence} >= {rule.min_confidence}")
-    return RuleReport(rule.name, passed, " and ".join(parts) + _verdict(passed))
 
 
 def evaluate_policy(

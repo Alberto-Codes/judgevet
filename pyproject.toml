@@ -285,3 +285,9 @@ forbidden_modules = [
     "structlog",
     "pydantic_settings",
 ]
+
+[[tool.importlinter.contracts]]
+name = "Policy JSON decoding does not depend on adapters"
+type = "forbidden"
+source_modules = ["judgevet.policy_json", "judgevet._policy_json"]
+forbidden_modules = ["judgevet.adapters", "judgevet.ports", "mcp"]

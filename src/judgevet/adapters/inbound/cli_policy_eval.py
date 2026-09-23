@@ -1,4 +1,8 @@
-"""Policy evaluation for typed question predicates.
+"""Legacy answer checks over the shared pure policy comparisons.
+
+The tuple and mutable-dictionary return shape remains compatible. Required
+confidence checks follow the historical CLI contract; strict public evaluation
+also checks unrequested confidence and original question constraints.
 
 Examples:
     ```python
@@ -34,6 +38,7 @@ from collections.abc import Mapping
 from judgevet.adapters.inbound.cli_inputs import InputFailure
 from judgevet.adapters.inbound.cli_policy import Rule
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.policy_comparisons import choice_report, range_report
 
 
 def _extract_noul_answer(answer: Answer) -> float:
@@ -120,7 +125,7 @@ def _build_report(rule: Rule, passed: bool, detail: str) -> dict[str, str | bool
 
 
 def _evaluate_noul(rule: Rule, answer: Answer) -> tuple[bool, str]:
-    """Evaluate noul rule against a NoulAnswer.
+    """Apply legacy Noul validation and the shared inclusive comparisons.
 
     Args:
         rule: The policy rule.
@@ -135,15 +140,11 @@ def _evaluate_noul(rule: Rule, answer: Answer) -> tuple[bool, str]:
     value = _extract_noul_answer(answer)
     if not _is_valid_noul_value(value):
         raise InputFailure("response: noul value is nonfinite or out of [0,1]", code=1)
-    predicate_ok = (rule.minimum is None or value >= rule.minimum) and (
-        rule.maximum is None or value <= rule.maximum
-    )
-    detail = _build_noul_detail(rule, value, predicate_ok)
-    return predicate_ok, detail
+    return range_report(rule, value, "noul", None)
 
 
 def _evaluate_choice(rule: Rule, answer: Answer) -> tuple[bool, str]:
-    """Evaluate choice rule against a ChoiceAnswer.
+    """Apply legacy Choice checks and shared equality/confidence comparisons.
 
     Args:
         rule: The policy rule.
@@ -156,23 +157,16 @@ def _evaluate_choice(rule: Rule, answer: Answer) -> tuple[bool, str]:
         InputFailure: If answer is not a ChoiceAnswer or confidence is nonfinite.
     """
     choice, confidence = _extract_choice_answer(answer)
-    choice_ok = choice == rule.choice
+    comparison = None
     if rule.min_confidence is not None:
         if not math.isfinite(confidence):
             raise InputFailure("response: choice confidence is nonfinite", code=1)
-        confidence_ok = confidence >= rule.min_confidence
-        passed = choice_ok and confidence_ok
-        detail = _build_choice_detail(
-            rule, choice, confidence, choice_ok, confidence_ok
-        )
-    else:
-        passed = choice_ok
-        detail = _build_choice_detail_no_confidence(rule, choice, choice_ok)
-    return passed, detail
+        comparison = (confidence, rule.min_confidence)
+    return choice_report(rule.name, rule.choice, choice, comparison)
 
 
 def _evaluate_score(rule: Rule, answer: Answer) -> tuple[bool, str]:
-    """Evaluate score rule against a ScoreAnswer.
+    """Apply legacy Score checks and shared range/confidence comparisons.
 
     Args:
         rule: The policy rule.
@@ -187,17 +181,12 @@ def _evaluate_score(rule: Rule, answer: Answer) -> tuple[bool, str]:
     score, confidence = _extract_score_answer(answer)
     if not math.isfinite(score):
         raise InputFailure("response: score is nonfinite", code=1)
-    predicate_ok = (rule.minimum is None or score >= rule.minimum) and (
-        rule.maximum is None or score <= rule.maximum
-    )
-    confidence_ok = True
+    comparison = None
     if rule.min_confidence is not None:
         if not math.isfinite(confidence):
             raise InputFailure("response: score confidence is nonfinite", code=1)
-        confidence_ok = confidence >= rule.min_confidence
-    passed = predicate_ok and confidence_ok
-    detail = _build_score_detail(rule, score, confidence, predicate_ok, confidence_ok)
-    return passed, detail
+        comparison = (confidence, rule.min_confidence)
+    return range_report(rule, score, "score", comparison)
 
 
 def evaluate_policy(
