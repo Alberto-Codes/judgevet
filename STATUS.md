@@ -5,25 +5,32 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.7.0 is published. Library, CLI and optional MCP share one version.
-The release adds supported root exports, pure typed policies and JSON decoding.
-CLI contracts and MCP tools retain their previous behavior.
+judgevet 0.8.0 is published. Library, CLI and optional MCP share one version.
+The release adds opt-in retries, proxy/CA configuration, file/command credentials,
+and scoped diagnostic correlation. Defaults retain one attempt and verified TLS.
+The documentation site is [live](https://alberto-codes.github.io/judgevet/).
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.7.0`, commit `cc1a3f48bd8ef8d09fc03f46b8e6f89299334e4a` |
-| Wheel SHA-256 | `569eb78c355133b8735cda47c392a0e82ba07c4ee2d66f136c9696520a525ada` |
-| Source distribution SHA-256 | `d321e451c4c80b86b8e78c1f40c53759945d13be54df6b0105dc47922c5efa47` |
-| Actual TestPyPI/PyPI downloads | Match workflow artifacts and each other; isolated base/MCP imports, typing marker, examples and live calls passed |
-| Library | Exact README and four policy-guide examples executed against the published wheel; policy examples also type-checked |
-| CLI | Installed mixed live judgment passed with clean stderr |
-| MCP | Discovery and all three live tools passed; fresh uvx launcher passed |
+| Release/tag | `v0.8.0`, commit `e0780444b0c1379089d17834a24e5dc38a0068d4` |
+| Accepted candidate | `578e8db293bfb692ec3cb09d2edc927715592935`; release tree is identical |
+| Wheel SHA-256 | `8970ddadf1a36153c4142847299b3e1a3652a74911d57ec7a35ed6204b794081` |
+| Source distribution SHA-256 | `f58ed085e3c5a47dc845570416efaed3971b49ac6a658757859f6f17d3b8b5e4` |
+| Actual TestPyPI/PyPI downloads | Both distributions match workflow artifacts and each other |
+| Library | Isolated base imports, typing marker, live example and all four policy-guide examples passed; policy examples also type-checked |
+| CLI | Installed mixed live judgment passed on both index wheels; one test each, no skip |
+| MCP | Isolated discovery and all three live tools passed on both wheels; fresh published uvx launcher initialized and discovered three tools |
+| Container | Exact documented Dockerfile built the actual PyPI wheel; non-root read-only runs exercised file and command credentials with synthetic HTTP requests |
 
-[Release evidence](https://github.com/Alberto-Codes/judgevet/issues/143) records
-commands, hashes and limits. [Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35807462370),
-[TestPyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35807319494)
-and [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35807568535)
-passed. No unseen API body became verified.
+[Release evidence](https://github.com/Alberto-Codes/judgevet/issues/155) records
+commands, hashes and limits. [Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35873226697),
+[TestPyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35872961957)
+and [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35873463087)
+passed. Both publication workflows passed base/MCP smoke checks before upload.
+The first PyPI read did not yet see 0.8.0; a fresh uncached download succeeded.
+The fresh-launcher harness initially omitted the child credential environment;
+the documented `direnv exec` invocation passed. This does not prove an existing
+host session reloaded its tools. No unseen API body became verified.
 
 ## Documentation program
 
@@ -38,10 +45,10 @@ error body, calibration claim or other model became verified.
 
 The final reader route reaches tutorials, policy tasks, error lookup and
 explanations without issue history. All authored docs remain draft. README
-package links and current example checks pass. Site publication remains the
+package links and current example checks pass. Site publication was the
 separate final follow-up [#41](https://github.com/Alberto-Codes/judgevet/issues/41).
 That program did not change Pages settings or repository visibility.
-The deployment-readiness follow-up below now tracks Pages publication.
+The deployment-readiness follow-up below records completed Pages publication.
 #146 landed in `b32afa2`: explicit key injection, adapter cleanup, matching
 Choice labels, standalone examples and fresh-artifact selection. Both exact API
 blocks execute offline against an isolated wheel and pass typing checks.
@@ -203,12 +210,13 @@ command credentials. JSON stdout and diagnostic stderr remain separate.
 The guide covers secret mounts, SELinux labels, connection ownership, rotation,
 proxy/CA settings and deadline/retry budgets. Cloud Run, Lambda and Fargate
 integration guidance cites platform documentation; no cloud account was deployed.
-The source-built development wheel is not evidence of index publication.
+The initial source-built development wheel was not index evidence. The same
+container checks now pass with the actual published 0.8.0 PyPI wheel.
 
 The complete commit/push gates include strict docs, isolated examples and
 coverage. Runtime evidence is local and synthetic; unseen service
-errors stay inferred. No runtime dependency or version changes in this round. The 0.8.0
-release remains pending. The Pages site is live.
+errors stay inferred. Runtime dependencies remain unchanged. Release-please set the shared version
+to 0.8.0; both index publications and the Pages site are verified.
 
 ## Pages deployment
 
