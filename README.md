@@ -127,10 +127,10 @@ The tools are `ask_noul`, `ask_choice` and `ask_score`. For example, call
 
 Choice accepts a criteria map; Score accepts an ordered criteria list. See the
 [connection checks](docs/how-to/install.md#verify-the-connection) for all three.
-The published 0.7.0 tools have passed discovery and live calls. Historical
-launcher failures and an initial 0.7.0 initialization failure remain unexplained
-despite later passing checks;
-those checks do not prove an existing agent session reloaded its tools.
+If initialization or discovery fails, follow the
+[connection troubleshooting steps](docs/how-to/install.md#when-mcp-does-not-connect).
+Intermittent initialization failures have no established cause or remedy.
+A successful separate check does not prove an existing session loaded the tools.
 
 ## Diagnostics and security
 
@@ -144,10 +144,9 @@ before handling sensitive content or sharing diagnostics.
 
 ## What is verified
 
-Documentation status: **draft**. [0.7.0 release evidence](https://github.com/Alberto-Codes/judgevet/issues/143)
-covers actual PyPI/TestPyPI artifacts, typed library examples, the installed
-CLI and all three MCP tools. The library example and policy-guide examples were
-checked against the published package; synthetic answers do not prove model quality.
+Documentation status: **draft**. The published package has passed isolated
+library, CLI and MCP checks. The library and policy-guide examples have been
+executed against it. Synthetic answers do not prove model quality.
 
 Live calls exercised the success shapes, resolved `jev-1.13.0` model, Noul
 criteria and Score legend, plus authentication and validation errors. The
@@ -158,8 +157,7 @@ observations from documentation-derived expectations.
 
 Live 429/529 bodies remain unseen. Other resolved models and fields not touched
 by a call remain unverified. Contract tests exercise synthetic fixtures; they
-do not turn those cases into live evidence. The reusable policy API, JSON facade
-and CLI integration are published in 0.7.0. Actual index downloads passed isolated library, CLI and MCP checks.
+do not turn those cases into live evidence. The [evidence ledger](STATUS.md) links the release verification records.
 
 ## Development
 
@@ -180,3 +178,5 @@ uv run pytest -q --cov
 
 Coverage floor is 90%. `live` tests contact the real service and are excluded
 from the default run. Contributions follow [AGENTS.md](AGENTS.md).
+
+Release operators: see the [maintainer procedures](docs/maintainers/index.md).

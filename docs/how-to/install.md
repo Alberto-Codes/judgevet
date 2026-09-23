@@ -21,9 +21,8 @@ Alternatively, in an existing uv project, run:
 uv add judgevet
 ```
 
-The published 0.7.0 wheel includes `judgevet/py.typed`. Independent base
-installs resolve under their virtual environments' site-packages without the
-MCP runtime. See the [published artifact proof](https://github.com/Alberto-Codes/judgevet/issues/143).
+The package includes `judgevet/py.typed` for type checkers. The base installation
+does not install the MCP runtime. See [supported imports](../reference/compatibility.md).
 
 ## Run the CLI
 
@@ -125,22 +124,31 @@ Score takes an ordered criteria list. Check the returned structured content:
 | `ask_choice` | selected `choice`, `confidence`, `probabilities`, model, usage |
 | `ask_score` | numeric `score`, `confidence`, `probabilities`, `legend`, model, usage |
 
-In the Python MCP SDK, initialization returns `server_info`; tool answers use
-`structured_content` and `is_error`. Their JSON wire aliases are `serverInfo`,
-`structuredContent` and `isError`. See the verified
-[SDK compatibility notes](https://github.com/Alberto-Codes/judgevet/issues/114#issuecomment-5771829178).
 A successful call has no tool error and returns model and usage fields.
 This verifies integration, not the accuracy of a judgment.
 
-The [published artifact proof](https://github.com/Alberto-Codes/judgevet/issues/143)
-records byte equality and live base/MCP checks on the actual PyPI download.
-The [published launcher proof](https://github.com/Alberto-Codes/judgevet/issues/143)
-records discovery and all three live calls from a temporary working directory
-with an empty uv cache. These checks exercise legacy initialization. A separate
-SDK or wire probe does not prove that an already-running Codex session reloaded
-its native tools.
+## When MCP does not connect
 
-The first 0.7.0 fresh launcher probe failed during initialization with
-`invalid_data`. A diagnostic run and a later standard fresh-cache run passed;
-the cause remains unknown. These observations do not establish a cache or
-timeout explanation or a cure for historical intermittent launcher failures.
+If the server fails to start, first check that the configured executable is on
+`PATH` and that the project path exists. If using direnv, check that the
+project's `.envrc` is approved. Do not print the environment or credential.
+Check that a key is supplied through `JEV_API__KEY` or `TYPESAFE_API_KEY`.
+Read [credential handling](../../SECURITY.md#credentials) before changing it.
+
+If the process starts but tools are missing, inspect the host's saved server
+configuration. Start a fresh host session and repeat discovery. A saved entry
+is not proof of a connection. A standalone SDK check is not proof that the
+host loaded the tools. Confirm all three tools in the session you intend to use.
+
+If initialization fails with `invalid_data`, record the judgevet version,
+launcher command with sensitive values removed, host version and failure stage.
+Intermittent failures have been observed with the published launcher; their
+cause remains unknown. Successful later runs do not establish a cache or timeout
+remedy. Do not delete caches or increase timeouts on that evidence alone.
+If it persists, report a minimal reproduction with synthetic data through the
+[repository issue form](https://github.com/Alberto-Codes/judgevet/issues/new).
+
+Review [diagnostic disclosure limits](../../SECURITY.md#diagnostics-and-error-content)
+before sharing output. Use the private reporting path there for vulnerabilities.
+If discovery succeeds but a call fails, check the key and supplied tool arguments.
+Do not interpret a service or tool error as a negative judgment.

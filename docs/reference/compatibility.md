@@ -4,11 +4,9 @@ status: draft
 
 # Supported imports and compatibility
 
-judgevet ships one distribution, one version and one release-please component.
-The library, CLI, MCP server and optional dependencies have separate compatibility
-assessments within that release. The 0.7.0 release implements the accepted
-[#67 API decision](https://github.com/Alberto-Codes/judgevet/issues/67#issuecomment-5786388416)
-and [#66 compatibility decision](https://github.com/Alberto-Codes/judgevet/issues/66#issuecomment-5786398764).
+judgevet ships one distribution and one version. The library, CLI, MCP server
+and optional dependencies have separate compatibility assessments within that
+release. One wheel does not have independently released library/CLI/MCP versions.
 
 ## Library imports
 
@@ -55,23 +53,11 @@ for malformed answers. Public evaluation always checks selected confidence and
 snapshotted choice/score constraints; the legacy checks remain as before. This
 is a new API contract, not a migration of existing CLI semantics.
 
-## Release communication
-
-Use Conventional Commit scopes `api`, `cli`, `mcp`, and `deps` to identify affected
-surfaces. Generated changelog sections stay grouped by commit type. Add a short
-four-surface compatibility table to reviewed release notes; do not rewrite
-release-please's machine-parsed PR body or maintain a second changelog.
-
-A documented surface break uses `!` and a `BREAKING CHANGE:` footer describing
-the affected callers and migration. Before 1.0, the configured release workflow
-bumps the minor version for a break; after 1.0, a break requires a major version.
-See [SemVer](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
-One wheel does not have independently released library/CLI/MCP versions.
-
 ## Verification limits
 
 Policy tests are synthetic local acceptance evidence. They do not establish model
 quality or new service behavior. Live 429/529 bodies remain unseen; resolved
-models other than `jev-1.13.0` remain untested. The historical intermittent MCP
-launcher failure remains unexplained. A successful fresh launcher does not prove
-that an existing agent session reloaded its native tools.
+models other than `jev-1.13.0` remain untested. Intermittent MCP
+initialization failures have no established cause or remedy. Follow the
+[connection checks](../how-to/install.md#when-mcp-does-not-connect). A successful
+fresh launcher does not prove that an existing agent session reloaded its tools.
