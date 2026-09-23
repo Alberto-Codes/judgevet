@@ -244,18 +244,22 @@ way nobody planned.
 
 ## Remaining work
 
-#102's existing credential was copied as destination-encrypted ciphertext by
-manual run 35800106404, without plaintext retrieval or rotation. GitHub accepted
-the environment secret at 2026-09-23T00:01:29Z. Metadata now proves repository
-absence and release-environment presence. The environment permits main only.
-Both credential jobs bind to it, reject missing PATs and verify Alberto-Codes
-as the authenticated identity. Eight acceptance tests and independent removals
-cover bindings, absence, identity and fallback. The temporary workflow, encrypted
-artifact and migration run were retired. A new commit-triggered release-please
-run after repository-secret removal is still required; earlier green runs do
-not prove the final scope.
+#102 is fulfilled. The original PAT was migrated as destination-encrypted
+ciphertext without plaintext retrieval or rotation. Repository metadata is
+empty; release-environment metadata contains RELEASE_PLEASE_TOKEN, updated
+2026-09-23T00:01:29Z. The environment permits main only. Both credential jobs
+bind to it and have no GITHUB_TOKEN fallback. Fresh push run
+[35800344761](https://github.com/Alberto-Codes/judgevet/actions/runs/35800344761),
+created after repository-secret removal, passed both jobs and printed actual
+HAS_PAT=true and PAT_IDENTITY=Alberto-Codes output. It updated the release branch
+and PR #134, authored by Alberto-Codes. The one-time sealing workflow, encrypted
+artifact and migration run were retired. Eight acceptance cases and independent
+removal proofs cover scope, missing credentials, identity and fallback.
+[Full credential evidence](https://github.com/Alberto-Codes/judgevet/issues/102)
+records the sequence. No release was published.
 
 The developer-workflow release requirements are fulfilled. Final evidence-commit
 CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
 first fresh-launcher failure remains unexplained. #67/#66 now have sourced recommendations; their proposed API implementation is
-separate work. #102 credential scoping remains outstanding. No inferred API claim was promoted and no quality gate was weakened.
+separate work. The post-0.5.0 reliability and credential-scoping rounds are
+fulfilled; publication requires separate authorization. No inferred API claim was promoted and no quality gate was weakened.
