@@ -16,11 +16,11 @@ install without the MCP runtime; the wheel includes `py.typed` for type checkers
 Use Python 3.12 or newer. In a virtual environment:
 
 ```bash
-python -m pip install 'judgevet==0.6.0'
+python -m pip install 'judgevet==0.7.0'
 judgevet --help
 ```
 
-For an existing uv project, use `uv add 'judgevet==0.6.0'`.
+For an existing uv project, use `uv add 'judgevet==0.7.0'`.
 See [installation and MCP client setup](docs/how-to/install.md) and
 [security, credential handling and cryptographic posture](SECURITY.md).
 
@@ -72,9 +72,9 @@ applications. Both adapters close their HTTP client when the context exits.
 
 ## Evaluate policies from Python
 
-The 0.7.0 candidate adds `judgevet.policy` for immutable typed rules, validated
+Version 0.7.0 adds `judgevet.policy` for immutable typed rules, validated
 question snapshots and ordered pass/fail reports. `judgevet.policy_json` decodes
-the existing CLI policy grammar. These APIs are absent from published 0.6.0.
+the existing CLI policy grammar. Both APIs are published in 0.7.0.
 See the [runnable typed and JSON policy guide](docs/how-to/use-policy-library.md)
 and [supported imports and compatibility](docs/reference/compatibility.md).
 
@@ -110,7 +110,7 @@ shows an opt-in Git workflow.
 Install the extra and launch the stdio server with a key in its environment:
 
 ```bash
-python -m pip install 'judgevet[mcp]==0.6.0'
+python -m pip install 'judgevet[mcp]==0.7.0'
 judgevet-mcp
 ```
 
@@ -127,8 +127,9 @@ The tools are `ask_noul`, `ask_choice` and `ask_score`. For example, call
 
 Choice accepts a criteria map; Score accepts an ordered criteria list. See the
 [connection checks](docs/how-to/install.md#verify-the-connection) for all three.
-The published 0.6.0 tools have passed discovery and live calls. An initial
-TestPyPI launcher failure remains unexplained despite later passing checks;
+The published 0.7.0 tools have passed discovery and live calls. Historical
+launcher failures and an initial 0.7.0 initialization failure remain unexplained
+despite later passing checks;
 those checks do not prove an existing agent session reloaded its tools.
 
 ## Diagnostics and security
@@ -143,10 +144,10 @@ before handling sensitive content or sharing diagnostics.
 
 ## What is verified
 
-Documentation status: **draft**. [0.6.0 release evidence](https://github.com/Alberto-Codes/judgevet/pull/134#issuecomment-5786785252)
+Documentation status: **draft**. [0.7.0 release evidence](https://github.com/Alberto-Codes/judgevet/issues/143)
 covers actual PyPI/TestPyPI artifacts, typed library examples, the installed
-CLI and all three MCP tools. The examples above were also checked offline
-against the published package; synthetic answers do not prove model quality.
+CLI and all three MCP tools. The library example and policy-guide examples were
+checked against the published package; synthetic answers do not prove model quality.
 
 Live calls exercised the success shapes, resolved `jev-1.13.0` model, Noul
 criteria and Score legend, plus authentication and validation errors. The
@@ -157,9 +158,8 @@ observations from documentation-derived expectations.
 
 Live 429/529 bodies remain unseen. Other resolved models and fields not touched
 by a call remain unverified. Contract tests exercise synthetic fixtures; they
-do not turn those cases into live evidence. The reusable policy library API is implemented for the 0.7.0 candidate;
-published artifact verification remains a release requirement. The CLI policy
-workflow above is shipped in 0.6.0.
+do not turn those cases into live evidence. The reusable policy API, JSON facade
+and CLI integration are published in 0.7.0. Actual index downloads passed isolated library, CLI and MCP checks.
 
 ## Development
 

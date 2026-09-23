@@ -6,7 +6,7 @@ status: draft
 
 judgevet ships one distribution, one version and one release-please component.
 The library, CLI, MCP server and optional dependencies have separate compatibility
-assessments within that release. The 0.7.0 candidate implements the accepted
+assessments within that release. The 0.7.0 release implements the accepted
 [#67 API decision](https://github.com/Alberto-Codes/judgevet/issues/67#issuecomment-5786388416)
 and [#66 compatibility decision](https://github.com/Alberto-Codes/judgevet/issues/66#issuecomment-5786398764).
 
@@ -33,7 +33,7 @@ raw redirect errors, for example, retain their prior behavior.
 `ValidatedPolicy`, `RuleReport`, `PolicyReport`, `validate_policy`,
 `evaluate_policy`, `PolicyError`, `PolicyDefinitionError`, and `PolicyAnswerError`.
 `judgevet.policy_json` supports `parse_policy`. These modules are new in the
-0.7.0 candidate and absent from 0.6.0. The implementation helpers are internal;
+0.7.0 release and absent from 0.6.0. The implementation helpers are internal;
 use the facades for new policy callers.
 
 The [typed policy guide](../how-to/use-policy-library.md) gives runnable examples,

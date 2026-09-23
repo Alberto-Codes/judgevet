@@ -4,9 +4,9 @@ status: draft
 
 # Evaluate policies from Python
 
-The 0.7.0 candidate adds `judgevet.policy` and `judgevet.policy_json`. These
-modules are absent from published 0.6.0. Install the verified 0.7.0 release
-when available, or install a built candidate wheel for evaluation.
+Version 0.7.0 adds `judgevet.policy` and `judgevet.policy_json`. These
+modules are absent from 0.6.0. Install the verified 0.7.0 release with
+`python -m pip install 'judgevet==0.7.0'`.
 
 ## Construct a typed policy
 

@@ -4,7 +4,7 @@ status: draft
 
 # Install judgevet
 
-Published judgevet 0.6.0 provides the library, CLI and `judgevet-mcp` command.
+Published judgevet 0.7.0 provides the library, CLI and `judgevet-mcp` command.
 The MCP runtime is optional.
 
 ## Install the library
@@ -21,9 +21,9 @@ Alternatively, in an existing uv project, run:
 uv add judgevet
 ```
 
-The published 0.6.0 wheel includes `judgevet/py.typed`. Independent base
+The published 0.7.0 wheel includes `judgevet/py.typed`. Independent base
 installs resolve under their virtual environments' site-packages without the
-MCP runtime. See the [published artifact proof](https://github.com/Alberto-Codes/judgevet/pull/134#issuecomment-5786785252).
+MCP runtime. See the [published artifact proof](https://github.com/Alberto-Codes/judgevet/issues/143).
 
 ## Run the CLI
 
@@ -55,10 +55,10 @@ configuration, command arguments, or diagnostics.
 Execute the following command to launch the MCP server:
 
 ```bash
-direnv exec /absolute/path/to/project uvx --from 'judgevet[mcp]==0.6.0' judgevet-mcp
+direnv exec /absolute/path/to/project uvx --from 'judgevet[mcp]==0.7.0' judgevet-mcp
 ```
 
-This command pins judgevet to version 0.6.0. To update, replace `0.6.0` with a
+This command pins judgevet to version 0.7.0. To update, replace `0.7.0` with a
 newer published version after verification. Note that only the judgevet package
 is pinned; transitive dependencies may still resolve differently. The server
 waits for client input on stdin and closes on EOF, emitting frames on stdout
@@ -94,7 +94,7 @@ paths.
 ```toml
 [mcp_servers.judgevet]
 command = "direnv"
-args = ["exec", "/absolute/path/to/project", "uvx", "--from", "judgevet[mcp]==0.6.0", "judgevet-mcp"]
+args = ["exec", "/absolute/path/to/project", "uvx", "--from", "judgevet[mcp]==0.7.0", "judgevet-mcp"]
 ```
 
 Codex loads project settings only for trusted projects. User-wide settings
@@ -132,10 +132,15 @@ In the Python MCP SDK, initialization returns `server_info`; tool answers use
 A successful call has no tool error and returns model and usage fields.
 This verifies integration, not the accuracy of a judgment.
 
-The [published artifact proof](https://github.com/Alberto-Codes/judgevet/pull/134#issuecomment-5786785252)
+The [published artifact proof](https://github.com/Alberto-Codes/judgevet/issues/143)
 records byte equality and live base/MCP checks on the actual PyPI download.
-The [published launcher proof](https://github.com/Alberto-Codes/judgevet/pull/134#issuecomment-5786785252)
+The [published launcher proof](https://github.com/Alberto-Codes/judgevet/issues/143)
 records discovery and all three live calls from a temporary working directory
 with an empty uv cache. These checks exercise legacy initialization. A separate
 SDK or wire probe does not prove that an already-running Codex session reloaded
 its native tools.
+
+The first 0.7.0 fresh launcher probe failed during initialization with
+`invalid_data`. A diagnostic run and a later standard fresh-cache run passed;
+the cause remains unknown. These observations do not establish a cache or
+timeout explanation or a cure for historical intermittent launcher failures.

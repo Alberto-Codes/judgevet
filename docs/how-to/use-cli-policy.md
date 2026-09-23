@@ -85,7 +85,7 @@ without printing the policy path or its contents.
 
 ## Use the policy in a library caller
 
-The 0.7.0 candidate adds [typed construction and JSON decoding](use-policy-library.md)
+Version 0.7.0 adds [typed construction and JSON decoding](use-policy-library.md)
 for Python callers. The CLI shares the predicate comparisons and report details
 with that API while retaining its historical diagnostics and answer checks.
 See the [compatibility contract](../reference/compatibility.md) for the strict
