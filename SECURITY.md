@@ -4,8 +4,10 @@ status: draft
 
 # Security policy
 
-This page describes judgevet 0.6.0. It is an implementation review, not a
-security certification. See [installation](docs/how-to/install.md) and the
+The credential, transport and diagnostic review below was performed for
+judgevet 0.6.0. The 0.7.0 changes leave those paths unchanged and add local
+typed policy evaluation and JSON decoding. This is an implementation review,
+not a new security certification. See [installation](docs/how-to/install.md) and the
 [release evidence and API verification limits](STATUS.md).
 
 ## Report a vulnerability
@@ -153,4 +155,4 @@ OS. It neither configures nor verifies a FIPS provider. OpenSSL documents
 a compliant deployment requires assessment of the actual cryptographic module,
 runtime and configuration. Certificate pinning, a judgevet mTLS configuration,
 encrypted storage and enterprise audit controls are not shipped features of
-0.6.0.
+0.7.0.

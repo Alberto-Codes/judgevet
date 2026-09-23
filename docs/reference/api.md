@@ -45,7 +45,7 @@ A question that assigns a score using an ordered rubric.
 HTTP implementation of the SystemOnePort.
 
 **Parameters:**
-- `api_key`: TypeSafe API key (or `TYPESAFE_API_KEY` env var)
+- `api_key`: Explicit TypeSafe API key. Direct adapters do not read environment variables
 - `base_url`: API base URL (default: `https://api.typesafe.ai`)
 - `default_model`: Default model (default: `jev-latest`)
 - `transport`: Optional httpx transport for testing (default: `None`)
@@ -94,33 +94,67 @@ Token counts.
 
 ### Basic Usage
 
+These examples require `TYPESAFE_API_KEY` in the process environment. The
+application reads it and passes it explicitly. Do not put the key in source
+code. Both examples send the supplied state and questions to the service;
+read the [security policy](../../SECURITY.md#data-sent-to-the-service) first.
+The answer values vary. The assertions check types and valid ranges, not
+whether the model made a correct judgment.
+
 ```python
-from judgevet import HTTPSystemOneAdapter, Noul, Choice
+import os
 
-adapter = HTTPSystemOneAdapter()
+from judgevet import Choice, ChoiceAnswer, HTTPSystemOneAdapter, Noul, NoulAnswer
 
-response = adapter.system_one(
-    state="I was charged twice for my plan",
-    questions={
-        "is_refund": Noul(instructions="Is this about a refund?"),
-        "queue": Choice(
-            criteria={"a": "Option A", "b": "Option B"},
-            instructions="Choose one:",
-        ),
-    },
-)
+adapter = HTTPSystemOneAdapter(api_key=os.environ["TYPESAFE_API_KEY"])
+try:
+    response = adapter.system_one(
+        state="I was charged twice for my plan",
+        questions={
+            "is_refund": Noul(instructions="Is this about a refund?"),
+            "queue": Choice(
+                criteria={
+                    "billing": "Payments and refunds",
+                    "technical": "Product faults",
+                },
+                instructions="Which queue should handle this message?",
+            ),
+        },
+    )
+finally:
+    adapter.close()
 
-assert 0 <= response.answers["is_refund"].noul <= 1
-assert response.answers["queue"].choice in {"billing", "technical"}
+refund = response.answers["is_refund"]
+queue = response.answers["queue"]
+assert isinstance(refund, NoulAnswer)
+assert isinstance(queue, ChoiceAnswer)
+assert 0 <= refund.noul <= 1
+assert queue.choice in {"billing", "technical"}
 ```
 
 ### Context Manager
 
+The context manager closes the adapter even when a call raises.
+
 ```python
-with HTTPSystemOneAdapter() as adapter:
+import os
+
+from judgevet import HTTPSystemOneAdapter, Noul, NoulAnswer
+
+with HTTPSystemOneAdapter(api_key=os.environ["TYPESAFE_API_KEY"]) as adapter:
     response = adapter.system_one(
-        state="Test",
-        questions={},
+        state="I was charged twice for my plan",
+        questions={"is_refund": Noul(instructions="Is this about a refund?")},
         model="jev-1.13.0",
     )
+
+answer = response.answers["is_refund"]
+assert isinstance(answer, NoulAnswer)
+assert 0 <= answer.noul <= 1
 ```
+
+The vendor documents the [request and answer format](https://docs.typesafe.ai/api.md)
+and the [Noul](https://docs.typesafe.ai/primitives/noul) and
+[Choice](https://docs.typesafe.ai/primitives/choice) primitives.
+Adapter ownership and explicit key injection are judgevet behavior; see the
+[adapter source](../../src/judgevet/adapters/outbound/http.py).

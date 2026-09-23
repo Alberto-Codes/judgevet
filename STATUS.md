@@ -3,6 +3,16 @@
 Last written: 2026-09-23. This file reports current state; historical rounds
 remain in Git history and their linked issues.
 
+## Documentation program
+
+#145 is in progress. The #146 correctness round fixes explicit key injection,
+adapter cleanup, matching Choice labels and standalone imports in API examples.
+Both exact blocks execute with synthetic HTTP answers against an isolated 0.7.0
+wheel and pass typing checks. The packaging procedure selects a fresh build,
+checks its marker and validates an isolated installed consumer. SECURITY retains
+the date/version scope of its original review and identifies the unchanged
+credential/transport/diagnostic paths in 0.7.0. No live evidence is promoted.
+
 ## Published release
 
 **judgevet 0.7.0 is published and verified.** It adds supported root types and
