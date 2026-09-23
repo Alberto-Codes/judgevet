@@ -90,6 +90,12 @@ mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
+- #14: SECURITY.md documents 0.6.0 credential sources, service disclosure and
+  diagnostic boundaries. GitHub private vulnerability reporting was enabled
+  with owner approval and its API returned `enabled: true`. MCP protocol
+  errors and arbitrary tracebacks are not covered by diagnostic redaction.
+  No runtime behavior or live API verification claim changed.
+
 - #67/#66: sourced research recommends a supported pure typed policy API with
   separate JSON decoding, additive exports for ports/errors/answer types, and
   explicit adapter ownership. One distribution/version remains; scopes and
