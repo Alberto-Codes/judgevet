@@ -80,6 +80,14 @@ repos:
         always_run: true
         stages: [pre-push]
 
+      - id: doc-example-inventory
+        name: documentation example inventory
+        entry: uv run python -m scripts.doc_example_inventory
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit, pre-push]
+
       - id: docs-build
         name: strict documentation build and links
         entry: uv run mkdocs build --strict

@@ -49,3 +49,32 @@ check; rendering a code block does not prove it works.
 
 Implementation follows the [MkDocs configuration reference](https://www.mkdocs.org/user-guide/configuration/)
 and [mkdocstrings source-reference recipe](https://mkdocstrings.github.io/recipes/).
+
+## Classify documentation examples
+
+Run the inventory check with:
+
+```bash
+uv run python -m scripts.doc_example_inventory
+```
+
+It scans every fenced block in README and authored user docs. Backtick and
+tilde fences are supported. Maintainer procedures and generated source
+reference are outside this user-example inventory; they remain covered by
+link/build checks and their dedicated release checks.
+
+[scripts/doc_examples.json](../../scripts/doc_examples.json) records each page's
+blocks in source order. Every record states its language, classification and
+reason. `runnable` means a complete program, command or input; `continuation`
+needs a prior saved file or setup; `template` needs substitution or surrounding
+structure; `output` illustrates what a program prints. Classification does not
+mean execution has passed. Setup commands require separate disposable-environment
+verification; credential and host-configuration commands must never be executed
+by a generic shell runner.
+
+Add or update records when fences change. New pages, added/removed blocks,
+changed languages, missing reasons, unclosed fences and an empty inventory fail
+with page/block diagnostics. The checker preserves exact body text for subsequent
+execution; it does not substitute a simpler example. It does not yet detect
+behavioral drift inside a same-language block. The isolated execution, schema
+and artifact checks are the remaining work in #153.

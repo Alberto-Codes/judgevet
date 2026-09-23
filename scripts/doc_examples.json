@@ -1,0 +1,284 @@
+{
+  "README.md": [
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    },
+    {
+      "language": "json",
+      "kind": "runnable",
+      "reason": "Complete input JSON; validate with the corresponding question/policy decoder or MCP schema."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    }
+  ],
+  "docs/explanation/policies.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    }
+  ],
+  "docs/how-to/connect-mcp.md": [
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Launcher requires an approved project path and environment; do not start a user-configured host in generic checks."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Launcher requires an approved project path and environment; do not start a user-configured host in generic checks."
+    },
+    {
+      "language": "toml",
+      "kind": "template",
+      "reason": "Host configuration requires a trusted project path; parse configuration without modifying the user host."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Requires a configured host entry; check CLI spelling without reading or changing user configuration."
+    },
+    {
+      "language": "json",
+      "kind": "runnable",
+      "reason": "Complete input JSON; validate with the corresponding question/policy decoder or MCP schema."
+    }
+  ],
+  "docs/how-to/handle-errors.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    }
+  ],
+  "docs/how-to/install.md": [
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    }
+  ],
+  "docs/how-to/review-staged-diff.md": [
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    },
+    {
+      "language": "bash",
+      "kind": "continuation",
+      "reason": "Requires the three checkout example files and a temporary Git repository with controlled staged content."
+    }
+  ],
+  "docs/how-to/use-async-library.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    }
+  ],
+  "docs/how-to/use-cli-files.md": [
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
+    },
+    {
+      "language": "json",
+      "kind": "runnable",
+      "reason": "Complete input JSON; validate with the corresponding question/policy decoder or MCP schema."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
+    }
+  ],
+  "docs/how-to/use-cli-policy.md": [
+    {
+      "language": "json",
+      "kind": "runnable",
+      "reason": "Complete input JSON; validate with the corresponding question/policy decoder or MCP schema."
+    },
+    {
+      "language": "json",
+      "kind": "runnable",
+      "reason": "Complete input JSON; validate with the corresponding question/policy decoder or MCP schema."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
+    },
+    {
+      "language": "json",
+      "kind": "template",
+      "reason": "Individual rule fragment; requires a rules array and a matching question definition before policy validation."
+    },
+    {
+      "language": "json",
+      "kind": "template",
+      "reason": "Individual rule fragment; requires a rules array and a matching question definition before policy validation."
+    },
+    {
+      "language": "json",
+      "kind": "output",
+      "reason": "Illustrative policy member only; detail is a placeholder, not a complete CLI answer envelope."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
+    }
+  ],
+  "docs/how-to/use-library.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    }
+  ],
+  "docs/how-to/use-policy-library.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    }
+  ],
+  "docs/reference/api.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    }
+  ],
+  "docs/reference/errors.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    }
+  ],
+  "docs/reference/policy.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    }
+  ],
+  "docs/tutorials/first-judgment.md": [
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Interactive credential acquisition requires user input; never execute it in generic smoke checks."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    },
+    {
+      "language": "bash",
+      "kind": "continuation",
+      "reason": "Runs the preceding saved Python example in the tutorial environment."
+    },
+    {
+      "language": "text",
+      "kind": "output",
+      "reason": "Illustrative stdout, not an executable command; compare with the associated program where deterministic."
+    }
+  ],
+  "docs/tutorials/first-policy.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    },
+    {
+      "language": "bash",
+      "kind": "continuation",
+      "reason": "Runs the preceding saved Python example in the tutorial environment."
+    },
+    {
+      "language": "text",
+      "kind": "output",
+      "reason": "Illustrative stdout, not an executable command; compare with the associated program where deterministic."
+    }
+  ]
+}

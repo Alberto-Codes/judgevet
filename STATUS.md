@@ -78,9 +78,14 @@ They retain the MCP state-schema discrepancy, mutable nested answer data and
 strict-versus-legacy policy distinctions. Pricing and calibration claims are
 removed from the API/root documentation; no runtime behavior changes.
 
+#153 begins with a complete 50-block README/user-doc inventory and seven
+acceptance tests. Each block has an explicit classification and reason. Commit,
+push and CI gates reject inventory drift. Execution/schema/artifact drift
+checks remain in progress; classification alone does not verify behavior.
+
 ## Gates
 
-**1084 tests pass, 6 live tests deselected.** The last measured coverage is
+**1091 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
