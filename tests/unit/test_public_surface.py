@@ -31,6 +31,7 @@ EXPECTED_EXPORTS = {
     "JevServiceError",
     "NoulAnswer",
     "Question",
+    "RetryPolicy",
     "ScoreAnswer",
     "SystemOnePort",
     "SystemOneResponse",

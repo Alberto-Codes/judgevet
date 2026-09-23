@@ -19,7 +19,7 @@ share unreviewed service error text. These steps assume the
 | CLI exit 2 | Compare input sources with the file guide and installed help. | Choose exactly one state source and one question source. |
 | CLI input failure | Check UTF-8, nonempty content, JSON syntax and duplicate keys. | Correct the input before calling again. |
 | Policy definition failure | Match each rule to a question name/type and valid bounds. | Correct and revalidate the policy. |
-| Timeout or transport failure | Check service reachability and your approved proxy/CA configuration. | Restore connectivity or review timeout requirements; there is no automatic retry. |
+| Timeout or transport failure | Check service reachability and your approved proxy/CA configuration. | Restore connectivity or review timeout requirements; transport retries require explicit configuration. |
 | CLI exit 3 | Read the policy report and returned answers. | Treat it as an unmet policy, not an installation failure. |
 
 The CLI/MCP credential precedence and direct-library differences are documented

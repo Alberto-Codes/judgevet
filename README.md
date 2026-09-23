@@ -93,6 +93,7 @@ with synthetic answers; it requires no key or network.
 |---|---|
 | Learn one complete service call | [First judgment](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-judgment.md) |
 | Call from an async application | [Async Python guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-async-library.md) |
+| Configure bounded retries | [Retry limits](https://github.com/Alberto-Codes/judgevet/blob/main/docs/reference/configuration.md#retry-limits) |
 | Handle service and transport failures | [Library error handling](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/handle-errors.md) |
 | Evaluate typed or JSON policies in Python | [Policy guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-policy-library.md) |
 | Use shell commands, files or stdin | [CLI inputs](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-cli-files.md) and [CLI policies](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-cli-policy.md) |

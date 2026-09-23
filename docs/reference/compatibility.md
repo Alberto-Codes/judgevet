@@ -17,6 +17,7 @@ The root `__all__` declares these supported names:
 | Purpose | Imports from `judgevet` |
 |---|---|
 | Explicit adapters | `HTTPSystemOneAdapter`, `AsyncHTTPSystemOneAdapter` |
+| Retry configuration | `RetryPolicy` |
 | Structural ports | `SystemOnePort`, `AsyncSystemOnePort` |
 | Questions | `Question`, `Noul`, `Choice`, `Score` |
 | Answers and metadata | `Answer`, `NoulAnswer`, `ChoiceAnswer`, `ScoreAnswer`, `SystemOneResponse`, `Usage` |

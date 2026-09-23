@@ -137,8 +137,8 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1156 tests pass, 6 live tests deselected.** The last measured coverage is
-**94.20%** (1430/1518 statements).
+**1202 tests pass, 6 live tests deselected.** The last measured coverage is
+**94.46%** (1501/1589 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
@@ -150,6 +150,21 @@ Nine acceptance tests cover link parsing and strict source-reference resolution.
 Independent symbol, target and anchor mutations fail the build; restoration
 passes. A fresh development-only installation builds without MCP or API keys.
 The site is local only. Example execution and editorial checks remain separate.
+
+## Deployment-readiness work
+
+#33 adds opt-in bounded retries through the root-exported `RetryPolicy`.
+The default remains one attempt. Sync and async adapters share classification,
+exponential delay and jitter limits; transport replay requires separate opt-in.
+CLI, policy CLI and MCP consume the environment settings. Synthetic tests cover
+exhaustion, final causes, cancellation, final diagnostic status and actual
+request counts through all three composition roots. Independent mutations
+break recovery, attempt bounds, cancellation and each settings path.
+
+The complete commit/push gates include strict docs, isolated examples and
+coverage. Retry evidence is local and synthetic; unseen service errors stay
+inferred. No runtime dependency or version changes in this round. The 0.8.0
+release, remaining deployment settings and Pages publication are pending.
 
 ## Operational limits
 

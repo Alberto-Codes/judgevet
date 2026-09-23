@@ -54,8 +54,9 @@ Both send the [documented request](https://api.typesafe.ai/docs) to
 | `questions` | Required mapping from caller-chosen names to typed questions or raw mappings. |
 | `model` | Optional string on the concrete adapters; omitted/empty uses the constructor default. |
 
-`system_one` returns `SystemOneResponse`; the async call must be awaited. One
-call produces one HTTP request, without automatic retries. The adapters parse
+`system_one` returns `SystemOneResponse`; the async call must be awaited. By default, one
+call produces one HTTP request. Optional [retry limits](configuration.md#retry-limits)
+permit bounded additional attempts. The adapters parse
 wire answers into domain types. Successful parsing does not validate the
 judgment's quality or guarantee an answer for every supplied name. See
 [error boundaries](errors.md#retry-and-exception-boundaries).

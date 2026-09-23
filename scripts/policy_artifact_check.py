@@ -12,6 +12,7 @@ _EXPORTS = {
         "HTTPSystemOneAdapter",
         "AsyncHTTPSystemOneAdapter",
     ),
+    "judgevet.adapters.outbound.retries": ("RetryPolicy",),
     "judgevet.ports": ("SystemOnePort", "AsyncSystemOnePort"),
     "judgevet.domain.questions": ("Question", "Noul", "Choice", "Score"),
     "judgevet.domain.answers": ("Answer", "NoulAnswer", "ChoiceAnswer", "ScoreAnswer"),

@@ -1,4 +1,4 @@
-"""HTTP outbound adapter with one safe terminal debug event per call.
+"""HTTP outbound adapter with bounded opt-in retries and terminal debug events.
 
 Error handling:
     The API error `detail` field is polymorphic:
@@ -69,7 +69,8 @@ from typing import Any, Self
 
 import httpx
 
-from judgevet.adapters.outbound.http_events import call_event
+from judgevet.adapters.outbound.http_events import CallEvent, call_event
+from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.domain.errors import (
     JevAuthError,
     JevError,
@@ -277,7 +278,7 @@ def _translate_request_error(exc: httpx.RequestError) -> JevServiceError:
 
 
 class HTTPSystemOneAdapter:
-    """HTTP adapter for SystemOnePort using httpx.
+    """HTTP adapter for SystemOnePort using httpx and opt-in retries.
 
     This class satisfies SystemOnePort structurally without importing it.
     See: https://api.typesafe.ai/v1/systemone
@@ -333,6 +334,8 @@ class HTTPSystemOneAdapter:
         default_model: str = "jev-latest",
         transport: httpx.BaseTransport | None = None,
         timeout_seconds: float = 30.0,
+        *,
+        retry: RetryPolicy | None = None,
     ) -> None:
         """Initialize the HTTP adapter.
 
@@ -342,9 +345,10 @@ class HTTPSystemOneAdapter:
             default_model: Default model to use. Defaults to jev-latest.
             transport: Optional httpx transport for testing. Defaults to None.
             timeout_seconds: Read timeout in seconds. Defaults to 30.0.
+            retry: Validated retry policy. None preserves one attempt.
 
         Raises:
-            ValueError: If no API key is provided, or timeout_seconds <= 0.
+            ValueError: If the key is absent, timeout is nonpositive, or retry limits are invalid.
         """
         self._api_key = api_key
         if self._api_key is None:
@@ -353,6 +357,7 @@ class HTTPSystemOneAdapter:
         if timeout_seconds <= 0:
             raise ValueError(f"timeout_seconds must be positive, got {timeout_seconds}")
 
+        self._retry = retry or RetryPolicy()
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
         self._client = httpx.Client(
@@ -371,7 +376,7 @@ class HTTPSystemOneAdapter:
         questions: Mapping[str, Any],
         model: str | None = None,
     ) -> SystemOneResponse:
-        """Call Jev via HTTP and emit terminal metadata to configured debug logging.
+        """Call Jev with bounded retries and emit one terminal debug event.
 
         Args:
             state: The content to evaluate.
@@ -410,21 +415,37 @@ class HTTPSystemOneAdapter:
         """
         with call_event(model or self._default_model, len(questions)) as event:
             payload = _build_payload(state, questions, model, self._default_model)
-            try:
-                response = self._client.post("/v1/systemone", json=payload)
-                event.status_code = response.status_code
-                response.raise_for_status()
-                answer = _parse_body(response)
-            except httpx.HTTPStatusError as exc:
-                translated = _translate_status_error(exc)
-                if translated is None:
-                    raise
-                raise translated from exc
-            except httpx.RequestError as exc:
-                raise _translate_request_error(exc) from exc
-            else:
-                event.outcome = "success"
-                return answer
+            answer = self._retry.run(lambda: self._request(payload, event))
+            event.outcome = "success"
+            return answer
+
+    def _request(self, payload: dict[str, Any], event: CallEvent) -> SystemOneResponse:
+        """Send one attempt and translate HTTP errors.
+
+        Args:
+            payload: Serialized judgment inputs.
+            event: Terminal metadata for this logical call.
+
+        Returns:
+            Parsed judgment response.
+
+        Raises:
+            JevError: If the service or transport rejects the request.
+            httpx.HTTPStatusError: If an unhandled HTTP status occurs.
+        """
+        event.status_code = None
+        try:
+            response = self._client.post("/v1/systemone", json=payload)
+            event.status_code = response.status_code
+            response.raise_for_status()
+            return _parse_body(response)
+        except httpx.HTTPStatusError as exc:
+            translated = _translate_status_error(exc)
+            if translated is None:
+                raise
+            raise translated from exc
+        except httpx.RequestError as exc:
+            raise _translate_request_error(exc) from exc
 
     def close(self) -> None:
         """Close the HTTP client."""
@@ -440,7 +461,7 @@ class HTTPSystemOneAdapter:
 
 
 class AsyncHTTPSystemOneAdapter:
-    """Async HTTP adapter for AsyncSystemOnePort using httpx.AsyncClient.
+    """Async HTTP adapter with opt-in retries and cancellable backoff.
 
     This class satisfies AsyncSystemOnePort structurally without importing it.
     See: https://api.typesafe.ai/v1/systemone
@@ -505,6 +526,8 @@ class AsyncHTTPSystemOneAdapter:
         default_model: str = "jev-latest",
         transport: httpx.AsyncBaseTransport | None = None,
         timeout_seconds: float = 30.0,
+        *,
+        retry: RetryPolicy | None = None,
     ) -> None:
         """Initialize the async HTTP adapter.
 
@@ -514,9 +537,10 @@ class AsyncHTTPSystemOneAdapter:
             default_model: Default model to use. Defaults to jev-latest.
             transport: Optional httpx async transport for testing. Defaults to None.
             timeout_seconds: Read timeout in seconds. Defaults to 30.0.
+            retry: Validated retry policy. None preserves one attempt.
 
         Raises:
-            ValueError: If no API key is provided, or timeout_seconds <= 0.
+            ValueError: If the key is absent, timeout is nonpositive, or retry limits are invalid.
         """
         if api_key is None:
             raise ValueError("API key must be provided")
@@ -525,6 +549,7 @@ class AsyncHTTPSystemOneAdapter:
             raise ValueError(f"timeout_seconds must be positive, got {timeout_seconds}")
 
         self._api_key = api_key
+        self._retry = retry or RetryPolicy()
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
         self._client = httpx.AsyncClient(
@@ -543,7 +568,7 @@ class AsyncHTTPSystemOneAdapter:
         questions: Mapping[str, Any],
         model: str | None = None,
     ) -> SystemOneResponse:
-        """Call Jev asynchronously and emit terminal metadata to debug logging.
+        """Call Jev asynchronously with bounded retries and one terminal debug event.
 
         Args:
             state: The content to evaluate.
@@ -578,21 +603,39 @@ class AsyncHTTPSystemOneAdapter:
         """
         with call_event(model or self._default_model, len(questions)) as event:
             payload = _build_payload(state, questions, model, self._default_model)
-            try:
-                response = await self._client.post("/v1/systemone", json=payload)
-                event.status_code = response.status_code
-                response.raise_for_status()
-                answer = _parse_body(response)
-            except httpx.HTTPStatusError as exc:
-                translated = _translate_status_error(exc)
-                if translated is None:
-                    raise
-                raise translated from exc
-            except httpx.RequestError as exc:
-                raise _translate_request_error(exc) from exc
-            else:
-                event.outcome = "success"
-                return answer
+            answer = await self._retry.arun(lambda: self._request(payload, event))
+            event.outcome = "success"
+            return answer
+
+    async def _request(
+        self, payload: dict[str, Any], event: CallEvent
+    ) -> SystemOneResponse:
+        """Send one attempt and translate HTTP errors.
+
+        Args:
+            payload: Serialized judgment inputs.
+            event: Terminal metadata for this logical call.
+
+        Returns:
+            Parsed judgment response.
+
+        Raises:
+            JevError: If the service or transport rejects the request.
+            httpx.HTTPStatusError: If an unhandled HTTP status occurs.
+        """
+        event.status_code = None
+        try:
+            response = await self._client.post("/v1/systemone", json=payload)
+            event.status_code = response.status_code
+            response.raise_for_status()
+            return _parse_body(response)
+        except httpx.HTTPStatusError as exc:
+            translated = _translate_status_error(exc)
+            if translated is None:
+                raise
+            raise translated from exc
+        except httpx.RequestError as exc:
+            raise _translate_request_error(exc) from exc
 
     async def aclose(self) -> None:
         """Close the HTTP async client."""

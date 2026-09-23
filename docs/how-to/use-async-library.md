@@ -43,8 +43,9 @@ its intended lifetime. `async with` awaits cleanup; manual ownership requires
 `await adapter.aclose()` even when the operation fails.
 
 The async adapter uses the same typed answers and explicit configuration as
-the [sync adapter](use-library.md). Async does not add automatic retries or a
-policy tool. After awaiting the answer, evaluate a local policy using the
+the [sync adapter](use-library.md). Both adapters support the same opt-in
+[retry limits](../reference/configuration.md#retry-limits). Async backoff awaits
+a cancellable delay. Neither adapter adds a policy tool. After awaiting the answer, evaluate a local policy using the
 [async policy workflow](use-policy-library.md#own-the-adapter-lifecycle).
 For failures, follow [error handling](handle-errors.md) and
 [troubleshooting](troubleshoot.md).

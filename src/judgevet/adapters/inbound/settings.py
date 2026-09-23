@@ -1,4 +1,4 @@
-"""The one ``Settings`` the composition roots read from the environment.
+"""Read connection, retry and logging settings at composition roots.
 
 ``Settings`` nests ``ApiSettings`` and ``LogSettings`` under ``api`` and
 ``log`` respectively. pydantic-settings splits the environment on ``__``, so
@@ -45,6 +45,7 @@ from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from judgevet.adapters.inbound.logs import LogSettings as LogsLogSettings
+from judgevet.adapters.outbound.retries import RetryPolicy
 
 DEFAULT_BASE_URL = "https://api.typesafe.ai"
 DEFAULT_MODEL = "jev-latest"
@@ -62,6 +63,11 @@ class ApiSettings(BaseSettings):
             which is why every call path reports a missing key rather than
             assuming one.
         default_model (str): Model id sent when a call names none.
+        max_attempts (int): Total requests per call, including the first.
+        retry_base_delay (float): Initial delay ceiling in seconds.
+        retry_max_delay (float): Maximum delay ceiling in seconds.
+        retry_transport (bool): Permit retries of transport errors.
+        retry_policy (RetryPolicy): Validated policy passed to the adapter.
         timeout_seconds (float): Read timeout in seconds. Defaults to 30.0.
             Can be set via ``JEV_API__TIMEOUT_SECONDS`` environment variable.
 
@@ -122,6 +128,44 @@ class ApiSettings(BaseSettings):
         validation_alias=AliasChoices("key", "TYPESAFE_API_KEY"),
     )
     default_model: str = Field(default=DEFAULT_MODEL)
+
+    max_attempts: int = Field(default=1, ge=1)
+
+    @field_validator("max_attempts", mode="before")
+    @classmethod
+    def _validate_max_attempts(cls, value: object) -> object:
+        """Reject booleans before numeric settings validation.
+
+        Args:
+            value: Explicit or environment-supplied attempt count.
+
+        Returns:
+            Input for normal integer validation.
+
+        Raises:
+            ValueError: If an explicit boolean is supplied.
+        """
+        if value is True or value is False:
+            raise ValueError("max_attempts must be a positive integer")
+        return value
+
+    retry_base_delay: float = Field(default=0.5, ge=0, allow_inf_nan=False)
+    retry_max_delay: float = Field(default=5.0, ge=0, allow_inf_nan=False)
+    retry_transport: bool = False
+
+    @property
+    def retry_policy(self) -> RetryPolicy:
+        """Build the shared retry policy from validated settings.
+
+        Returns:
+            Immutable policy consumed by the composition roots.
+        """
+        return RetryPolicy(
+            self.max_attempts,
+            self.retry_base_delay,
+            self.retry_max_delay,
+            self.retry_transport,
+        )
 
     timeout_seconds: float = Field(default=30.0)
 

@@ -261,8 +261,8 @@ class JevRateLimitError(JevError):
     """Rate limit exceeded - 429.
 
     Raised when the API returns a 429 status code indicating the client
-    has exceeded the rate limit. The caller owns any retry policy; the adapter
-    does not retry automatically.
+    has exceeded the rate limit. The caller chooses retry limits; the adapter
+    defaults to one attempt.
 
     See: https://docs.typesafe.ai/api.md
 

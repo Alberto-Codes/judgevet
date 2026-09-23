@@ -165,8 +165,8 @@ These edges follow the [HTTP adapter](../../src/judgevet/adapters/outbound/http.
 [MCP adapter](../../src/judgevet/adapters/inbound/mcp.py) and
 [local policy evaluator](../../src/judgevet/domain/policy_evaluation.py).
 The [security policy](../../SECURITY.md#data-sent-to-the-service) records the full
-transport and disclosure limits. No audit sink, automatic retry, pre-send content
-redaction or storage control is part of this path.
+transport and disclosure limits. Retries are opt-in and remain in the outbound adapter. No audit sink, pre-send
+content redaction or storage control is part of this path.
 
 ## Alternatives and consequences
 

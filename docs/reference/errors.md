@@ -58,9 +58,9 @@ assert transport.retryable is True
 
 ### Retry and exception boundaries
 
-`retryable` is advisory metadata. judgevet performs no automatic retries and
-does not implement a retry schedule or a `Retry-After` policy. Callers own any
-retry limits. A read timeout does not prove the service stopped processing.
+`retryable` is advisory metadata. Callers can enable the adapter's
+[bounded retry policy](configuration.md#retry-limits). The default is one attempt.
+The adapter does not honor `Retry-After` headers. A read timeout does not prove the service stopped processing.
 
 `except JevError` does not catch every HTTPX or Python exception. Redirects are
 disabled and can propagate raw `httpx.HTTPStatusError`. Missing constructor keys,

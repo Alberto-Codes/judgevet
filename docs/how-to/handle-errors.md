@@ -7,17 +7,20 @@ status: draft
 Status: **draft**.
 
 Use this pattern after [installing judgevet](install.md) and supplying
-`JEV_API__KEY`. It makes one service call with synthetic text. The handler
+`JEV_API__KEY`. It calls the service with synthetic text and permits at most three attempts. The handler
 prints error category and retry metadata, not service-supplied message text.
-It does not retry or turn an unavailable answer into a policy rejection.
+It retries eligible HTTP failures and keeps an unavailable answer separate from
+a policy rejection. Transport retries remain disabled.
 
 ```python
 import os
 
-from judgevet import HTTPSystemOneAdapter, JevError, Noul
+from judgevet import HTTPSystemOneAdapter, JevError, Noul, RetryPolicy
 
 try:
-    with HTTPSystemOneAdapter(api_key=os.environ["JEV_API__KEY"]) as adapter:
+    with HTTPSystemOneAdapter(
+        api_key=os.environ["JEV_API__KEY"], retry=RetryPolicy(max_attempts=3)
+    ) as adapter:
         response = adapter.system_one(
             state="I was charged twice.",
             questions={"billing": Noul(instructions="Is this about billing?")},
@@ -51,9 +54,10 @@ without publishing arbitrary traceback contents. See
 | `JevRateLimitError` | Defer work under your application's retry and spending policy. |
 | `JevServiceError` | Check transport/service availability; decide whether another attempt is appropriate. |
 
-`retryable` is a classification, not a retry mechanism or a promise of success.
-The adapter does not perform automatic retries. An application retry may make
-another service request; choose limits deliberately. Error mappings are defined
+`retryable` is a classification, not a promise of success. The example enables
+bounded retries; the default adapter makes one attempt. Each retry sends another
+service request. Choose [retry limits](../reference/configuration.md#retry-limits)
+under your spending policy. Error mappings are defined
 by the [adapter](../../src/judgevet/adapters/outbound/http.py) and
 [error types](../../src/judgevet/domain/errors.py).
 

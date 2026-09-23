@@ -129,7 +129,7 @@ def run_policy(
     policy_file: str,
     callbacks: CliCallbacks,
 ) -> int:
-    """Validate policy, configure logging and close the adapter after judgment.
+    """Validate policy, apply retry settings and close the adapter after judgment.
 
     Args:
         state: Existing state string interpretation.
@@ -156,6 +156,7 @@ def run_policy(
             base_url=settings.api.base_url,
             default_model=model,
             timeout_seconds=settings.api.timeout_seconds,
+            retry=settings.api.retry_policy,
         )
         try:
             response = adapter.system_one(
