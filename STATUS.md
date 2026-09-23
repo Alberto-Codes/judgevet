@@ -53,6 +53,10 @@ limits. The shared support-ticket scenario uses labeled synthetic values. Its
 policy example executes offline; numeric illustrations were checked. No model
 accuracy, calibration or new live-service claim is made.
 
+#11 explains the library-first architecture, entry-point choices, typed ports,
+explicit ownership and optional MCP runtime. Source and lifecycle tests support
+the package claims; they do not promote service behavior. Diagrams remain #73.
+
 ## Gates
 
 **1084 tests pass, 6 live tests deselected.** The last measured coverage is

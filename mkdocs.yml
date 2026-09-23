@@ -37,6 +37,7 @@ nav:
       - Python policy: how-to/use-policy-library.md
       - Staged Git changes: how-to/review-staged-diff.md
   - Explanation:
+      - Library-first architecture: explanation/architecture.md
       - Judgment types: explanation/judgments.md
       - Local policies: explanation/policies.md
       - Evidence limits: explanation/verification.md

@@ -48,8 +48,7 @@ the API page is not yet an exhaustive error reference.
 - [Distinguish local checks, live observations and model quality](explanation/verification.md).
 - [Security boundaries and caller responsibilities](../SECURITY.md).
 
-The dedicated architecture explanation is still being written. For current
-terms, see [ports and adapters](reference/glossary.md#architecture).
+- [Choose an entry point and understand ownership](explanation/architecture.md).
 
 ## Maintainers
 
