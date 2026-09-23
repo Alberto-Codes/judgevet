@@ -46,7 +46,7 @@ __all__ = ["main"]
 
 
 def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
-    """Build HTTPSystemOneAdapter with network, connection and retry settings.
+    """Resolve one wrapped credential and build the configured HTTP adapter.
 
     Args:
         settings: The Settings instance.
@@ -55,10 +55,11 @@ def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
         HTTPSystemOneAdapter configured with settings.
 
     Raises:
-        ValueError: If the configured key is absent or timeout is invalid.
+        ValueError: If credential resolution or connection configuration fails.
     """
+    key = settings.api.resolve_key()
     return HTTPSystemOneAdapter(
-        api_key=settings.api.key.get_secret_value() if settings.api.key else None,
+        api_key=key.get_secret_value() if key is not None else None,
         base_url=settings.api.base_url,
         default_model=settings.api.default_model,
         timeout_seconds=settings.api.timeout_seconds,
@@ -86,7 +87,7 @@ async def run_stdio(port: SystemOnePort) -> None:
 def main() -> int:
     """MCP stdio server entry point.
 
-    Reads Settings once, configures logging, validates the key and runs MCP,
+    Reads Settings once, configures logging, selects a credential source and runs MCP,
     and ensures adapter cleanup.
 
     Returns:
@@ -115,9 +116,9 @@ def main() -> int:
 
         configure(settings.log)
         configure_mcp_logging()
-        if settings.api.key is None or not settings.api.key:
+        if not settings.api.has_key_source:
             print(
-                "judgevet-mcp: set JEV_API__KEY or TYPESAFE_API_KEY",
+                "judgevet-mcp: set JEV_API__KEY or TYPESAFE_API_KEY, or JEV_API__KEY_FILE",
                 file=sys.stderr,
             )
             return 2

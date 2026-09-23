@@ -4,7 +4,8 @@ The command wrapper propagates failure status to the process while helpers
 return integer codes and the composition root closes its adapter. Explicit
 file and stdin sources are validated before adapter construction. Explicit
 policies use a separate composition path and distinguish unmet policy from errors.
-Both paths render rate limits as handled failures and configure stderr logging.
+Both paths resolve credential sources once before adapter construction.
+They render rate limits as handled failures and configure stderr logging.
 
 Examples:
     ```python
@@ -186,7 +187,7 @@ def run_cli(
         json_output: Whether to output as JSON.
 
     Returns:
-        Exit code: 0 for success, 1 for error.
+        Exit code: 0 for success, 1 for judgment errors.
     """
     try:
         state_data = json.loads(state) if state.startswith(("{", "[")) else state
@@ -299,7 +300,7 @@ def _cli_command(
         typer.Option("--policy", help="Apply an explicit acceptance policy from JSON"),
     ] = None,
 ) -> int:
-    """Call the Jev System One API.
+    """Validate command inputs and dispatch to the selected composition root.
 
     Args:
         arguments: Optional positional state followed by questions JSON.
@@ -325,8 +326,35 @@ def _cli_command(
     state, questions = _command_inputs(
         state, questions, state_files, question_files, policy_files, json_output
     )
+    code = _dispatch(state, questions, model, api_key, json_output, policy_files)
+    if code != 0:
+        raise typer.Exit(code=code)
+    return code
+
+
+def _dispatch(
+    state: str,
+    questions: str,
+    model: str,
+    api_key: str | None,
+    json_output: bool,
+    policy_files: list[str] | None,
+) -> int:
+    """Select the composition path after command input validation.
+
+    Args:
+        state: Validated state text.
+        questions: Validated question text.
+        model: Requested model.
+        api_key: Optional explicit literal key.
+        json_output: Select JSON rendering.
+        policy_files: Optional validated policy file selection.
+
+    Returns:
+        Exit status from the selected composition root.
+    """
     if policy_files:
-        code = run_policy(
+        return run_policy(
             state,
             questions,
             model,
@@ -336,16 +364,13 @@ def _cli_command(
             CliCallbacks(parse_questions, build_response_data, output_response),
         )
     else:
-        code = main(
+        return main(
             state=state,
             questions=questions,
             model=model,
             api_key=api_key,
             json_output=json_output,
         )
-    if code != 0:
-        raise typer.Exit(code=code)
-    return code
 
 
 def main(
@@ -358,7 +383,8 @@ def main(
     """Call the Jev System One API.
 
     Reads Settings and configures stderr logging. An explicit --api-key overrides
-    the settings key. Constructs HTTPSystemOneAdapter once with the settings
+    the selected credential source. Resolves it once as a wrapped key.
+    Constructs HTTPSystemOneAdapter once with the settings
     timeout, network options and retry limits, then calls run_cli with it as the port.
     Closes the adapter in finally.
     The command wrapper supplies separate help and propagates failure status.
@@ -377,13 +403,18 @@ def main(
     configure(settings.log)
     timeout_seconds = settings.api.timeout_seconds
     base_url = settings.api.base_url
-    key = settings.api.key.get_secret_value() if settings.api.key else None
-
-    # Explicit --api-key wins over settings value
-    final_api_key = api_key if api_key is not None else key
+    try:
+        key = settings.api.resolve_key(api_key)
+    except ValueError:
+        message = "API key source failed"
+        print(
+            json.dumps({"error": message}) if json_output else f"Error: {message}",
+            file=sys.stderr,
+        )
+        return 1
 
     adapter = HTTPSystemOneAdapter(
-        api_key=final_api_key,
+        api_key=key.get_secret_value() if key is not None else None,
         base_url=base_url,
         default_model=model,
         timeout_seconds=timeout_seconds,

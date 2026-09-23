@@ -123,7 +123,7 @@ def _render_policy(
 def _build_adapter(
     settings: Settings, api_key: str | None, model: str
 ) -> HTTPSystemOneAdapter:
-    """Construct the policy adapter with explicit connection options.
+    """Resolve the policy credential once and construct its configured adapter.
 
     Args:
         settings: Validated connection, retry and network settings.
@@ -134,12 +134,11 @@ def _build_adapter(
         An owned HTTP adapter for one policy invocation.
 
     Raises:
-        ValueError: If the key is absent or network configuration is invalid.
+        ValueError: If credential resolution or connection configuration fails.
     """
+    key = settings.api.resolve_key(api_key)
     return HTTPSystemOneAdapter(
-        api_key=api_key
-        if api_key is not None
-        else (settings.api.key.get_secret_value() if settings.api.key else None),
+        api_key=key.get_secret_value() if key is not None else None,
         base_url=settings.api.base_url,
         default_model=model,
         timeout_seconds=settings.api.timeout_seconds,

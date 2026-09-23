@@ -58,6 +58,14 @@ for malformed answers. Public evaluation always checks selected confidence and
 snapshotted choice/score constraints; the legacy checks remain as before. This
 is a new API contract, not a migration of existing CLI semantics.
 
+## Credential-source compatibility
+
+Direct adapter `api_key` values remain literal. Settings keys starting with `!`
+now opt into command resolution. File and command resolution is explicit in
+Python and occurs once at CLI/MCP adapter construction. Commands require POSIX;
+existing literal keys and file sources do not require process-group support.
+The mandatory dependency set and optional MCP boundary are unchanged.
+
 ## Verification limits
 
 Policy tests are synthetic local acceptance evidence. They do not establish model

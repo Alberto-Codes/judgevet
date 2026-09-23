@@ -137,8 +137,8 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1240 tests pass, 6 live tests deselected.** The last measured coverage is
-**94.58%** (1535/1623 statements).
+**1288 tests pass, 6 live tests deselected.** The last measured coverage is
+**94.45%** (1650/1747 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
@@ -170,8 +170,18 @@ mutations break CA, proxy, secure defaults and each composition path.
 The policy composition root extracts adapter construction into a helper; its
 42 code lines remain below the 50-line function limit.
 
+#61 adds lazy file and trusted command credential sources to settings.
+Explicit arguments remain literal and override configured sources. Configured
+literal keys precede files, and files precede commands. CLI, policy CLI and MCP
+resolve once before constructing their adapters. Loopback tests observe the
+resolved authorization headers and reject source failures before any request.
+Command tests cover bounded output, deadlines, discarded stderr, closed stdin,
+wrapped traceback locals and POSIX process-group cleanup. Independent mutations
+break these limits, precedence and each composition path. Command execution is
+not a sandbox; descendants that escape the process group remain outside cleanup.
+
 The complete commit/push gates include strict docs, isolated examples and
-coverage. Retry and network evidence is local and synthetic; unseen service
+coverage. Retry, network and credential evidence is local and synthetic; unseen service
 errors stay inferred. No runtime dependency or version changes in this round. The 0.8.0
 release, remaining deployment settings and Pages publication are pending.
 

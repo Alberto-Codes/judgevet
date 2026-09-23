@@ -93,6 +93,7 @@ with synthetic answers; it requires no key or network.
 |---|---|
 | Learn one complete service call | [First judgment](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-judgment.md) |
 | Call from an async application | [Async Python guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-async-library.md) |
+| Use a mounted key or secret provider | [Credential sources](https://github.com/Alberto-Codes/judgevet/blob/main/docs/reference/configuration.md#credential-sources) |
 | Configure a proxy or private CA | [Network configuration](https://github.com/Alberto-Codes/judgevet/blob/main/docs/reference/configuration.md#proxy-and-tls-configuration) |
 | Configure bounded retries | [Retry limits](https://github.com/Alberto-Codes/judgevet/blob/main/docs/reference/configuration.md#retry-limits) |
 | Handle service and transport failures | [Library error handling](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/handle-errors.md) |

@@ -44,7 +44,9 @@ The nested settings use the `JEV_` prefix and `__` separator.
 
 | Environment name | Compatibility alias | Default | Effect |
 |---|---|---|---|
-| `JEV_API__KEY` | `TYPESAFE_API_KEY` | No key | Credential supplied to the adapter. |
+| `JEV_API__KEY` | `TYPESAFE_API_KEY` | No key | Literal credential or an explicit `!command` source. |
+| `JEV_API__KEY_FILE` | None | Unset | Regular UTF-8 file containing one credential token. |
+| `JEV_API__KEY_COMMAND_TIMEOUT` | None | `5.0` | Command deadline after process creation; finite and greater than zero. |
 | `JEV_API__BASE_URL` | `TYPESAFE_BASE_URL` | `https://api.typesafe.ai` | Service base URL. |
 | `JEV_API__DEFAULT_MODEL` | None | `jev-latest` | Stored adapter default; entry-point call overrides are described below. |
 | `JEV_API__TIMEOUT_SECONDS` | None | `30.0` | Adapter timeout; must be greater than zero. |
@@ -69,7 +71,7 @@ does not prove that a destination is trusted or reachable.
 
 ### Entry-point overrides
 
-The CLI's explicit `--api-key` overrides the settings key. Prefer an approved
+The CLI's explicit `--api-key` is literal and overrides every settings source. Prefer an approved
 environment or secret provider because command arguments may be visible to
 other processes or stored in shell history. Invalid settings can still prevent
 startup even when an option supplies another value.
@@ -93,7 +95,7 @@ JSON otherwise. The log format is separate from CLI `--json`, which selects
 answer and handled-error rendering. Use the documented lowercase settings;
 unknown log levels are not accepted by the logging configuration.
 
-`SecretStr` masks the settings key's normal representation. The HTTP adapter
+`SecretStr` masks configured keys, command specifications and resolved keys. The HTTP adapter
 retains an unwrapped key. Redaction has limits: CLI error text, protocol errors
 and arbitrary tracebacks are not universally scrubbed. Consult
 [credentials](../../SECURITY.md#credentials) and
@@ -173,3 +175,58 @@ Caller-supplied transports own their own network and TLS behavior. Prefer the
 default transport when using these settings. Review
 [transport and certificate limits](../../SECURITY.md#transport-and-certificates)
 before deployment. Changing settings does not reconfigure an existing client.
+
+
+## Credential sources
+
+Settings construction reads configuration but does not open credential files or
+run commands. `settings.api.resolve_key()` performs resolution when requested.
+It returns a `SecretStr`, or `None` when no source is configured. The CLI,
+policy CLI and MCP resolve once when constructing their adapter. Retries reuse
+that credential. Reconstruct the adapter to pick up a rotated source.
+
+The resolver selects the first available source in this order:
+
+1. An explicit argument to `resolve_key`, including an explicit empty string.
+   It is literal, even if it starts with `!`.
+2. A nonempty configured key that does not start with `!`.
+3. `JEV_API__KEY_FILE`, if configured.
+4. A configured key starting with `!`, interpreted as a command.
+
+An empty configured key is absent. A selected source failure stops resolution;
+it does not try lower-priority sources. Unselected files and commands perform
+no IO. Existing key aliases retain their precedence. Direct HTTP adapter
+`api_key` arguments remain literal and never execute commands.
+
+For a mounted secret, set `JEV_API__KEY_FILE` to its path and leave literal
+key variables unset. Relative paths use the process working directory.
+Regular-file symlinks are supported; directories, pipes and devices are rejected.
+File reads and command stdout accept at most 4096 bytes, including line endings.
+The resolver removes trailing CR/LF and requires one printable ASCII token
+without whitespace. Empty, oversized, malformed or multiline output fails with
+`ValueError`. These are client input constraints, not a vendor key-format claim.
+
+For a command, a value such as `!op read 'op://vault/item/credential'` names an
+installed provider executable and its arguments. Command syntax uses
+[Python shlex tokenization](https://docs.python.org/3/library/shlex.html#shlex.split)
+and [direct argv execution](https://docs.python.org/3/library/subprocess.html#security-considerations).
+Quotes group arguments. Pipes, redirection, substitutions and shell builtins
+are not evaluated unless you explicitly name a shell executable. Executables
+use the inherited PATH, environment and working directory. Use trusted,
+noninteractive providers; stdin and stderr are discarded.
+
+The default command deadline is five seconds after process creation. The
+resolver kills the command process group and reaps its direct child after
+success, failure or timeout. Cleanup allows one additional second for reaping.
+OS process creation itself has no portable deadline guarantee. Commands require
+POSIX process groups; unsupported platforms reject command resolution while
+literal and file sources remain available. Descendants that deliberately leave
+the process group are outside cleanup control. This feature is not a sandbox.
+
+A nonzero exit, timeout, spawn failure or invalid output raises a generic
+`ValueError`. Diagnostics omit command text and output. CLI source failures
+produce a handled error; MCP uses its existing generic startup-failure path.
+Keep the returned key wrapped until the adapter call expression, as in the
+[sync recipe](../how-to/use-library.md). Resolution is synchronous; perform it
+during startup before serving async requests. See
+[credential security](../../SECURITY.md#credentials) for disclosure limits.

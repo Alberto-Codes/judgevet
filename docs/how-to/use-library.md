@@ -7,8 +7,8 @@ status: draft
 Status: **draft**.
 
 Use this recipe when a Python caller can wait for a judgment before continuing.
-Install judgevet in that interpreter's environment. Supply `JEV_API__KEY` through
-your process environment or secret provider; the [first tutorial](../tutorials/first-judgment.md)
+Install judgevet in that interpreter's environment. Configure an environment key, mounted file or
+[credential command](../reference/configuration.md#credential-sources); the [first tutorial](../tutorials/first-judgment.md)
 shows setup. The call needs service access and sends the supplied content.
 Read [data disclosure](../../SECURITY.md#data-sent-to-the-service) first.
 
@@ -16,13 +16,19 @@ Save this complete program as `judge_ticket.py` and run it with your installed
 Python interpreter:
 
 ```python
-import os
+from judgevet import HTTPSystemOneAdapter, Noul
+from judgevet.adapters.inbound.settings import Settings
 
-from judgevet import HTTPSystemOneAdapter, NetworkConfig, Noul
+settings = Settings()
+key = settings.api.resolve_key()
+if key is None:
+    raise SystemExit("Configure a credential source before calling Jev")
 
 with HTTPSystemOneAdapter(
-    api_key=os.environ["JEV_API__KEY"],
-    network=NetworkConfig(ca_bundle=os.environ.get("JEV_API__CA_BUNDLE")),
+    api_key=key.get_secret_value(),
+    base_url=settings.api.base_url,
+    network=settings.api.network_config,
+    retry=settings.api.retry_policy,
 ) as adapter:
     response = adapter.system_one(
         state="I was charged twice.",
@@ -41,8 +47,8 @@ A valid answer does not prove the classification is correct.
 The context manager owns cleanup, including when a call raises. For several
 calls, keep the adapter open around those calls and close it after the last
 one. The returned values remain usable after closing. Direct constructors do
-not read judgevet environment settings: this example reads the key and optional
-CA bundle path explicitly. Leave `JEV_API__CA_BUNDLE` unset for normal HTTPX
+not read judgevet environment settings: this example explicitly reads Settings
+and resolves one wrapped key before constructing the adapter. Leave `JEV_API__CA_BUNDLE` unset for normal HTTPX
 trust roots. In a private-CA deployment, set it to your approved PEM bundle.
 Certificate and hostname verification stay enabled. See
 [network configuration](../reference/configuration.md#proxy-and-tls-configuration)

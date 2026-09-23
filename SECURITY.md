@@ -29,20 +29,37 @@ This policy does not promise a response deadline or backports to older releases.
 The CLI and MCP composition roots use
 [Settings](src/judgevet/adapters/inbound/settings.py). They accept
 `JEV_API__KEY` or the compatibility alias `TYPESAFE_API_KEY`; the former wins
-when both are set. Settings can also be constructed in Python. The library's
+when both are set. `JEV_API__KEY_FILE` selects a mounted regular file. A configured
+key beginning with `!` selects a trusted command. Explicit CLI keys are literal;
+then literal settings keys, files and commands take precedence in that order.
+A selected-source failure does not fall back. Settings can also be constructed
+in Python. The library's
 sync and async HTTP adapters instead take an explicit `api_key` argument and
 do not load credentials from the environment themselves.
 
 Settings wraps the key in Pydantic's
 [SecretStr](https://docs.pydantic.dev/latest/api/types/#pydantic.types.SecretStr),
 which masks its normal string and representation output. The composition roots
-unwrap it for the HTTP adapter. The adapter retains a plain Python string and
+resolve files or commands only when constructing the adapter. They retain a
+wrapped result and unwrap it only in the HTTP constructor expression. The adapter retains a plain Python string and
 puts it in the authentication header. Masking the settings object is not a
 promise that arbitrary tracebacks, debuggers or memory dumps cannot expose it.
 The [settings tests](tests/unit/test_settings.py) cover masking and precedence.
 
 judgevet does not create a credential file or a persistent key store. Supply
-credentials through your process environment or application secret provider.
+credentials through the supported environment, file or command sources. The
+client reads mounted files and does not write resolved keys to disk or the
+environment. A configured command is a trusted external program; its own
+storage, network access and logging are outside the client's control.
+
+Command stdout is bounded, stderr is discarded, and nonzero exits fail without
+disclosing output. Source values must be printable ASCII tokens within 4096
+bytes after a bounded read. Resolution errors omit source contents and command
+text. POSIX process-group cleanup covers success, failure and timeouts; it is
+not a sandbox for hostile programs. The command inherits the launch environment
+and working directory. Use noninteractive providers and keep command arguments
+free of literal secrets. See [credential configuration](docs/reference/configuration.md#credential-sources)
+for exact precedence, deadlines and platform limits.
 If you use direnv, it reads your approved `.envrc`; judgevet does not encrypt
 that file. Git ignores `.envrc` in this checkout, but ignoring a file does not
 protect it from local readers or copies. Keep credentials out of committed

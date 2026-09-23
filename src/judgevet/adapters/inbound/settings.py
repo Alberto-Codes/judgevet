@@ -1,4 +1,4 @@
-"""Read connection, TLS, retry and logging settings at composition roots.
+"""Configure credential sources, connection options and logging without IO.
 
 ``Settings`` nests ``ApiSettings`` and ``LogSettings`` under ``api`` and
 ``log`` respectively. pydantic-settings splits the environment on ``__``, so
@@ -9,7 +9,9 @@ configuration as arguments; only a composition root reads the environment.
 That is what keeps the outbound adapter testable without touching
 ``os.environ``.
 
-The API key is a ``SecretStr``. Its ``repr`` renders as ``**********``, so a
+The configured key or command is a ``SecretStr``. File and command sources
+resolve only when ``resolve_key`` is called, not during Settings construction.
+Its ``repr`` renders as ``**********``, so a
 traceback or a log line that carries the settings object does not carry the
 key.
 
@@ -44,6 +46,7 @@ from urllib.parse import urlparse
 from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from judgevet.adapters.inbound.credentials import resolve_key
 from judgevet.adapters.inbound.logs import LogSettings as LogsLogSettings
 from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
@@ -53,7 +56,7 @@ DEFAULT_MODEL = "jev-latest"
 
 
 class ApiSettings(BaseSettings):
-    """Connection, proxy and TLS settings for the Jev API.
+    """Credential sources and connection settings for the Jev API.
 
     Attributes:
         base_url (str): Root of the Jev API. Defaults to the documented host.
@@ -63,6 +66,9 @@ class ApiSettings(BaseSettings):
         key (SecretStr | None): The API key. ``None`` until one is supplied,
             which is why every call path reports a missing key rather than
             assuming one.
+        key_file (str | None): Optional mounted credential file.
+        key_command_timeout (float): Finite positive command deadline in seconds.
+        has_key_source (bool): Source presence without IO.
         default_model (str): Model id sent when a call names none.
         max_attempts (int): Total requests per call, including the first.
         retry_base_delay (float): Initial delay ceiling in seconds.
@@ -132,6 +138,32 @@ class ApiSettings(BaseSettings):
         default=None,
         validation_alias=AliasChoices("key", "TYPESAFE_API_KEY"),
     )
+    key_file: str | None = None
+    key_command_timeout: float = Field(default=5.0, gt=0, allow_inf_nan=False)
+
+    @property
+    def has_key_source(self) -> bool:
+        """Check source presence without reading files or executing commands.
+
+        Returns:
+            Whether a nonempty key/command or a file path is configured.
+        """
+        return bool(self.key) or self.key_file is not None
+
+    def resolve_key(self, explicit: str | None = None) -> SecretStr | None:
+        """Resolve the selected credential source only when requested.
+
+        Args:
+            explicit: Optional literal override, which wins over configured sources.
+
+        Returns:
+            Wrapped key or None when no source is configured.
+
+        Raises:
+            ValueError: If the selected file or command source fails.
+        """
+        return resolve_key(self.key, self.key_file, self.key_command_timeout, explicit)
+
     default_model: str = Field(default=DEFAULT_MODEL)
 
     proxy: SecretStr | None = None
