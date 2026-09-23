@@ -80,6 +80,14 @@ repos:
         always_run: true
         stages: [pre-push]
 
+      - id: doc-python-examples
+        name: isolated Python documentation examples
+        entry: uv run python -m scripts.check_doc_python
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
       - id: doc-example-inventory
         name: documentation example inventory
         entry: uv run python -m scripts.doc_example_inventory

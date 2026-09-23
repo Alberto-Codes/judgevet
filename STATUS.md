@@ -80,12 +80,16 @@ removed from the API/root documentation; no runtime behavior changes.
 
 #153 begins with a complete 50-block README/user-doc inventory and seven
 acceptance tests. Each block has an explicit classification and reason. Commit,
-push and CI gates reject inventory drift. Execution/schema/artifact drift
-checks remain in progress; classification alone does not verify behavior.
+push and CI gates reject inventory drift. An isolated-wheel gate now executes
+and type-checks all 15 Python programs
+with synthetic HTTP, secret-free environments and client cleanup checks. Seven
+executor acceptance cases bring the inventory/executor total to fourteen.
+CLI/schema/artifact drift checks remain in progress; offline examples do not
+verify live service behavior.
 
 ## Gates
 
-**1091 tests pass, 6 live tests deselected.** The last measured coverage is
+**1098 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

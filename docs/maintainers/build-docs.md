@@ -75,6 +75,30 @@ by a generic shell runner.
 Add or update records when fences change. New pages, added/removed blocks,
 changed languages, missing reasons, unclosed fences and an empty inventory fail
 with page/block diagnostics. The checker preserves exact body text for subsequent
-execution; it does not substitute a simpler example. It does not yet detect
-behavioral drift inside a same-language block. The isolated execution, schema
-and artifact checks are the remaining work in #153.
+execution; it does not substitute a simpler example. Behavioral checks are separate from this classification check.
+
+## Execute Python examples
+
+```bash
+uv run python -m scripts.check_doc_python
+```
+
+This builds into a fresh temporary directory, installs that exact wheel into a
+new environment, proves import isolation, and executes all 15 current Python
+blocks from README/user docs without rewriting them. It reuses the release
+helpers and Python extractor, and verifies extraction matches the inventory's
+exact text. The base install has no optional MCP dependency. A final typing pass
+checks each extracted file against that interpreter.
+
+Execution supplies synthetic credentials and HTTP answers, blocks socket
+connections/name resolution, and checks HTTP client cleanup. It does not inherit
+caller environment secrets. Programs retain their assertions; failures identify
+the source page and opening-fence line. Output is captured to keep example
+prints and arbitrary exception text out of gate diagnostics. This is a test
+harness for trusted repository examples, not a sandbox for untrusted code.
+Dependency installation may use package indexes; example execution is offline.
+
+The command runs on push and in CI. It verifies Python wiring, not live-service
+behavior or judgment quality. Existing opt-in release smoke checks retain their
+separate live purpose. CLI/JSON/MCP execution and explicit stale-artifact failure
+proofs remain required work in #153.
