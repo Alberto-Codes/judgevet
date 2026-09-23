@@ -43,15 +43,13 @@ the API page is not yet an exhaustive error reference.
 
 ## Explanation: understand the decisions
 
-Dedicated explanations of judgments, policies, architecture and evidence limits
-are still being written. Current definitions and limits are available in:
-
-- [Probability, confidence, score and local policy decisions](reference/glossary.md#numbers-and-decisions).
-- [Ports and adapters](reference/glossary.md#architecture).
-- [Observed behavior versus documented expectations](reference/glossary.md#evidence-and-documentation-status).
+- [Choose between Noul, Choice and Score](explanation/judgments.md).
+- [Understand local acceptance policies and threshold tradeoffs](explanation/policies.md).
+- [Distinguish local checks, live observations and model quality](explanation/verification.md).
 - [Security boundaries and caller responsibilities](../SECURITY.md).
 
-These lookup sections define terms; they do not replace the planned explanations.
+The dedicated architecture explanation is still being written. For current
+terms, see [ports and adapters](reference/glossary.md#architecture).
 
 ## Maintainers
 

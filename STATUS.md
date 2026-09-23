@@ -48,6 +48,11 @@ metadata and visible status, with separate user and maintainer paths. Final
 navigation acceptance remains open until the tutorial, explanation and complete
 error-reference destinations land and #12 validates the rendered site.
 
+#149 supplies explanations of question types, local policy decisions and evidence
+limits. The shared support-ticket scenario uses labeled synthetic values. Its
+policy example executes offline; numeric illustrations were checked. No model
+accuracy, calibration or new live-service claim is made.
+
 ## Gates
 
 **1084 tests pass, 6 live tests deselected.** The last measured coverage is

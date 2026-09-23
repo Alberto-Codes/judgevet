@@ -36,6 +36,10 @@ nav:
       - CLI policy: how-to/use-cli-policy.md
       - Python policy: how-to/use-policy-library.md
       - Staged Git changes: how-to/review-staged-diff.md
+  - Explanation:
+      - Judgment types: explanation/judgments.md
+      - Local policies: explanation/policies.md
+      - Evidence limits: explanation/verification.md
   - Reference:
       - API: reference/api.md
       - Glossary: reference/glossary.md
