@@ -164,6 +164,14 @@ checks remain separate; Pages deployment is tracked below.
 
 ## Deployment-readiness work
 
+#154 records the public-source gateway contract on the
+[research issue](https://github.com/Alberto-Codes/judgevet/issues/154#issuecomment-5804773817).
+It compares HTTP and W3C standards with Apigee, Kong and Azure documentation.
+The contract selects explicit authentication and metadata configuration,
+bounded header validation, opt-in correlation and loopback acceptance tests.
+Implementation remains #63. No gateway deployment or new service behavior
+was verified. Test count and coverage remain unchanged in this research round.
+
 #33 adds opt-in bounded retries through the root-exported `RetryPolicy`.
 The default remains one attempt. Sync and async adapters share classification,
 exponential delay and jitter limits; transport replay requires separate opt-in.
