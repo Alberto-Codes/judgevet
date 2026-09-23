@@ -6,6 +6,10 @@ status: draft
 
 Status: **draft**.
 
+Prerequisites: an [installed CLI](install.md#run-the-cli), a POSIX shell,
+an approved credential environment and service access. Inputs are sent to Jev;
+review [data disclosure](../../SECURITY.md#data-sent-to-the-service).
+
 Keep the questions and their acceptance policy in separate version-controlled
 JSON files. First create `questions.json`:
 
@@ -22,6 +26,7 @@ Create `policy.json` with an inclusive probability floor:
 Evaluate a file using the same approved key environment as other CLI calls:
 
 ```bash
+printf 'A short example.\n' > document.txt
 judgevet --state-file document.txt --questions-file questions.json --policy policy.json --json
 ```
 
@@ -46,6 +51,8 @@ judgment. Choose thresholds for your task and inspect the returned answers.
 A Noul rule accepts `min`, `max`, or both inside `noul`. Bounds are inclusive
 and lie between 0 and 1. Noul has no confidence predicate.
 
+The following Choice and Score objects illustrate individual rules, not complete
+policy files. Add them to a `rules` array only with matching questions.
 A Choice rule uses the exact label from the question's criteria:
 
 ```json
@@ -92,3 +99,27 @@ for Python callers. The CLI shares the predicate comparisons and report details
 with that API while retaining its historical diagnostics and answer checks.
 See the [compatibility contract](../reference/compatibility.md) for the strict
 public evaluation rules and unchanged CLI behavior.
+
+## Distinguish policy rejection in automation
+
+Run this POSIX shell snippet in the directory containing the three files above.
+It captures the JSON answer and diagnostic streams separately. Output files may
+contain supplied content; apply your normal data-handling controls.
+
+```bash
+status=0
+judgevet --state-file document.txt --questions-file questions.json --policy policy.json --json > answer.json 2> error.json || status=$?
+case "$status" in
+  0) printf 'Policy passed. Inspect answer.json.\n' ;;
+  3) printf 'Policy unmet. Inspect answer.json before deciding what to change.\n' ;;
+  1) printf 'No policy verdict. Review error.json privately.\n' >&2 ;;
+  2) printf 'Invalid invocation. Review error.json and judgevet --help.\n' >&2 ;;
+  *) printf 'Unexpected process status: %s\n' "$status" >&2 ;;
+esac
+```
+
+This snippet reports the command status without exiting your shell. In a gate
+script, finish with `exit "$status"` to propagate it. Treat exits 1 and 2 as
+operational failures, not rejected content. Framework usage diagnostics on
+stderr are not necessarily JSON despite the output filename.
+See [troubleshooting](troubleshoot.md) for safe recovery checks.

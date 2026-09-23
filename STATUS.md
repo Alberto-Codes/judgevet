@@ -62,6 +62,12 @@ checkpoints, output interpretation and recovery guidance. Exact Python examples
 are checked in isolation. Reciprocal tutorial links finish #149's reading path.
 No additional service field or model is promoted by tutorial verification.
 
+#150 supplies focused sync/async, service-error, MCP and troubleshooting recipes.
+CLI guides include complete input files and status-aware automation. Staged-diff
+setup names its checkout files and shell requirements. MCP instructions retain
+legacy installation anchors and link verified official host configuration docs.
+Example checks use synthetic answers and do not promote live-service evidence.
+
 ## Gates
 
 **1084 tests pass, 6 live tests deselected.** The last measured coverage is

@@ -11,6 +11,11 @@ judgment workflow for reviewing staged Git changes.
 
 ## Installation
 
+Prerequisites: Git, Bash, uv and an approved credential environment. This guide
+uses files from a judgevet source checkout; the wheel does not install the
+example script. Obtain the three linked files below from the same revision.
+Run the script from the Git repository you intend to review.
+
 Install judgevet:
 
 ```bash
@@ -26,11 +31,16 @@ inherits the CLI configuration. Never print credentials or put them in the files
 
 ## Usage
 
-Copy all three example files (`review-staged.sh`, `questions.json`, `policy.json`) to your repository.
+Copy all three example files to one directory in your repository:
+[review-staged.sh](../../examples/staged-review/review-staged.sh),
+[questions.json](../../examples/staged-review/questions.json) and
+[policy.json](../../examples/staged-review/policy.json).
+Review the questions, policy and staged content before transmitting it to Jev.
+The script finds its companion files beside itself, not in the current directory.
 Invoke the script path from the repository under review:
 
 ```bash
-./review-staged.sh
+bash ./review-staged.sh
 ```
 
 No positional arguments are accepted.
@@ -73,3 +83,8 @@ The CLI forwards answer `policy` as an object with `rules` array and `result` st
 - No mandatory gate installation is required
 - The script respects Git's exit codes: 0=no changes, 1=changes, other=failure
 - Temporary files are cleaned up on exit via trap
+
+For exit 1, inspect the diagnostic privately and check Git, input and credential
+setup. For exit 3, inspect the answers and policy comparisons before changing
+the staged work or your acceptance rule. See [troubleshooting](troubleshoot.md)
+and [diagnostic limits](../../SECURITY.md#diagnostics-and-error-content).

@@ -16,9 +16,11 @@ Status: **draft**. Choose a path by what you need to do.
 ## How-to: complete a task
 
 - [Install the library or CLI](how-to/install.md#install-the-library).
-- [Connect an MCP host](how-to/install.md#run-the-published-mcp-command),
-  [verify discovery](how-to/install.md#verify-the-connection), or
-  [troubleshoot initialization](how-to/install.md#when-mcp-does-not-connect).
+- [Call from synchronous Python](how-to/use-library.md) or
+  [asynchronous Python](how-to/use-async-library.md).
+- [Handle failed library calls](how-to/handle-errors.md).
+- [Connect an MCP host and verify discovery](how-to/connect-mcp.md).
+- [Diagnose installation, input and connection failures](how-to/troubleshoot.md).
 - [Read questions from files and state from files or stdin](how-to/use-cli-files.md).
 - [Apply an acceptance policy in the CLI](how-to/use-cli-policy.md).
 - [Construct, decode and evaluate a policy in Python](how-to/use-policy-library.md).

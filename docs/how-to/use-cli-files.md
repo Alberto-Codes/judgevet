@@ -6,6 +6,16 @@ status: draft
 
 Status: **draft**.
 
+Prerequisites: [install the CLI](install.md#run-the-cli), use a POSIX shell,
+and supply an approved key as described in [credential handling](../../SECURITY.md#credentials).
+Calls require service access and disclose their input to Jev.
+
+For a positional invocation, both state and questions are literal arguments:
+
+```bash
+judgevet 'A short example.' '{"clear":{"type":"noul","instructions":"Is this text clear?"}}' --json
+```
+
 Keep questions in a UTF-8 JSON file using the same shape as the positional
 questions argument. For example, save this as `questions.json`:
 
@@ -14,7 +24,11 @@ questions argument. For example, save this as `questions.json`:
 ```
 
 Load the API key through your approved environment configuration. Evaluate text
-from an argument, a file, or standard input:
+from an argument, a file, or standard input. Create the example state file first:
+
+```bash
+printf 'A short example.\n' > document.txt
+```
 
 ```bash
 judgevet 'A short example.' --questions-file questions.json --json
@@ -43,3 +57,7 @@ Successful output keeps the existing model, usage and answers envelope.
 Framework argument parsing errors retain their existing format. A valid
 judgment exits 0 regardless of its probability; this input feature does not
 turn a low probability into an operational failure.
+
+To turn a judgment into an acceptance decision, use an [explicit policy](use-cli-policy.md).
+That guide shows how automation handles exits 0, 1, 2 and 3. If the command
+fails, use [troubleshooting](troubleshoot.md); do not publish unreviewed stderr.

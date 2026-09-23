@@ -34,7 +34,12 @@ nav:
       - First judgment: tutorials/first-judgment.md
       - First policy: tutorials/first-policy.md
   - How-to:
-      - Install and connect: how-to/install.md
+      - Install: how-to/install.md
+      - Synchronous Python: how-to/use-library.md
+      - Asynchronous Python: how-to/use-async-library.md
+      - Library errors: how-to/handle-errors.md
+      - Connect MCP: how-to/connect-mcp.md
+      - Troubleshooting: how-to/troubleshoot.md
       - CLI files and stdin: how-to/use-cli-files.md
       - CLI policy: how-to/use-cli-policy.md
       - Python policy: how-to/use-policy-library.md
