@@ -46,7 +46,7 @@ __all__ = ["main"]
 
 
 def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
-    """Build HTTPSystemOneAdapter with connection and retry settings.
+    """Build HTTPSystemOneAdapter with network, connection and retry settings.
 
     Args:
         settings: The Settings instance.
@@ -63,6 +63,7 @@ def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
         default_model=settings.api.default_model,
         timeout_seconds=settings.api.timeout_seconds,
         retry=settings.api.retry_policy,
+        network=settings.api.network_config,
     )
 
 

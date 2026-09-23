@@ -106,8 +106,9 @@ does not run that validator: library callers must choose an HTTPS URL and a
 trusted transport themselves.
 
 The sync and async [HTTP adapters](src/judgevet/adapters/outbound/http.py)
-delegate TLS to HTTPX. They do not override certificate verification, install
-certificate pins or select cipher suites. With the default transport,
+delegate TLS to HTTPX. They accept explicit proxy and CA configuration through
+`NetworkConfig` and the CLI/MCP settings. They do not install certificate pins
+or select cipher suites. With the default transport,
 [HTTPX verifies HTTPS certificates and host identity](https://www.python-httpx.org/advanced/ssl/)
 by default. It uses the certifi CA bundle rather than automatically using the
 OS trust store. The reviewed lockfile resolves HTTPX 0.28.1. The adapters also
@@ -117,7 +118,16 @@ HTTPX's default environment support remains enabled.
 [`SSL_CERT_FILE` and `SSL_CERT_DIR`](https://www.python-httpx.org/environment_variables/)
 can replace its default trust roots; `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`
 and `NO_PROXY` affect routing. Review the launch environment as part of a
-deployment. Python's [ssl module](https://docs.python.org/3/library/ssl.html)
+deployment. An explicit proxy overrides environment proxy routing, including
+`NO_PROXY`. An explicit CA bundle replaces default/environment trust roots while
+retaining certificate and hostname checks. Invalid bundles fail construction.
+`JEV_API__VERIFY=false` or `NetworkConfig(verify=False)` disables those checks;
+use that override only for controlled tests with synthetic data. A CA bundle
+cannot accompany disabled verification. Proxy credentials are masked in Settings
+and omitted from `NetworkConfig` representations; arbitrary tracebacks remain
+outside that guarantee. See [configuration](docs/reference/configuration.md#proxy-and-tls-configuration).
+
+Python's [ssl module](https://docs.python.org/3/library/ssl.html)
 uses OpenSSL; the available protocols and cryptographic behavior depend on
 that runtime and its configuration. judgevet does not perform its own
 certificate validation or supply a separate cryptographic implementation.

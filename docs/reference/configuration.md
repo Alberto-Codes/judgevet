@@ -17,6 +17,7 @@ arguments. Neither reads judgevet environment settings or installs logging.
 | `api_key` | `None` | Supply a key explicitly. `None` raises `ValueError`; this is not an authentication check. |
 | `base_url` | `None` | Uses `https://api.typesafe.ai` when omitted or empty. |
 | `default_model` | `"jev-latest"` | Used when `system_one` receives no model or an empty model string. |
+| `network` | `None` | Optional `NetworkConfig`; omission retains HTTPX proxy and TLS defaults. |
 | `retry` | `None` | Optional `RetryPolicy`; omission preserves one attempt. |
 | `transport` | `None` | Optional HTTPX transport; use the sync or async transport type appropriate to the adapter. |
 | `timeout_seconds` | `30.0` | HTTPX read, write and pool timeout in seconds; connect timeout is fixed at 5 seconds. Values at or below zero raise `ValueError`. |
@@ -47,6 +48,9 @@ The nested settings use the `JEV_` prefix and `__` separator.
 | `JEV_API__BASE_URL` | `TYPESAFE_BASE_URL` | `https://api.typesafe.ai` | Service base URL. |
 | `JEV_API__DEFAULT_MODEL` | None | `jev-latest` | Stored adapter default; entry-point call overrides are described below. |
 | `JEV_API__TIMEOUT_SECONDS` | None | `30.0` | Adapter timeout; must be greater than zero. |
+| `JEV_API__PROXY` | None | Unset | Explicit HTTPX proxy URL; overrides standard proxy routing. |
+| `JEV_API__CA_BUNDLE` | None | Unset | PEM file replacing default trust roots; must load successfully. |
+| `JEV_API__VERIFY` | None | `true` | Verify certificate chains and hostnames. Disable only in controlled tests. |
 | `JEV_API__MAX_ATTEMPTS` | None | `1` | Total requests per call; must be a positive integer. |
 | `JEV_API__RETRY_BASE_DELAY` | None | `0.5` | Initial backoff ceiling in seconds. |
 | `JEV_API__RETRY_MAX_DELAY` | None | `5.0` | Maximum backoff ceiling in seconds. |
@@ -136,3 +140,36 @@ documents two retries by default, 0.5-second initial delay, a 5-second cap and
 opt-in and separate transport opt-in. It does not honor `Retry-After` or
 `retry-after-ms` headers. These are local policy choices, not live-service
 observations. The [error recipe](../how-to/handle-errors.md) shows a bounded call.
+
+
+## Proxy and TLS configuration
+
+Import `NetworkConfig` from `judgevet` and pass it as `network=` to either
+adapter. Its defaults are `proxy=None`, `ca_bundle=None`, and `verify=True`.
+The [sync recipe](../how-to/use-library.md) shows explicit optional CA selection.
+
+With no explicit proxy, HTTPX retains its standard `HTTP_PROXY`, `HTTPS_PROXY`,
+`ALL_PROXY`, and `NO_PROXY` behavior. An explicit proxy selects routing even
+when `NO_PROXY` would bypass an environment proxy. HTTPX often requires an
+`http://` proxy URL for an HTTPS destination; the destination TLS connection
+then runs through a CONNECT tunnel. See [HTTPX proxies](https://www.python-httpx.org/advanced/proxies/)
+and [environment variables](https://www.python-httpx.org/environment_variables/).
+
+By default, HTTPX verifies certificates and hostnames using certifi roots.
+`SSL_CERT_FILE` or `SSL_CERT_DIR` can replace those roots. An explicit
+`ca_bundle` takes precedence and creates a verifying Python SSL context.
+It replaces the default roots; include every required root in that PEM file.
+An empty path, unreadable file or malformed bundle fails adapter construction.
+The adapter never disables verification after a CA loading error.
+
+`verify=False` disables both chain and hostname checks. Use it only for
+controlled tests with synthetic data. Supplying a CA bundle together with
+`verify=False` raises `ValueError`. The default remains secure on the sync,
+async, CLI, policy CLI and MCP paths. See [HTTPX TLS configuration](https://www.python-httpx.org/advanced/ssl/).
+
+The current HTTPX client does not switch to the OS trust store automatically.
+An MCP SDK transport change does not change this outbound client's trust roots.
+Caller-supplied transports own their own network and TLS behavior. Prefer the
+default transport when using these settings. Review
+[transport and certificate limits](../../SECURITY.md#transport-and-certificates)
+before deployment. Changing settings does not reconfigure an existing client.

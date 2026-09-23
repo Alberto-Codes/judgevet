@@ -39,6 +39,7 @@ EXPECTED_EXPORTS = {
     "AsyncHTTPSystemOneAdapter",
     "Choice",
     "HTTPSystemOneAdapter",
+    "NetworkConfig",
     "Noul",
     "Score",
     "__version__",

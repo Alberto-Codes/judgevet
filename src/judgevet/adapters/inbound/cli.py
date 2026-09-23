@@ -359,7 +359,8 @@ def main(
 
     Reads Settings and configures stderr logging. An explicit --api-key overrides
     the settings key. Constructs HTTPSystemOneAdapter once with the settings
-    timeout and retry limits, then calls run_cli with it as the port. Closes the adapter in finally.
+    timeout, network options and retry limits, then calls run_cli with it as the port.
+    Closes the adapter in finally.
     The command wrapper supplies separate help and propagates failure status.
 
     Args:
@@ -387,6 +388,7 @@ def main(
         default_model=model,
         timeout_seconds=timeout_seconds,
         retry=settings.api.retry_policy,
+        network=settings.api.network_config,
     )
 
     try:

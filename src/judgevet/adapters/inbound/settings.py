@@ -1,4 +1,4 @@
-"""Read connection, retry and logging settings at composition roots.
+"""Read connection, TLS, retry and logging settings at composition roots.
 
 ``Settings`` nests ``ApiSettings`` and ``LogSettings`` under ``api`` and
 ``log`` respectively. pydantic-settings splits the environment on ``__``, so
@@ -45,6 +45,7 @@ from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from judgevet.adapters.inbound.logs import LogSettings as LogsLogSettings
+from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
 
 DEFAULT_BASE_URL = "https://api.typesafe.ai"
@@ -52,7 +53,7 @@ DEFAULT_MODEL = "jev-latest"
 
 
 class ApiSettings(BaseSettings):
-    """Connection settings for the Jev API.
+    """Connection, proxy and TLS settings for the Jev API.
 
     Attributes:
         base_url (str): Root of the Jev API. Defaults to the documented host.
@@ -68,6 +69,10 @@ class ApiSettings(BaseSettings):
         retry_max_delay (float): Maximum delay ceiling in seconds.
         retry_transport (bool): Permit retries of transport errors.
         retry_policy (RetryPolicy): Validated policy passed to the adapter.
+        proxy (SecretStr | None): Explicit proxy URL; masks optional credentials.
+        ca_bundle (str | None): Explicit PEM trust bundle path.
+        verify (bool): Enable certificate and hostname verification.
+        network_config (NetworkConfig): Network configuration for the adapter.
         timeout_seconds (float): Read timeout in seconds. Defaults to 30.0.
             Can be set via ``JEV_API__TIMEOUT_SECONDS`` environment variable.
 
@@ -128,6 +133,26 @@ class ApiSettings(BaseSettings):
         validation_alias=AliasChoices("key", "TYPESAFE_API_KEY"),
     )
     default_model: str = Field(default=DEFAULT_MODEL)
+
+    proxy: SecretStr | None = None
+    ca_bundle: str | None = None
+    verify: bool = True
+
+    @property
+    def network_config(self) -> NetworkConfig:
+        """Pass explicit proxy and TLS values to the outbound adapter.
+
+        Returns:
+            Immutable network options with proxy credentials omitted from repr.
+
+        Raises:
+            ValueError: If CA configuration conflicts with disabled verification.
+        """
+        return NetworkConfig(
+            proxy=self.proxy.get_secret_value() if self.proxy is not None else None,
+            ca_bundle=self.ca_bundle,
+            verify=self.verify,
+        )
 
     max_attempts: int = Field(default=1, ge=1)
 

@@ -137,8 +137,8 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1202 tests pass, 6 live tests deselected.** The last measured coverage is
-**94.46%** (1501/1589 statements).
+**1240 tests pass, 6 live tests deselected.** The last measured coverage is
+**94.57%** (1533/1621 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
@@ -161,9 +161,16 @@ exhaustion, final causes, cancellation, final diagnostic status and actual
 request counts through all three composition roots. Independent mutations
 break recovery, attempt bounds, cancellation and each settings path.
 
+#55 adds root-exported `NetworkConfig` and proxy/CA/verification settings.
+Actual loopback TLS tests prove default rejection, explicit private-CA trust,
+hostname checks and test-only verification-off. Loopback proxy tests observe
+CONNECT selection and explicit precedence; they do not prove a deployed
+corporate proxy. CLI, policy CLI and MCP consume every new setting. Independent
+mutations break CA, proxy, secure defaults and each composition path.
+
 The complete commit/push gates include strict docs, isolated examples and
-coverage. Retry evidence is local and synthetic; unseen service errors stay
-inferred. No runtime dependency or version changes in this round. The 0.8.0
+coverage. Retry and network evidence is local and synthetic; unseen service
+errors stay inferred. No runtime dependency or version changes in this round. The 0.8.0
 release, remaining deployment settings and Pages publication are pending.
 
 ## Operational limits

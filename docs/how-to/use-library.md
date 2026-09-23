@@ -18,9 +18,12 @@ Python interpreter:
 ```python
 import os
 
-from judgevet import HTTPSystemOneAdapter, Noul
+from judgevet import HTTPSystemOneAdapter, NetworkConfig, Noul
 
-with HTTPSystemOneAdapter(api_key=os.environ["JEV_API__KEY"]) as adapter:
+with HTTPSystemOneAdapter(
+    api_key=os.environ["JEV_API__KEY"],
+    network=NetworkConfig(ca_bundle=os.environ.get("JEV_API__CA_BUNDLE")),
+) as adapter:
     response = adapter.system_one(
         state="I was charged twice.",
         questions={"billing": Noul(instructions="Is this about billing?")},
@@ -38,7 +41,12 @@ A valid answer does not prove the classification is correct.
 The context manager owns cleanup, including when a call raises. For several
 calls, keep the adapter open around those calls and close it after the last
 one. The returned values remain usable after closing. Direct constructors do
-not read environment settings: this example reads the key explicitly.
+not read judgevet environment settings: this example reads the key and optional
+CA bundle path explicitly. Leave `JEV_API__CA_BUNDLE` unset for normal HTTPX
+trust roots. In a private-CA deployment, set it to your approved PEM bundle.
+Certificate and hostname verification stay enabled. See
+[network configuration](../reference/configuration.md#proxy-and-tls-configuration)
+for proxy precedence and TLS limits.
 
 For missing credentials, check the variable's presence without printing it.
 For service failures, use [error handling](handle-errors.md). To produce a

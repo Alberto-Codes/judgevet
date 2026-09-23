@@ -58,6 +58,7 @@ Attributes:
     SystemOneResponse (type): Answer container with typed accessors.
     Usage (type): Token usage metadata.
     RetryPolicy (type): Immutable opt-in retry limits.
+    NetworkConfig (type): Explicit proxy and certificate verification options.
     JevError (type): Base Jev exception.
     JevAuthError (type): Authentication failure.
     JevRequestError (type): Rejected request.
@@ -87,6 +88,7 @@ from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
     HTTPSystemOneAdapter,
 )
+from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.errors import (
@@ -117,6 +119,7 @@ __all__ = [
     "JevRequestError",
     "JevResponseError",
     "JevServiceError",
+    "NetworkConfig",
     "Noul",
     "NoulAnswer",
     "Question",

@@ -1,4 +1,4 @@
-"""HTTP outbound adapter with bounded opt-in retries and terminal debug events.
+"""HTTP outbound adapter with explicit TLS, bounded retries and debug events.
 
 Error handling:
     The API error `detail` field is polymorphic:
@@ -70,6 +70,7 @@ from typing import Any, Self
 import httpx
 
 from judgevet.adapters.outbound.http_events import CallEvent, call_event
+from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.domain.errors import (
     JevAuthError,
@@ -278,7 +279,7 @@ def _translate_request_error(exc: httpx.RequestError) -> JevServiceError:
 
 
 class HTTPSystemOneAdapter:
-    """HTTP adapter for SystemOnePort using httpx and opt-in retries.
+    """HTTP adapter with explicit network configuration and opt-in retries.
 
     This class satisfies SystemOnePort structurally without importing it.
     See: https://api.typesafe.ai/v1/systemone
@@ -336,6 +337,7 @@ class HTTPSystemOneAdapter:
         timeout_seconds: float = 30.0,
         *,
         retry: RetryPolicy | None = None,
+        network: NetworkConfig | None = None,
     ) -> None:
         """Initialize the HTTP adapter.
 
@@ -346,9 +348,10 @@ class HTTPSystemOneAdapter:
             transport: Optional httpx transport for testing. Defaults to None.
             timeout_seconds: Read timeout in seconds. Defaults to 30.0.
             retry: Validated retry policy. None preserves one attempt.
+            network: Proxy and TLS options. None retains HTTPX defaults.
 
         Raises:
-            ValueError: If the key is absent, timeout is nonpositive, or retry limits are invalid.
+            ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
         """
         self._api_key = api_key
         if self._api_key is None:
@@ -358,6 +361,7 @@ class HTTPSystemOneAdapter:
             raise ValueError(f"timeout_seconds must be positive, got {timeout_seconds}")
 
         self._retry = retry or RetryPolicy()
+        network = network or NetworkConfig()
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
         self._client = httpx.Client(
@@ -367,6 +371,8 @@ class HTTPSystemOneAdapter:
                 "Content-Type": "application/json",
             },
             transport=transport,
+            proxy=network.proxy,
+            verify=network.verification(),
             timeout=httpx.Timeout(timeout_seconds, connect=5.0),
         )
 
@@ -461,7 +467,7 @@ class HTTPSystemOneAdapter:
 
 
 class AsyncHTTPSystemOneAdapter:
-    """Async HTTP adapter with opt-in retries and cancellable backoff.
+    """Async HTTP adapter with explicit network configuration and bounded retries.
 
     This class satisfies AsyncSystemOnePort structurally without importing it.
     See: https://api.typesafe.ai/v1/systemone
@@ -528,6 +534,7 @@ class AsyncHTTPSystemOneAdapter:
         timeout_seconds: float = 30.0,
         *,
         retry: RetryPolicy | None = None,
+        network: NetworkConfig | None = None,
     ) -> None:
         """Initialize the async HTTP adapter.
 
@@ -538,9 +545,10 @@ class AsyncHTTPSystemOneAdapter:
             transport: Optional httpx async transport for testing. Defaults to None.
             timeout_seconds: Read timeout in seconds. Defaults to 30.0.
             retry: Validated retry policy. None preserves one attempt.
+            network: Proxy and TLS options. None retains HTTPX defaults.
 
         Raises:
-            ValueError: If the key is absent, timeout is nonpositive, or retry limits are invalid.
+            ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
         """
         if api_key is None:
             raise ValueError("API key must be provided")
@@ -550,6 +558,7 @@ class AsyncHTTPSystemOneAdapter:
 
         self._api_key = api_key
         self._retry = retry or RetryPolicy()
+        network = network or NetworkConfig()
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
         self._client = httpx.AsyncClient(
@@ -559,6 +568,8 @@ class AsyncHTTPSystemOneAdapter:
                 "Content-Type": "application/json",
             },
             transport=transport,
+            proxy=network.proxy,
+            verify=network.verification(),
             timeout=httpx.Timeout(timeout_seconds, connect=5.0),
         )
 
