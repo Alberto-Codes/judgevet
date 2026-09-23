@@ -138,7 +138,7 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1307 tests pass, 6 live tests deselected.** The last measured coverage is
+**1309 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.75%** (1695/1789 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
@@ -208,15 +208,21 @@ The source-built development wheel is not evidence of index publication.
 The complete commit/push gates include strict docs, isolated examples and
 coverage. Runtime evidence is local and synthetic; unseen service
 errors stay inferred. No runtime dependency or version changes in this round. The 0.8.0
-release and Pages publication are pending.
+release remains pending. The Pages site is live.
 
 ## Pages deployment
 
 #41 adds the strict-build Actions workflow and the project-path site URL.
 Pages is configured with `build_type=workflow`; repository visibility remains
 public. An isolated checkout with a nonexistent Python cross-reference fails
-the strict build; restoration passes. Deployment and browser verification are
-pending. README and package metadata will link the site after verification.
+the strict build; restoration passes.
+[Deployment run 35871720007](https://github.com/Alberto-Codes/judgevet/actions/runs/35871720007)
+published commit `5a5997f245e88786c95eb034b923ed1ffb499eac`. Browser checks verify
+project-path CSS/scripts, navigation, both architecture diagrams, generated
+Python API anchors, and the deployment and event guides. No failing resource
+requests or browser console errors were observed on those pages.
+README and package metadata link the [live site](https://alberto-codes.github.io/judgevet/).
+Published README links retain offline source and fragment validation.
 
 ## Operational limits
 

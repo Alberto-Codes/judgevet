@@ -37,6 +37,7 @@ judgevet = "judgevet.adapters.inbound.cli:app"
 judgevet-mcp = "judgevet.adapters.inbound.mcp_entrypoint:main"
 
 [project.urls]
+Documentation = "https://alberto-codes.github.io/judgevet/"
 Source = "https://github.com/Alberto-Codes/judgevet"
 Issues = "https://github.com/Alberto-Codes/judgevet/issues"
 

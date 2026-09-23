@@ -23,8 +23,9 @@ rendering. It then resolves generated Python cross-references and checks every r
 HTML destination and fragment, including root-relative navigation.
 It covers README, SECURITY, STATUS, repository guidance and all docs pages.
 Absolute GitHub `blob/main` URLs for this repository resolve against the checkout,
-including their fragments. This keeps README links usable on PyPI and checked
-offline. Other external URLs are not fetched, so checks need no API key or service.
+including their fragments. Published URLs beneath the judgevet Pages site map
+to authored pages and section indexes in `docs/`, including their fragments.
+This keeps README links usable on PyPI and checked offline. Other external URLs are not fetched, so checks need no API key or service.
 Installing dependencies can require the package index.
 
 Run just the repository link check with:

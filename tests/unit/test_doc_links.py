@@ -109,3 +109,35 @@ def test_project_site_prefix_preserves_missing_targets(tmp_path: Path) -> None:
     assert len(findings) == 3
     assert any("missing rendered anchor" in item for item in findings)
     assert sum("missing rendered target" in item for item in findings) == 2
+
+
+def test_published_site_links_resolve_offline(tmp_path: Path) -> None:
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "index.md").write_text("# Home\n")
+    (docs / "guide.md").write_text("# Guide\n")
+    section = docs / "section"
+    section.mkdir()
+    (section / "index.md").write_text("# Section\n")
+    page = tmp_path / "README.md"
+    page.write_text(
+        "[home](https://alberto-codes.github.io/judgevet/#home)\n"
+        "[guide](https://alberto-codes.github.io/judgevet/guide/#guide)\n"
+        "[section](https://alberto-codes.github.io/judgevet/section/#section)\n"
+    )
+    assert check_links([page], repository_root=tmp_path) == []
+
+
+def test_published_site_missing_targets_and_anchors_fail(tmp_path: Path) -> None:
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "guide.md").write_text("# Guide\n")
+    page = tmp_path / "README.md"
+    page.write_text(
+        "[missing](https://alberto-codes.github.io/judgevet/missing/)\n"
+        "[anchor](https://alberto-codes.github.io/judgevet/guide/#absent)\n"
+    )
+    findings = check_links([page], repository_root=tmp_path)
+    assert len(findings) == 2
+    assert "missing target" in findings[0]
+    assert "missing anchor" in findings[1]

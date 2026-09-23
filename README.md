@@ -15,7 +15,7 @@ shared library, CLI and MCP contract with local policy evaluation.
 The library and CLI install without the MCP runtime.
 
 Documentation status: **draft**. Start below or follow the
-[first-judgment tutorial](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-judgment.md)
+[first-judgment tutorial](https://alberto-codes.github.io/judgevet/tutorials/first-judgment/)
 for environment setup, checkpoints and recovery steps.
 
 ## Install and ask one question
@@ -30,7 +30,7 @@ judgevet --help
 Supply a TypeSafe API key through your process environment or secret provider.
 This example reads `JEV_API__KEY` and passes it explicitly to the library.
 Do not put real keys in source or command arguments. The
-[installation guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/install.md)
+[installation guide](https://alberto-codes.github.io/judgevet/how-to/install/)
 covers other installation methods.
 
 **This call sends the state, questions and selected model to the configured
@@ -57,8 +57,8 @@ print(f"Input tokens: {response.usage.input_tokens}")
 
 The context manager closes the HTTP client after the call. The answer remains
 available. If the import or call fails, use the tutorial's
-[recovery steps](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-judgment.md#recover-from-a-failed-checkpoint)
-or the [troubleshooting guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/troubleshoot.md).
+[recovery steps](https://alberto-codes.github.io/judgevet/tutorials/first-judgment/#recover-from-a-failed-checkpoint)
+or the [troubleshooting guide](https://alberto-codes.github.io/judgevet/how-to/troubleshoot/).
 
 ## Read the answer and make a decision
 
@@ -77,34 +77,34 @@ Other question types let you select a label or evaluate an ordered rubric:
 | `Score` | Continuous score, rubric legend, per-level probabilities and confidence |
 
 The [vendor API reference](https://docs.typesafe.ai/api) defines those fields.
-The [question-type explanation](https://github.com/Alberto-Codes/judgevet/blob/main/docs/explanation/judgments.md)
+The [question-type explanation](https://alberto-codes.github.io/judgevet/explanation/judgments/)
 shows how to choose a type and distinguish score, confidence and probability.
 
 A local policy can require a minimum value before your application accepts an
 answer. For example, `0.85` meets a minimum of `0.8` and fails one of `0.9`.
 These are teaching thresholds, not production recommendations. A passing policy
 does not prove the model is correct or perform the application's next action.
-Try the [first-policy tutorial](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-policy.md)
+Try the [first-policy tutorial](https://alberto-codes.github.io/judgevet/tutorials/first-policy/)
 with synthetic answers; it requires no key or network.
 
 ## Choose your next task
 
 | Need | Start here |
 |---|---|
-| Learn one complete service call | [First judgment](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-judgment.md) |
-| Call from an async application | [Async Python guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-async-library.md) |
-| Use a mounted key or secret provider | [Credential sources](https://github.com/Alberto-Codes/judgevet/blob/main/docs/reference/configuration.md#credential-sources) |
-| Deploy in containers or serverless | [Deployment guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/deploy.md) |
-| Correlate diagnostic events | [Event contract and caller binding](https://github.com/Alberto-Codes/judgevet/blob/main/docs/reference/events.md) |
-| Configure a proxy or private CA | [Network configuration](https://github.com/Alberto-Codes/judgevet/blob/main/docs/reference/configuration.md#proxy-and-tls-configuration) |
-| Configure bounded retries | [Retry limits](https://github.com/Alberto-Codes/judgevet/blob/main/docs/reference/configuration.md#retry-limits) |
-| Handle service and transport failures | [Library error handling](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/handle-errors.md) |
-| Evaluate typed or JSON policies in Python | [Policy guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-policy-library.md) |
-| Use shell commands, files or stdin | [CLI inputs](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-cli-files.md) and [CLI policies](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-cli-policy.md) |
-| Give an agent judgment tools | [Optional MCP installation, connection and discovery](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/connect-mcp.md) |
-| Look up types, options or schemas | [Reference map](https://github.com/Alberto-Codes/judgevet/blob/main/docs/index.md#reference-look-up-a-contract) |
-| Understand thresholds and tradeoffs | [Local policy explanation](https://github.com/Alberto-Codes/judgevet/blob/main/docs/explanation/policies.md) |
-| Choose an entry point and own its lifecycle | [Library-first architecture](https://github.com/Alberto-Codes/judgevet/blob/main/docs/explanation/architecture.md) |
+| Learn one complete service call | [First judgment](https://alberto-codes.github.io/judgevet/tutorials/first-judgment/) |
+| Call from an async application | [Async Python guide](https://alberto-codes.github.io/judgevet/how-to/use-async-library/) |
+| Use a mounted key or secret provider | [Credential sources](https://alberto-codes.github.io/judgevet/reference/configuration/#credential-sources) |
+| Deploy in containers or serverless | [Deployment guide](https://alberto-codes.github.io/judgevet/how-to/deploy/) |
+| Correlate diagnostic events | [Event contract and caller binding](https://alberto-codes.github.io/judgevet/reference/events/) |
+| Configure a proxy or private CA | [Network configuration](https://alberto-codes.github.io/judgevet/reference/configuration/#proxy-and-tls-configuration) |
+| Configure bounded retries | [Retry limits](https://alberto-codes.github.io/judgevet/reference/configuration/#retry-limits) |
+| Handle service and transport failures | [Library error handling](https://alberto-codes.github.io/judgevet/how-to/handle-errors/) |
+| Evaluate typed or JSON policies in Python | [Policy guide](https://alberto-codes.github.io/judgevet/how-to/use-policy-library/) |
+| Use shell commands, files or stdin | [CLI inputs](https://alberto-codes.github.io/judgevet/how-to/use-cli-files/) and [CLI policies](https://alberto-codes.github.io/judgevet/how-to/use-cli-policy/) |
+| Give an agent judgment tools | [Optional MCP installation, connection and discovery](https://alberto-codes.github.io/judgevet/how-to/connect-mcp/) |
+| Look up types, options or schemas | [Reference map](https://alberto-codes.github.io/judgevet/#reference-look-up-a-contract) |
+| Understand thresholds and tradeoffs | [Local policy explanation](https://alberto-codes.github.io/judgevet/explanation/policies/) |
+| Choose an entry point and own its lifecycle | [Library-first architecture](https://alberto-codes.github.io/judgevet/explanation/architecture/) |
 
 The CLI uses the same library and can return JSON or a policy exit status.
 The optional MCP server exposes `ask_noul`, `ask_choice` and `ask_score` over
@@ -117,7 +117,7 @@ Exact documentation examples run against isolated installations with synthetic
 answers. Those checks establish local wiring, not model quality or calibration.
 Live evidence covers only the observed cases and resolved `jev-1.13.0` model.
 The 429/529 error bodies remain unseen; other models and untouched fields remain
-unverified. The [verification explanation](https://github.com/Alberto-Codes/judgevet/blob/main/docs/explanation/verification.md)
+unverified. The [verification explanation](https://alberto-codes.github.io/judgevet/explanation/verification/)
 separates local tests, vendor statements and live observations.
 
 Diagnostics are quiet by default. Debug metadata excludes state and question
@@ -128,7 +128,7 @@ describes credential, disclosure and diagnostic limits.
 
 ## Maintainers
 
-Use the [maintainer procedures](https://github.com/Alberto-Codes/judgevet/blob/main/docs/maintainers/index.md)
+Use the [maintainer procedures](https://alberto-codes.github.io/judgevet/maintainers/)
 for documentation checks, package verification and releases.
 [Repository contribution rules](https://github.com/Alberto-Codes/judgevet/blob/main/AGENTS.md)
 define gates and commits. The

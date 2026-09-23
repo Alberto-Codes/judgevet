@@ -18,6 +18,7 @@ import markdown
 from mkdocs.config.defaults import MkDocsConfig
 
 REPOSITORY_URL = "https://github.com/Alberto-Codes/judgevet/blob/main/"
+SITE_URL = "https://alberto-codes.github.io/judgevet/"
 
 
 class Links(HTMLParser):
@@ -68,6 +69,23 @@ def parse_page(path: Path) -> Links:
     return parser
 
 
+def site_source(root: Path, route: str) -> Path:
+    """Map an authored published route to its checkout source.
+
+    Args:
+        root: Checkout root.
+        route: Decoded route relative to the published site root.
+
+    Returns:
+        Markdown page, section index or static asset path.
+    """
+    target = root / "docs" / route
+    if target.suffix:
+        return target
+    page = target.with_suffix(".md")
+    return page if page.is_file() else target / "index.md"
+
+
 def check_links(pages: list[Path], repository_root: Path | None = None) -> list[str]:
     """Check local destinations and Markdown fragments for every supplied page.
 
@@ -87,12 +105,18 @@ def check_links(pages: list[Path], repository_root: Path | None = None) -> list[
             if target.startswith(REPOSITORY_URL):
                 url = urlsplit(target[len(REPOSITORY_URL) :])
                 base = root
+            elif target.startswith(SITE_URL):
+                url = urlsplit(target[len(SITE_URL) :])
+                base = site_source(root, unquote(url.path))
+                url = url._replace(path="")
             else:
                 url = urlsplit(target)
                 if url.scheme or url.netloc:
                     continue
             destination = (
-                (base / unquote(url.path)).resolve() if url.path else page.resolve()
+                (base / unquote(url.path)).resolve()
+                if url.path
+                else (base if target.startswith(SITE_URL) else page).resolve()
             )
             if not destination.is_file():
                 findings.append(f"{page}: missing target {target}")
