@@ -69,7 +69,7 @@ async def run_stdio(port: SystemOnePort) -> None:
     """Run MCP stdio server with the given port.
 
     Args:
-        port: The SystemOnePort implementation.
+        port: The port used for API calls.
 
     Raises:
         RuntimeError: If MCP runtime is not available.

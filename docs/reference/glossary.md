@@ -14,17 +14,22 @@ Use this table for authored prose about judgevet. Its preferred and avoided
 columns are the source for terminology enforcement. Apply each row only in its
 stated context; ordinary technical uses outside that context remain valid.
 
-| Preferred | Avoid | Context |
-|---|---|---|
-| question | prompt; query | An evaluation instruction supplied to Jev. |
-| answer | response; result | A judgment for one named question. HTTP responses and function results are different concepts. |
-| confidence | certainty | The reported Choice or Score confidence value. |
-| score | confidence | The value on a Score rubric. This is a semantic distinction, not a global word replacement. |
-| port | interface | The typed boundary used by judgevet callers and adapters. Other interfaces retain their own names. |
-| adapter | implementation; driver | A judgevet component connecting that boundary to HTTP, CLI or MCP. |
-| verified | documented | A claim described as observed against the live service. Vendor documentation alone is insufficient. |
-| model judgment | calibrated judgment | A model answer whose statistical calibration has not been established here. |
-| typed client | — | judgevet as a Python library. This description is accurate and permitted. |
+| Preferred | Avoid | Context | Check |
+|---|---|---|---|
+| question | `prompt`; `query` | An evaluation instruction supplied to Jev. | question |
+| answer | `response`; `result` | A judgment for one named question. HTTP responses and function results are different concepts. | answer |
+| confidence | `certainty` | The reported Choice or Score confidence value. | confidence |
+| score | `confidence` | The value on a Score rubric. This is a semantic distinction, not a global word replacement. | human |
+| port | `interface` | The typed boundary used by judgevet callers and adapters. Other interfaces retain their own names. | boundary |
+| adapter | `implementation`; `driver` | A judgevet component connecting that boundary to HTTP, CLI or MCP. | adapter |
+| verified | `documented` | A claim described as observed against the live service. Vendor documentation alone is insufficient. | human |
+| model judgment | `calibrated judgment` | A model answer whose statistical calibration has not been established here. | always |
+| typed client | `—` | judgevet as a Python library. This description is accurate and permitted. | human |
+
+The Check column selects a bounded lexical context. `human` rows require
+semantic review; they do not trigger a global word replacement. The
+[writing guide](../maintainers/writing-guide.md#check-terminology) defines the
+selectors and the safe source-identifier scope.
 
 These preferences do not rename public APIs. Preserve exact Python identifiers,
 JSON fields, third-party API names and quoted diagnostics. Use code formatting

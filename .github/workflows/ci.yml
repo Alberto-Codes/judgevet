@@ -31,6 +31,7 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run python -m scripts.doc_example_inventory
       - run: uv run python -m scripts.check_plain_english
+      - run: uv run python -m scripts.check_terminology
       - run: uv run python -m scripts.check_doc_python
       - run: uv run mkdocs build --strict
       - run: uv run lint-imports

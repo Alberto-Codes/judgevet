@@ -112,6 +112,14 @@ repos:
         always_run: true
         stages: [pre-commit, pre-push]
 
+      - id: terminology
+        name: canonical terminology
+        entry: uv run python -m scripts.check_terminology
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit, pre-push]
+
       - id: docs-build
         name: strict documentation build and links
         entry: uv run mkdocs build --strict

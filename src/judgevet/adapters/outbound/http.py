@@ -53,7 +53,7 @@ Raises:
 
 Async adapters:
     AsyncSystemOnePort: Async protocol for the System One API.
-    AsyncHTTPSystemOneAdapter: Async HTTP implementation using httpx.AsyncClient.
+    AsyncHTTPSystemOneAdapter: Async HTTP adapter using httpx.AsyncClient.
 
     The async adapter provides `aclose()`, `__aenter__`, and `__aexit__` for
     lifecycle management. It does NOT provide sync names (`close`, `__enter__`,
@@ -277,7 +277,7 @@ def _translate_request_error(exc: httpx.RequestError) -> JevServiceError:
 
 
 class HTTPSystemOneAdapter:
-    """HTTP implementation of SystemOnePort using httpx.
+    """HTTP adapter for SystemOnePort using httpx.
 
     This class satisfies SystemOnePort structurally without importing it.
     See: https://api.typesafe.ai/v1/systemone
@@ -440,7 +440,7 @@ class HTTPSystemOneAdapter:
 
 
 class AsyncHTTPSystemOneAdapter:
-    """Async HTTP implementation of AsyncSystemOnePort using httpx.AsyncClient.
+    """Async HTTP adapter for AsyncSystemOnePort using httpx.AsyncClient.
 
     This class satisfies AsyncSystemOnePort structurally without importing it.
     See: https://api.typesafe.ai/v1/systemone

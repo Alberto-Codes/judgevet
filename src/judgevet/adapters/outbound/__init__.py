@@ -27,5 +27,5 @@ See Also:
     - [judgevet.adapters.inbound.cli][]: CLI adapter
 
 Attributes:
-    HTTPSystemOneAdapter (type): HTTP implementation of SystemOnePort.
+    HTTPSystemOneAdapter (type): HTTP adapter for SystemOnePort.
 """

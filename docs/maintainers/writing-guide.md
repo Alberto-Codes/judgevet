@@ -85,3 +85,62 @@ Review a documentation change in its reading path:
 
 Do not shorten prose by removing a prerequisite, a security limit or an evidence
 qualification. Rewrite the explanation so each necessary fact remains clear.
+
+## Check terminology
+
+```bash
+uv run python -m scripts.check_terminology
+```
+
+The same README, SECURITY, authored-docs and package-docstring scope applies.
+The checker reads preferred and avoided terms from the glossary table. It has
+no second term list. Changing a preferred term changes its diagnostic.
+Malformed or missing tables fail the check.
+
+The table's Check column selects these explicit contexts:
+
+| Selector | Lexical scope |
+|---|---|
+| `question` | An avoided word after Jev, evaluation or judgment; or before “to Jev” or “for Jev”. |
+| `answer` | After Noul, Choice, Score, named question, individual question or per-question; or before “for a/one/each [named] question”. |
+| `confidence` | After Choice, Score or model; or before “of [the] Choice/Score”. |
+| `boundary` | After judgevet, typed, SystemOnePort or AsyncSystemOnePort. |
+| `adapter` | After HTTP, CLI, MCP, SystemOnePort, AsyncSystemOnePort or judgevet. |
+| `always` | The avoided phrase anywhere in extracted prose. |
+| `human` | Semantic review only; no lexical substitution. |
+
+Matching ignores case and recognizes a simple plural ending in `s` or `ies`.
+It does not infer the subject of arbitrary sentences. An HTTP response, a
+function result and a Bash prompt remain valid technical terms. An ambiguous
+standalone word remains for review. Score versus confidence and documented
+versus live verified require evidence and context that lexical matching cannot establish.
+
+Inline/fenced code preserves exact identifiers, wire fields and quoted
+diagnostics. Citation destinations are excluded; descriptive link labels remain
+prose. Quote an exact diagnostic as code, while keeping its explanation in prose.
+These are syntax rules, not exceptions for individual files.
+
+For Python identifiers, the check reads only annotated local variable names
+with directly imported judgevet question or individual-answer types.
+It recognizes imports from the package root and domain question/answer modules,
+including aliases. It checks underscore-delimited words against the corresponding
+glossary row. Public definitions, parameters, class attributes, module bindings,
+wire keys and `SystemOneResponse` containers retain their contract names.
+Unannotated locals, qualified annotations and compound type expressions require
+review; the checker does not infer their runtime type.
+
+The command runs in commit/push hooks and CI. A clean lexical check does not
+prove that every term or numeric interpretation is correct.
+
+## Optional model-assisted editorial review
+
+The [CLI policy workflow](../how-to/use-cli-policy.md) can ask a Noul question
+about a passage and compare its answer with a local acceptance threshold.
+An agent can also use the supported [MCP tools](../reference/mcp.md).
+This can assist review of meaning or clarity. It does not replace the exact
+lexical check, the reviewer or the recorded evidence for a claim.
+
+Such a review sends the passage and question to the configured service and
+requires credentials. Apply the [disclosure guidance](../../SECURITY.md#data-sent-to-the-service)
+first. Its probability and a policy pass do not prove editorial correctness.
+Ordinary documentation gates stay offline and do not depend on model judgments.

@@ -86,7 +86,7 @@ def create_mcp_server(port: SystemOnePort) -> Any:
     """Create an MCP stdio server exposing ask_noul, ask_choice, and ask_score tools.
 
     Args:
-        port: The SystemOnePort implementation to use for API calls.
+        port: The port used for API calls.
             The server does NOT construct an HTTPSystemOneAdapter.
 
     Returns:

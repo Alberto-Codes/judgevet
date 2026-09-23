@@ -104,9 +104,16 @@ locations. Commit, push and CI run the complete declared scope. The
 [writing guide](docs/maintainers/writing-guide.md) records exclusions and human
 review criteria. This is not a claim of ASD-STE100 compliance.
 
+#71 enforces the glossary table through explicit lexical contexts and safe
+annotated local-name checks. Public/wire names and ambiguous technical contexts
+remain intact. Twenty-one acceptance cases cover prohibited prose, literal
+contracts, glossary-driven wording and typed locals. The writing guide records
+semantic-review limits and optional model-assisted review. Commit, push and CI
+run the complete declared terminology scope.
+
 ## Gates
 
-**1132 tests pass, 6 live tests deselected.** The last measured coverage is
+**1153 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

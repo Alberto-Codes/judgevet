@@ -179,7 +179,7 @@ def run_cli(
     """Run the CLI with a port and render handled errors, including rate limits.
 
     Args:
-        port: The SystemOnePort implementation to use for API calls.
+        port: The port used for API calls.
         state: State to evaluate (JSON string or text).
         questions: Questions as JSON string.
         model: Model to use. Defaults to "jev-latest".
