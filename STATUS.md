@@ -37,8 +37,8 @@ No cache/timeout explanation or intermittent-failure cure is claimed. This does
 not prove that an already-running agent session reloaded its native tools.
 
 [Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/pull/134#issuecomment-5786785252)
-records commands, hashes, runs and limits. The pure policy API remains planned;
-the additive root exports are now implemented for 0.7.0 below. No unseen API body
+records commands, hashes, runs and limits. The pure policy API and
+additive root exports are now implemented for 0.7.0 below. No unseen API body
 became verified.
 The release review also corrected current scope on twelve existing backlog issues.
 
@@ -55,8 +55,22 @@ port export causes two failures; substituting its identity causes one. Both
 mutations were restored. Static typing and architecture checks pass. Built and
 published artifact verification remains required under #143.
 
-#140 (pure policy), #141 (JSON/CLI integration), #142 (documentation) and #143
-(publication) remain open. The current published version is still 0.6.0.
+#140 adds judgevet.policy: frozen typed rules, ordered policies, validated
+question snapshots, immutable reports, pure validation/evaluation and distinct
+local definition/answer errors. Direct ValidatedPolicy construction validates;
+changing question constraints requires revalidation. Required answer scalars are
+checked even without a confidence predicate. Existing answer constructors and
+CLI semantics are unchanged; #141 will retain the legacy distinction explicitly.
+
+The 95 new acceptance cases and 146 unchanged legacy policy cases pass together.
+Independent isolated-cache mutations detect range validation (2), inclusive
+bounds (2), conjunction (1), report truncation (2), mutable rule retention (1),
+question validation (13) and finite-answer checks (6). All were restored. An
+initial proof reused stale bytecode after source restoration; fresh per-mutation
+cache directories removed that interference, and the full suite then passed.
+Four import contracts pass, including the new pure policy facade contract.
+
+#141 (JSON/CLI integration), #142 (documentation) and #143 (publication) remain open. The current published version is still 0.6.0.
 
 ## Delivered developer workflow
 
@@ -200,7 +214,7 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**949 tests pass, 6 live tests deselected, 95.46% coverage** (1219/1277 statements). All eleven configured
+**1044 tests pass, 6 live tests deselected, 95.72% coverage** (1432/1496 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
@@ -295,5 +309,6 @@ published with separate user authorization.
 The developer-workflow release requirements are fulfilled. Final evidence-commit
 CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
 first fresh-launcher failure remains unexplained. #67/#66 are being implemented
-under #138; root exports have landed, while pure policy and release work remain. The post-0.5.0 reliability and credential-scoping rounds are
+under #138; root exports and pure policy have landed, while JSON/CLI integration, docs and
+release verification remain. The post-0.5.0 reliability and credential-scoping rounds are
 fulfilled and published in 0.6.0 with user authorization. No inferred API claim was promoted and no quality gate was weakened.

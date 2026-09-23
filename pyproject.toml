@@ -266,3 +266,22 @@ allowed-authors = [
     # that guards the branch it is asking to merge into.
     "github-actions[bot]@users.noreply.github.com",
 ]
+
+[[tool.importlinter.contracts]]
+name = "Policy facade stays pure"
+type = "forbidden"
+source_modules = ["judgevet.policy"]
+forbidden_modules = [
+    "judgevet.adapters",
+    "judgevet.ports",
+    "json",
+    "pathlib",
+    "os",
+    "io",
+    "logging",
+    "httpx",
+    "typer",
+    "mcp",
+    "structlog",
+    "pydantic_settings",
+]
