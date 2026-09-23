@@ -89,3 +89,68 @@ and arbitrary exception messages or strings under other field names may expose
 data. The [HTTP stream tests](tests/unit/test_logging_streams.py) and
 [MCP stream tests](tests/unit/test_logging_mcp.py) prove the bounded diagnostic
 behavior with synthetic canaries; they do not prove universal redaction.
+
+## Cryptographic posture
+
+### Transport and certificates
+
+The default URL uses HTTPS. CLI and MCP
+[settings validation](src/judgevet/adapters/inbound/settings.py) rejects remote
+plaintext HTTP but permits `http://localhost` and `http://127.0.0.1` for local
+testing. Loopback HTTP is unencrypted. Direct library adapter construction
+does not run that validator: library callers must choose an HTTPS URL and a
+trusted transport themselves.
+
+The sync and async [HTTP adapters](src/judgevet/adapters/outbound/http.py)
+delegate TLS to HTTPX. They do not override certificate verification, install
+certificate pins or select cipher suites. With the default transport,
+[HTTPX verifies HTTPS certificates and host identity](https://www.python-httpx.org/advanced/ssl/)
+and uses the certifi CA bundle by default, rather than automatically using the
+OS trust store. The reviewed lockfile resolves HTTPX 0.28.1. The adapters also
+accept caller-supplied transports, whose behavior belongs to the caller.
+
+HTTPX's default environment support remains enabled.
+[`SSL_CERT_FILE` and `SSL_CERT_DIR`](https://www.python-httpx.org/environment_variables/)
+can replace its default trust roots; `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`
+and `NO_PROXY` affect routing. Review the launch environment as part of a
+deployment. Python's [ssl module](https://docs.python.org/3/library/ssl.html)
+uses OpenSSL; the available protocols and cryptographic behavior depend on
+that runtime and its configuration. judgevet does not perform its own
+certificate validation or supply a separate cryptographic implementation.
+
+### Storage and memory
+
+The request path has no persistent credential, state or answer store and no
+audit sink. The [CLI](src/judgevet/adapters/inbound/cli.py) prints answers and
+errors; [file inputs](src/judgevet/adapters/inbound/cli_inputs.py) read
+caller-owned files. Shell redirection, MCP hosts and application log handlers
+can persist that output. Python, installers and the platform can also write
+caches, swap or crash dumps. judgevet supplies no encryption at rest or
+retention control for those artifacts; their storage and protection belong to
+the application and platform.
+
+`SecretStr` masks display; it is not encrypted or locked memory. Unwrapped keys,
+HTTP headers and serialized payloads can have multiple in-memory copies.
+Python [strings are immutable](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str),
+and the interpreter manages its [object heap and allocators](https://docs.python.org/3/c-api/memory.html).
+Given those constraints and the adapter's plain strings, judgevet cannot
+guarantee secret zeroization when objects are freed. Closing an adapter releases
+network resources; it does not erase every copy of a credential.
+
+### Egress and compliance limits
+
+The production request path targets the configured service and has no judgevet
+telemetry or phone-home endpoint. This is not a guarantee of exactly one
+outbound connection: [HTTPX uses connection pools](https://www.python-httpx.org/advanced/clients/),
+and DNS, proxies and caller-supplied transports affect network activity.
+The default HTTPX clients do not follow redirects; the
+[redirect test](tests/unit/test_http_adapter.py) checks that setting. Network
+allowlists and enforcement belong to the deployment.
+
+judgevet does not claim FIPS compliance or automatically inherit it from the
+OS. It neither configures nor verifies a FIPS provider. OpenSSL documents
+[explicit FIPS module configuration requirements](https://docs.openssl.org/3.0/man7/fips_module/);
+a compliant deployment requires assessment of the actual cryptographic module,
+runtime and configuration. Certificate pinning, a judgevet mTLS configuration,
+encrypted storage and enterprise audit controls are not shipped features of
+0.6.0.

@@ -90,6 +90,11 @@ mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
+- #62: SECURITY.md now separates settings-only HTTPS validation, HTTPX TLS
+  verification and environment trust/proxy behavior from caller/platform
+  responsibilities. It documents storage and Python memory limits without
+  claiming zeroization, FIPS compliance or a fixed connection count.
+
 - #14: SECURITY.md documents 0.6.0 credential sources, service disclosure and
   diagnostic boundaries. GitHub private vulnerability reporting was enabled
   with owner approval and its API returned `enabled: true`. MCP protocol
