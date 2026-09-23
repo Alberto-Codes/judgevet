@@ -1,6 +1,6 @@
 [project]
 name = "judgevet"
-version = "0.6.0"
+version = "0.7.0"
 description = "Typed client, CLI and MCP server for TypeSafe's Jev (System One) judgment model"
 readme = "README.md"
 license = { file = "LICENSE" }

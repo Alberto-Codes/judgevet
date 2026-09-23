@@ -3,6 +3,24 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.7.0](https://github.com/Alberto-Codes/judgevet/compare/v0.6.0...v0.7.0) (2026-09-23)
+
+
+### Features
+
+* **api:** add immutable typed policy validation and evaluation ([a7069ca](https://github.com/Alberto-Codes/judgevet/commit/a7069ca5d53cc74a6c0ffc76ddf7f5df6f302f42)), closes [#140](https://github.com/Alberto-Codes/judgevet/issues/140)
+* **api:** support public ports, answers and Jev errors ([bef1152](https://github.com/Alberto-Codes/judgevet/commit/bef1152e7493a8603090f64729a4a10cc7e02a33)), closes [#139](https://github.com/Alberto-Codes/judgevet/issues/139)
+* **cli:** share typed policy decoding and comparisons ([c64ac1d](https://github.com/Alberto-Codes/judgevet/commit/c64ac1d931a844b9ee226ab35133b089c75deca7)), closes [#141](https://github.com/Alberto-Codes/judgevet/issues/141)
+
+
+### Documentation
+
+* **api:** document policy use and surface compatibility ([256d4cc](https://github.com/Alberto-Codes/judgevet/commit/256d4cc6871714f75a1b328a59ca7e26b224ebeb)), closes [#142](https://github.com/Alberto-Codes/judgevet/issues/142)
+* document credentials and security reporting ([c70dfd5](https://github.com/Alberto-Codes/judgevet/commit/c70dfd5e8cbc0639ad9ee24a657b17a1b785f906)), closes [#14](https://github.com/Alberto-Codes/judgevet/issues/14)
+* introduce the verified 0.6.0 public workflows ([0ec30a8](https://github.com/Alberto-Codes/judgevet/commit/0ec30a80a9cf95a569de50cdc7d0a9b1631636ea)), closes [#43](https://github.com/Alberto-Codes/judgevet/issues/43)
+* record verified 0.6.0 release and installation ([44ee39d](https://github.com/Alberto-Codes/judgevet/commit/44ee39d3f8e16c34d6b3748d4c40405dc41bfc98))
+* state the 0.6.0 cryptographic posture ([20e4969](https://github.com/Alberto-Codes/judgevet/commit/20e4969890d223b859a3e0fa4784c553e137fdf0)), closes [#62](https://github.com/Alberto-Codes/judgevet/issues/62)
+
 ## [0.6.0](https://github.com/Alberto-Codes/judgevet/compare/v0.5.0...v0.6.0) (2026-09-23)
 
 
