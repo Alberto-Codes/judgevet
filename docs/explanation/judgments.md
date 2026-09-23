@@ -87,7 +87,7 @@ not supply a review queue or execute refunds.
 
 Next, read [how policies turn answers into decisions](policies.md) and
 [what verification establishes](verification.md). For code, use the
-[library quick start](../../README.md#use-the-typed-library) and
+[library quick start](../../README.md#install-and-ask-one-question) and
 [Python policy guide](../how-to/use-policy-library.md).
 The [glossary](../reference/glossary.md) and [API reference](../reference/api.md)
 provide lookup definitions and fields.

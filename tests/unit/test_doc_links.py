@@ -58,3 +58,33 @@ def test_rendered_site_root_and_fragment(tmp_path: Path) -> None:
 def test_rendered_site_broken_anchor(tmp_path: Path) -> None:
     (tmp_path / "index.html").write_text('<a href="#absent">Broken</a>')
     assert any("absent" in item for item in check_doc_links.check_site(tmp_path))
+
+
+def test_repository_url_resolves_offline(tmp_path: Path) -> None:
+    page = tmp_path / "README.md"
+    (tmp_path / "target.md").write_text("# Target\n")
+    page.write_text(
+        "[read](https://github.com/Alberto-Codes/judgevet/blob/main/target.md#target)\n"
+    )
+    assert check_links([page], repository_root=tmp_path) == []
+
+
+def test_repository_url_missing_file_fails(tmp_path: Path) -> None:
+    page = tmp_path / "README.md"
+    page.write_text(
+        "[read](https://github.com/Alberto-Codes/judgevet/blob/main/missing.md)\n"
+    )
+    findings = check_links([page], repository_root=tmp_path)
+    assert len(findings) == 1
+    assert "missing target" in findings[0]
+
+
+def test_repository_url_missing_anchor_fails(tmp_path: Path) -> None:
+    page = tmp_path / "README.md"
+    (tmp_path / "target.md").write_text("# Target\n")
+    page.write_text(
+        "[read](https://github.com/Alberto-Codes/judgevet/blob/main/target.md#absent)\n"
+    )
+    findings = check_links([page], repository_root=tmp_path)
+    assert len(findings) == 1
+    assert "missing anchor" in findings[0]

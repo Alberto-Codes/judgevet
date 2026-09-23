@@ -9,31 +9,6 @@
       "language": "python",
       "kind": "runnable",
       "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
-    },
-    {
-      "language": "bash",
-      "kind": "runnable",
-      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
-    },
-    {
-      "language": "bash",
-      "kind": "runnable",
-      "reason": "CLI workflow requires synthetic inputs and an offline service fixture; verify stdout, stderr and exit status."
-    },
-    {
-      "language": "bash",
-      "kind": "runnable",
-      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
-    },
-    {
-      "language": "json",
-      "kind": "runnable",
-      "reason": "Complete input JSON; validate with the corresponding question/policy decoder or MCP schema."
-    },
-    {
-      "language": "bash",
-      "kind": "runnable",
-      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
     }
   ],
   "docs/explanation/policies.md": [

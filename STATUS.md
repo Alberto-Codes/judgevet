@@ -78,22 +78,22 @@ They retain the MCP state-schema discrepancy, mutable nested answer data and
 strict-versus-legacy policy distinctions. Pricing and calibration claims are
 removed from the API/root documentation; no runtime behavior changes.
 
-#153 begins with a complete 50-block README/user-doc inventory and seven
+#153 supplies a complete README/user-doc inventory (45 current blocks) and seven
 acceptance tests. Each block has an explicit classification and reason. Commit,
 push and CI gates reject inventory drift. An isolated-wheel gate now executes
 and type-checks all 15 Python programs
 with synthetic HTTP, secret-free environments and client cleanup checks. Seven
 executor acceptance cases bring the inventory/executor total to fourteen.
-Seven CLI shell blocks now run against a loopback fixture using exact documented
+Five CLI shell blocks now run against a loopback fixture using exact documented
 question/policy JSON; four acceptance cases cover pipe input, invalid options
-and policy exits. A separate optional-runtime gate validates all nine JSON/TOML blocks
+and policy exits. A separate optional-runtime gate validates all eight JSON/TOML blocks
 against input decoders, MCP discovery and template/report contracts, with six
 acceptance cases. The shared wheel builder now rejects nonempty output before building, with four
 selection acceptance cases and a stale-artifact failure proof. Three continuation
 acceptance cases cover exact saved tutorial commands and clean/met/unmet staged
 review. A wrong-filename mutation fails the isolated command and restoration
-passes. Separate disposable setup verification accounts for ten installation
-and development blocks; four credential/host shell templates remain explicitly
+passes. Separate disposable setup verification accounts for eight current installation
+blocks; four credential/host shell templates remain explicitly
 unexecuted. Offline examples do not verify live service behavior.
 
 #70 adds a local plain-English profile: a 25-word sentence limit and five
@@ -111,9 +111,17 @@ contracts, glossary-driven wording and typed locals. The writing guide records
 semantic-review limits and optional model-assisted review. Commit, push and CI
 run the complete declared terminology scope.
 
+#152 makes the README a library-first entry path: install, ask one billing
+question, interpret its probability and choose a next task. CLI and MCP routes
+link to complete guides. Security and evidence limits stay visible; release
+records remain in maintainer material. Absolute repository links work in package
+descriptions and now receive offline destination/anchor checks. Three acceptance
+cases prove valid targets and reject missing files or fragments. Duplicate README
+examples were removed; the task guides retain their executable coverage.
+
 ## Gates
 
-**1153 tests pass, 6 live tests deselected.** The last measured coverage is
+**1156 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

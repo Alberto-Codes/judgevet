@@ -22,7 +22,9 @@ The strict build checks authored local links and Markdown fragments before
 rendering. It then resolves generated Python cross-references and checks every rendered
 HTML destination and fragment, including root-relative navigation.
 It covers README, SECURITY, STATUS, repository guidance and all docs pages.
-External URLs are not fetched, so ordinary checks need no API key or service.
+Absolute GitHub `blob/main` URLs for this repository resolve against the checkout,
+including their fragments. This keeps README links usable on PyPI and checked
+offline. Other external URLs are not fetched, so checks need no API key or service.
 Installing dependencies can require the package index.
 
 Run just the repository link check with:
@@ -100,7 +102,7 @@ Dependency installation may use package indexes; example execution is offline.
 
 The command runs on push and in CI. It verifies Python wiring, not live-service
 behavior or judgment quality. Existing opt-in release smoke checks retain their
-separate live purpose. The same isolated gate also executes seven exact shell blocks from README,
+separate live purpose. The same isolated gate also executes five exact shell blocks from the
 CLI files and CLI policy guides. It supplies the documented JSON files and
 validates them through the installed decoders. Bash commands use a loopback
 HTTP fixture and synthetic credentials; no inherited key, proxy or user
@@ -119,23 +121,23 @@ outcomes. A wrong tutorial filename fails with its source page and fence line.
 
 Installation commands require separate disposable-environment verification.
 They may access package indexes and do not belong in the offline executor.
-Use temporary virtual environments, uv cache/tool directories and a disposable
-checkout for the README development commands. Verify each command's exit and
-output; a shell block without `set -e` can hide an earlier failure. Do not pass
-API credentials into development gates. For the README server startup command,
-use a dummy key and closed stdin; that verifies startup and shutdown, not MCP
-host connectivity. Credential acquisition and configured-host shell templates
+Use temporary virtual environments and uv cache/tool directories. Verify each
+command's exit and output; a shell block without `set -e` can hide an earlier
+failure. Follow the [repository rules](../../AGENTS.md) for development gates;
+those checks do not need API credentials. Separate MCP startup checks may use
+a dummy key and closed stdin. That verifies startup and shutdown, not host
+connectivity. Credential acquisition and configured-host shell templates
 remain unexecuted, with explicit inventory reasons.
 
-The current 50-block scope is accounted for as follows:
+The current 45-block scope is accounted for as follows:
 
 | Blocks | Verification |
 |---|---|
 | 15 Python programs | Isolated execution and typing |
-| 7 CLI shell workflows | Exact local inputs, output and exit checks |
+| 5 CLI shell workflows | Exact local inputs, output and exit checks |
 | 3 shell continuations | Saved tutorial programs and staged Git cases |
-| 9 JSON/TOML blocks | Decoder, discovery schema or contextual validation |
-| 10 installation/development blocks | Separate disposable setup audit |
+| 8 JSON/TOML blocks | Decoder, discovery schema or contextual validation |
+| 8 installation blocks | Separate disposable setup audit |
 | 4 credential/host shell templates | Explicit substitution requirements; not executed |
 | 2 text outputs | Exact policy output; synthetic judgment output with live placeholders retained |
 
@@ -153,7 +155,7 @@ uv run python -m scripts.check_doc_schemas
 
 This separate check builds a fresh wheel and installs its MCP extra in another
 isolated environment. It uses the installed server's discovered `ask_noul`
-schema to validate the exact README and connection-guide arguments. It makes
+schema to validate the exact connection-guide arguments. It makes
 no service call and does not launch or modify a user host.
 
 All current JSON/TOML fences have explicit contracts. These cover question-file

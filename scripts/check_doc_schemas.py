@@ -23,7 +23,6 @@ from scripts.smoke_release import (
 )
 
 CONTRACTS = {
-    ("README.md", 6): "mcp",
     ("docs/how-to/connect-mcp.md", 4): "host",
     ("docs/how-to/connect-mcp.md", 6): "mcp",
     ("docs/how-to/use-cli-files.md", 2): "questions",

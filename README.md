@@ -1,19 +1,24 @@
 # judgevet
 
-A typed Python client, CLI and optional MCP server for TypeSafe's **Jev**
-(System One) judgment model. Send content and typed questions; use the answers
-to classify, route or evaluate that content without parsing generated prose.
+A typed Python client for TypeSafe's **Jev** (System One) judgment model, with
+CLI and optional MCP entry points. Use it to ask structured questions about
+content—for example, whether a support ticket concerns billing.
+
+The **state** is your content. A **question** describes what to evaluate.
+A typed **answer** contains the model's values, which your application can
+inspect or compare with a local acceptance policy.
 
 **Unofficial and not affiliated with TypeSafe.** The
-[official TypeSafe Python SDK](https://docs.typesafe.ai/sdk/python) also offers
-typed questions and synchronous and asynchronous clients. Choose judgevet when
-you want an importable library, shell/CI workflows with explicit acceptance
-policies, and agent tools over one contract-tested core. The library and CLI
-install without the MCP runtime; the wheel includes `py.typed` for type checkers.
+[official TypeSafe Python SDK](https://docs.typesafe.ai/sdk/python) also provides
+typed questions and synchronous and asynchronous clients. judgevet adds a
+shared library, CLI and MCP contract with local policy evaluation.
+The library and CLI install without the MCP runtime.
 
-Find tasks and reference in the [documentation map](docs/index.md).
+Documentation status: **draft**. Start below or follow the
+[first-judgment tutorial](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-judgment.md)
+for environment setup, checkpoints and recovery steps.
 
-## Install
+## Install and ask one question
 
 Use Python 3.12 or newer. In a virtual environment:
 
@@ -22,163 +27,105 @@ python -m pip install 'judgevet==0.7.0'
 judgevet --help
 ```
 
-For an existing uv project, use `uv add 'judgevet==0.7.0'`.
-See [installation and MCP client setup](docs/how-to/install.md) and
-[security, credential handling and cryptographic posture](SECURITY.md).
-
 Supply a TypeSafe API key through your process environment or secret provider.
-The CLI and MCP accept `JEV_API__KEY` or `TYPESAFE_API_KEY`; `JEV_API__KEY` takes
-precedence. Library adapters take an explicit key. The example below reads
-`JEV_API__KEY`. Do not put real keys in source or command arguments.
+This example reads `JEV_API__KEY` and passes it explicitly to the library.
+Do not put real keys in source or command arguments. The
+[installation guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/install.md)
+covers other installation methods.
 
-## Use the typed library
+**This call sends the state, questions and selected model to the configured
+service.** Send only content you are authorized to disclose. Read the
+[data and credential guidance](https://github.com/Alberto-Codes/judgevet/blob/main/SECURITY.md)
+before using sensitive content. The example uses a synthetic ticket:
 
 ```python
 import os
 
-from judgevet import Choice, HTTPSystemOneAdapter, Noul, Score
+from judgevet import HTTPSystemOneAdapter, Noul
 
 with HTTPSystemOneAdapter(api_key=os.environ["JEV_API__KEY"]) as client:
-    answer = client.system_one(
+    response = client.system_one(
         state="I was charged twice. Please help today.",
-        questions={
-            "billing": Noul(instructions="Is this about billing?"),
-            "team": Choice(
-                instructions="Which team should handle this?",
-                criteria={"billing": "Payments", "support": "Technical help"},
-            ),
-            "urgency": Score(
-                instructions="How urgent is this?",
-                criteria=["Can wait", "This week", "Today"],
-            ),
-        },
+        questions={"billing": Noul(instructions="Is this about billing?")},
     )
 
-print(answer.nouls["billing"].noul)
-print(answer.choices["team"].choice)
-print(answer.scores["urgency"].score)
+answer = response.nouls["billing"]
+print(f"Probability of billing: {answer.noul}")
+print(f"Resolved model: {response.model}")
+print(f"Input tokens: {response.usage.input_tokens}")
 ```
 
-The [API reference](https://docs.typesafe.ai/api) defines the three question
-types and their answer fields:
+The context manager closes the HTTP client after the call. The answer remains
+available. If the import or call fails, use the tutorial's
+[recovery steps](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-judgment.md#recover-from-a-failed-checkpoint)
+or the [troubleshooting guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/troubleshoot.md).
 
-| Question | Typed answer |
+## Read the answer and make a decision
+
+A Noul value such as `0.85` reports the model's probability of yes. The actual
+value varies. It is not a boolean, a measured accuracy rate or an instruction
+to route the ticket. Noul has no separate confidence field.
+See the [vendor's Noul definition](https://docs.typesafe.ai/primitives/noul).
+
+The returned container also records the resolved model and token usage.
+Other question types let you select a label or evaluate an ordered rubric:
+
+| Question | What its answer contains |
 |---|---|
-| `Noul` | Probability of yes; no separate confidence field |
-| `Choice` | Selected option, per-option probabilities and confidence |
-| `Score` | Continuous score, scale legend, per-level probabilities and confidence |
+| `Noul` | Probability of yes |
+| `Choice` | Selected label, per-label probabilities and confidence |
+| `Score` | Continuous score, rubric legend, per-level probabilities and confidence |
 
-The answer also contains the resolved model and token usage. Use
-`AsyncHTTPSystemOneAdapter` with `async with` and await `system_one` for async
-applications. Both adapters close their HTTP client when the context exits.
+The [vendor API reference](https://docs.typesafe.ai/api) defines those fields.
+The [question-type explanation](https://github.com/Alberto-Codes/judgevet/blob/main/docs/explanation/judgments.md)
+shows how to choose a type and distinguish score, confidence and probability.
 
-## Evaluate policies from Python
+A local policy can require a minimum value before your application accepts an
+answer. For example, `0.85` meets a minimum of `0.8` and fails one of `0.9`.
+These are teaching thresholds, not production recommendations. A passing policy
+does not prove the model is correct or perform the application's next action.
+Try the [first-policy tutorial](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-policy.md)
+with synthetic answers; it requires no key or network.
 
-Version 0.7.0 adds `judgevet.policy` for immutable typed rules, validated
-question snapshots and ordered pass/fail reports. `judgevet.policy_json` decodes
-the existing CLI policy grammar. Both APIs are published in 0.7.0.
-See the [runnable typed and JSON policy guide](docs/how-to/use-policy-library.md)
-and [supported imports and compatibility](docs/reference/compatibility.md).
+## Choose your next task
 
-The CLI retains its grammar, diagnostics, output and exit meanings. MCP retains
-its three tools. The base installation still omits MCP; one distribution and
-version cover all surfaces.
+| Need | Start here |
+|---|---|
+| Learn one complete service call | [First judgment](https://github.com/Alberto-Codes/judgevet/blob/main/docs/tutorials/first-judgment.md) |
+| Call from an async application | [Async Python guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-async-library.md) |
+| Handle service and transport failures | [Library error handling](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/handle-errors.md) |
+| Evaluate typed or JSON policies in Python | [Policy guide](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-policy-library.md) |
+| Use shell commands, files or stdin | [CLI inputs](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-cli-files.md) and [CLI policies](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/use-cli-policy.md) |
+| Give an agent judgment tools | [Optional MCP installation, connection and discovery](https://github.com/Alberto-Codes/judgevet/blob/main/docs/how-to/connect-mcp.md) |
+| Look up types, options or schemas | [Reference map](https://github.com/Alberto-Codes/judgevet/blob/main/docs/index.md#reference-look-up-a-contract) |
+| Understand thresholds and tradeoffs | [Local policy explanation](https://github.com/Alberto-Codes/judgevet/blob/main/docs/explanation/policies.md) |
+| Choose an entry point and own its lifecycle | [Library-first architecture](https://github.com/Alberto-Codes/judgevet/blob/main/docs/explanation/architecture.md) |
 
-## Use the CLI
+The CLI uses the same library and can return JSON or a policy exit status.
+The optional MCP server exposes `ask_noul`, `ask_choice` and `ask_score` over
+stdio. Follow the connection guide to install the extra and configure a host.
+These are alternative entry points; you do not need MCP to use Python or the CLI.
 
-With a key in the environment, ask a question and emit JSON:
+## Know the limits
 
-```bash
-judgevet 'I was charged twice.' \
-  '{"billing":{"type":"noul","instructions":"Is this about billing?"}}' --json
-```
+Exact documentation examples run against isolated installations with synthetic
+answers. Those checks establish local wiring, not model quality or calibration.
+Live evidence covers only the observed cases and resolved `jev-1.13.0` model.
+The 429/529 error bodies remain unseen; other models and untouched fields remain
+unverified. The [verification explanation](https://github.com/Alberto-Codes/judgevet/blob/main/docs/explanation/verification.md)
+separates local tests, vendor statements and live observations.
 
-For reusable questions and an explicit pass/fail policy, create the files using
-[the file input guide](docs/how-to/use-cli-files.md) and
-[the policy guide](docs/how-to/use-cli-policy.md), then run:
+Diagnostics are quiet by default. Debug metadata excludes state and question
+text, but protocol errors, CLI error envelopes and arbitrary tracebacks can
+contain sensitive content. Review them before sharing. The
+[security policy](https://github.com/Alberto-Codes/judgevet/blob/main/SECURITY.md)
+describes credential, disclosure and diagnostic limits.
 
-```bash
-judgevet --state-file document.txt --questions-file questions.json --policy policy.json --json
-```
+## Maintainers
 
-A valid judgment exits 0 when the policy passes and 3 when it does not.
-Input/service failures exit 1; usage conflicts exit 2. Without a policy, a low
-probability remains a successful judgment. State can also come from stdin with
-`--state-file -`. The [staged-diff example](docs/how-to/review-staged-diff.md)
-shows an opt-in Git workflow.
-
-## Use the optional MCP server
-
-Install the extra and launch the stdio server with a key in its environment:
-
-```bash
-python -m pip install 'judgevet[mcp]==0.7.0'
-judgevet-mcp
-```
-
-Configure your MCP host to run `judgevet-mcp`. It waits for protocol input on
-stdin; stdout carries protocol frames and stderr carries diagnostics. It is
-not an interactive shell. See [client setup and the pinned uvx launcher](docs/how-to/install.md).
-
-The tools are `ask_noul`, `ask_choice` and `ask_score`. For example, call
-`ask_noul` with these arguments from your MCP client:
-
-```json
-{"state":"I was charged twice.","instruction":"Is this about billing?"}
-```
-
-Choice accepts a criteria map; Score accepts an ordered criteria list. See the
-[connection checks](docs/how-to/install.md#verify-the-connection) for all three.
-If initialization or discovery fails, follow the
-[connection troubleshooting steps](docs/how-to/install.md#when-mcp-does-not-connect).
-Intermittent initialization failures have no established cause or remedy.
-A successful separate check does not prove an existing session loaded the tools.
-
-## Diagnostics and security
-
-Routine diagnostics are quiet by default. `JEV_LOG__LEVEL=debug` emits HTTP
-call metadata to stderr; `JEV_LOG__FORMAT` selects `json` or `console`.
-These events exclude state, question text, headers and exception text.
-MCP runtime diagnostics retain severity only. This does not promise redaction
-of MCP protocol errors, CLI error envelopes or arbitrary tracebacks. Library
-imports do not configure logging. Read the [security policy](SECURITY.md)
-before handling sensitive content or sharing diagnostics.
-
-## What is verified
-
-Documentation status: **draft**. The published package has passed isolated
-library, CLI and MCP checks. The library and policy-guide examples have been
-executed against it. Synthetic answers do not prove model quality.
-
-Live calls exercised the success shapes, resolved `jev-1.13.0` model, Noul
-criteria and Score legend, plus authentication and validation errors. The
-observed error detail is polymorphic: an object for authentication and an
-array for validation. The [API notes](docs/reference/api.md) and
-[verification table](STATUS.md#what-is-verified-and-what-is-not) separate these
-observations from documentation-derived expectations.
-
-Live 429/529 bodies remain unseen. Other resolved models and fields not touched
-by a call remain unverified. Contract tests exercise synthetic fixtures; they
-do not turn those cases into live evidence. The [evidence ledger](STATUS.md) links the release verification records.
-
-## Development
-
-The domain is pure. Ports separate it from HTTP and the CLI/MCP adapters;
-`import-linter` enforces those boundaries and isolates the optional MCP runtime.
-From a source checkout:
-
-```bash
-uv sync --extra mcp
-uv run pre-commit install --install-hooks -t pre-commit -t pre-push -t commit-msg
-uv run ruff check .
-uv run ruff format --check .
-uv run ty check
-uv run lint-imports
-uv run docvet check --all
-uv run pytest -q --cov
-```
-
-Coverage floor is 90%. `live` tests contact the real service and are excluded
-from the default run. Contributions follow [AGENTS.md](AGENTS.md).
-
-Release operators: see the [maintainer procedures](docs/maintainers/index.md).
+Use the [maintainer procedures](https://github.com/Alberto-Codes/judgevet/blob/main/docs/maintainers/index.md)
+for documentation checks, package verification and releases.
+[Repository contribution rules](https://github.com/Alberto-Codes/judgevet/blob/main/AGENTS.md)
+define gates and commits. The
+[evidence ledger](https://github.com/Alberto-Codes/judgevet/blob/main/STATUS.md)
+retains release records and the detailed live-verification table.

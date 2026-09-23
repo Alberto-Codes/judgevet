@@ -13,7 +13,6 @@ from pathlib import Path
 from scripts.doc_example_inventory import Block, discover
 
 WORKFLOWS = {
-    "README.md": {3: "judgment", 4: "policy"},
     "docs/how-to/use-cli-files.md": {1: "judgment", 3: "state", 4: "judgment"},
     "docs/how-to/use-cli-policy.md": {3: "policy", 7: "automation"},
 }

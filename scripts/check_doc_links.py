@@ -17,6 +17,8 @@ from urllib.parse import unquote, urlsplit
 import markdown
 from mkdocs.config.defaults import MkDocsConfig
 
+REPOSITORY_URL = "https://github.com/Alberto-Codes/judgevet/blob/main/"
+
 
 class Links(HTMLParser):
     """Collect rendered destinations and explicit or generated anchors.
@@ -66,26 +68,31 @@ def parse_page(path: Path) -> Links:
     return parser
 
 
-def check_links(pages: list[Path]) -> list[str]:
+def check_links(pages: list[Path], repository_root: Path | None = None) -> list[str]:
     """Check local destinations and Markdown fragments for every supplied page.
 
     Args:
         pages: Source Markdown pages.
+        repository_root: Checkout for absolute repository URLs; defaults to this script's root.
 
     Returns:
         Actionable source/target findings. External URLs are not fetched.
     """
     findings = []
+    root = repository_root or Path(__file__).resolve().parents[1]
     parsed = {page.resolve(): parse_page(page) for page in pages}
     for page in pages:
         for target in parsed[page.resolve()].targets:
-            url = urlsplit(target)
-            if url.scheme or url.netloc:
-                continue
+            base = page.parent
+            if target.startswith(REPOSITORY_URL):
+                url = urlsplit(target[len(REPOSITORY_URL) :])
+                base = root
+            else:
+                url = urlsplit(target)
+                if url.scheme or url.netloc:
+                    continue
             destination = (
-                (page.parent / unquote(url.path)).resolve()
-                if url.path
-                else page.resolve()
+                (base / unquote(url.path)).resolve() if url.path else page.resolve()
             )
             if not destination.is_file():
                 findings.append(f"{page}: missing target {target}")
