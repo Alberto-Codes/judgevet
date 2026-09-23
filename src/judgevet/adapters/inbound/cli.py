@@ -357,9 +357,9 @@ def main(
 ) -> int:
     """Call the Jev System One API.
 
-    Reads Settings, configures stderr logging, lets an explicit --api-key override the settings key,
-    constructs HTTPSystemOneAdapter once with timeout from Settings, calls
-    run_cli with it as the port, and closes the adapter in finally.
+    Reads Settings and configures stderr logging. An explicit --api-key overrides
+    the settings key. Constructs HTTPSystemOneAdapter once with the settings
+    timeout, then calls run_cli with it as the port. Closes the adapter in finally.
     The command wrapper supplies separate help and propagates failure status.
 
     Args:

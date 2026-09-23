@@ -71,7 +71,7 @@ missing context and categories that overlap.
 
 Compare candidate rules on those examples. Count accepted incorrect routes,
 rejected correct routes and cases needing review. Use a separate set of labeled
-examples to evaluate the rule you selected; tuning and evaluating on the same
+examples to evaluate the rule you selected. Tuning and evaluating on the same
 examples gives weak evidence of performance on new tickets.
 
 A higher minimum accepts a subset of the same fixed answers. It can reduce

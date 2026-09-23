@@ -188,9 +188,9 @@ out-of-range scalars, Choice labels outside the snapshot, and Score values
 outside the snapshotted scale. It does not revalidate unused probability or
 legend metadata; those remain the answer types' responsibility.
 
-The legacy CLI bridge retains its earlier checks: it checks confidence only
-when requested and does not compare returned Choice/Score values to the original
-question criteria. Its private `Rule`, parser and evaluator return shapes remain
+The legacy CLI bridge checks confidence only when requested. It does not
+compare returned Choice/Score values to the original question criteria. Its
+private `Rule`, parser and evaluator return shapes remain
 available. Both paths share actual predicate comparisons and detail rendering.
 See the [supported imports and compatibility contract](../reference/compatibility.md).
 

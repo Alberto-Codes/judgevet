@@ -25,10 +25,9 @@ Examples:
         adapter.close()
     ```
 
-    The async adapter is the same call, awaited. It is a separate class
-    rather than a mode, because the sync and async methods share a name and
-    a Protocol's members are keyed by name — the two cannot live behind one
-    port:
+    The async adapter is the same call, awaited. It uses a separate class
+    because the sync and async methods share a name. A Protocol's members are
+    keyed by name, so the two cannot live behind one port:
 
     ```python
     from judgevet import AsyncHTTPSystemOneAdapter, Noul

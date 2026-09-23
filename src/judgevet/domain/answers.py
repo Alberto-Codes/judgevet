@@ -1,9 +1,9 @@
 """Answer types returned by the Jev API.
 
-The domain enforces invariants on construction: noul in [0,1], confidence in
-[0,1], probabilities summing to 1, choice present in probabilities, score in
-legend range, and legend/probability keys matching. Frozen dataclasses prevent
-attribute reassignment; nested dictionaries remain mutable. Range comparisons
+The domain checks noul and confidence against [0,1] on construction. It checks
+that probabilities sum to 1 and contain the selected choice. It also checks
+that score lies in legend range and legend/probability keys match. Frozen
+dataclasses prevent attribute reassignment; nested dictionaries remain mutable. Range comparisons
 do not reject every nonfinite value. Public policy evaluation performs
 additional finite-scalar checks.
 
@@ -91,9 +91,9 @@ class ChoiceAnswer:
 
     See: https://docs.typesafe.ai/primitives/choice
 
-    This is a frozen dataclass with validation in `__post_init__` to ensure
-    confidence is numeric in [0.0, 1.0], all probabilities are numeric in [0.0, 1.0],
-    probabilities sum to 1.0, and choice is a key.
+    This frozen dataclass validates values in `__post_init__`. Confidence and
+    probabilities must be numeric and within [0.0, 1.0]. Probabilities must sum
+    to 1.0 and contain the selected choice.
 
     Attributes:
         choice (str): The name of the choice with highest probability.
@@ -173,10 +173,9 @@ class ScoreAnswer:
 
     See: https://docs.typesafe.ai/primitives/score
 
-    This is a frozen dataclass with validation in `__post_init__` to ensure
-    score is in legend range, confidence is in [0.0, 1.0], all probability values
-    are numeric in [0.0, 1.0], probabilities sum to 1.0, and legend/probability
-    keys match.
+    This frozen dataclass validates values in `__post_init__`. Score must lie in
+    legend range. Confidence and probabilities must be numeric and within
+    [0.0, 1.0]. Probabilities must sum to 1.0, and legend/probability keys must match.
 
     Attributes:
         score (float): Expected score (probability-weighted average of rubric levels).
@@ -208,15 +207,15 @@ class ScoreAnswer:
     def __post_init__(self) -> None:
         """Validate score, confidence, legend, and probabilities.
 
-        Ensures score is in legend range, confidence is in [0.0, 1.0], all
-        probability values are numeric in [0.0, 1.0], probabilities sum to 1.0,
-        and legend/probability keys match.
+        Checks score against legend range and confidence against [0.0, 1.0].
+        Checks numeric probabilities against [0.0, 1.0] and their sum against 1.0.
+        Checks that legend/probability keys match.
 
         Raises:
             TypeError: If any numeric key or value is not the expected type.
-            ValueError: If score is outside legend range, confidence is outside
-                [0.0, 1.0], any probability is outside [0.0, 1.0], probabilities
-                do not sum to 1.0, or keys do not match.
+            ValueError: If score is outside legend range, or confidence or any
+                probability is outside [0.0, 1.0]. Also raised if probabilities
+                do not sum to 1.0 or legend/probability keys do not match.
         """
         if isinstance(self.confidence, bool) or not isinstance(
             self.confidence, (int, float)

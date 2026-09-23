@@ -82,7 +82,7 @@ A missing required answer or a wrong answer type instead raises
 `PolicyDefinitionError`. See [policy error handling](../how-to/use-policy-library.md#handle-errors-and-immutable-values).
 
 If your program reports a policy-definition error, check that the rule name
-matches the question and that the threshold is a finite number from zero to
+matches the question. Check that the threshold is a finite number from zero to
 one. If judgevet cannot be imported, run the file with the tutorial environment's
 interpreter. Do not add service credentials to fix this offline example.
 

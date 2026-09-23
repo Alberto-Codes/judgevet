@@ -10,6 +10,7 @@ These guides are for people who build and publish judgevet.
 For package use, follow [installation](../how-to/install.md) or the
 [typed policy guide](../how-to/use-policy-library.md).
 
+- [Write and review technical prose](writing-guide.md).
 - [Build documentation and check links](build-docs.md).
 - [Verify a wheel's typing marker and isolated consumer](verify-package.md).
 - [Cut and verify a release](cut-a-release.md): authorization, compatibility

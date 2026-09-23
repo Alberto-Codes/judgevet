@@ -83,9 +83,9 @@ execution; it does not substitute a simpler example. Behavioral checks are separ
 uv run python -m scripts.check_doc_python
 ```
 
-This builds into a fresh temporary directory, installs that exact wheel into a
-new environment, proves import isolation, and executes all 15 current Python
-blocks from README/user docs without rewriting them. It reuses the release
+This builds into a fresh temporary directory and installs that exact wheel into
+a new environment. It proves import isolation and executes all 15 current
+Python blocks from README/user docs without rewriting them. It reuses the release
 helpers and Python extractor, and verifies extraction matches the inventory's
 exact text. The base install has no optional MCP dependency. A final typing pass
 checks each extracted file against that interpreter.
@@ -156,9 +156,9 @@ isolated environment. It uses the installed server's discovered `ask_noul`
 schema to validate the exact README and connection-guide arguments. It makes
 no service call and does not launch or modify a user host.
 
-All current JSON/TOML fences have explicit contracts: question-file validation,
-policy decoding, rule fragments wrapped in their stated question context,
-illustrative report consistency, MCP arguments or host-template structure.
+All current JSON/TOML fences have explicit contracts. These cover question-file
+validation, policy decoding, contextual rule fragments, illustrative report
+consistency, MCP arguments and host-template structure.
 The checker rejects new data blocks without a contract and stale selections.
 Rule fragments remain fragments; wrapping them for validation does not turn
 them into complete policy-file examples. The host template is parsed, not used

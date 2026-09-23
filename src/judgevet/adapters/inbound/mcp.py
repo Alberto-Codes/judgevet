@@ -1,8 +1,8 @@
 """Inbound MCP stdio server.
 
-This module provides an MCP server that exposes three tools, ``ask_noul``,
-``ask_choice``, and ``ask_score``, each taking a state and an instruction and
-returning the corresponding answer as MCP structured content.
+This module provides an MCP server with three tools: ``ask_noul``,
+``ask_choice``, and ``ask_score``. Each takes a state and an instruction,
+then returns the corresponding answer as MCP structured content.
 
 The server was tested with MCP Python SDK v2.2.0. Its
 [Server.run](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp/server/lowlevel/server.py)
@@ -125,8 +125,8 @@ def create_mcp_server(port: SystemOnePort) -> Any:
         """Dispatch one tool call to the port and return its structured result.
 
         Dispatches to ask_noul, ask_choice, or ask_score based on the tool name.
-        Each tool validates required arguments (state, instruction), calls the
-        SystemOnePort with the appropriate question type, and returns structured
+        Each tool validates the required state and instruction arguments. It calls
+        SystemOnePort with the appropriate question type. It returns structured
         content with the answer, model, and token usage.
 
         Args:

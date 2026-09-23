@@ -96,9 +96,17 @@ passes. Separate disposable setup verification accounts for ten installation
 and development blocks; four credential/host shell templates remain explicitly
 unexecuted. Offline examples do not verify live service behavior.
 
+#70 adds a local plain-English profile: a 25-word sentence limit and five
+banned marketing adjectives. Structural parsing covers README, SECURITY,
+authored docs including maintainer pages, and package docstrings. Seventeen
+acceptance cases cover prose, literal syntax, sentence boundaries and source
+locations. Commit, push and CI run the complete declared scope. The
+[writing guide](docs/maintainers/writing-guide.md) records exclusions and human
+review criteria. This is not a claim of ASD-STE100 compliance.
+
 ## Gates
 
-**1115 tests pass, 6 live tests deselected.** The last measured coverage is
+**1132 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

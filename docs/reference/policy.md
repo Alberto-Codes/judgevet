@@ -78,7 +78,7 @@ See [evaluation source](../../src/judgevet/domain/policy_evaluation.py).
 
 The CLI shares comparisons but retains its legacy malformed-answer checks.
 Public evaluation checks confidence without a confidence predicate and checks
-Choice/Score against the question snapshot; do not assume the legacy CLI
+Choice/Score against the question snapshot. Do not assume the legacy CLI
 wrapper enforces those additional conditions. This distinction concerns
 malformed answers, not different threshold operators.
 

@@ -2,6 +2,7 @@
 
 Error handling:
     The API error `detail` field is polymorphic:
+
     - Array for validation errors (422): [{"type", "loc", "msg", "input"}]
     - Object for auth errors (401/403): {"error_type", "message"}
     - Absent, malformed or unrecognised: falls back to status line alone.
@@ -296,9 +297,9 @@ class HTTPSystemOneAdapter:
         JevResponseError: If the API returns 2xx with unparseable body.
 
     Error details:
-        Validation errors (422) include an array of error objects; each
-        object's `input` key contains the caller's request payload and is
-        deliberately omitted from the error message.
+        Validation errors (422) include an array of error objects. Each
+        object's `input` key contains the caller's request payload. The adapter
+        deliberately omits this key from the error message.
 
         Auth errors (401/403) return an object with `error_type` and
         `message` fields.
@@ -388,9 +389,9 @@ class HTTPSystemOneAdapter:
             JevResponseError: If the API returns 2xx with unparseable body.
 
         Error details:
-            Validation errors (422) include an array of error objects; each
-            object's `input` key contains the caller's request payload and is
-            deliberately omitted from the error message.
+            Validation errors (422) include an array of error objects. Each
+            object's `input` key contains the caller's request payload. The adapter
+            deliberately omits this key from the error message.
 
             Auth errors (401/403) return an object with `error_type` and
             `message` fields.
@@ -464,9 +465,9 @@ class AsyncHTTPSystemOneAdapter:
         JevResponseError: If the API returns 2xx with unparseable body.
 
     Error details:
-        Validation errors (422) include an array of error objects; each
-        object's `input` key contains the caller's request payload and is
-        deliberately omitted from the error message.
+        Validation errors (422) include an array of error objects. Each
+        object's `input` key contains the caller's request payload. The adapter
+        deliberately omits this key from the error message.
 
         Auth errors (401/403) return an object with `error_type` and
         `message` fields.
@@ -560,9 +561,9 @@ class AsyncHTTPSystemOneAdapter:
             JevResponseError: If the API returns 2xx with unparseable body.
 
         Error details:
-            Validation errors (422) include an array of error objects; each
-            object's `input` key contains the caller's request payload and is
-            deliberately omitted from the error message.
+            Validation errors (422) include an array of error objects. Each
+            object's `input` key contains the caller's request payload. The adapter
+            deliberately omits this key from the error message.
 
             Auth errors (401/403) return an object with `error_type` and
             `message` fields.

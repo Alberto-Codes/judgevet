@@ -50,7 +50,7 @@ files and command arguments.
 
 The [HTTP adapter](src/judgevet/adapters/outbound/http.py) sends the supplied
 state, named questions (including instructions and criteria), and requested
-model as JSON, with the API key in a Bearer authorization header. This follows
+model as JSON. It sends the API key in a Bearer authorization header. This follows
 the [official API quick start](https://docs.typesafe.ai/introduction/quickstart).
 The default service is `https://api.typesafe.ai`; the CLI and MCP accept
 `JEV_API__BASE_URL` or `TYPESAFE_BASE_URL`, and library callers can supply
@@ -107,7 +107,7 @@ The sync and async [HTTP adapters](src/judgevet/adapters/outbound/http.py)
 delegate TLS to HTTPX. They do not override certificate verification, install
 certificate pins or select cipher suites. With the default transport,
 [HTTPX verifies HTTPS certificates and host identity](https://www.python-httpx.org/advanced/ssl/)
-and uses the certifi CA bundle by default, rather than automatically using the
+by default. It uses the certifi CA bundle rather than automatically using the
 OS trust store. The reviewed lockfile resolves HTTPX 0.28.1. The adapters also
 accept caller-supplied transports, whose behavior belongs to the caller.
 

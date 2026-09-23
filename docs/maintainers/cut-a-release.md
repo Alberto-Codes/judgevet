@@ -109,8 +109,8 @@ gh run view "$TEST_RUN" --verbose
 ```
 
 Confirm both smoke steps succeeded before upload. Both publishing workflows
-build distributions once, download their `dist` artifact in the publishing
-job, require exactly one wheel, and pass that path to the base and MCP smoke
+build distributions once and download their `dist` artifact in the publishing
+job. They require exactly one wheel and pass its path to the base and MCP smoke
 runners before OIDC upload. Each smoke step receives the key separately.
 Ordinary CI makes no live call.
 
