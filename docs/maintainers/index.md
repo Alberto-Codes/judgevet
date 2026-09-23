@@ -4,6 +4,8 @@ status: draft
 
 # Maintainer procedures
 
+Status: **draft**.
+
 These guides are for people who build and publish judgevet.
 For package use, follow [installation](../how-to/install.md) or the
 [typed policy guide](../how-to/use-policy-library.md).

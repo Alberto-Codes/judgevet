@@ -4,6 +4,8 @@ status: draft
 
 # Supported imports and compatibility
 
+Status: **draft**.
+
 judgevet ships one distribution and one version. The library, CLI, MCP server
 and optional dependencies have separate compatibility assessments within that
 release. One wheel does not have independently released library/CLI/MCP versions.

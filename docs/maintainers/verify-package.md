@@ -4,6 +4,8 @@ status: draft
 
 # Verify package typing
 
+Status: **draft**.
+
 For package maintainers. Run these checks before publishing a wheel.
 For supported consumer imports, see [compatibility](../reference/compatibility.md).
 

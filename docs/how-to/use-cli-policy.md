@@ -4,6 +4,8 @@ status: draft
 
 # Apply an explicit acceptance policy
 
+Status: **draft**.
+
 Keep the questions and their acceptance policy in separate version-controlled
 JSON files. First create `questions.json`:
 

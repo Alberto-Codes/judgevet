@@ -11,6 +11,8 @@ you want an importable library, shell/CI workflows with explicit acceptance
 policies, and agent tools over one contract-tested core. The library and CLI
 install without the MCP runtime; the wheel includes `py.typed` for type checkers.
 
+Find tasks and reference in the [documentation map](docs/index.md).
+
 ## Install
 
 Use Python 3.12 or newer. In a virtual environment:

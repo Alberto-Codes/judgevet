@@ -4,6 +4,8 @@ status: draft
 
 # Use question files and piped state
 
+Status: **draft**.
+
 Keep questions in a UTF-8 JSON file using the same shape as the positional
 questions argument. For example, save this as `questions.json`:
 

@@ -4,6 +4,8 @@ status: draft
 
 # Review staged diffs
 
+Status: **draft**.
+
 This document describes the `review-staged.sh` example, an opt-in probabilistic
 judgment workflow for reviewing staged Git changes.
 

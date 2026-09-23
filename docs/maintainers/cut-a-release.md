@@ -4,6 +4,8 @@ status: draft
 
 # Cut a release
 
+Status: **draft**.
+
 For release maintainers. These procedures publish immutable artifacts.
 For package use, start with [installation](../how-to/install.md).
 

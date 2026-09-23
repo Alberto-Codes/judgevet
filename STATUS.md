@@ -43,6 +43,11 @@ vocabulary guidance links to it. Definitions distinguish model numbers from
 local decisions, preserve literal API names and retain observed/inferred limits.
 Terminology enforcement remains #71; no checker or service evidence changed.
 
+#10 has a [navigation foundation](docs/index.md): all current pages have draft
+metadata and visible status, with separate user and maintainer paths. Final
+navigation acceptance remains open until the tutorial, explanation and complete
+error-reference destinations land and #12 validates the rendered site.
+
 ## Gates
 
 **1075 tests pass, 6 live tests deselected.** The last measured coverage is
