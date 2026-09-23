@@ -50,7 +50,10 @@ nav:
       - Local policies: explanation/policies.md
       - Evidence limits: explanation/verification.md
   - Reference:
-      - API: reference/api.md
+      - Python API: reference/api.md
+      - CLI: reference/cli.md
+      - MCP: reference/mcp.md
+      - Policy: reference/policy.md
       - Glossary: reference/glossary.md
       - Compatibility: reference/compatibility.md
       - Configuration: reference/configuration.md

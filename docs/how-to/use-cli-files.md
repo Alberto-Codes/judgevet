@@ -61,3 +61,5 @@ turn a low probability into an operational failure.
 To turn a judgment into an acceptance decision, use an [explicit policy](use-cli-policy.md).
 That guide shows how automation handles exits 0, 1, 2 and 3. If the command
 fails, use [troubleshooting](troubleshoot.md); do not publish unreviewed stderr.
+
+For the full contract, see the [CLI reference](../reference/cli.md).

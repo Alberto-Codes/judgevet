@@ -1,7 +1,8 @@
 """Jev (TypeSafe System One) Python client.
 
 This client provides typed access to TypeSafe's Jev API, which answers
-structured questions about text with calibrated confidence values.
+structured questions about supplied content. Returned confidence values do not
+establish calibration for a caller's task.
 
 Examples:
     ```python

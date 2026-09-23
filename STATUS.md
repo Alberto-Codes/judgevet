@@ -45,8 +45,8 @@ Terminology enforcement remains #71; no checker or service evidence changed.
 
 #10 has a [navigation foundation](docs/index.md): all current pages have draft
 metadata and visible status, with separate user and maintainer paths. Final
-navigation acceptance remains open until the tutorial, explanation and complete
-error-reference destinations land and #12 validates the rendered site.
+navigation acceptance remains open for the final reading-path audit. Tutorial,
+explanation and error-reference destinations now exist; #12 validates site links.
 
 #149 supplies explanations of question types, local policy decisions and evidence
 limits. The shared support-ticket scenario uses labeled synthetic values. Its
@@ -71,7 +71,10 @@ Example checks use synthetic answers and do not promote live-service evidence.
 #151 begins with configuration and error reference: explicit library settings,
 environment precedence, entry-point model overrides, error constructors and
 retry metadata. Generated error docstrings now match those local contracts.
-Full API, CLI, MCP and policy reference completion remains open.
+The completed API, CLI, MCP and policy references enumerate the shipped surfaces.
+They retain the MCP state-schema discrepancy, mutable nested answer data and
+strict-versus-legacy policy distinctions. Pricing and calibration claims are
+removed from the API/root documentation; no runtime behavior changes.
 
 ## Gates
 

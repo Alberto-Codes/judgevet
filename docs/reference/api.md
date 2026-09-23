@@ -2,105 +2,107 @@
 status: draft
 ---
 
-# Jev Client API Reference
+# Python API reference
 
-Status: **draft**.
+Status: **draft**. Success and 401/422 bodies have live evidence. The 429/529
+bodies, resolved models other than `jev-1.13.0`, and untouched fields remain
+inferred. See the [evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not).
 
-> The success response and the 401/422 error bodies are
-> verified against the live service (2026-09-21). The 429 and 529 bodies,
-> models other than `jev-1.13.0`, and any field no call has exercised remain
-> inferred from published documentation. `STATUS.md` holds the line-by-line
-> table.
+The [supported imports](compatibility.md) enumerate the root exports and policy
+facades. Generated Python reference in the site provides source signatures;
+this page records their semantics. [Configuration](configuration.md),
+[errors](errors.md) and [policies](policy.md) describe the related contracts.
+The [glossary](glossary.md) distinguishes probability, confidence and score.
 
-Use the [glossary](glossary.md) to distinguish probability, confidence, score
-and local acceptance decisions.
+## Question types
 
-Generated Python signatures and source documentation are available through
-the Reference navigation in the [locally built site](../maintainers/build-docs.md).
+`Question` is `Noul | Choice | Score`. These are mutable local objects, not
+service-side validation results. Their constructors do not validate every
+vendor constraint. Typed objects and raw question mappings are accepted by the
+HTTP adapters, including mixed mappings.
 
-## Question Types
+| Type | Constructor arguments | Meaning and source |
+|---|---|---|
+| `Noul` | `instructions=None`, `criteria=None` | Yes/no question; optional criteria use `true` and `false` descriptions. [Noul](https://docs.typesafe.ai/primitives/noul) |
+| `Choice` | required `criteria`, `instructions=None` | Named alternatives mapped to descriptions. [Choice](https://docs.typesafe.ai/primitives/choice) |
+| `Score` | required `criteria`, `instructions=None` | Ordered rubric descriptions; positions start at zero. [Score](https://docs.typesafe.ai/primitives/score) |
 
-### Noul
+`instructions` accepts a string, dictionary, sequence or `None` in the Python
+annotations. Choice descriptions accept those same forms; Score descriptions
+accept strings, dictionaries or sequences. Noul criteria accepts a dictionary.
+These annotations are not evidence that every possible value has been exercised
+against the service. Prefer the simple text examples in the task guides.
 
-A yes/no question.
+Choice copies its criteria into a dictionary; Score copies its criteria into a
+list. These are shallow copies. Noul keeps its supplied criteria reference.
+The [question source](../../src/judgevet/domain/questions.py) defines the exact
+Python types. The outbound adapter adds the wire `type` and omits optional
+`None` instructions/criteria when converting typed questions.
 
-**Parameters:**
-- `instructions`: The yes/no question or statement to evaluate
-- `criteria`: Optional. An object with `true` and `false` descriptions of what a yes and a no mean. See: https://docs.typesafe.ai/primitives/noul
+## Adapters and ports
 
-**Response:** `NoulAnswer` with `noul` probability (0-1)
+`HTTPSystemOneAdapter` and `AsyncHTTPSystemOneAdapter` implement the synchronous
+and asynchronous calls respectively. Their constructors accept `api_key`,
+`base_url`, `default_model`, `transport` and `timeout_seconds`; see the
+[defaults and validation table](configuration.md#direct-python-adapters).
+Both send the [documented request](https://api.typesafe.ai/docs) to
+`POST /v1/systemone` with bearer authentication.
 
-### Choice
+| Call argument | Python contract |
+|---|---|
+| `state` | Required string, dictionary or list containing the content to judge. |
+| `questions` | Required mapping from caller-chosen names to typed questions or raw mappings. |
+| `model` | Optional string on the concrete adapters; omitted/empty uses the constructor default. |
 
-A question that selects between named alternatives.
+`system_one` returns `SystemOneResponse`; the async call must be awaited. One
+call produces one HTTP request, without automatic retries. The adapters parse
+wire answers into domain types. Successful parsing does not validate the
+judgment's quality or guarantee an answer for every supplied name. See
+[error boundaries](errors.md#retry-and-exception-boundaries).
 
-**Parameters:**
-- `criteria`: Labels mapped to descriptions
-- `instructions`: The question to ask
+Use `with` or `close()` for sync ownership and `async with` or awaited `aclose()`
+for async ownership. The async adapter has no synchronous close/context-manager
+API. The caller owns construction and cleanup, including after a failed call.
+See the [sync](../how-to/use-library.md) and [async](../how-to/use-async-library.md)
+recipes.
 
-**Response:** `ChoiceAnswer` with `choice` name, `confidence`, and `probabilities`
+`SystemOnePort` and `AsyncSystemOnePort` are structural protocols, not client
+factories. They declare the same state and question inputs and typed return,
+but require the `model` argument. Only the concrete adapters offer a default
+for that call argument. The async port declares an async method. Neither port
+requires lifecycle methods; ownership belongs to the code that creates the
+concrete adapter. See [port signatures](../../src/judgevet/ports/__init__.py).
 
-### Score
+## Answer and container types
 
-A question that assigns a score using an ordered rubric.
+`Answer` is `NoulAnswer | ChoiceAnswer | ScoreAnswer`.
 
-**Parameters:**
-- `criteria`: Ordered list of descriptions (position = score level)
-- `instructions`: What the model should rate
+| Type | Required fields | Semantics |
+|---|---|---|
+| `NoulAnswer` | `noul: float` | Probability of true; no confidence field. [Noul source](https://docs.typesafe.ai/primitives/noul) |
+| `ChoiceAnswer` | `choice: str`, `confidence: float`, `probabilities: dict[str, float]` | Selected label, confidence and distribution over labels. [Choice source](https://docs.typesafe.ai/primitives/choice) |
+| `ScoreAnswer` | `score: float`, `confidence: float`, `legend: dict[int, str]`, `probabilities: dict[int, float]` | Continuous expected score, confidence and rubric/distribution indexed by level. [Score source](https://docs.typesafe.ai/primitives/score) |
+| `Usage` | None required; `input_tokens=None`, `output_tokens=None` | Optional nonnegative integer token counts; booleans are rejected. [Wire fields](https://docs.typesafe.ai/api.md) |
+| `SystemOneResponse` | `model: str`, `usage: Usage`; `answers` defaults to a new empty dictionary | Answer mapping keyed by question name. The observed service model is the resolved version, not necessarily the requested alias. [Wire envelope](https://docs.typesafe.ai/api.md) |
 
-**Response:** `ScoreAnswer` with `score`, `confidence`, `legend`, and `probabilities`
+Token counts are usage metadata, not a price quote. This client reference makes
+no current pricing or retention claim.
 
-## Adapters
+Answer constructors apply local checks: numeric probability/confidence ranges,
+choice membership, matching Score legend/distribution keys, score range and a
+probability-sum tolerance of `1e-6`. Those checks are not a complete validation of
+all malformed numeric values. In particular, ordinary comparisons do not reject
+NaN consistently. Public policy evaluation performs its own finite-scalar
+checks; see [policy validation](policy.md#evaluation-and-reports).
+The [answer source](../../src/judgevet/domain/answers.py) is authoritative for
+constructor behavior. Do not infer service guarantees from local checks.
 
-### HTTPSystemOneAdapter
-
-HTTP implementation of the SystemOnePort.
-
-**Parameters:**
-- `api_key`: Explicit TypeSafe API key. Direct adapters do not read environment variables
-- `base_url`: API base URL (default: `https://api.typesafe.ai`)
-- `default_model`: Default model (default: `jev-latest`)
-- `transport`: Optional httpx transport for testing (default: `None`)
-
-**Methods:**
-- `system_one(state, questions, model)`: Call the Jev API
-- `close()`: Close the HTTP client
-
-## Domain Types
-
-### NoulAnswer
-
-Yes/no answer.
-
-**Attributes:**
-- `noul`: Probability of yes/true (0-1)
-
-### ChoiceAnswer
-
-Selected choice with probabilities.
-
-**Attributes:**
-- `choice`: The selected label
-- `confidence`: Confidence in the choice (0-1)
-- `probabilities`: Probability per choice
-
-### ScoreAnswer
-
-Scored response.
-
-**Attributes:**
-- `score`: Expected score
-- `confidence`: Confidence in the score (0-1)
-- `legend`: Rubric descriptions keyed by score level
-- `probabilities`: Probability per score level
-
-### Usage
-
-Token counts.
-
-**Attributes:**
-- `input_tokens`: Billable input tokens
-- `output_tokens`: Output tokens (currently free)
+Answer, Usage and response instances are frozen dataclasses. Frozen prevents
+attribute reassignment, not mutation of nested dictionaries. `answers`,
+`probabilities` and `legend` can remain mutable. The container properties
+`nouls`, `choices` and `scores` each return a fresh shallow dictionary filtered
+by answer type. Their values are the same answer objects. Missing names or
+wrong-type names raise normal `KeyError` when indexed in a filtered mapping.
 
 ## Examples
 

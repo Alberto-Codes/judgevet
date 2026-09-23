@@ -116,3 +116,5 @@ answer. Values vary. The call is a judgment, not a policy evaluation.
 Do not paste the JSON into the server's stdin by hand: the host manages MCP
 protocol messages. Tool definitions are in the [MCP adapter](../../src/judgevet/adapters/inbound/mcp.py).
 For startup, discovery or call failures, use [troubleshooting](troubleshoot.md).
+
+For the full contract, see the [MCP reference](../reference/mcp.md).

@@ -193,3 +193,5 @@ when requested and does not compare returned Choice/Score values to the original
 question criteria. Its private `Rule`, parser and evaluator return shapes remain
 available. Both paths share actual predicate comparisons and detail rendering.
 See the [supported imports and compatibility contract](../reference/compatibility.md).
+
+For the full contract, see the [policy reference](../reference/policy.md).

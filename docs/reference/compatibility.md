@@ -36,6 +36,7 @@ raw redirect errors, for example, retain their prior behavior.
 0.7.0 release and absent from 0.6.0. The implementation helpers are internal;
 use the facades for new policy callers.
 
+The [policy reference](policy.md) defines the complete local contract.
 The [typed policy guide](../how-to/use-policy-library.md) gives runnable examples,
 constructor invariants, strict answer checks, immutable snapshots, error handling
 and explicit sync/async lifecycle ownership. Public policy errors are local

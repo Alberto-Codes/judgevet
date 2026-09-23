@@ -30,7 +30,10 @@ Status: **draft**. Choose a path by what you need to do.
 
 ## Reference: look up a contract
 
-- [Question types, typed answers and HTTP adapter examples](reference/api.md).
+- [Question types, typed answers, adapters and ports](reference/api.md).
+- [CLI options, inputs, output and exit codes](reference/cli.md).
+- [MCP tool schemas and answers](reference/mcp.md).
+- [Policy types, JSON grammar and evaluation](reference/policy.md).
 - [Supported imports and compatibility](reference/compatibility.md).
 - [Configuration defaults and precedence](reference/configuration.md).
 - [Service, transport and local policy errors](reference/errors.md).
@@ -38,9 +41,6 @@ Status: **draft**. Choose a path by what you need to do.
 - [The installed typing marker](reference/py-typed-marker.md).
 - [Credential inputs and precedence](../SECURITY.md#credentials).
 - [Data disclosure and diagnostic limits](../SECURITY.md#data-sent-to-the-service).
-
-Complete CLI, MCP and policy reference pages are still being written.
-The task guides cover their current workflows.
 
 ## Explanation: understand the decisions
 

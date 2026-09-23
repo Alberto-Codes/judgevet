@@ -1,8 +1,11 @@
 """Answer types returned by the Jev API.
 
-The domain enforces invariants on construction: noul in [0,1], confidence in [0,1],
-probabilities summing to 1, choice present in probabilities, score in legend range,
-and legend/probability keys matching. Instances are immutable (frozen dataclasses).
+The domain enforces invariants on construction: noul in [0,1], confidence in
+[0,1], probabilities summing to 1, choice present in probabilities, score in
+legend range, and legend/probability keys matching. Frozen dataclasses prevent
+attribute reassignment; nested dictionaries remain mutable. Range comparisons
+do not reject every nonfinite value. Public policy evaluation performs
+additional finite-scalar checks.
 
 Examples:
     ```python
@@ -39,8 +42,9 @@ with ε = 2.22e-16. A 1000-key distribution accumulates at most ≈2.2e-13, so
 
 Open question: if the live service rounds probabilities to 2-3 decimals, a
 normalized distribution can sum off by up to ~0.0005·k and would be rejected.
-When the live probe for issue #6 runs, if that is what Jev does, widen the
-tolerance with that evidence and record the rounding in docs/reference/api.md."""
+Change this tolerance only with observed evidence and record any rounding
+behavior in docs/reference/api.md. Existing calls do not establish a general
+rounding guarantee."""
 
 
 @dataclass(frozen=True)
