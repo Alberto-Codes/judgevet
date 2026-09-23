@@ -88,11 +88,13 @@ Seven CLI shell blocks now run against a loopback fixture using exact documented
 question/policy JSON; four acceptance cases cover pipe input, invalid options
 and policy exits. A separate optional-runtime gate validates all nine JSON/TOML blocks
 against input decoders, MCP discovery and template/report contracts, with six
-acceptance cases. Artifact and remaining continuation checks are in progress; offline examples do not verify live service behavior.
+acceptance cases. The shared wheel builder now rejects nonempty output before building, with four
+selection acceptance cases and a stale-artifact failure proof. Remaining
+continuation/setup checks are in progress; offline examples do not verify live service behavior.
 
 ## Gates
 
-**1108 tests pass, 6 live tests deselected.** The last measured coverage is
+**1112 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.20%** (1430/1518 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

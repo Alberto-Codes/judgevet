@@ -89,8 +89,13 @@ def build_wheel(out_dir: Path) -> Path:
         The absolute path to the built wheel.
 
     Raises:
-        RuntimeError: If the build fails or yields zero or more than one wheel.
+        RuntimeError: If output is nonempty, the build fails, or it yields
+            zero or more than one wheel.
     """
+    if out_dir.exists() and any(out_dir.iterdir()):
+        raise RuntimeError(
+            "Build output directory must be empty; use a fresh directory"
+        )
     result = _build_wheel_subprocess(out_dir)
 
     if result.returncode != 0:

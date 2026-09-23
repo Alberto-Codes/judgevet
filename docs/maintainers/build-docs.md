@@ -113,7 +113,7 @@ The explicit workflow selection is in `scripts/doc_cli_prepare.py`. Installation
 credential setup, host templates, tutorial continuation commands and staged-Git
 examples are not run by this shell executor. Their inventory reasons remain
 visible; setup needs disposable-environment verification, and credential/host
-commands must not be executed generically. Staged/tutorial continuations and stale-artifact proofs remain #153 work.
+commands must not be executed generically. Staged/tutorial continuations and setup coverage remain #153 work.
 
 
 ## Validate documented data and MCP arguments
@@ -139,3 +139,11 @@ MCP runtime's dependency; the base Python/CLI gate remains independent of it.
 Push hooks and the MCP-enabled CI job run this command. Schema failures report
 the source page and fence line. Live behavior and judgment values remain outside
 these offline checks.
+
+
+The shared wheel builder requires a new or empty output directory before it
+starts. It still requires exactly one resulting wheel. Reusing a directory with
+an old wheel, source distribution or any other file fails before the builder
+runs; existing files are preserved. This prevents a successful build command
+that emits no artifact from silently selecting an old wheel. The documentation
+commands allocate fresh temporary directories automatically.
