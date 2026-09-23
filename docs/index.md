@@ -48,7 +48,6 @@ Status: **draft**. Choose a path by what you need to do.
 - [Understand local acceptance policies and threshold tradeoffs](explanation/policies.md).
 - [Distinguish local checks, live observations and model quality](explanation/verification.md).
 - [Security boundaries and caller responsibilities](../SECURITY.md).
-
 - [Choose an entry point and understand ownership](explanation/architecture.md).
 
 ## Maintainers

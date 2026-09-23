@@ -195,3 +195,5 @@ available. Both paths share actual predicate comparisons and detail rendering.
 See the [supported imports and compatibility contract](../reference/compatibility.md).
 
 For the full contract, see the [policy reference](../reference/policy.md).
+
+Look up local policy exceptions in the [error reference](../reference/errors.md).

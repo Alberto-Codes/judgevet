@@ -43,10 +43,13 @@ vocabulary guidance links to it. Definitions distinguish model numbers from
 local decisions, preserve literal API names and retain observed/inferred limits.
 Terminology enforcement remains #71; no checker or service evidence changed.
 
-#10 has a [navigation foundation](docs/index.md): all current pages have draft
-metadata and visible status, with separate user and maintainer paths. Final
-navigation acceptance remains open for the final reading-path audit. Tutorial,
-explanation and error-reference destinations now exist; #12 validates site links.
+#10 completes the [navigation map](docs/index.md) and rendered navigation.
+All 32 authored docs pages, README and SECURITY are reachable from the map.
+Tutorials, how-to, reference and explanation remain distinct; maintainer
+procedures have a separate audience. Draft metadata and visible labels agree.
+Recovery and policy-handling paths link directly to error lookup. The final
+navigation inventory and reading routes are recorded on #10; #12 checks their
+source destinations and rendered links. No trust status was promoted.
 
 #149 supplies explanations of question types, local policy decisions and evidence
 limits. The shared support-ticket scenario uses labeled synthetic values. Its

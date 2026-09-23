@@ -4,6 +4,8 @@ status: draft
 
 # Security policy
 
+Status: **draft**.
+
 The credential, transport and diagnostic review below was performed for
 judgevet 0.6.0. The 0.7.0 changes leave those paths unchanged and add local
 typed policy evaluation and JSON decoding. This is an implementation review,

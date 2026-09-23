@@ -123,6 +123,9 @@ You will choose an acceptance rule in the
   The example does not implement retries. Review errors before sharing them;
   arbitrary tracebacks are not guaranteed to redact secrets.
 
+For exception types and retry guidance, use the [error reference](../reference/errors.md)
+and [library handling recipe](../how-to/handle-errors.md).
+
 For deeper meaning, read [judgment types](../explanation/judgments.md) and
 [verification limits](../explanation/verification.md). For lookup, use the
 [API reference](../reference/api.md) and [glossary](../reference/glossary.md).
