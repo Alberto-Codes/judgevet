@@ -37,9 +37,26 @@ No cache/timeout explanation or intermittent-failure cure is claimed. This does
 not prove that an already-running agent session reloaded its native tools.
 
 [Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/pull/134#issuecomment-5786785252)
-records commands, hashes, runs and limits. The policy API recommendations remain
-design decisions, not implemented exports. No unseen API body became verified.
+records commands, hashes, runs and limits. The pure policy API remains planned;
+the additive root exports are now implemented for 0.7.0 below. No unseen API body
+became verified.
 The release review also corrected current scope on twelve existing backlog issues.
+
+## 0.7.0 work in progress
+
+Release tracker #138 covers implementation and publication. #139 adds the fifteen
+recommended root exports: ports, question/answer unions, typed answers, response,
+usage and the existing Jev error hierarchy. All six existing exports and deep
+import identities remain. Explicit sync/async adapter ownership is unchanged.
+
+The export acceptance started with 16 failures and six passes. The final focused
+suite passes 61 cases, including typed callers through both ports. Removing a
+port export causes two failures; substituting its identity causes one. Both
+mutations were restored. Static typing and architecture checks pass. Built and
+published artifact verification remains required under #143.
+
+#140 (pure policy), #141 (JSON/CLI integration), #142 (documentation) and #143
+(publication) remain open. The current published version is still 0.6.0.
 
 ## Delivered developer workflow
 
@@ -183,7 +200,7 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**929 tests pass, 6 live tests deselected, 95.44% coverage** (1214/1272 statements). All eleven configured
+**949 tests pass, 6 live tests deselected, 95.46% coverage** (1219/1277 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
@@ -277,6 +294,6 @@ published with separate user authorization.
 
 The developer-workflow release requirements are fulfilled. Final evidence-commit
 CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
-first fresh-launcher failure remains unexplained. #67/#66 now have sourced recommendations; their proposed API implementation is
-separate work. The post-0.5.0 reliability and credential-scoping rounds are
+first fresh-launcher failure remains unexplained. #67/#66 are being implemented
+under #138; root exports have landed, while pure policy and release work remain. The post-0.5.0 reliability and credential-scoping rounds are
 fulfilled and published in 0.6.0 with user authorization. No inferred API claim was promoted and no quality gate was weakened.

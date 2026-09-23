@@ -43,7 +43,26 @@ Examples:
     `AttributeError` on purpose, because a synchronous close would return an
     un-awaited coroutine and close nothing.
 
+The root re-exports the original domain types, errors and port protocols.
+Existing deep imports retain object identity. Callers own adapter construction
+and cleanup; importing a port does not create a client.
+
 Attributes:
+    Answer (type): Union of the three typed answers.
+    Question (type): Union of the three typed questions.
+    SystemOnePort (type): Synchronous structural port protocol.
+    AsyncSystemOnePort (type): Asynchronous structural port protocol.
+    NoulAnswer (type): Typed Noul answer.
+    ChoiceAnswer (type): Typed Choice answer.
+    ScoreAnswer (type): Typed Score answer.
+    SystemOneResponse (type): Answer container with typed accessors.
+    Usage (type): Token usage metadata.
+    JevError (type): Base Jev exception.
+    JevAuthError (type): Authentication failure.
+    JevRequestError (type): Rejected request.
+    JevResponseError (type): Unparseable successful answer body.
+    JevServiceError (type): Service or transport failure.
+    JevRateLimitError (type): Rate limit failure.
     __version__ (str): The installed package version. release-please
         rewrites this line on every release. Do not edit it by hand.
     AsyncHTTPSystemOneAdapter (type): Async HTTP adapter for the Jev API,
@@ -67,15 +86,42 @@ from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
     HTTPSystemOneAdapter,
 )
-from judgevet.domain.questions import Choice, Noul, Score
+from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.errors import (
+    JevAuthError,
+    JevError,
+    JevRateLimitError,
+    JevRequestError,
+    JevResponseError,
+    JevServiceError,
+)
+from judgevet.domain.questions import Choice, Noul, Question, Score
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.usage import Usage
+from judgevet.ports import AsyncSystemOnePort, SystemOnePort
 
 __version__ = "0.6.0"  # x-release-please-version
 
 __all__ = [
+    "Answer",
     "AsyncHTTPSystemOneAdapter",
+    "AsyncSystemOnePort",
     "Choice",
+    "ChoiceAnswer",
     "HTTPSystemOneAdapter",
+    "JevAuthError",
+    "JevError",
+    "JevRateLimitError",
+    "JevRequestError",
+    "JevResponseError",
+    "JevServiceError",
     "Noul",
+    "NoulAnswer",
+    "Question",
     "Score",
+    "ScoreAnswer",
+    "SystemOnePort",
+    "SystemOneResponse",
+    "Usage",
     "__version__",
 ]

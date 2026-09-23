@@ -13,10 +13,28 @@ accidental removal fails here with the diff, not at a user's import.
 
 from __future__ import annotations
 
+import pytest
+
 import judgevet
-from judgevet import AsyncHTTPSystemOneAdapter, HTTPSystemOneAdapter
+from judgevet import AsyncHTTPSystemOneAdapter, HTTPSystemOneAdapter, ports
+from judgevet.domain import answers, errors, questions, response, usage
 
 EXPECTED_EXPORTS = {
+    "Answer",
+    "AsyncSystemOnePort",
+    "ChoiceAnswer",
+    "JevAuthError",
+    "JevError",
+    "JevRateLimitError",
+    "JevRequestError",
+    "JevResponseError",
+    "JevServiceError",
+    "NoulAnswer",
+    "Question",
+    "ScoreAnswer",
+    "SystemOnePort",
+    "SystemOneResponse",
+    "Usage",
     "AsyncHTTPSystemOneAdapter",
     "Choice",
     "HTTPSystemOneAdapter",
@@ -68,3 +86,31 @@ def test_the_async_adapter_refuses_the_sync_lifecycle() -> None:
     assert not absent, f"async adapter should not expose: {absent}"
     assert hasattr(adapter, "aclose")
     assert hasattr(adapter, "__aenter__")
+
+
+@pytest.mark.parametrize(
+    "name,original",
+    [
+        ("SystemOnePort", ports.SystemOnePort),
+        ("AsyncSystemOnePort", ports.AsyncSystemOnePort),
+        ("Question", questions.Question),
+        ("Answer", answers.Answer),
+        ("NoulAnswer", answers.NoulAnswer),
+        ("ChoiceAnswer", answers.ChoiceAnswer),
+        ("ScoreAnswer", answers.ScoreAnswer),
+        ("SystemOneResponse", response.SystemOneResponse),
+        ("Usage", usage.Usage),
+        ("JevError", errors.JevError),
+        ("JevAuthError", errors.JevAuthError),
+        ("JevRequestError", errors.JevRequestError),
+        ("JevResponseError", errors.JevResponseError),
+        ("JevServiceError", errors.JevServiceError),
+        ("JevRateLimitError", errors.JevRateLimitError),
+        ("Noul", questions.Noul),
+        ("Choice", questions.Choice),
+        ("Score", questions.Score),
+    ],
+)
+def test_exports_preserve_deep_import_identity(name: str, original: object) -> None:
+    """Root exports retain the original objects and existing deep imports."""
+    assert getattr(judgevet, name) is original
