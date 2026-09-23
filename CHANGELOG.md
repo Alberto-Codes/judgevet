@@ -3,6 +3,28 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.6.0](https://github.com/Alberto-Codes/judgevet/compare/v0.5.0...v0.6.0) (2026-09-23)
+
+
+### Features
+
+* **logging:** wire safe diagnostics at composition roots ([d763313](https://github.com/Alberto-Codes/judgevet/commit/d76331349ad82f12d741d518b186c493b693a7b2)), closes [#27](https://github.com/Alberto-Codes/judgevet/issues/27) [#3](https://github.com/Alberto-Codes/judgevet/issues/3)
+
+
+### Fixes
+
+* **ci:** require release environment credentials and identity ([70ca8ab](https://github.com/Alberto-Codes/judgevet/commit/70ca8abe7a180ef1e25335690013c03ac6ef4eb9)), closes [#102](https://github.com/Alberto-Codes/judgevet/issues/102)
+* **cli:** handle rate limits in both command paths ([1f336bc](https://github.com/Alberto-Codes/judgevet/commit/1f336bcd8c934ae31e4350b98765fe494170702d)), closes [#135](https://github.com/Alberto-Codes/judgevet/issues/135)
+* **http:** validate error detail shapes before rendering ([081aec0](https://github.com/Alberto-Codes/judgevet/commit/081aec0f7f3a5e8513370d290d0d81b77050518e)), closes [#136](https://github.com/Alberto-Codes/judgevet/issues/136)
+* **smoke:** preserve safe failure stages through cleanup ([fd96bab](https://github.com/Alberto-Codes/judgevet/commit/fd96babe011f1b6a99aee0b5ce92e0d0f21622c3)), closes [#133](https://github.com/Alberto-Codes/judgevet/issues/133)
+
+
+### Documentation
+
+* record policy API and compatibility decisions ([82f17c3](https://github.com/Alberto-Codes/judgevet/commit/82f17c3a61a87bbaabcb2c7b5a82cb918544060f)), closes [#67](https://github.com/Alberto-Codes/judgevet/issues/67) [#66](https://github.com/Alberto-Codes/judgevet/issues/66)
+* record verified 0.5.0 release and developer workflow ([4f71f04](https://github.com/Alberto-Codes/judgevet/commit/4f71f04cbc20a00263ce35370ccde40a333ee9ad)), closes [#130](https://github.com/Alberto-Codes/judgevet/issues/130) [#131](https://github.com/Alberto-Codes/judgevet/issues/131) [#133](https://github.com/Alberto-Codes/judgevet/issues/133)
+* record verified release credential scope ([12d1fce](https://github.com/Alberto-Codes/judgevet/commit/12d1fcedb4f2536e7b51edf743ff501f93e8fadd)), closes [#102](https://github.com/Alberto-Codes/judgevet/issues/102)
+
 ## [0.5.0](https://github.com/Alberto-Codes/judgevet/compare/v0.4.1...v0.5.0) (2026-09-22)
 
 
