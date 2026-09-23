@@ -50,6 +50,28 @@
       "reason": "Complete input JSON; validate with the corresponding question/policy decoder or MCP schema."
     }
   ],
+  "docs/how-to/deploy.md": [
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Requires the published release or verified candidate wheel and a fresh operator-selected build directory; verified during release preparation."
+    },
+    {
+      "language": "dockerfile",
+      "kind": "runnable",
+      "reason": "Complete base CLI image definition; built and exercised separately with rootless Podman and a current development wheel."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Requires a working container engine and the prepared image build context; exercised separately with Podman."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Requires caller-owned inputs and an approved runtime secret mount; separately exercised using synthetic credentials and a loopback service."
+    }
+  ],
   "docs/how-to/handle-errors.md": [
     {
       "language": "python",

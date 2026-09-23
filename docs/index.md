@@ -28,6 +28,8 @@ Status: **draft**. Choose a path by what you need to do.
 - [Handle local policy errors](how-to/use-policy-library.md#handle-errors-and-immutable-values).
 - [Review staged Git changes](how-to/review-staged-diff.md).
 
+- [Deploy a CLI job or integrate the library in a serverless runtime](how-to/deploy.md).
+
 ## Reference: look up a contract
 
 - [Question types, typed answers, adapters and ports](reference/api.md).

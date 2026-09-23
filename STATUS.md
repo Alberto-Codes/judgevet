@@ -57,7 +57,7 @@ local decisions, preserve literal API names and retain observed/inferred limits.
 Terminology enforcement remains #71; no checker or service evidence changed.
 
 #10 completes the [navigation map](docs/index.md) and rendered navigation.
-All 33 authored docs pages, README and SECURITY are reachable from the map.
+All 34 authored docs pages, README and SECURITY are reachable from the map.
 Tutorials, how-to, reference and explanation remain distinct; maintainer
 procedures have a separate audience. Draft metadata and visible labels agree.
 Recovery and policy-handling paths link directly to error lookup. The final
@@ -94,7 +94,7 @@ They retain the MCP state-schema discrepancy, mutable nested answer data and
 strict-versus-legacy policy distinctions. Pricing and calibration claims are
 removed from the API/root documentation; no runtime behavior changes.
 
-#153 supplies a complete README/user-doc inventory (45 current blocks) and seven
+#153 supplies a complete README/user-doc inventory (49 current blocks) and seven
 acceptance tests. Each block has an explicit classification and reason. Commit,
 push and CI gates reject inventory drift. An isolated-wheel gate now executes
 and type-checks all 15 Python programs
@@ -192,10 +192,19 @@ and payloads. The artifact checker includes the new supported export identity.
 The pi attempts and their defects remain recorded separately from Codex's
 specification and implementation. No model-written specification was accepted.
 
+#58 adds [container and serverless deployment guidance](docs/how-to/deploy.md).
+The exact documented Dockerfile builds a base image without MCP. A non-root,
+read-only rootless Podman run sends real synthetic HTTP requests with file and
+command credentials. JSON stdout and diagnostic stderr remain separate.
+The guide covers secret mounts, SELinux labels, connection ownership, rotation,
+proxy/CA settings and deadline/retry budgets. Cloud Run, Lambda and Fargate
+integration guidance cites platform documentation; no cloud account was deployed.
+The source-built development wheel is not evidence of index publication.
+
 The complete commit/push gates include strict docs, isolated examples and
 coverage. Runtime evidence is local and synthetic; unseen service
 errors stay inferred. No runtime dependency or version changes in this round. The 0.8.0
-release, remaining deployment settings and Pages publication are pending.
+release and Pages publication are pending.
 
 ## Operational limits
 
