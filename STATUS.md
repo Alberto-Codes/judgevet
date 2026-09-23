@@ -1,49 +1,45 @@
 # STATUS
 
-Last written: 2026-09-22. This file reports current state; historical rounds
+Last written: 2026-09-23. This file reports current state; historical rounds
 remain in Git history and their linked issues.
 
 ## Published release
 
-**judgevet 0.5.0 is published and verified.** Developers can keep reusable
-questions and an explicit acceptance policy in version control, read state from
-files or stdin, and distinguish an unmet policy from input/service failures.
-The library, CLI and optional supported MCP command remain independently usable.
+**judgevet 0.6.0 is published and verified.** This release adds safe diagnostics,
+CLI rate-limit handling, malformed HTTP error-detail validation and stage-aware
+MCP smoke diagnostics. Release credentials are scoped to the main-only release
+environment. The library, CLI and optional MCP command remain independently usable.
 
-Release commit: `3f77287a0c487e9e828ee0781ab6d60059002908`.
-Release-please selected the version and updated all four version fields. The
-release tree equals candidate `06f29ef9b96a15fb620a2aeaef0e628007bbd634`.
+Release commit and tag: `1ca1459148ba9366f5fccb9aee71c99193a40803` (`v0.6.0`).
+The release tree equals candidate `5e8dbe90fa72319ab525d75d5641877b2c537300`.
+Release-please updated all four version fields; its generated PR body was preserved.
 
 Actual TestPyPI/PyPI downloads match their Actions artifacts and each other:
 
 | artifact | SHA-256 |
 |---|---|
-| wheel | `7f5b659b9eeec20dae5b7a4c6398bbda78127a7218f3bd743291d9b937be01df` |
-| source distribution | `1fbfafc8d4c721857cef5b576f79a13ddf27541036bcf6d669806c0076aecea9` |
+| wheel | `4f6ceef2b47694feec24e1d5d987f1ebc6d9c1f94b7ec5add4f0eda73f52e547` |
+| source distribution | `0ddd2f7736b33f63e3f1598a4ab06da1a8f2a01eb6c1aca028ba049615e03b2d` |
 
-[TestPyPI run](https://github.com/Alberto-Codes/judgevet/actions/runs/35794248340)
-and [production run](https://github.com/Alberto-Codes/judgevet/actions/runs/35794710780)
-passed isolated base/MCP smoke checks before upload. Independent actual-wheel
-checks passed outside checkout: library examples, CLI help, mixed live installed
-CLI, MCP discovery/all three tools and eight offline staged-workflow cases.
-Base installs omit MCP; the wheel includes `py.typed`.
+[TestPyPI run](https://github.com/Alberto-Codes/judgevet/actions/runs/35801297889)
+and [production run](https://github.com/Alberto-Codes/judgevet/actions/runs/35801671681)
+passed isolated base/MCP checks before upload. Independent actual-wheel checks
+passed for both indexes: library examples, CLI help, mixed live installed CLI
+(one passed test each), MCP discovery and all three live tools. Base installs
+omit MCP and include `py.typed`. [Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35801525799)
+passed with 929 tests, six live deselections and 95.44% coverage.
 
-The published uvx launcher passed from a temporary cwd and empty cache with
-version 0.5.0, exactly three tools and all three live calls. Its first probe
-returned a sanitized transport error; a help probe and fresh empty-cache retry
-passed without a product/config change. Cause remains unknown (#133). This does
+The published uvx launcher passed from a temporary cwd and empty cache in 2.18s:
+version 0.6.0, exactly three tools and all three live calls, including clean shutdown.
+The first local TestPyPI MCP runner invocation failed generically. A diagnostic
+exercise and subsequent standard TestPyPI/PyPI checks passed; cause remains unknown.
+No cache/timeout explanation or intermittent-failure cure is claimed. This does
 not prove that an already-running agent session reloaded its native tools.
-The actual PyPI wheel also ran the staged-diff workflow live, returning valid
-unmet-policy status 3. The verdict is not a judgment-quality guarantee.
 
-[Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/issues/130#issuecomment-5785649938)
-records commands, hashes, runs and limits. Native tools were available and all
-three were dogfooded as advisory aids during development.
-
-Replacing the generated release PR body prevented release-please from parsing
-it. Restoring that body and rerunning the same release-commit workflow created
-the correct draft/tag. Unintended unmerged PR #132 was closed. The release guide
-now preserves that machine-parsed structure; no index files were replaced.
+[Artifact and launcher evidence](https://github.com/Alberto-Codes/judgevet/pull/134#issuecomment-5786785252)
+records commands, hashes, runs and limits. The policy API recommendations remain
+design decisions, not implemented exports. No unseen API body became verified.
+The release review also corrected current scope on twelve existing backlog issues.
 
 ## Delivered developer workflow
 
@@ -256,10 +252,11 @@ and PR #134, authored by Alberto-Codes. The one-time sealing workflow, encrypted
 artifact and migration run were retired. Eight acceptance cases and independent
 removal proofs cover scope, missing credentials, identity and fallback.
 [Full credential evidence](https://github.com/Alberto-Codes/judgevet/issues/102)
-records the sequence. No release was published.
+records the sequence. That migration round did not publish a release; 0.6.0 is now
+published with separate user authorization.
 
 The developer-workflow release requirements are fulfilled. Final evidence-commit
 CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
 first fresh-launcher failure remains unexplained. #67/#66 now have sourced recommendations; their proposed API implementation is
 separate work. The post-0.5.0 reliability and credential-scoping rounds are
-fulfilled; publication requires separate authorization. No inferred API claim was promoted and no quality gate was weakened.
+fulfilled and published in 0.6.0 with user authorization. No inferred API claim was promoted and no quality gate was weakened.
