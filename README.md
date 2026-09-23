@@ -1,135 +1,170 @@
 # judgevet
 
-Typed client, CLI and MCP server for TypeSafe's **Jev** (System One) judgment
-model.
+A typed Python client, CLI and optional MCP server for TypeSafe's **Jev**
+(System One) judgment model. Send content and typed questions; use the answers
+to classify, route or evaluate that content without parsing generated prose.
 
-## What is verified
+**Unofficial and not affiliated with TypeSafe.** The
+[official TypeSafe Python SDK](https://docs.typesafe.ai/sdk/python) also offers
+typed questions and synchronous and asynchronous clients. Choose judgevet when
+you want an importable library, shell/CI workflows with explicit acceptance
+policies, and agent tools over one contract-tested core. The library and CLI
+install without the MCP runtime; the wheel includes `py.typed` for type checkers.
 
-This library is on PyPI and usable: `pip install judgevet`. This section says
-how much of it has been checked against the real service, because the answer
-is "most, not all" and you should know which parts before you rely on them.
+## Install
 
-**The response shape is verified. The error surface is partly verified.
-Everything else is still inferred from documentation.**
+Use Python 3.12 or newer. In a virtual environment:
 
-A `live`-marked test passes against the real API, and three probe calls on
-2026-09-21 settled what had been guesswork:
+```bash
+python -m pip install 'judgevet==0.6.0'
+judgevet --help
+```
 
-- The success shape parses field for field — including the parts easiest to
-  get wrong. A noul answer carries no `confidence` while choice and score do;
-  `score` is continuous, not an index; `legend` is a map keyed by stringified
-  position. The real probabilities summed to exactly 1.0, the choice appeared
-  in its own map, and the score sat inside its legend, so the domain's
-  invariants do not reject real data.
-- `model` in a response is the **resolved** version. Sending `jev-latest`
-  returned `jev-1.13.0`.
-- `detail` on an error is **polymorphic**: an object for authentication
-  errors, an array for validation errors. Documentation did not say so, and
-  code that assumes either shape breaks on the other.
+For an existing uv project, use `uv add 'judgevet==0.6.0'`.
+See [installation and MCP client setup](docs/how-to/install.md) and
+[security, credential handling and cryptographic posture](SECURITY.md).
 
-Still inferred, and marked as such in `STATUS.md`: the 429 and 529 bodies —
-one needs abusing the service, the other cannot be provoked — every model
-other than `jev-1.13.0`, and any field no call has exercised.
+Supply a TypeSafe API key through your process environment or secret provider.
+The CLI and MCP accept `JEV_API__KEY` or `TYPESAFE_API_KEY`; `JEV_API__KEY` takes
+precedence. Library adapters take an explicit key. The example below reads
+`JEV_API__KEY`. Do not put real keys in source or command arguments.
 
-The repository marks `README.md` and `docs/reference/api.md` as `draft`
-rather than `stable` under its own documentation trust levels — one model and
-two error statuses is not the whole surface. That is a statement about
-documentation coverage, not about whether the package works.
+## Use the typed library
 
-## What Jev is
+```python
+import os
 
-Jev is not a chat model and not a coding model. You send it a piece of state
-and a set of *typed questions*, and it returns one answer per question with a
-calibrated probability:
+from judgevet import Choice, HTTPSystemOneAdapter, Noul, Score
 
-| question | answer |
+with HTTPSystemOneAdapter(api_key=os.environ["JEV_API__KEY"]) as client:
+    answer = client.system_one(
+        state="I was charged twice. Please help today.",
+        questions={
+            "billing": Noul(instructions="Is this about billing?"),
+            "team": Choice(
+                instructions="Which team should handle this?",
+                criteria={"billing": "Payments", "support": "Technical help"},
+            ),
+            "urgency": Score(
+                instructions="How urgent is this?",
+                criteria=["Can wait", "This week", "Today"],
+            ),
+        },
+    )
+
+print(answer.nouls["billing"].noul)
+print(answer.choices["team"].choice)
+print(answer.scores["urgency"].score)
+```
+
+The [API reference](https://docs.typesafe.ai/api) defines the three question
+types and their answer fields:
+
+| Question | Typed answer |
 |---|---|
-| `Noul` | yes/no, with a probability |
-| `Choice` | one option from a set you defined, with per-option probabilities |
-| `Score` | a position on a scale you defined, with a legend |
+| `Noul` | Probability of yes; no separate confidence field |
+| `Choice` | Selected option, per-option probabilities and confidence |
+| `Score` | Continuous score, scale legend, per-level probabilities and confidence |
 
-Typed answers let code branch, sort and route without parsing prose.
+The answer also contains the resolved model and token usage. Use
+`AsyncHTTPSystemOneAdapter` with `async with` and await `system_one` for async
+applications. Both adapters close their HTTP client when the context exits.
 
-## Why this client exists
+## Use the CLI
 
-The [official TypeSafe Python SDK](https://docs.typesafe.ai/sdk/python)
-provides synchronous and asynchronous clients.
-
-judgevet combines a typed library with two inbound adapters, CLI and MCP,
-over one contract-tested core. The **library is the artifact**: scripts, hooks
-and CI can call it directly. [STATUS.md](STATUS.md) separates verified claims
-from inferences.
-
-```
-domain/              question and answer types, calibrated probabilities  — pure
-ports/               protocols the domain calls out through
-adapters/outbound/   HTTP to the Jev API
-adapters/inbound/    cli.py   — scripts, hooks, CI
-                     mcp.py   — agents
-```
-
-`import-linter` enforces that map, and keeps the optional MCP runtime out of
-everything but its own adapter.
-
-## Use
+With a key in the environment, ask a question and emit JSON:
 
 ```bash
-uv sync
-uv run judgevet --help
+judgevet 'I was charged twice.' \
+  '{"billing":{"type":"noul","instructions":"Is this about billing?"}}' --json
 ```
 
-The MCP server is an optional extra, so the library and CLI install without an
-MCP runtime:
-
-```bash
-uv sync --extra mcp
-```
-
-## Developer workflows
-
-Version 0.5.0 supports reusable question files, file/stdin state and explicit
-acceptance policies:
+For reusable questions and an explicit pass/fail policy, create the files using
+[the file input guide](docs/how-to/use-cli-files.md) and
+[the policy guide](docs/how-to/use-cli-policy.md), then run:
 
 ```bash
 judgevet --state-file document.txt --questions-file questions.json --policy policy.json --json
 ```
 
-A successful judgment exits 0 when its policy passes and 3 when it does not.
-Input/service failures exit 1; invalid usage exits 2. Without a policy, a low
-probability remains a successful judgment.
+A valid judgment exits 0 when the policy passes and 3 when it does not.
+Input/service failures exit 1; usage conflicts exit 2. Without a policy, a low
+probability remains a successful judgment. State can also come from stdin with
+`--state-file -`. The [staged-diff example](docs/how-to/review-staged-diff.md)
+shows an opt-in Git workflow.
 
-See [file inputs](docs/how-to/use-cli-files.md),
-[policy rules](docs/how-to/use-cli-policy.md), and the
-[opt-in staged-diff example](docs/how-to/review-staged-diff.md).
-[Installation](docs/how-to/install.md) covers the library, CLI and MCP command.
+## Use the optional MCP server
 
-CLI and MCP diagnostics stay quiet at the default log level. Set
-`JEV_LOG__LEVEL=debug` to emit one `http.call` event per HTTP call to stderr.
-Events contain the requested model, question count, HTTP status (or null before
-an answer arrives), and success/error outcome. They exclude caller payloads,
-headers and exception text. Non-TTY diagnostics use JSON lines; `JEV_LOG__FORMAT`
-can force `json` or `console`. MCP SDK warnings/errors use a safe `mcp.runtime`
-event with severity only. Debug CLI failures have a diagnostic line followed by
-the existing error envelope on stderr; stdout retains its existing JSON shape.
-Library imports do not configure logging, and unconfigured library calls stay
-silent. Applications may configure structlog themselves to receive events.
-
-## Gates
+Install the extra and launch the stdio server with a key in its environment:
 
 ```bash
-uv run ruff check . && uv run ruff format --check .
+python -m pip install 'judgevet[mcp]==0.6.0'
+judgevet-mcp
+```
+
+Configure your MCP host to run `judgevet-mcp`. It waits for protocol input on
+stdin; stdout carries protocol frames and stderr carries diagnostics. It is
+not an interactive shell. See [client setup and the pinned uvx launcher](docs/how-to/install.md).
+
+The tools are `ask_noul`, `ask_choice` and `ask_score`. For example, call
+`ask_noul` with these arguments from your MCP client:
+
+```json
+{"state":"I was charged twice.","instruction":"Is this about billing?"}
+```
+
+Choice accepts a criteria map; Score accepts an ordered criteria list. See the
+[connection checks](docs/how-to/install.md#verify-the-connection) for all three.
+The published 0.6.0 tools have passed discovery and live calls. An initial
+TestPyPI launcher failure remains unexplained despite later passing checks;
+those checks do not prove an existing agent session reloaded its tools.
+
+## Diagnostics and security
+
+Routine diagnostics are quiet by default. `JEV_LOG__LEVEL=debug` emits HTTP
+call metadata to stderr; `JEV_LOG__FORMAT` selects `json` or `console`.
+These events exclude state, question text, headers and exception text.
+MCP runtime diagnostics retain severity only. This does not promise redaction
+of MCP protocol errors, CLI error envelopes or arbitrary tracebacks. Library
+imports do not configure logging. Read the [security policy](SECURITY.md)
+before handling sensitive content or sharing diagnostics.
+
+## What is verified
+
+Documentation status: **draft**. [0.6.0 release evidence](https://github.com/Alberto-Codes/judgevet/pull/134#issuecomment-5786785252)
+covers actual PyPI/TestPyPI artifacts, typed library examples, the installed
+CLI and all three MCP tools. The examples above were also checked offline
+against the published package; synthetic answers do not prove model quality.
+
+Live calls exercised the success shapes, resolved `jev-1.13.0` model, Noul
+criteria and Score legend, plus authentication and validation errors. The
+observed error detail is polymorphic: an object for authentication and an
+array for validation. The [API notes](docs/reference/api.md) and
+[verification table](STATUS.md#what-is-verified-and-what-is-not) separate these
+observations from documentation-derived expectations.
+
+Live 429/529 bodies remain unseen. Other resolved models and fields not touched
+by a call remain unverified. Contract tests exercise synthetic fixtures; they
+do not turn those cases into live evidence. The proposed reusable policy
+library API remains a design decision, not an implemented public export;
+the CLI policy workflow above is shipped.
+
+## Development
+
+The domain is pure. Ports separate it from HTTP and the CLI/MCP adapters;
+`import-linter` enforces those boundaries and isolates the optional MCP runtime.
+From a source checkout:
+
+```bash
+uv sync --extra mcp
+uv run pre-commit install --install-hooks -t pre-commit -t pre-push -t commit-msg
+uv run ruff check .
+uv run ruff format --check .
 uv run ty check
 uv run lint-imports
-uv run docvet check
+uv run docvet check --all
 uv run pytest -q --cov
 ```
 
-Coverage floor is 90%. `live`-marked tests touch the real API and are excluded
-by default.
-
-## Sister projects
-
-Shares the toolchain and hex layout used by
-[automarket](https://github.com/Alberto-Codes/automarket),
-[vramfit](https://github.com/Alberto-Codes/vramfit) and
-[docvet](https://github.com/Alberto-Codes/docvet).
+Coverage floor is 90%. `live` tests contact the real service and are excluded
+from the default run. Contributions follow [AGENTS.md](AGENTS.md).

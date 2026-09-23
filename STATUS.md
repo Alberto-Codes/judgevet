@@ -90,6 +90,15 @@ mutations detecting duplicate-key and early state-validation removal.
 
 ## Delivered scope
 
+- #43: README now leads with public installation, typed library/CLI/MCP use
+  and explicit non-affiliation. An isolated PyPI 0.6.0 install passed the
+  exact library and CLI examples, file-policy pass/unmet cases, and MCP
+  discovery/all tools plus the documented tool arguments. Base installation
+  includes py.typed and omits MCP. Local links resolve and external links
+  return HTTP 200 (private reporting requires GitHub sign-in). The existing
+  929-test/95.44% gate baseline and live verification limits are unchanged;
+  final documentation-commit CI evidence is recorded on #14, #62 and #43.
+
 - #62: SECURITY.md now separates settings-only HTTPS validation, HTTPX TLS
   verification and environment trust/proxy behavior from caller/platform
   responsibilities. It documents storage and Python memory limits without
