@@ -49,14 +49,14 @@ from __future__ import annotations
 class JevError(Exception):
     """Base exception for all Jev-related errors.
 
-    This is the parent class for all custom exceptions raised by this library.
-    It ensures callers can catch all Jev errors with a single except clause
-    without needing to import httpx.
+    This is the parent of the service-error hierarchy, not local policy errors
+    or every HTTPX exception. Redirects can propagate raw HTTPX status errors.
+    The base class always reports retryable=False; subclasses override it.
 
     Attributes:
-        message (str): The error message.
+        args (tuple): Standard exception arguments containing the message.
         status_code (int | None): The HTTP status code if available, None otherwise.
-        retryable (bool): True if the error is retryable (429, 5xx).
+        retryable (bool): Advisory retry classification; False on this base class.
 
     Examples:
         ```python
@@ -102,7 +102,7 @@ class JevError(Exception):
         """Return True if the error is retryable.
 
         Returns:
-            True for 429 (rate limit) and 5xx errors, False for 4xx and auth errors.
+            False on this base class, independent of status_code.
         """
         return False
 
@@ -114,7 +114,7 @@ class JevAuthError(JevError):
     permissions to access the requested resource.
 
     Attributes:
-        message (str): The error message.
+        args (tuple): Standard exception arguments containing the message.
         status_code (int): Always 401 or 403.
 
     Examples:
@@ -163,7 +163,7 @@ class JevRequestError(JevError):
     malformed input, or other client-side issues.
 
     Attributes:
-        message (str): The error message.
+        args (tuple): Standard exception arguments containing the message.
         status_code (int): The HTTP status code (4xx).
 
     Examples:
@@ -216,7 +216,7 @@ class JevServiceError(JevError):
     error occurs (network issues, timeouts, etc.).
 
     Attributes:
-        message (str): The error message.
+        args (tuple): Standard exception arguments containing the message.
         status_code (int | None): The HTTP status code (5xx) or None for transport errors.
 
     Examples:
@@ -252,7 +252,7 @@ class JevServiceError(JevError):
         """Return True if the error is retryable.
 
         Returns:
-            True for service errors (5xx).
+            True for service errors (5xx) and transport failures (status None).
         """
         return True
 
@@ -261,13 +261,13 @@ class JevRateLimitError(JevError):
     """Rate limit exceeded - 429.
 
     Raised when the API returns a 429 status code indicating the client
-    has exceeded the rate limit. The caller should use exponential backoff
-    before retrying the request.
+    has exceeded the rate limit. The caller owns any retry policy; the adapter
+    does not retry automatically.
 
     See: https://docs.typesafe.ai/api.md
 
     Attributes:
-        message (str): The error message.
+        args (tuple): Standard exception arguments containing the message.
         status_code (int): Always 429.
 
     Examples:
@@ -308,12 +308,12 @@ class JevResponseError(JevError):
     """Response parsing error - 2xx with invalid body.
 
     Raised when the API returns a 2xx status code but the response body
-    cannot be parsed into the expected domain types. This is particularly
-    important because the domain model is inferred from documentation,
-    so shape mismatches are expected when a live key exists.
+    cannot be parsed into the expected domain types. This is a local parsing
+    failure. Live calls verify only the fields they exercised;
+    other fields remain inferred from documentation.
 
     Attributes:
-        message (str): The error message.
+        args (tuple): Standard exception arguments containing the message.
         status_code (int): Always 2xx.
 
     Examples:

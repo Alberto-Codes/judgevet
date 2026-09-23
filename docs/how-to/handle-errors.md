@@ -39,7 +39,7 @@ missing environment variable, invalid constructor arguments, every HTTPX
 exception or every programming error. In particular, redirects can propagate
 raw `httpx.HTTPStatusError`. Keep unexpected failures visible to your application
 without publishing arbitrary traceback contents. See
-[supported errors and compatibility](../reference/compatibility.md).
+[error reference](../reference/errors.md).
 
 ## Choose a next action by category
 

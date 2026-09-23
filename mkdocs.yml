@@ -53,6 +53,8 @@ nav:
       - API: reference/api.md
       - Glossary: reference/glossary.md
       - Compatibility: reference/compatibility.md
+      - Configuration: reference/configuration.md
+      - Errors: reference/errors.md
       - Typing marker: reference/py-typed-marker.md
       - Python source: reference/python/index.md
       - Security: project/SECURITY.md

@@ -32,14 +32,15 @@ Status: **draft**. Choose a path by what you need to do.
 
 - [Question types, typed answers and HTTP adapter examples](reference/api.md).
 - [Supported imports and compatibility](reference/compatibility.md).
+- [Configuration defaults and precedence](reference/configuration.md).
+- [Service, transport and local policy errors](reference/errors.md).
 - [Terms and meanings](reference/glossary.md).
 - [The installed typing marker](reference/py-typed-marker.md).
 - [Credential inputs and precedence](../SECURITY.md#credentials).
 - [Data disclosure and diagnostic limits](../SECURITY.md#data-sent-to-the-service).
 
-Complete CLI, MCP, configuration and service-error reference pages are still
-being written. Current policy errors are covered in the Python guide above;
-the API page is not yet an exhaustive error reference.
+Complete CLI, MCP and policy reference pages are still being written.
+The task guides cover their current workflows.
 
 ## Explanation: understand the decisions
 

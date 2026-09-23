@@ -68,6 +68,11 @@ setup names its checkout files and shell requirements. MCP instructions retain
 legacy installation anchors and link verified official host configuration docs.
 Example checks use synthetic answers and do not promote live-service evidence.
 
+#151 begins with configuration and error reference: explicit library settings,
+environment precedence, entry-point model overrides, error constructors and
+retry metadata. Generated error docstrings now match those local contracts.
+Full API, CLI, MCP and policy reference completion remains open.
+
 ## Gates
 
 **1084 tests pass, 6 live tests deselected.** The last measured coverage is
