@@ -109,8 +109,13 @@ TEST_WHEEL=${test_downloads[0]}
 cmp "${test_artifacts[0]}" "$TEST_WHEEL"
 sha256sum "${test_artifacts[0]}" "$TEST_WHEEL"
 direnv exec . python3 scripts/smoke_release.py --wheel "$TEST_WHEEL"
+direnv exec . uv run python -m scripts.smoke_policy_release --wheel "$TEST_WHEEL"
 direnv exec . python3 -m scripts.smoke_mcp_release --wheel "$TEST_WHEEL"
 ```
+
+The policy runner additionally verifies supported import identities, base absence
+of MCP, `py.typed`, and execution/static typing of every exact Python block in
+the policy guide. It requires the development `ty` executable on PATH.
 
 The runners create separate virtual environments outside the checkout and
 install the exact wheel. The base check executes library examples and CLI
@@ -214,6 +219,7 @@ cmp "${prod_artifacts[0]}" "$PROD_WHEEL"
 cmp "$TEST_WHEEL" "$PROD_WHEEL"
 sha256sum "${prod_artifacts[0]}" "$TEST_WHEEL" "$PROD_WHEEL"
 direnv exec . python3 scripts/smoke_release.py --wheel "$PROD_WHEEL"
+direnv exec . uv run python -m scripts.smoke_policy_release --wheel "$PROD_WHEEL"
 direnv exec . python3 -m scripts.smoke_mcp_release --wheel "$PROD_WHEEL"
 check_cli_wheel "$PROD_WHEEL"
 ```

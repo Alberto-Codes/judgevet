@@ -87,7 +87,24 @@ confidence proof exposed an equivalence-only test gap; explicit expected verdict
 now make that test fail independently. All mutations are restored. Five import
 contracts pass, including adapter-free JSON decoding. Whole-repo docvet is clean.
 
-#142 (documentation) and #143 (publication) remain open. The current published version is still 0.6.0.
+#142 documents supported imports, errors, immutability and explicit sync/async
+ownership in the typed policy guide and four-surface compatibility reference.
+README and CLI/release guides link the new contract. Installation pins remain
+at the verified published 0.6.0 until 0.7.0 passes publication verification.
+
+A built wheel passed all four exact guide examples and their static typing in
+an isolated base environment outside checkout, including live sync/async calls.
+The new policy artifact command verifies root identity, facade exports, py.typed
+and base absence of MCP. Existing live base and MCP smoke commands also passed.
+Broken example, invalid typing and deleted installed export each fail their
+artifact detector. Six new detector tests pass; 21 local doc links resolve.
+The final formatted examples were re-executed after the formatter gate finding.
+An initial positive detector test lacked an assertion; the hygiene gate caught
+it and the corrected full suite passed. No gate suppression was added.
+
+The development wheel still has the release-please-managed 0.6.0 version and was
+not uploaded. This is built-artifact evidence, not TestPyPI/PyPI 0.7.0 evidence.
+#143 (publication and actual-download verification) remains open. The current published version is still 0.6.0.
 
 ## Delivered developer workflow
 
@@ -231,7 +248,7 @@ from actual closures; no generated changelog entries were hand-maintained.
 
 ## Gates and model evidence
 
-**1069 tests pass, 6 live tests deselected, 94.20% coverage** (1430/1518 statements). All eleven configured
+**1075 tests pass, 6 live tests deselected, 94.20% coverage** (1430/1518 statements). All eleven configured
 local gates passed: suppressions, dependencies, test hygiene, ruff check/format,
 ty, import-linter, docvet diff/all, pytest, and pytest with coverage. Commit and
 push hooks remain enabled. [#127 CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35788246669)
@@ -326,6 +343,6 @@ published with separate user authorization.
 The developer-workflow release requirements are fulfilled. Final evidence-commit
 CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
 first fresh-launcher failure remains unexplained. #67/#66 are being implemented
-under #138; root exports, pure policy and JSON/CLI integration have landed. Documentation
-and release verification remain. The post-0.5.0 reliability and credential-scoping rounds are
+under #138; root exports, pure policy and JSON/CLI integration have landed. Documentation is in place;
+release and actual-download verification remain. The post-0.5.0 reliability and credential-scoping rounds are
 fulfilled and published in 0.6.0 with user authorization. No inferred API claim was promoted and no quality gate was weakened.

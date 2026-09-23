@@ -82,3 +82,11 @@ and the policy summary and comparisons to stderr.
 A missing or wrong-type answer required by the policy is a response failure,
 not an unmet policy or a vacuous pass. Error diagnostics identify the source
 without printing the policy path or its contents.
+
+## Use the policy in a library caller
+
+The 0.7.0 candidate adds [typed construction and JSON decoding](use-policy-library.md)
+for Python callers. The CLI shares the predicate comparisons and report details
+with that API while retaining its historical diagnostics and answer checks.
+See the [compatibility contract](../reference/compatibility.md) for the strict
+public evaluation rules and unchanged CLI behavior.

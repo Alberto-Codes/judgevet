@@ -70,6 +70,18 @@ The answer also contains the resolved model and token usage. Use
 `AsyncHTTPSystemOneAdapter` with `async with` and await `system_one` for async
 applications. Both adapters close their HTTP client when the context exits.
 
+## Evaluate policies from Python
+
+The 0.7.0 candidate adds `judgevet.policy` for immutable typed rules, validated
+question snapshots and ordered pass/fail reports. `judgevet.policy_json` decodes
+the existing CLI policy grammar. These APIs are absent from published 0.6.0.
+See the [runnable typed and JSON policy guide](docs/how-to/use-policy-library.md)
+and [supported imports and compatibility](docs/reference/compatibility.md).
+
+The CLI retains its grammar, diagnostics, output and exit meanings. MCP retains
+its three tools. The base installation still omits MCP; one distribution and
+version cover all surfaces.
+
 ## Use the CLI
 
 With a key in the environment, ask a question and emit JSON:
@@ -145,9 +157,9 @@ observations from documentation-derived expectations.
 
 Live 429/529 bodies remain unseen. Other resolved models and fields not touched
 by a call remain unverified. Contract tests exercise synthetic fixtures; they
-do not turn those cases into live evidence. The proposed reusable policy
-library API remains a design decision, not an implemented public export;
-the CLI policy workflow above is shipped.
+do not turn those cases into live evidence. The reusable policy library API is implemented for the 0.7.0 candidate;
+published artifact verification remains a release requirement. The CLI policy
+workflow above is shipped in 0.6.0.
 
 ## Development
 
