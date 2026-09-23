@@ -244,14 +244,16 @@ way nobody planned.
 
 ## Remaining work
 
-#102 migration is in progress. The release environment permits main only.
-Both credential-consuming jobs now bind to it and require the existing PAT,
-with an authenticated identity check and no GITHUB_TOKEN fallback. Eight
-workflow acceptance cases started red and now pass. The temporary manual
-sealing workflow encrypts the original secret for the destination public key;
-its exact code passed a canary round trip and no-plaintext-output check. The
-repository secret remains until destination presence is proved. Environment
-migration, repository removal and fresh-run identity proof are still pending.
+#102's existing credential was copied as destination-encrypted ciphertext by
+manual run 35800106404, without plaintext retrieval or rotation. GitHub accepted
+the environment secret at 2026-09-23T00:01:29Z. Metadata now proves repository
+absence and release-environment presence. The environment permits main only.
+Both credential jobs bind to it, reject missing PATs and verify Alberto-Codes
+as the authenticated identity. Eight acceptance tests and independent removals
+cover bindings, absence, identity and fallback. The temporary workflow, encrypted
+artifact and migration run were retired. A new commit-triggered release-please
+run after repository-secret removal is still required; earlier green runs do
+not prove the final scope.
 
 The developer-workflow release requirements are fulfilled. Final evidence-commit
 CI and milestone closure are tracked on #131. #133 now supplies stage diagnostics and a bounded reproduction; the historical
