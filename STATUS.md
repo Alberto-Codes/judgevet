@@ -38,6 +38,11 @@ installation, compatibility and security guidance. The installation guide gives
 safe checks for startup/discovery failures without claiming a known cure.
 Prose relocation does not promote service evidence.
 
+#46 adds the canonical [glossary](docs/reference/glossary.md). Repository
+vocabulary guidance links to it. Definitions distinguish model numbers from
+local decisions, preserve literal API names and retain observed/inferred limits.
+Terminology enforcement remains #71; no checker or service evidence changed.
+
 ## Gates
 
 **1075 tests pass, 6 live tests deselected.** The last measured coverage is

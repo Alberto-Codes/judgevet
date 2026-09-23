@@ -160,19 +160,10 @@ evidence.
 
 ## Vocabulary
 
-One term per concept, in docs, identifiers and commit messages.
-
-| use | not |
-|---|---|
-| question | prompt, query |
-| answer | response, result |
-| confidence | certainty, score |
-| `Noul` / `Choice` / `Score` | boolean / enum / rating |
-| port | interface |
-| adapter | implementation, driver |
-
-`Score` is a Jev question type. The number inside an answer is a **score**; how
-sure Jev is of it is **confidence**. Do not swap them.
+Use the [canonical glossary](docs/reference/glossary.md) for definitions and
+preferred wording. Its vocabulary table is the single source for terminology.
+Preserve exact public identifiers, wire fields and quoted diagnostics. Apply
+prose preferences in their stated context; do not rename supported APIs.
 
 ## Writing system
 

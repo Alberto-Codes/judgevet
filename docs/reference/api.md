@@ -6,6 +6,9 @@
 > inferred from published documentation. `STATUS.md` holds the line-by-line
 > table.
 
+Use the [glossary](glossary.md) to distinguish probability, confidence, score
+and local acceptance decisions.
+
 ## Question Types
 
 ### Noul
