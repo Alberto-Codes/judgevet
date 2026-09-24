@@ -3,6 +3,28 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.10.0](https://github.com/Alberto-Codes/judgevet/compare/v0.9.0...v0.10.0) (2026-09-24)
+
+
+### Features
+
+* **mcp:** add validated registry manifest and launcher checks ([403aea9](https://github.com/Alberto-Codes/judgevet/commit/403aea9bce905ec0d159117546373de12e5e2611)), references [#47](https://github.com/Alberto-Codes/judgevet/issues/47)
+
+
+### Fixes
+
+* **release:** render issue references without claiming closure ([f6b7737](https://github.com/Alberto-Codes/judgevet/commit/f6b773748a8d65a5b8ae1e48b3a39666f8bbfa20)), references [#125](https://github.com/Alberto-Codes/judgevet/issues/125) [#160](https://github.com/Alberto-Codes/judgevet/issues/160)
+
+
+### Refactoring
+
+* **mcp:** separate discovery and tool handlers ([7fa32b2](https://github.com/Alberto-Codes/judgevet/commit/7fa32b27dd2053471f06b83ae8cd771885781f82)), references [#80](https://github.com/Alberto-Codes/judgevet/issues/80)
+
+
+### Documentation
+
+* record verified 0.9.0 release and installation ([98cf8cd](https://github.com/Alberto-Codes/judgevet/commit/98cf8cd2ef74da448d15a69e4704fab2ff343d3c)), references [#157](https://github.com/Alberto-Codes/judgevet/issues/157)
+
 ## [0.9.0](https://github.com/Alberto-Codes/judgevet/compare/v0.8.0...v0.9.0) (2026-09-24)
 
 
