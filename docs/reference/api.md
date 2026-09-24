@@ -114,6 +114,55 @@ attribute reassignment, not mutation of nested dictionaries. `answers`,
 by answer type. Their values are the same answer objects. Missing names or
 wrong-type names raise normal `KeyError` when indexed in a filtered mapping.
 
+## Service limits
+
+The [TypeSafe models page](https://docs.typesafe.ai/models.md) states these
+limits. This section records that page as fetched on 2026-09-24. No judgevet
+call has exercised any of these limits. They are vendor statements, not
+verified behavior.
+
+The service enforces these limits. judgevet does not check them before a call.
+It counts no tokens, because the vendor documents no tokenizer. It does not
+throttle requests.
+
+| Limit | Value the page states for `jev-1.13.0` |
+|---|---|
+| Context length | "64k tokens per request; 32k tokens for `state` plus the longest question" |
+| Rate limits | "250,000 tokens per second / 1,200 requests per minute" |
+| Input | "Text only. String, JSON object, or array of text values. No image, audio, or video input." |
+
+The page explains the two context budgets. The 64k budget "covers the `state`
+plus all questions combined". The 32k budget "applies to the `state` plus the
+single longest question".
+
+The page says a request over either rate limit "returns `429 Too Many
+Requests`". judgevet has never observed a 429 body. See the
+[evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not).
+
+The page warns that the rate limits change. Its warning reads "Rate limits are
+adjusting dynamically." It also says "the limits above can change without
+notice". Check the cited page before you size a workload.
+
+The page names two aliases. Both point to `jev-1.13.0` on the fetch date.
+
+| Alias | Points to |
+|---|---|
+| `jev-latest` | `jev-1.13.0` |
+| `jev-preview` | `jev-1.13.0` |
+
+The page states that "an alias moves when a new release ships, so the
+answers behind it can change without a change on your side". Pin a
+versioned ID to keep one model.
+
+On language, the page states that "English is the primary training language".
+It also states that other languages "are handled but not equally well".
+
+**Open question:** the page does not say which status code a request over the
+context length returns. It also does not name the error body for that case.
+
+**Open question:** the page does not say how the service counts tokens. A
+caller cannot compute the context budget locally before a call.
+
 ## Examples
 
 ### Basic Usage
