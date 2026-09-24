@@ -56,6 +56,7 @@ Status: **draft**. Choose a path by what you need to do.
 
 ## Maintainers
 
+Start with [contributor setup](maintainers/contributor-setup.md) for a fresh checkout.
 [Maintainer procedures](maintainers/index.md) cover wheel verification and
 release operations. They are separate from package use.
 The former [release-guide path](how-to/cut-a-release.md) remains a pointer for

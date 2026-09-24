@@ -67,6 +67,7 @@ nav:
       - Security: project/SECURITY.md
   - Maintainers:
       - Procedures: maintainers/index.md
+      - Contributor setup: maintainers/contributor-setup.md
       - Writing guide: maintainers/writing-guide.md
       - Build documentation: maintainers/build-docs.md
       - Verify package: maintainers/verify-package.md

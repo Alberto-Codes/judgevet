@@ -115,6 +115,23 @@ unverified and are carried by #167. Claude's account-limit response does not
 verify a TypeSafe 429 body. No other model, gateway or modern protocol path
 became verified.
 
+### Contributor setup
+
+[#21](https://github.com/Alberto-Codes/judgevet/issues/21#issuecomment-5807239311)
+adds the canonical [cold-clone route](docs/maintainers/contributor-setup.md).
+The exact commands passed in a fresh public clone with new uv, pre-commit and
+npm caches. No API credential resolved. All three executable hooks installed
+before subsequent project commands; actionlint provisioned its Go environment.
+Locked synchronization, CLI help and both full gate stages passed. An invalid
+CLI option exited 2; restoring the documented help command exited 0.
+
+The credential-free clone measured 1600 passed, 6 live deselected and 95.33%
+coverage (1836/1926 statements). The lockfile remained unchanged. The walkthrough
+used Bazzite 44 x64, Python 3.13.13, uv 0.11.20, Node 26.3.0 and npm 12.0.2.
+Downloads and advisory checks need network access, but ordinary setup needs
+no live service account. Windows and ChromeOS Linux remain unverified under
+#167. No runtime behavior, dependencies or service evidence changed.
+
 ## Documentation program
 
 [#145](https://github.com/Alberto-Codes/judgevet/issues/145) is complete.
