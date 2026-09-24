@@ -6,7 +6,7 @@ status: draft
 
 Status: **draft**.
 
-Published judgevet 0.8.0 provides the library, CLI and `judgevet-mcp` command.
+Published judgevet 0.9.0 provides the library, CLI and `judgevet-mcp` command.
 The MCP runtime is optional.
 
 ## Install the library

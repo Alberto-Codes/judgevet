@@ -5,32 +5,40 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.8.0 is published. Library, CLI and optional MCP share one version.
-The release adds opt-in retries, proxy/CA configuration, file/command credentials,
-and scoped diagnostic correlation. Defaults retain one attempt and verified TLS.
-The documentation site is [live](https://alberto-codes.github.io/judgevet/).
+judgevet 0.9.0 is published. Library, CLI and optional MCP share one version.
+The release adds explicit gateway authentication and metadata, caller-controlled
+state redaction, dependency auditing, and configuration/workflow checks.
+Direct TypeSafe defaults remain unchanged. The documentation site is
+[live](https://alberto-codes.github.io/judgevet/).
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.8.0`, commit `e0780444b0c1379089d17834a24e5dc38a0068d4` |
-| Accepted candidate | `578e8db293bfb692ec3cb09d2edc927715592935`; release tree is identical |
-| Wheel SHA-256 | `8970ddadf1a36153c4142847299b3e1a3652a74911d57ec7a35ed6204b794081` |
-| Source distribution SHA-256 | `f58ed085e3c5a47dc845570416efaed3971b49ac6a658757859f6f17d3b8b5e4` |
+| Release/tag | `v0.9.0`, commit `9f4bfc25f5910fa7571aaffbbb7e1b417dab6dc4` |
+| Accepted candidate | `6c7b8a0cb2abb99dd68693b40c9dca587bff32fb`; release tree is identical |
+| Wheel SHA-256 | `03cb15e2e5983bc05f76a218af7bb6426a7c8eb672f67f17f79a93dc270bd2e6` |
+| Source distribution SHA-256 | `7ebbe0d0f68528e97652a36b681dee6759add5403fdeacf95c9826d9835c6d6e` |
 | Actual TestPyPI/PyPI downloads | Both distributions match workflow artifacts and each other |
 | Library | Isolated base imports, typing marker, live example and all four policy-guide examples passed; policy examples also type-checked |
 | CLI | Installed mixed live judgment passed on both index wheels; one test each, no skip |
-| MCP | Isolated discovery and all three live tools passed on both wheels; fresh published uvx launcher initialized and discovered three tools |
-| Container | Exact documented Dockerfile built the actual PyPI wheel; non-root read-only runs exercised file and command credentials with synthetic HTTP requests |
+| MCP | Isolated discovery and all three live tools passed on both wheels; fresh published uvx launcher initialized and called all three tools |
+| New features | All 219 gateway/redaction acceptance cases pass against both isolated installed wheels |
+| Documentation | Both index wheels execute and type-check all 17 exact Python programs; five CLI blocks and three continuation commands pass |
 
-[Release evidence](https://github.com/Alberto-Codes/judgevet/issues/155) records
-commands, hashes and limits. [Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35873226697),
-[TestPyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35872961957)
-and [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35873463087)
+[Release evidence](https://github.com/Alberto-Codes/judgevet/issues/157) records
+commands, hashes and limits. [Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35941053887),
+[TestPyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35940775919)
+and [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35941229046)
 passed. Both publication workflows passed base/MCP smoke checks before upload.
-The first PyPI read did not yet see 0.8.0; a fresh uncached download succeeded.
-The fresh-launcher harness initially omitted the child credential environment;
-the documented `direnv exec` invocation passed. This does not prove an existing
-host session reloaded its tools. No unseen API body became verified.
+The first TestPyPI lookup did not yet list 0.9.0; direct downloads and a fresh
+uncached pip lookup succeeded. The first fresh MCP launcher probe failed during
+initialization. A separate synthetic-key diagnostic initialized successfully;
+a full fresh-cache recheck passed. The initial cause remains unproven.
+This does not prove an existing host session reloaded its tools.
+No unseen API body or gateway vendor became verified.
+
+The prior [0.8.0 release evidence](https://github.com/Alberto-Codes/judgevet/issues/155)
+retains its hashes and container verification. That container exercise used
+0.8.0, not the new release.
 
 ## Documentation program
 
@@ -190,7 +198,7 @@ push gates pass. The current public audit covers 87 packages after adding the
 locked development tool and reports no known vulnerabilities or adverse statuses.
 [Contract, red tests and proofs](https://github.com/Alberto-Codes/judgevet/issues/48)
 remain on the issue. Runtime dependencies and live-service claims are unchanged.
-Release publication and installed-artifact verification remain on #157.
+Release publication and installed-artifact verification are recorded on #157.
 
 ## Deployment-readiness work
 
@@ -288,7 +296,7 @@ container checks now pass with the actual published 0.8.0 PyPI wheel.
 The complete commit/push gates include strict docs, isolated examples and
 coverage. Runtime evidence is local and synthetic; unseen service
 errors stay inferred. Runtime dependencies remain unchanged. Release-please set the shared version
-to 0.8.0; both index publications and the Pages site are verified.
+to 0.9.0; both index publications and the Pages site are verified.
 
 ## Pages deployment
 
