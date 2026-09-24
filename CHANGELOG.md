@@ -3,6 +3,20 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.9.0](https://github.com/Alberto-Codes/judgevet/compare/v0.8.0...v0.9.0) (2026-09-24)
+
+
+### Features
+
+* add caller-controlled state redaction before transmission ([4985677](https://github.com/Alberto-Codes/judgevet/commit/4985677abb66402df95cafb537f574117f034c37)), closes [#53](https://github.com/Alberto-Codes/judgevet/issues/53) [#157](https://github.com/Alberto-Codes/judgevet/issues/157)
+* support explicit gateway authentication and metadata ([50133e2](https://github.com/Alberto-Codes/judgevet/commit/50133e255a508d709d46bb21e66a911c5e7bbea7)), closes [#63](https://github.com/Alberto-Codes/judgevet/issues/63) [#157](https://github.com/Alberto-Codes/judgevet/issues/157)
+
+
+### Documentation
+
+* record public gateway acceptance contract ([5d758b0](https://github.com/Alberto-Codes/judgevet/commit/5d758b02e80aba2711180543ac2c1d5986908f8c)), closes [#154](https://github.com/Alberto-Codes/judgevet/issues/154) [#157](https://github.com/Alberto-Codes/judgevet/issues/157)
+* record verified 0.8.0 release and installation ([2bec6fe](https://github.com/Alberto-Codes/judgevet/commit/2bec6fe19ba67ffe6d76184a37f2d70061293e9f)), closes [#155](https://github.com/Alberto-Codes/judgevet/issues/155)
+
 ## [0.8.0](https://github.com/Alberto-Codes/judgevet/compare/v0.7.0...v0.8.0) (2026-09-23)
 
 
