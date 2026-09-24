@@ -33,3 +33,23 @@ for (const target of ['0.10.0', '1.2.3', '2.0.0-rc.1']) {
     assert.deepEqual(manifest, before);
   });
 }
+
+for (const target of ['0.10.1', '0.11.0', '1.2.3', '2.0.0-rc.1']) {
+  test(`configured updater synchronizes only host recipe pins to ${target}`, async () => {
+    const strategy = new Python({
+      github: {}, targetBranch: 'main', path: '.', extraFiles: config['extra-files'],
+    });
+    const updates = await strategy.extraFileUpdates(Version.parse(target), new Map());
+    const page = 'docs/how-to/connect-mcp.md';
+    const original = fs.readFileSync(path.join(root, page), 'utf8');
+    const pin = /\b(judgevet(?:\[mcp\])?==)\d+\.\d+\.\d+(?:-[\w.]+)?/g;
+    const pins = [...original.matchAll(pin)];
+    assert.ok(pins.length > 0, 'host recipes must retain explicit package pins');
+    const expected = original.replace(pin, (_, requirement) => requirement + target);
+    let content = original;
+    for (const update of updates.filter(u => u.path === page)) {
+      content = update.updater.updateContent(content);
+    }
+    assert.equal(content, expected, 'all pins change; every other byte survives');
+  });
+}

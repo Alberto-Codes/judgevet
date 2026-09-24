@@ -26,7 +26,9 @@ One wheel does not have independently released library/CLI/MCP versions.
 release-please manages the version and changelog. Its Python strategy updates
 `pyproject.toml`; `extra-files` updates `src/judgevet/__init__.py`. It also
 updates `.release-please-manifest.json` and all three version values in
-`server.json`. See [registry publication](mcp-registry.md). The separate `update-lockfile` job
+`server.json`. It updates package pins in the [host recipes](../how-to/connect-mcp.md)
+through bounded release markers. Host version observations stay unchanged.
+See [registry publication](mcp-registry.md). The separate `update-lockfile` job
 refreshes `uv.lock` on the release branch. Never edit a version by hand.
 
 The workflow runs the locked release-please engine through

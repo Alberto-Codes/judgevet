@@ -55,7 +55,9 @@ and issue templates. The
 records current primary sources, host schemas, credential mechanisms,
 installation alternatives and source disagreements. It is research, not
 host integration evidence. Pi uses the existing CLI route, explicitly outside
-MCP. No release version has been selected.
+MCP. The complete landed scope has now been reviewed for 0.10.1.
+Runtime sources and dependencies are unchanged; this is an onboarding and
+repository-tooling patch. Publication remains pending.
 
 The [user-approved revision](https://github.com/Alberto-Codes/judgevet/issues/162#issuecomment-5806551798)
 accepts cited documentation and mechanical checks for unavailable hosts.
@@ -163,6 +165,21 @@ one failure. The original forms pass again. Full local push gates measure
 Parsed checks do not emulate GitHub's entire form engine or establish the
 truth of a report. Native rendering and exact-commit CI evidence are recorded
 on #36 after publication of the templates. No service claim changed.
+
+### Release preparation
+
+[#168](https://github.com/Alberto-Codes/judgevet/issues/168#issuecomment-5807678611)
+fixes the observed candidate mismatch between package 0.10.1 and host recipe
+pins at 0.10.0. The original candidate failed thirteen tests. Release-please
+now updates thirteen marked recipe blocks through its configured generic
+updater. No version was edited manually and no pin assertion was weakened.
+
+Four real-engine cases cover patch, minor, major and prerelease targets. They
+require every package pin to change and all other document bytes to survive.
+Removing the updater or one marker makes all four fail while registry cases
+still pass. All eighteen Node checks pass. Full local push gates measure
+1614 passed, 6 live deselected and 95.33% coverage. Refreshed candidate CI and
+index artifact verification remain required before release publication.
 
 ## Documentation program
 

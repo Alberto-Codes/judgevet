@@ -25,7 +25,8 @@
           "type": "json",
           "path": "server.json",
           "jsonpath": "$.packages[0].runtimeArguments[0].variables.version.value"
-        }
+        },
+        "docs/how-to/connect-mcp.md"
       ],
       "pull-request-header": "Pre-flight for a release cut. On merge, release-please cuts a **draft** GitHub release and creates its tag. Nothing reaches PyPI until a maintainer publishes the draft.\n\n- [ ] The version above is the intended one. If not, do not merge.\n- [ ] The gate table is green. Every gate in the row that `pre-commit install` runs is \ud83c\udfaf green.\n- [ ] STATUS.md's verified-vs-inferred table still holds. No inferred line has become verified, and no verified line has become inferred.\n- [ ] `uv.lock` was refreshed.\n",
       "pull-request-footer": "After merging: release-please cuts the draft and its tag. Edit the draft to say what this release is for, then publish it by hand \u2014 publishing is what fires publish.yml and uploads to PyPI over OIDC. Nothing reaches the index until you click it.",

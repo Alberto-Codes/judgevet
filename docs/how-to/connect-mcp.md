@@ -24,15 +24,19 @@ service access. Inputs go to Jev; review
 Choose one installation method. For a persistent command, use either a Python
 3.12-or-newer virtual environment with pip:
 
+<!-- x-release-please-start-version -->
 ```bash
 python -m pip install 'judgevet[mcp]==0.10.0'
 ```
+<!-- x-release-please-end -->
 
 Or install a standalone tool with uv:
 
+<!-- x-release-please-start-version -->
 ```bash
 uv tool install 'judgevet[mcp]==0.10.0'
 ```
+<!-- x-release-please-end -->
 
 Configure the host with the installed `judgevet-mcp` executable's absolute
 path and an empty `args` array. This avoids GUI `PATH` differences. The MCP
@@ -44,9 +48,11 @@ Alternatively, install [uv](https://docs.astral.sh/uv/getting-started/installati
 and let the host execute the package with uvx. No prior judgevet installation
 or source checkout is required:
 
+<!-- x-release-please-start-version -->
 ```bash
 uvx --from 'judgevet[mcp]==0.10.0' judgevet-mcp
 ```
+<!-- x-release-please-end -->
 
 The host recipes below use this alternative. Use the absolute path to `uvx`
 if the host cannot find it. uv can provision Python 3.12 or newer. According
@@ -93,6 +99,7 @@ Run **MCP: Open User Configuration** to configure the current user profile,
 or save this in `.vscode/mcp.json` for a workspace. **MCP: Add Server** also
 provides a guided flow. Merge the entry with existing servers.
 
+<!-- x-release-please-start-version -->
 ```json
 {
   "servers": {
@@ -105,6 +112,7 @@ provides a guided flow. Merge the entry with existing servers.
   }
 }
 ```
+<!-- x-release-please-end -->
 
 Trust the workspace when prompted. Use **MCP: List Servers** to start the
 server and review its trust prompt.
@@ -127,6 +135,7 @@ Save this in `.cursor/mcp.json` for the project or `~/.cursor/mcp.json` for
 personal use. Merge it with other entries. Project entries take precedence
 when the same name appears in both locations.
 
+<!-- x-release-please-start-version -->
 ```json
 {
   "mcpServers": {
@@ -139,6 +148,7 @@ when the same name appears in both locations.
   }
 }
 ```
+<!-- x-release-please-end -->
 
 Save and restart Cursor. Inspect **Customize > MCPs**, enable the server and
 its tools, then request the three calls below in Agent chat. Check **Output >
@@ -152,14 +162,17 @@ Cursor Agent CLI inspection is not evidence that the IDE loaded a server.
 
 After exporting the key, use the native project-scoped add command:
 
+<!-- x-release-please-start-version -->
 ```bash
 claude mcp add --transport stdio --scope project judgevet --env 'JEV_API__KEY=${JEV_API__KEY}' -- uvx --from 'judgevet[mcp]==0.10.0' judgevet-mcp
 ```
+<!-- x-release-please-end -->
 
 Keep `judgevet` before `--env`: that option accepts multiple values. The
 single quotes preserve the variable reference, not the secret value.
 The equivalent project `.mcp.json` entry is:
 
+<!-- x-release-please-start-version -->
 ```json
 {
   "mcpServers": {
@@ -172,6 +185,7 @@ The equivalent project `.mcp.json` entry is:
   }
 }
 ```
+<!-- x-release-please-end -->
 
 Use `--scope user` for personal cross-project setup instead. Inspect with
 `claude mcp get judgevet`; `claude mcp list` checks connection. Start Claude
@@ -198,6 +212,7 @@ places it at `~/Library/Application Support/Claude/claude_desktop_config.json`
 on macOS and `%APPDATA%\Claude\claude_desktop_config.json` on Windows.
 Use the UI to locate configuration on other supported platforms.
 
+<!-- x-release-please-start-version -->
 ```json
 {
   "mcpServers": {
@@ -209,6 +224,7 @@ Use the UI to locate configuration on other supported platforms.
   }
 }
 ```
+<!-- x-release-please-end -->
 
 Use actual absolute paths for both the executable and key file. On Windows,
 escape backslashes in JSON or use forward slashes, for example
@@ -225,12 +241,14 @@ A browser session does not exercise this local Desktop route.
 Save this in `.codex/config.toml` in a trusted project, or in
 `~/.codex/config.toml` for user-wide settings. Merge with existing settings.
 
+<!-- x-release-please-start-version -->
 ```toml
 [mcp_servers.judgevet]
 command = "uvx"
 args = ["--from", "judgevet[mcp]==0.10.0", "judgevet-mcp"]
 env_vars = ["JEV_API__KEY"]
 ```
+<!-- x-release-please-end -->
 
 After exporting the key, start Codex CLI from that shell. `env_vars` forwards
 the named environment variable without storing its value in TOML. Inspect
@@ -263,17 +281,23 @@ Install base judgevet persistently as described in [installation](install.md#run
 or use the uvx alternative below. Start Pi from the shell where you exported
 the key. Ask Pi to run these exact commands through its Bash tool:
 
+<!-- x-release-please-start-version -->
 ```bash
 uvx --from 'judgevet==0.10.0' judgevet 'Two checks passed.' '{"noul_question":{"type":"noul","instructions":"Did the checks pass?"}}' --json
 ```
+<!-- x-release-please-end -->
 
+<!-- x-release-please-start-version -->
 ```bash
 uvx --from 'judgevet==0.10.0' judgevet 'Two checks passed.' '{"choice_question":{"type":"choice","instructions":"Did the checks pass?","criteria":{"yes":"Yes","no":"No"}}}' --json
 ```
+<!-- x-release-please-end -->
 
+<!-- x-release-please-start-version -->
 ```bash
 uvx --from 'judgevet==0.10.0' judgevet 'Two checks passed.' '{"score_question":{"type":"score","instructions":"Did the checks pass?","criteria":["Poor","Fair","Good","Excellent"]}}' --json
 ```
+<!-- x-release-please-end -->
 
 Inspect the actual tool execution and JSON answers, model and usage. A model's
 claim that it ran a command is insufficient. Command-not-found errors require
@@ -325,9 +349,11 @@ a native install link has been separately verified.
 If you already use direnv, it can wrap the published launcher. The project
 must have a reviewed, approved `.envrc` exporting the key:
 
+<!-- x-release-please-start-version -->
 ```bash
 direnv exec /absolute/path/to/project uvx --from 'judgevet[mcp]==0.10.0' judgevet-mcp
 ```
+<!-- x-release-please-end -->
 
 This is an alternative credential mechanism, not a judgevet prerequisite.
 [direnv exec](https://direnv.net/man/direnv.1.html) loads the approved environment
