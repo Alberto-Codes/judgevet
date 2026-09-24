@@ -19,3 +19,6 @@ scratchpad/
 
 # Local documentation build output
 /site/
+
+# Locked Node tooling used by release configuration checks
+node_modules/

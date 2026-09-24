@@ -1,0 +1,47 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Alberto-Codes/judgevet",
+  "description": "Ask TypeSafe Jev yes/no, choice and score questions and receive structured model judgments.",
+  "repository": {
+    "url": "https://github.com/Alberto-Codes/judgevet",
+    "source": "github"
+  },
+  "version": "0.9.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "judgevet",
+      "version": "0.9.0",
+      "runtimeHint": "uvx",
+      "runtimeArguments": [
+        {
+          "type": "named",
+          "name": "--from",
+          "value": "judgevet[mcp]=={version}",
+          "variables": {
+            "version": {
+              "value": "0.9.0"
+            }
+          }
+        },
+        {
+          "type": "positional",
+          "value": "judgevet-mcp",
+          "valueHint": "command"
+        }
+      ],
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "JEV_API__KEY",
+          "description": "TypeSafe API key. Tool inputs are sent to TypeSafe for judgment.",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

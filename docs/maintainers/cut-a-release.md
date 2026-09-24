@@ -25,7 +25,8 @@ One wheel does not have independently released library/CLI/MCP versions.
 
 release-please manages the version and changelog. Its Python strategy updates
 `pyproject.toml`; `extra-files` updates `src/judgevet/__init__.py`. It also
-updates `.release-please-manifest.json`. The separate `update-lockfile` job
+updates `.release-please-manifest.json` and all three version values in
+`server.json`. See [registry publication](mcp-registry.md). The separate `update-lockfile` job
 refreshes `uv.lock` on the release branch. Never edit a version by hand.
 
 Merging the release PR creates a draft and tag. Publishing the draft triggers
@@ -77,7 +78,8 @@ git show "$HEAD_SHA:CHANGELOG.md"
 gh run list --workflow ci.yml --commit "$BASE_SHA"
 ```
 
-Inspect all four version values: project version, root `__version__`, manifest
+Inspect all seven version values, including the registry root, package and
+uvx pin with `uv run python -m scripts.registry_manifest`. The existing four are: project version, root `__version__`, manifest
 root entry, and the root `judgevet` package version in `uv.lock`. All must equal
 `VERSION`. Review the changelog and STATUS trust table. Inspect the identified
 main CI run and require completed success. Fetching does not replace local
@@ -134,6 +136,7 @@ sha256sum "${test_artifacts[0]}" "$TEST_WHEEL"
 direnv exec . python3 scripts/smoke_release.py --wheel "$TEST_WHEEL"
 direnv exec . uv run python -m scripts.smoke_policy_release --wheel "$TEST_WHEEL"
 direnv exec . python3 -m scripts.smoke_mcp_release --wheel "$TEST_WHEEL"
+direnv exec . uv run python -m scripts.smoke_registry_release --wheel "$TEST_WHEEL"
 ```
 
 The policy runner additionally verifies supported import identities, base absence
@@ -244,6 +247,8 @@ sha256sum "${prod_artifacts[0]}" "$TEST_WHEEL" "$PROD_WHEEL"
 direnv exec . python3 scripts/smoke_release.py --wheel "$PROD_WHEEL"
 direnv exec . uv run python -m scripts.smoke_policy_release --wheel "$PROD_WHEEL"
 direnv exec . python3 -m scripts.smoke_mcp_release --wheel "$PROD_WHEEL"
+direnv exec . uv run python -m scripts.smoke_registry_release --wheel "$PROD_WHEEL"
+direnv exec . uv run python -m scripts.smoke_registry_release
 check_cli_wheel "$PROD_WHEEL"
 ```
 

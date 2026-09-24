@@ -151,6 +151,33 @@ descriptions and now receive offline destination/anchor checks. Three acceptance
 cases prove valid targets and reject missing files or fragments. Duplicate README
 examples were removed; the task guides retain their executable coverage.
 
+## Registry manifest preparation
+
+#47 adds `server.json` with explicit optional MCP installation, the existing
+`judgevet-mcp` launcher and a secret TypeSafe key input. The official 2025-12-11
+schema and production validation endpoint accept the manifest. Removing the
+required name is rejected. This is validation, not a submitted or accepted listing.
+The published 0.9.0 description lacks the ownership marker; the next release
+must publish the new README marker before registry submission.
+
+Fifteen regression cases cover schema/package/configuration agreement, version
+drift, private key inputs and isolated candidate launches. The manifest-derived
+command matches the executed VS Code converter. Its trailing package identity
+argument is ignored by the existing launcher; other consumer conventions remain
+unverified. The isolated candidate passes discovery and all three live tools.
+Changing the launcher to the CLI, omitting the extra, or removing the entrypoint
+from the candidate wheel makes the transport check fail. Base wheel imports and
+policy examples still pass without MCP.
+
+Three Node tests execute the configured release-please 17.3.0 updater for minor,
+major and prerelease versions. All registry versions and the uvx pin update;
+removing one updater makes all three tests fail. Commit, push and CI now check
+schema/version agreement and actual updater behavior. The
+[registry procedure](docs/maintainers/mcp-registry.md) separates candidate mapping,
+index verification, submission and confirmed listing. Evidence remains on
+[#47](https://github.com/Alberto-Codes/judgevet/issues/47). No new service body,
+model, gateway deployment or modern protocol path is promoted.
+
 ## MCP adapter decomposition
 
 #80 moves discovery schemas and tool handlers out of the server factory.
@@ -172,7 +199,7 @@ with the final round evidence on [#80](https://github.com/Alberto-Codes/judgevet
 
 ## Gates
 
-**1553 tests pass, 6 live tests deselected.** The last measured coverage is
+**1568 tests pass, 6 live tests deselected.** The last measured coverage is
 **95.33%** (1836/1926 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

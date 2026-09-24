@@ -71,5 +71,6 @@ nav:
       - Build documentation: maintainers/build-docs.md
       - Verify package: maintainers/verify-package.md
       - Release: maintainers/cut-a-release.md
+      - MCP registry: maintainers/mcp-registry.md
       - Evidence: project/STATUS.md
       - Repository rules: project/AGENTS.md

@@ -41,6 +41,8 @@ jobs:
       - run: uv sync --locked --dev
       - run: uv run pre-commit run yamllint --all-files
       - run: uv run pre-commit run actionlint --all-files
+      - run: uv run python -m scripts.registry_manifest
+      - run: bash scripts/check_release_config.sh
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run python -m scripts.doc_example_inventory

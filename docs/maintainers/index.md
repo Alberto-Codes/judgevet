@@ -15,6 +15,7 @@ For package use, follow [installation](../how-to/install.md) or the
 - [Verify a wheel's typing marker and isolated consumer](verify-package.md).
 - [Cut and verify a release](cut-a-release.md): authorization, compatibility
   notes, index publication and credential troubleshooting.
+- [Validate and publish the MCP registry listing](mcp-registry.md).
 - [Repository contribution rules](../../AGENTS.md): enabled gates, commits
   and evidence requirements.
 - [Current evidence ledger](../../STATUS.md): release, gates and service limits.

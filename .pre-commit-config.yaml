@@ -39,6 +39,22 @@ repos:
         types: [yaml]
         stages: [pre-commit, pre-push]
 
+      - id: registry-manifest
+        name: registry schema and release versions
+        entry: uv run python -m scripts.registry_manifest
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit, pre-push]
+
+      - id: release-config
+        name: actual release-please updater checks
+        entry: bash scripts/check_release_config.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit, pre-push]
+
       - id: check-suppressions
         name: no gate suppressions
         entry: uv run python scripts/check_suppressions.py

@@ -134,3 +134,5 @@ for documentation checks, package verification and releases.
 define gates and commits. The
 [evidence ledger](https://github.com/Alberto-Codes/judgevet/blob/main/STATUS.md)
 retains release records and the detailed live-verification table.
+
+<!-- mcp-name: io.github.Alberto-Codes/judgevet -->
