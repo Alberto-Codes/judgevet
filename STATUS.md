@@ -406,7 +406,7 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**1947 tests pass, 6 live tests deselected.** The last measured coverage is
+**1948 tests pass, 6 live tests deselected.** The last measured coverage is
 **95.81%** (1850/1931 statements).
 Local commit and push gates pass for #170. The issue holds delivery evidence.
 The documentation rounds retain the existing local gates: suppressions,

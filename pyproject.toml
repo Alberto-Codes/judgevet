@@ -270,6 +270,10 @@ allowed-authors = [
     # authorship, and without this line the release PR cannot pass the gate
     # that guards the branch it is asking to merge into.
     "github-actions[bot]@users.noreply.github.com",
+    # Dependabot authors the commits on its own dependency update pull
+    # requests. Those are gate output, not authorship, and without this line
+    # no Dependabot PR can pass the gate on the branch it targets.
+    "49699333+dependabot[bot]@users.noreply.github.com",
 ]
 
 [[tool.importlinter.contracts]]

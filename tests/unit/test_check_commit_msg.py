@@ -115,3 +115,8 @@ class TestCheckAuthor:
         result = get_allowed_authors()
         assert isinstance(result, list)
         assert all(isinstance(item, str) for item in result)
+
+    def test_allows_dependabot_author(self) -> None:
+        """Dependabot's author address is in the allowed list."""
+        dependabot = "49699333+dependabot[bot]@users.noreply.github.com"
+        assert dependabot in get_allowed_authors()
