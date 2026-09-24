@@ -421,6 +421,10 @@ slice B.
 `[tool.ty.src] include` pins ty to `src`, `tests` and `scripts` (#49). A
 probe file with one type error in each root yields 3 diagnostics.
 Ordinary tests exclude live service calls. The coverage floor is 90%.
+#13 adds `.github/dependabot.yml` (uv and github-actions, weekly) and a
+CodeQL workflow on push, pull request and a weekly cron. Both pass yamllint
+and actionlint locally. No CodeQL run has been observed yet; the first run
+on the pushed commit is post-landing evidence for the issue.
 
 #12 adds the strict MkDocs build to commit/push hooks and CI. It checks authored
 local links, generated Python references and final HTML links/anchors offline.
