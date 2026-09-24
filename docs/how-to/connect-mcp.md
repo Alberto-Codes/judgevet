@@ -8,6 +8,9 @@ Status: **draft**. These recipes follow current host documentation. Mechanical
 checks parse the exact configurations and exercise isolated launchers. They do
 not prove that a host loaded them. Actual host observations belong in the
 [evidence ledger](../../STATUS.md#onboarding-release-in-progress).
+Codex CLI and Pi returned live answers. VS Code and Claude Code reached
+discovery; account access blocked their calls. Cursor and Desktop remain
+unverified in-host. See the ledger for exact versions and limits.
 Unavailable-host checks are [deferred](https://github.com/Alberto-Codes/judgevet/issues/167).
 
 Choose [VS Code](#vs-code), [Cursor](#cursor), [Claude Code](#claude-code),
@@ -103,10 +106,13 @@ provides a guided flow. Merge the entry with existing servers.
 }
 ```
 
-Use **MCP: List Servers** to start the server and review its trust prompt.
+Trust the workspace when prompted. Use **MCP: List Servers** to start the
+server and review its trust prompt.
 Open Chat's tool picker and enable judgevet's three tools. Ask the agent to
 [call each tool](#verify-the-connection). Restart the server from its controls
-after editing configuration; inspect its output if startup fails.
+after editing configuration; inspect its output if startup fails. If the
+server still uses old settings, reload the window and start it again.
+Chat calls require an available model and its account access.
 
 This recipe uses `envFile`. VS Code also supports password input variables on
 the extension-host route, but current Agent Host sessions do not receive
@@ -147,10 +153,11 @@ Cursor Agent CLI inspection is not evidence that the IDE loaded a server.
 After exporting the key, use the native project-scoped add command:
 
 ```bash
-claude mcp add --transport stdio --scope project --env 'JEV_API__KEY=${JEV_API__KEY}' judgevet -- uvx --from 'judgevet[mcp]==0.10.0' judgevet-mcp
+claude mcp add --transport stdio --scope project judgevet --env 'JEV_API__KEY=${JEV_API__KEY}' -- uvx --from 'judgevet[mcp]==0.10.0' judgevet-mcp
 ```
 
-The single quotes preserve the variable reference, not the secret value.
+Keep `judgevet` before `--env`: that option accepts multiple values. The
+single quotes preserve the variable reference, not the secret value.
 The equivalent project `.mcp.json` entry is:
 
 ```json
@@ -171,7 +178,8 @@ Use `--scope user` for personal cross-project setup instead. Inspect with
 from the credential-bearing shell, approve project configuration, inspect
 `/mcp`, and request the three calls. Restart the session after changes.
 Missing variables can remain literal with a warning: inspect connection
-status before calling. `${VAR}` is Claude Code syntax, not Cursor syntax.
+status before calling. An account usage limit can block calls after successful
+MCP discovery. `${VAR}` is Claude Code syntax, not Cursor syntax.
 See [Claude Code MCP](https://code.claude.com/docs/en/mcp).
 
 ## Claude Desktop
@@ -234,7 +242,15 @@ codex mcp get judgevet
 
 This is not live discovery. In the fresh CLI session, use `/mcp`, confirm the
 three tools, and request the calls below. Restart the configured client after
-changes. Check trust, executable path and startup diagnostics if absent.
+changes. Accept project trust through Codex before loading project settings.
+A command-line trust override alone did not load this recipe in CLI 0.156.1.
+Check trust, executable path and startup diagnostics if tools are absent.
+
+Approve the requested tool calls in the host. Headless execution with approval
+policy `never` can discover tools while rejecting every call. For authorized
+automation, configure approval for the three named tools explicitly; consult
+[tool approval settings](https://learn.chatgpt.com/docs/config-file/config-reference).
+Discovery alone does not establish that a call was approved or completed.
 See [MCP setup](https://learn.chatgpt.com/docs/extend/mcp?surface=cli) and
 [configuration precedence](https://learn.chatgpt.com/docs/config-file/config-basic).
 

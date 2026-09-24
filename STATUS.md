@@ -64,7 +64,8 @@ actual host checks. Desktop uses documented manual setup for this release.
 The Desktop bundle is deferred to [#166](https://github.com/Alberto-Codes/judgevet/issues/166).
 Checks on another machine, including Windows or a suitable Linux environment,
 are tracked in [#167](https://github.com/Alberto-Codes/judgevet/issues/167).
-Neither follow-up is a release requirement. No new live claim is verified.
+Neither follow-up is a release requirement. New host observations below
+exercise existing service paths only.
 
 [#163](https://github.com/Alberto-Codes/judgevet/issues/163) adds distinct host
 recipes and Pi CLI access. Persistent pip/uv-tool installs and uvx execution
@@ -76,7 +77,43 @@ launchers, both persistent installation commands and three Pi CLI commands
 against synthetic HTTP answers. Credential substitutions are test fixtures,
 not native host observations. Independent missing-extra mutations in the
 Desktop and pip recipes make positive acceptance checks fail. Actual host
-checks remain [#164](https://github.com/Alberto-Codes/judgevet/issues/164).
+checks are recorded in the [#164 evidence](https://github.com/Alberto-Codes/judgevet/issues/164#issuecomment-5807036514).
+
+### Native host observations
+
+On 2026-09-23, actual hosts used the documented recipes and PyPI 0.10.0 on
+Bazzite 44 x64. Initial uvx caches were fresh. Credential values stayed outside
+configuration and transcripts. These observations are separate from candidate
+transport tests and do not validate a future release artifact.
+
+| Host | Measured result | Remaining limit |
+|---|---|---|
+| Codex CLI 0.156.1 | Three MCP calls returned structured answers, model and usage | Other Codex surfaces and platforms untested |
+| Pi 0.86.1 | Bash executed all three exact base-CLI commands and returned live JSON | No MCP extension or skill route tested |
+| Claude Code 2.1.280 | Native add produced the documented configuration; connected and discovered three tools | Account spend limit blocked calls |
+| VS Code 1.134.0 | LocalProcess extension host started the server and discovered three tools | Copilot sign-in blocked Chat calls; Agent Host untested |
+| Cursor IDE | Cited recipe, semantic checks and isolated launcher only | IDE unavailable; no native host evidence |
+| Claude Desktop | Cited manual recipe, semantic checks and isolated launcher only | Desktop unavailable; no native host evidence |
+
+Codex returned Noul 0.96, Choice `yes` and Score 2.79. Pi returned Noul 0.96,
+Choice `yes` and Score 2.74. Each resolved `jev-1.13.0`; token usage was
+275/22, 309/32 and 305/18 respectively. These are observed values, not fixed
+acceptance targets or accuracy evidence. Pi ran without extensions or skills.
+
+Claude's native add first rejected the previous option order. Moving the
+server name before its variadic `--env` option passed and preserved literal
+variable interpolation. Codex needed persisted project trust; a command-line
+trust override did not load the project recipe. Its headless approval policy
+then rejected calls until the three authorized tools received explicit approval.
+Neither failure was a judgevet transport success.
+
+Controlled missing-executable checks removed Codex discovery, failed Claude's
+connection and produced VS Code's native missing-command error. Pi without a
+credential returned the configuration error and command exit 1. Fresh sessions
+or server restarts recovered the tested stages. Account-blocked calls remain
+unverified and are carried by #167. Claude's account-limit response does not
+verify a TypeSafe 429 body. No other model, gateway or modern protocol path
+became verified.
 
 ## Documentation program
 
