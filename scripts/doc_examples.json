@@ -311,6 +311,13 @@
       "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
     }
   ],
+  "docs/reference/worker-runs.md": [
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Cursor worker launch with placeholder brief and receipt paths; it bills a model pool and edits files, so never execute automatically."
+    }
+  ],
   "docs/tutorials/first-judgment.md": [
     {
       "language": "bash",

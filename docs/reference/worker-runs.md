@@ -25,21 +25,36 @@ Changing models never expands permissions or authorizes a live API call.
 
 ## Harness boundary
 
-judgevet has two verified worker harnesses.
+judgevet has three verified worker harnesses.
 pi runs local models through the `delegate-to-pi` skill.
 Claude Code sub agents run through the Agent tool with definitions in `.claude/agents/`.
+The Cursor CLI runs Cursor-pool models in print mode; #49 was its first accepted slice.
 Choose the worker independently from the supervisor.
 
 | Harness | Required launch evidence |
 |---|---|
 | pi | Installed version, provider/model, effective `--thinking` setting, instruction loading, tool permissions, session identifier |
 | Claude sub agent | Requested alias (`haiku`, `sonnet` or `opus`), resolved model ID from the agent's return or `unknown`, effort, allowed tools, agent definition name |
+| Cursor CLI | Installed version, requested model ID, identity the worker reports or `unknown`, `session_id` and usage from the JSON receipt, `.cursor/cli.json` deny list |
 | Any other harness | The same role, context, isolation, observation and return requirements |
 
 Read installed help and configuration before constructing a pi launch command.
 Do not copy flags, approval modes or token limits between harnesses.
 Keep planning and review read-only.
 Implementation needs only the permissions its assigned edits and checks require.
+
+Launch a Cursor worker from the checkout root with the brief as the prompt:
+
+```bash
+cursor-agent -p --force --trust --output-format json \
+  --model cursor-grok-4.6-medium "$(cat brief.md)" > receipt.json
+```
+
+`--force` applies edits without prompting, so `.cursor/cli.json` is the only guard.
+It denies `git`, `gh`, `rm`, the policy files and the credential files.
+Pass only `cursor-grok-*`, `grok-*`, `composer-*` or `gemini-*` IDs.
+Other IDs and `auto` bill the Anthropic and OpenAI pool instead.
+A `resource_exhausted` error before any edit is a service failure. Retry once.
 
 A requested alias such as `opus` is not a resolved model identity.
 Record both the requested alias and the resolved identity the agent reports.
@@ -52,6 +67,7 @@ Trailers are evidence. This repository is partly an evaluation of its workers.
 - A pi-written commit carries `Generated-By: <model> (local, via pi)`.
 - A Claude sub agent commit carries `Generated-By: <resolved model id> (via Claude Code Agent tool, <agent name>)`.
 - A Claude sub agent specification carries `Specified-By: <resolved model id> (via Claude Code Agent tool, specifier)`.
+- A Cursor worker commit carries `Generated-By: <requested model id> (via Cursor CLI <version>, print mode)`.
 - The supervisor's own commits carry no `Generated-By` trailer.
 - Never invent a resolved ID. The ID comes from the agent's return, never from the requested alias.
 

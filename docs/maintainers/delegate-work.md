@@ -14,11 +14,12 @@ Use one validation path. Do not add another harness to repeat required repositor
 
 ## Worker harnesses
 
-judgevet has two verified worker harnesses.
+judgevet has three verified worker harnesses.
 The [worker run contract](../reference/worker-runs.md) records launch evidence for each.
 
 - **pi** runs local models through the `delegate-to-pi` skill.
 - **Claude sub agents** run through the Agent tool with definitions in `.claude/agents/`.
+- **Cursor CLI** runs Cursor-pool models such as `cursor-grok-4.6-medium` in print mode.
 
 The Claude definitions are `builder.md`, `acceptance-reviewer.md`, `specifier.md` and `status-auditor.md`.
 
@@ -26,7 +27,7 @@ The Claude definitions are `builder.md`, `acceptance-reviewer.md`, `specifier.md
 |---|---|
 | Lookups and file search | Agent tool, `haiku` |
 | Research and documentation reads | Agent tool, `sonnet` |
-| Implementation and gate repairs | Agent tool, `opus` with `builder`; or pi with a local coder model |
+| Implementation and gate repairs | Agent tool, `opus` with `builder`; pi with a local coder model; or Cursor CLI with a Cursor-pool model |
 | Acceptance review | Agent tool, `opus` with `acceptance-reviewer` |
 | Specification | Agent tool, `opus` with `specifier`; or pi with a local reasoning model |
 | STATUS claim review | Agent tool, `opus` with `status-auditor` |
@@ -86,6 +87,7 @@ Keep temporary files under the ignored `scratchpad/` directory.
 
 For pi, inspect the installed harness help before choosing options.
 For a Claude sub agent, pass `model` on every Agent call and name the agent definition.
+For Cursor, paste the full contract into the brief, because `gh` is denied to the worker.
 Planning and review stay read-only. Implementation needs local edit and test permissions.
 
 ```text

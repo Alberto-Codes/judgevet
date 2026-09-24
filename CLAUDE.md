@@ -23,9 +23,10 @@ Conventions are inherited from the sister projects
 Roles describe responsibility, not model brands. Record the actual supervisor,
 worker and harness for each dispatch.
 
-judgevet has two verified worker harnesses: pi, through the `delegate-to-pi`
-skill, and Claude Code sub agents, through the Agent tool and the definitions
-in `.claude/agents/`.
+judgevet has three verified worker harnesses: pi, through the `delegate-to-pi`
+skill; Claude Code sub agents, through the Agent tool and the definitions in
+`.claude/agents/`; and the Cursor CLI in print mode, guarded by
+`.cursor/cli.json`.
 
 - The supervising session selects work, decides boundaries, accepts the
   result and commits.
