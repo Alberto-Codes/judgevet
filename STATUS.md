@@ -385,10 +385,30 @@ paths only. No unseen body, other model, gateway or modern protocol path gains
 verified status. Required push gates pass; commit gates and main CI are recorded
 with the final round evidence on [#80](https://github.com/Alberto-Codes/judgevet/issues/80).
 
+## Finite answer validation
+
+[#170](https://github.com/Alberto-Codes/judgevet/issues/170) corrects numeric
+answer validation and response errors. Direct constructors reject boolean or
+nonnumeric values with `TypeError` and nonfinite values with `ValueError`.
+Valid integers and floats retain existing ranges and distribution tolerance.
+The shared parser translates answer validation failures to `JevResponseError`.
+Both HTTP adapters reject malformed synthetic answers without retrying.
+Public imports, optional MCP dependencies and architecture contracts remain.
+
+The 322 new acceptance cases preserve all 1615 existing tests. Four policy
+test modules retain their assertions and construct corrupted fixtures after
+valid construction. Removing finite validation causes 24 acceptance failures.
+Bypassing parser translation causes 121. Restored source passes all 322 cases.
+The issue records the contract, pre-implementation failures and mutation proofs.
+The [compatibility assessment](docs/reference/compatibility.md#finite-answer-validation-correction)
+records stricter invalid-input handling relative to published 0.10.1.
+This is a local correction. No release or live-service evidence is promoted.
+
 ## Gates
 
-**1615 tests pass, 6 live tests deselected.** The last measured coverage is
-**95.33%** (1836/1926 statements).
+**1937 tests pass, 6 live tests deselected.** The last measured coverage is
+**95.81%** (1850/1931 statements).
+Local commit and push gates pass for #170. The issue holds delivery evidence.
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.

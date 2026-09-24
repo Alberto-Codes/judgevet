@@ -18,7 +18,6 @@ import pytest
 from judgevet.adapters.inbound.cli_inputs import InputFailure
 from judgevet.adapters.inbound.cli_policy import parse_policy
 from judgevet.adapters.inbound.cli_policy_eval import evaluate_policy
-from judgevet.domain.answers import NoulAnswer
 from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response_parser import parse_system_one_response
 from tests.cli_process_support import SUCCESS
@@ -75,6 +74,7 @@ def test_bad_answer(kind: str) -> None:
     elif kind == "wrong_type":
         answers["noul"] = answers["choice"]
     else:
-        answers["noul"] = NoulAnswer(float("nan"))
+        field = "noul"
+        object.__setattr__(answers["noul"], field, float("nan"))
     with pytest.raises(InputFailure):
         evaluate_policy(rules, answers)

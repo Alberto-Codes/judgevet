@@ -79,6 +79,24 @@ Strict event-key consumers must adopt the [documented field sets](events.md).
 The library binding API is additive. CLI output and MCP tool schemas remain
 unchanged; no gateway headers or runtime dependencies are added.
 
+## Finite-answer validation correction
+
+The correction in [#170](https://github.com/Alberto-Codes/judgevet/issues/170)
+tightens invalid-input handling relative to published 0.10.1. Answer constructors
+reject NaN and both infinities with `ValueError`. Boolean scores now raise
+`TypeError`, matching the other numeric answer fields. Valid integer and float
+inputs, inclusive bounds, distribution tolerance and public imports remain.
+Callers that supplied those invalid values must handle the domain error or
+supply a valid value.
+
+Malformed service answer values now raise `JevResponseError` instead of leaking
+constructor `TypeError` or `ValueError`. The error is not retryable. CLI and MCP
+receive the same error through their port; successful outputs and tool schemas
+remain unchanged. Runtime dependencies and the optional MCP extra remain.
+Policy validation still rejects deliberately corrupted answers when it consumes
+them. Nested dictionaries remain mutable. This correction does not publish a
+release or change the live-service evidence.
+
 ## Verification limits
 
 Policy tests are synthetic local acceptance evidence. They do not establish model

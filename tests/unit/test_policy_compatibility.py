@@ -16,15 +16,21 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.mark.parametrize(
-    "name,answer",
+    "name,answer,corrupt_confidence",
     [
-        ("choice", ChoiceAnswer("yes", float("nan"), {"yes": 1})),
-        ("score", ScoreAnswer(1, float("nan"), {1: "Only"}, {1: 1})),
-        ("choice", ChoiceAnswer("other", 1, {"other": 1})),
-        ("score", ScoreAnswer(4, 1, {4: "Other"}, {4: 1})),
+        ("choice", ChoiceAnswer("yes", 1, {"yes": 1}), True),
+        ("score", ScoreAnswer(1, 1, {1: "Only"}, {1: 1}), True),
+        ("choice", ChoiceAnswer("other", 1, {"other": 1}), False),
+        ("score", ScoreAnswer(4, 1, {4: "Other"}, {4: 1}), False),
     ],
 )
-def test_public_strict_legacy_compatible(name: str, answer: Answer) -> None:
+def test_public_strict_legacy_compatible(
+    name: str, answer: Answer, corrupt_confidence: bool
+) -> None:
+    if corrupt_confidence:
+        answer = replace(answer)
+        field = "confidence"
+        object.__setattr__(answer, field, float("nan"))
     predicate = '"choice":"yes"' if name == "choice" else '"score":{"min":0}'
     text = '{"rules":[{"question":"' + name + '","pass":{' + predicate + "}}]}"
     with pytest.raises(PolicyAnswerError):

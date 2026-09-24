@@ -3,9 +3,9 @@
 The domain checks noul and confidence against [0,1] on construction. It checks
 that probabilities sum to 1 and contain the selected choice. It also checks
 that score lies in legend range and legend/probability keys match. Frozen
-dataclasses prevent attribute reassignment; nested dictionaries remain mutable. Range comparisons
-do not reject every nonfinite value. Public policy evaluation performs
-additional finite-scalar checks.
+dataclasses prevent attribute reassignment; nested dictionaries remain mutable.
+All numeric answer values must be finite integers or floats, excluding booleans.
+Public policy evaluation also checks values when it consumes an answer.
 
 Examples:
     ```python
@@ -32,6 +32,7 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 PROBABILITY_SUM_TOLERANCE = 1e-6
 """Tolerance for probability sum validation.
@@ -47,6 +48,25 @@ behavior in docs/reference/api.md. Existing calls do not establish a general
 rounding guarantee."""
 
 
+def _validate_finite_number(value: float, name: str) -> None:
+    """Require a finite integer or float, excluding booleans.
+
+    Integers are finite without conversion, including values beyond float range.
+
+    Args:
+        value: The numeric answer value to validate.
+        name: The field name for diagnostics.
+
+    Raises:
+        TypeError: If value is a boolean or is not an integer or float.
+        ValueError: If value is NaN or either infinity.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(f"{name} must be float, got {type(value).__name__}")
+    if isinstance(value, float) and not isfinite(value):
+        raise ValueError(f"{name} must be finite")
+
+
 @dataclass(frozen=True)
 class NoulAnswer:
     """A yes/no answer with probability of true.
@@ -54,7 +74,7 @@ class NoulAnswer:
     See: https://docs.typesafe.ai/primitives/noul
 
     This is a frozen dataclass with validation in `__post_init__` to ensure
-    noul is numeric (not bool) and in [0.0, 1.0].
+    noul is finite and numeric (not bool) and in [0.0, 1.0].
 
     Attributes:
         noul (float): Probability of a yes answer or true statement, from 0 to 1.
@@ -73,14 +93,13 @@ class NoulAnswer:
     noul: float
 
     def __post_init__(self) -> None:
-        """Validate noul is a float in [0.0, 1.0] and not a bool.
+        """Validate noul is finite, numeric and in [0.0, 1.0], excluding bool.
 
         Raises:
             TypeError: If noul is not a numeric type or is a bool.
-            ValueError: If noul is outside [0.0, 1.0].
+            ValueError: If noul is nonfinite or outside [0.0, 1.0].
         """
-        if isinstance(self.noul, bool) or not isinstance(self.noul, (int, float)):
-            raise TypeError(f"noul must be float, got {type(self.noul).__name__}")
+        _validate_finite_number(self.noul, "noul")
         if self.noul < 0.0 or self.noul > 1.0:
             raise ValueError(f"noul must be in [0.0, 1.0], got {self.noul}")
 
@@ -92,8 +111,8 @@ class ChoiceAnswer:
     See: https://docs.typesafe.ai/primitives/choice
 
     This frozen dataclass validates values in `__post_init__`. Confidence and
-    probabilities must be numeric and within [0.0, 1.0]. Probabilities must sum
-    to 1.0 and contain the selected choice.
+    probabilities must be finite, numeric and within [0.0, 1.0], excluding booleans.
+    Probabilities must sum to 1.0 and contain the selected choice.
 
     Attributes:
         choice (str): The name of the choice with highest probability.
@@ -122,30 +141,22 @@ class ChoiceAnswer:
     def __post_init__(self) -> None:
         """Validate choice, confidence, and probabilities.
 
-        Ensures confidence is numeric in [0.0, 1.0], all probability values are
-        numeric in [0.0, 1.0], probabilities sum to 1.0, and choice is a key.
+        Ensures confidence is finite in [0.0, 1.0], all probability values are
+        finite in [0.0, 1.0], probabilities sum to 1.0, and choice is a key.
 
         Raises:
-            TypeError: If confidence or any probability value is not numeric.
-            ValueError: If confidence is outside [0.0, 1.0], any probability is
-                outside [0.0, 1.0], probabilities do not sum to 1.0, or choice
-                is missing from probabilities.
+            TypeError: If confidence or any probability is nonnumeric or a boolean.
+            ValueError: If a numeric value is nonfinite or outside [0.0, 1.0].
+                Also raised if probabilities do not sum to 1.0 or choice is
+                missing from probabilities.
         """
-        if isinstance(self.confidence, bool) or not isinstance(
-            self.confidence, (int, float)
-        ):
-            raise TypeError(
-                f"confidence must be float, got {type(self.confidence).__name__}"
-            )
+        _validate_finite_number(self.confidence, "confidence")
         if self.confidence < 0.0 or self.confidence > 1.0:
             raise ValueError(f"confidence must be in [0.0, 1.0], got {self.confidence}")
 
         # Validate individual probability values first, then check sum
         for key, value in self.probabilities.items():
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise TypeError(
-                    f"probability values must be float, got {type(value).__name__} for key '{key}'"
-                )
+            _validate_finite_number(value, "probability values")
             if value < 0.0 or value > 1.0:
                 raise ValueError(
                     f"probability values must be in [0.0, 1.0], got {value} for key '{key}'"
@@ -157,14 +168,6 @@ class ChoiceAnswer:
         total = sum(self.probabilities.values())
         if abs(total - 1.0) > PROBABILITY_SUM_TOLERANCE:
             raise ValueError(f"probabilities must sum to 1.0, got {total:.6f}")
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise TypeError(
-                    f"probability values must be float, got {type(value).__name__} for key '{key}'"
-                )
-            if value < 0.0 or value > 1.0:
-                raise ValueError(
-                    f"probability values must be in [0.0, 1.0], got {value} for key '{key}'"
-                )
 
 
 @dataclass(frozen=True)
@@ -174,7 +177,8 @@ class ScoreAnswer:
     See: https://docs.typesafe.ai/primitives/score
 
     This frozen dataclass validates values in `__post_init__`. Score must lie in
-    legend range. Confidence and probabilities must be numeric and within
+    legend range and be finite and numeric, excluding booleans. Confidence and
+    probabilities must also be finite and numeric, excluding booleans, and within
     [0.0, 1.0]. Probabilities must sum to 1.0, and legend/probability keys must match.
 
     Attributes:
@@ -207,22 +211,18 @@ class ScoreAnswer:
     def __post_init__(self) -> None:
         """Validate score, confidence, legend, and probabilities.
 
-        Checks score against legend range and confidence against [0.0, 1.0].
-        Checks numeric probabilities against [0.0, 1.0] and their sum against 1.0.
+        Checks finite score against legend range and finite confidence against [0.0, 1.0].
+        Checks finite numeric probabilities against [0.0, 1.0] and their sum against 1.0.
         Checks that legend/probability keys match.
 
         Raises:
-            TypeError: If any numeric key or value is not the expected type.
-            ValueError: If score is outside legend range, or confidence or any
-                probability is outside [0.0, 1.0]. Also raised if probabilities
+            TypeError: If any numeric key or value is not the expected type or is a boolean.
+            ValueError: If any numeric value is nonfinite, score is outside legend
+                range, or confidence or any probability is outside [0.0, 1.0].
+                Also raised if probabilities
                 do not sum to 1.0 or legend/probability keys do not match.
         """
-        if isinstance(self.confidence, bool) or not isinstance(
-            self.confidence, (int, float)
-        ):
-            raise TypeError(
-                f"confidence must be float, got {type(self.confidence).__name__}"
-            )
+        _validate_finite_number(self.confidence, "confidence")
         if self.confidence < 0.0 or self.confidence > 1.0:
             raise ValueError(f"confidence must be in [0.0, 1.0], got {self.confidence}")
 
@@ -231,10 +231,7 @@ class ScoreAnswer:
 
         for key, value in self.probabilities.items():
             self._validate_numeric_key("probability", key)
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise TypeError(
-                    f"probability values must be float, got {type(value).__name__} for key {key}"
-                )
+            _validate_finite_number(value, "probability values")
             if value < 0.0 or value > 1.0:
                 raise ValueError(
                     f"probability values must be in [0.0, 1.0], got {value} for key {key}"
@@ -244,6 +241,7 @@ class ScoreAnswer:
         if abs(total - 1.0) > PROBABILITY_SUM_TOLERANCE:
             raise ValueError(f"probabilities must sum to 1.0, got {total:.6f}")
 
+        _validate_finite_number(self.score, "score")
         min_score = min(self.legend.keys())
         max_score = max(self.legend.keys())
         if self.score < min_score or self.score > max_score:

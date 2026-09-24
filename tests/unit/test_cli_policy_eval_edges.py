@@ -10,14 +10,12 @@ See Also:
 """
 
 import json
-from dataclasses import replace
 
 import pytest
 
 from judgevet.adapters.inbound.cli_inputs import InputFailure
 from judgevet.adapters.inbound.cli_policy import Rule, parse_policy
 from judgevet.adapters.inbound.cli_policy_eval import evaluate_policy
-from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response_parser import parse_system_one_response
 from tests.cli_process_support import SUCCESS
@@ -67,13 +65,9 @@ def test_invalid_required_answer(name: str, failure: str) -> None:
     elif failure == "wrong_type":
         answers[name] = answers["choice" if name != "choice" else "noul"]
     else:
-        answer = answers[name]
-        if isinstance(answer, NoulAnswer):
-            answers[name] = replace(answer, noul=float("nan"))
-        elif isinstance(answer, ChoiceAnswer):
-            answers[name] = replace(answer, confidence=float("nan"))
-        elif isinstance(answer, ScoreAnswer):
-            answers[name] = replace(answer, score=float("nan"))
+        field = {"noul": "noul", "choice": "confidence", "score": "score"}[name]
+        # Corrupt this freshly parsed answer to exercise policy defenses.
+        object.__setattr__(answers[name], field, float("nan"))
     with pytest.raises(InputFailure):
         evaluate_policy(rules, answers)
 

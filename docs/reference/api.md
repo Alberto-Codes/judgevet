@@ -96,12 +96,14 @@ concrete adapter. See [port signatures](../../src/judgevet/ports/__init__.py).
 Token counts are usage metadata, not a price quote. This client reference makes
 no current pricing or retention claim.
 
-Answer constructors apply local checks: numeric probability/confidence ranges,
-choice membership, matching Score legend/distribution keys, score range and a
-probability-sum tolerance of `1e-6`. Those checks are not a complete validation of
-all malformed numeric values. In particular, ordinary comparisons do not reject
-NaN consistently. Public policy evaluation performs its own finite-scalar
-checks; see [policy validation](policy.md#evaluation-and-reports).
+Answer constructors require finite integer or float values for Noul, Score,
+confidence and each probability. Booleans and nonnumeric values raise `TypeError`.
+NaN, either infinity and out-of-range values raise `ValueError`. Constructors
+retain inclusive probability/confidence bounds of `[0,1]`, choice membership,
+matching Score legend/distribution keys, inclusive score range and the
+probability-sum tolerance of `1e-6`. They do not enforce argmax selection or
+expected-score equality. Public policy evaluation also checks values when it
+consumes an answer; see [policy validation](policy.md#evaluation-and-reports).
 The [answer source](../../src/judgevet/domain/answers.py) is authoritative for
 constructor behavior. Do not infer service guarantees from local checks.
 

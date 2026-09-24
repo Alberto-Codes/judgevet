@@ -68,6 +68,16 @@ invalid arguments, serialization failures and application errors can raise other
 types. Keep those visible without publishing an arbitrary traceback. See the
 [handling recipe](../how-to/handle-errors.md).
 
+Invalid answer values in a successful service response raise `JevResponseError`
+through both HTTP adapters. The shared parser translates `TypeError` and
+`ValueError` from answer parsing and construction. These errors have
+`retryable=False`; enabling retries does not repeat the request. New validation
+messages identify the answer type and a bounded question identifier. They omit
+answer values and suppress the original validation exception display. Direct
+answer construction retains Python `TypeError` and `ValueError` semantics.
+See the [answer contract](api.md#answer-and-container-types) and
+[parser source](../../src/judgevet/domain/response_parser.py).
+
 ### Error content
 
 The adapter extracts selected information from service `detail` values. For

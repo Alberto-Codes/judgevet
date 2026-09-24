@@ -83,12 +83,11 @@ def test_invalid_answers_raise(name: str, failure: str) -> None:
         del answers[name]
     elif failure == "wrong":
         answers[name] = ANSWERS["c" if name == "n" else "n"]
-    elif name == "n":
-        answers[name] = NoulAnswer(float("nan"))
-    elif name == "c":
-        answers[name] = ChoiceAnswer("yes", float("nan"), {"yes": 1})
     else:
-        answers[name] = ScoreAnswer(float("nan"), 0.5, {0: "Low"}, {0: 1})
+        answers[name] = replace(ANSWERS[name])
+        field = {"n": "noul", "c": "confidence", "s": "score"}[name]
+        # Exercise policy defenses after deliberately bypassing construction.
+        object.__setattr__(answers[name], field, float("nan"))
     with pytest.raises(PolicyAnswerError):
         evaluate_policy(validate_policy(Policy((rules[name],)), QUESTIONS), answers)
 
@@ -115,7 +114,10 @@ def test_question_constraints_are_snapshotted() -> None:
 def test_score_confidence_is_checked_without_predicate() -> None:
     answer = ANSWERS["s"]
     assert isinstance(answer, ScoreAnswer)
-    answers = dict(ANSWERS, s=replace(answer, confidence=float("nan")))
+    corrupted = replace(answer)
+    field = "confidence"
+    object.__setattr__(corrupted, field, float("nan"))
+    answers = dict(ANSWERS, s=corrupted)
     policy = validate_policy(Policy((ScoreRule("s", minimum=0),)), QUESTIONS)
     with pytest.raises(PolicyAnswerError):
         evaluate_policy(policy, answers)

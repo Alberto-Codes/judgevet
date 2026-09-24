@@ -31,7 +31,7 @@ See Also:
 
 Raises:
     JevResponseError: If the response cannot be parsed due to missing fields,
-        unknown types, or wrong value kinds.
+        unknown types, wrong value kinds, or invalid answer values.
 """
 
 from __future__ import annotations
@@ -58,8 +58,9 @@ def parse_system_one_response(
 
     Raises:
         JevResponseError: If parsing fails due to missing fields, unknown types,
-            or wrong value kinds. The error message includes the question ID
-            and what was wrong.
+            wrong value kinds, or invalid answer values. Constructor TypeError and
+            ValueError become response errors with bounded question context.
+            Other programming errors propagate.
     """
     model = _get_string(raw, "model", request_id)
     usage_raw = _get_dict(raw, "usage", request_id)
@@ -84,21 +85,31 @@ def _parse_answer(answer_id: str, raw: dict[str, Any]) -> Answer:
         Parsed Answer object.
 
     Raises:
-        JevResponseError: If the answer type is unknown or fields are missing/wrong.
+        JevResponseError: If the answer type is unknown, fields are missing/wrong,
+            or answer parsing/construction raises TypeError or ValueError.
+            Validation messages omit values and suppress the original exception
+            display. See https://docs.typesafe.ai/api for the answer wire shape.
     """
     answer_type = _get_string(raw, "type", answer_id)
 
-    if answer_type == "noul":
-        return _parse_noul_answer(answer_id, raw)
-    elif answer_type == "choice":
-        return _parse_choice_answer(answer_id, raw)
-    elif answer_type == "score":
-        return _parse_score_answer(answer_id, raw)
-    else:
+    try:
+        if answer_type == "noul":
+            return _parse_noul_answer(answer_id, raw)
+        elif answer_type == "choice":
+            return _parse_choice_answer(answer_id, raw)
+        elif answer_type == "score":
+            return _parse_score_answer(answer_id, raw)
+        else:
+            raise JevResponseError(
+                f"Unknown answer type '{answer_type}' for question '{answer_id}'",
+                200,
+            )
+    except (TypeError, ValueError):
         raise JevResponseError(
-            f"Unknown answer type '{answer_type}' for question '{answer_id}'",
+            f"Invalid {answer_type} answer for question {answer_id[:80]!r}: "
+            "invalid numeric value or distribution",
             200,
-        )
+        ) from None
 
 
 def _parse_noul_answer(answer_id: str, raw: dict[str, Any]) -> NoulAnswer:
@@ -121,6 +132,8 @@ def _parse_noul_answer(answer_id: str, raw: dict[str, Any]) -> NoulAnswer:
 def _parse_choice_answer(answer_id: str, raw: dict[str, Any]) -> ChoiceAnswer:
     """Parse a raw choice answer.
 
+    Reject boolean probabilities before converting numeric values to floats.
+
     Args:
         answer_id: The answer identifier (for error messages).
         raw: Raw answer dictionary.
@@ -136,7 +149,7 @@ def _parse_choice_answer(answer_id: str, raw: dict[str, Any]) -> ChoiceAnswer:
     probabilities = _get_dict(raw, "probabilities", answer_id)
 
     for prob_id, prob_value in probabilities.items():
-        if not isinstance(prob_value, (int, float)):
+        if isinstance(prob_value, bool) or not isinstance(prob_value, (int, float)):
             raise JevResponseError(
                 f"Probability value for '{prob_id}' in question '{answer_id}' "
                 f"is not a number, got {type(prob_value).__name__}",
