@@ -1,5 +1,10 @@
 # judgevet
 
+[![CI](https://img.shields.io/github/actions/workflow/status/Alberto-Codes/judgevet/ci.yml?branch=main)](https://github.com/Alberto-Codes/judgevet/actions/workflows/ci.yml)
+[![Licence](https://img.shields.io/github/license/Alberto-Codes/judgevet)](LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![docvet](https://img.shields.io/badge/docs%20vetted-docvet-purple)](https://github.com/Alberto-Codes/docvet)
+
 A typed Python client for TypeSafe's **Jev** (System One) judgment model, with
 CLI and optional MCP entry points. Use it to ask structured questions about
 content—for example, whether a support ticket concerns billing.
