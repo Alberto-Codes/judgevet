@@ -22,32 +22,97 @@
     {
       "language": "bash",
       "kind": "runnable",
-      "reason": "Environment setup commands; require disposable environment and separate setup verification, not generic shell execution."
+      "reason": "Alternative persistent installation; exercised in an isolated tool or virtual environment."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Alternative persistent installation; exercised in an isolated tool or virtual environment."
     },
     {
       "language": "bash",
       "kind": "template",
-      "reason": "Launcher requires an approved project path and environment; do not start a user-configured host in generic checks."
+      "reason": "MCP launcher requires an explicitly supplied credential and client; isolate launch checks from real host observations."
     },
     {
       "language": "bash",
       "kind": "template",
-      "reason": "Launcher requires an approved project path and environment; do not start a user-configured host in generic checks."
+      "reason": "Interactive secret acquisition; never execute automatically or print the value."
+    },
+    {
+      "language": "json",
+      "kind": "template",
+      "reason": "Parse the exact host schema and materialize only documented credential fixtures for isolated launcher tests; not host evidence."
+    },
+    {
+      "language": "json",
+      "kind": "template",
+      "reason": "Parse the exact host schema and materialize only documented credential fixtures for isolated launcher tests; not host evidence."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Native host configuration command; exercise in an isolated host profile during host validation."
+    },
+    {
+      "language": "json",
+      "kind": "template",
+      "reason": "Parse the exact host schema and materialize only documented credential fixtures for isolated launcher tests; not host evidence."
+    },
+    {
+      "language": "json",
+      "kind": "template",
+      "reason": "Parse the exact host schema and materialize only documented credential fixtures for isolated launcher tests; not host evidence."
     },
     {
       "language": "toml",
       "kind": "template",
-      "reason": "Host configuration requires a trusted project path; parse configuration without modifying the user host."
+      "reason": "Parse the exact host schema and materialize only documented credential fixtures for isolated launcher tests; not host evidence."
     },
     {
       "language": "bash",
       "kind": "template",
-      "reason": "Requires a configured host entry; check CLI spelling without reading or changing user configuration."
+      "reason": "Native host configuration command; exercise in an isolated host profile during host validation."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Exact Pi CLI command exercised against an isolated base wheel and synthetic HTTP fixture; actual Pi access is checked separately."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Exact Pi CLI command exercised against an isolated base wheel and synthetic HTTP fixture; actual Pi access is checked separately."
+    },
+    {
+      "language": "bash",
+      "kind": "runnable",
+      "reason": "Exact Pi CLI command exercised against an isolated base wheel and synthetic HTTP fixture; actual Pi access is checked separately."
     },
     {
       "language": "json",
       "kind": "runnable",
-      "reason": "Complete input JSON; validate with the corresponding question/policy decoder or MCP schema."
+      "reason": "Complete tool arguments checked against actual installed discovery schema."
+    },
+    {
+      "language": "json",
+      "kind": "runnable",
+      "reason": "Complete tool arguments checked against actual installed discovery schema."
+    },
+    {
+      "language": "json",
+      "kind": "runnable",
+      "reason": "Complete tool arguments checked against actual installed discovery schema."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "MCP launcher requires an explicitly supplied credential and client; isolate launch checks from real host observations."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "MCP launcher requires an explicitly supplied credential and client; isolate launch checks from real host observations."
     }
   ],
   "docs/how-to/deploy.md": [

@@ -23,8 +23,14 @@ from scripts.smoke_release import (
 )
 
 CONTRACTS = {
-    ("docs/how-to/connect-mcp.md", 4): "host",
-    ("docs/how-to/connect-mcp.md", 6): "mcp",
+    ("docs/how-to/connect-mcp.md", 5): "host-vscode",
+    ("docs/how-to/connect-mcp.md", 6): "host-cursor",
+    ("docs/how-to/connect-mcp.md", 8): "host-claude-code",
+    ("docs/how-to/connect-mcp.md", 9): "host-desktop",
+    ("docs/how-to/connect-mcp.md", 10): "host-codex",
+    ("docs/how-to/connect-mcp.md", 15): "mcp",
+    ("docs/how-to/connect-mcp.md", 16): "mcp-choice",
+    ("docs/how-to/connect-mcp.md", 17): "mcp-score",
     ("docs/how-to/use-cli-files.md", 2): "questions",
     ("docs/how-to/use-cli-policy.md", 1): "questions",
     ("docs/how-to/use-cli-policy.md", 2): "policy",
@@ -89,6 +95,7 @@ def check(root: Path, workdir: Path) -> int:
     probe_import(python, environment, workdir)
     (workdir / "scripts").mkdir()
     shutil.copy(Path(__file__).with_name("smoke_release_child.py"), workdir / "scripts")
+    shutil.copy(Path(__file__).with_name("doc_host_contracts.py"), workdir / "scripts")
     shutil.copy(Path(__file__).with_name("doc_schema_child.py"), workdir)
     return run_child(python, workdir / "doc_schema_child.py", environment, workdir)
 

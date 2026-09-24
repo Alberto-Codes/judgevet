@@ -66,6 +66,18 @@ Checks on another machine, including Windows or a suitable Linux environment,
 are tracked in [#167](https://github.com/Alberto-Codes/judgevet/issues/167).
 Neither follow-up is a release requirement. No new live claim is verified.
 
+[#163](https://github.com/Alberto-Codes/judgevet/issues/163) adds distinct host
+recipes and Pi CLI access. Persistent pip/uv-tool installs and uvx execution
+are alternatives. Direnv and source checkouts are optional. The documentation
+schema gate checks 14 exact JSON/TOML blocks, including all five host templates
+and three tool argument objects. Thirty-two new regression cases preserve
+all prior tests. Isolated candidate installs execute the exact five host
+launchers, both persistent installation commands and three Pi CLI commands
+against synthetic HTTP answers. Credential substitutions are test fixtures,
+not native host observations. Independent missing-extra mutations in the
+Desktop and pip recipes make positive acceptance checks fail. Actual host
+checks remain [#164](https://github.com/Alberto-Codes/judgevet/issues/164).
+
 ## Documentation program
 
 [#145](https://github.com/Alberto-Codes/judgevet/issues/145) is complete.
@@ -237,7 +249,7 @@ with the final round evidence on [#80](https://github.com/Alberto-Codes/judgevet
 
 ## Gates
 
-**1568 tests pass, 6 live tests deselected.** The last measured coverage is
+**1600 tests pass, 6 live tests deselected.** The last measured coverage is
 **95.33%** (1836/1926 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

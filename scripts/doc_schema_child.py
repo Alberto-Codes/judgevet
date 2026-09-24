@@ -10,7 +10,6 @@ See Also:
 
 import asyncio
 import json
-import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -22,11 +21,15 @@ from judgevet.adapters.inbound.cli_inputs import _validate_question_file_content
 from judgevet.adapters.inbound.mcp import create_mcp_server
 from judgevet.policy import PolicyReport, RuleReport
 from judgevet.policy_json import parse_policy
+from scripts.doc_host_contracts import parse_recipe
 from scripts.smoke_release_child import assert_in_site_packages
 
 
-async def noul_schema() -> dict[str, Any]:
-    """Read the actual installed server's ask_noul discovery schema.
+async def tool_schema(name: str) -> dict[str, Any]:
+    """Read the actual installed server's selected tool discovery schema.
+
+    Args:
+        name: Exact public tool name.
 
     Returns:
         The input schema from tool discovery, without a service call.
@@ -38,22 +41,23 @@ async def noul_schema() -> dict[str, Any]:
         server = create_mcp_server(adapter)
         listing = await server._request_handlers["tools/list"].handler(None, None)
         for tool in listing.tools:
-            if tool.name == "ask_noul":
+            if tool.name == name:
                 return tool.input_schema
-    raise ValueError("ask_noul missing from discovery")
+    raise ValueError("tool missing from discovery")
 
 
-def validate_mcp(text: str) -> None:
+def validate_mcp(text: str, name: str = "ask_noul") -> None:
     """Validate an exact documented argument object against discovery.
 
     Args:
-        text: Complete JSON argument object for ask_noul.
+        text: Complete JSON argument object.
+        name: Exact public tool name.
 
     Raises:
         ValueError: If JSON is invalid or the tool is absent.
         jsonschema.ValidationError: If arguments violate the discovered schema.
     """
-    jsonschema.validate(json.loads(text), asyncio.run(noul_schema()))
+    jsonschema.validate(json.loads(text), asyncio.run(tool_schema(name)))
 
 
 def validate_questions(text: str) -> None:
@@ -105,25 +109,6 @@ def validate_output(text: str) -> None:
         raise ValueError("illustrative policy result disagrees with rule reports")
 
 
-def validate_host(text: str) -> None:
-    """Parse the host template without launching or modifying a host.
-
-    Args:
-        text: Exact TOML template with its documented placeholder path.
-
-    Raises:
-        ValueError: If the launcher shape is incomplete.
-    """
-    server = tomllib.loads(text)["mcp_servers"]["judgevet"]
-    if server["command"] != "direnv" or server["args"][:2] != [
-        "exec",
-        "/absolute/path/to/project",
-    ]:
-        raise ValueError("unexpected host launcher template")
-    if server["args"][-1] != "judgevet-mcp":
-        raise ValueError("host template does not launch judgevet-mcp")
-
-
 def validate_block(kind: str, text: str) -> None:
     """Dispatch an explicitly classified schema check.
 
@@ -140,9 +125,12 @@ def validate_block(kind: str, text: str) -> None:
         "questions": validate_questions,
         "fragment": validate_fragment,
         "output": validate_output,
-        "host": validate_host,
     }
-    if kind == "policy":
+    if kind.startswith("host-"):
+        parse_recipe(kind.removeprefix("host-"), text)
+    elif kind in {"mcp-choice", "mcp-score"}:
+        validate_mcp(text, "ask_" + kind.removeprefix("mcp-"))
+    elif kind == "policy":
         parse_policy(text, {"clear": Noul()})
     elif kind in validators:
         validators[kind](text)

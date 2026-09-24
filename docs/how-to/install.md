@@ -58,9 +58,18 @@ a judgevet checkout.
 
 Use the [development launcher](connect-mcp.md#optional-run-mcp-from-a-source-checkout).
 
+## Choose a host
+
+Follow the recipe for [VS Code](connect-mcp.md#vs-code),
+[Cursor](connect-mcp.md#cursor), [Claude Code](connect-mcp.md#claude-code),
+[Claude Desktop](connect-mcp.md#claude-desktop), or
+[Codex](connect-mcp.md#configure-codex-for-a-project).
+[Pi uses CLI access](connect-mcp.md#pi-cli-access). Host setup needs neither
+direnv nor a source checkout.
+
 ## Configure Codex for a project
 
-Follow the [Codex host setup](connect-mcp.md#configure-codex-for-a-project).
+Follow the [Codex recipe](connect-mcp.md#configure-codex-for-a-project).
 
 ## Verify the connection
 

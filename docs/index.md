@@ -19,7 +19,8 @@ Status: **draft**. Choose a path by what you need to do.
 - [Call from synchronous Python](how-to/use-library.md) or
   [asynchronous Python](how-to/use-async-library.md).
 - [Handle failed library calls](how-to/handle-errors.md).
-- [Connect an MCP host and verify discovery](how-to/connect-mcp.md).
+- [Connect VS Code, Cursor, Claude Code, Desktop or Codex](how-to/connect-mcp.md).
+- [Use judgevet through Pi's CLI access](how-to/connect-mcp.md#pi-cli-access).
 - [Diagnose installation, input and connection failures](how-to/troubleshoot.md).
 - [Read questions from files and state from files or stdin](how-to/use-cli-files.md).
 - [Apply an acceptance policy in the CLI](how-to/use-cli-policy.md).

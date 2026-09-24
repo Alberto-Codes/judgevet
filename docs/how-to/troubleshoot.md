@@ -30,15 +30,34 @@ For library categories, see [error handling](handle-errors.md).
 ## When MCP does not connect
 
 If the server fails to start, first check that the configured executable is on
-`PATH` and that the project path exists. If using direnv, check that the
+`PATH`; use an absolute executable path for GUI hosts. A persistent install
+uses `judgevet-mcp` directly. The uvx route requires `uvx` and the MCP extra,
+not a prior judgevet installation. If using optional direnv, check that the
 project's `.envrc` is approved. Do not print the environment or credential.
-Check that a key is supplied through `JEV_API__KEY` or `TYPESAFE_API_KEY`.
+Check the selected credential route without printing its value. Environment
+files contain `JEV_API__KEY=...`; `JEV_API__KEY_FILE` points to a file containing
+only the token. Check file access under the host's user account. An inherited
+literal key can override a key file; consult precedence before changing it.
 Read [credential handling](../../SECURITY.md#credentials) before changing it.
 
 If the process starts but tools are missing, inspect the host's saved server
 configuration. Start a fresh host session and repeat discovery. A saved entry
 is not proof of a connection. A standalone SDK check is not proof that the
 host loaded the tools. Confirm all three tools in the session you intend to use.
+
+| Host | Inspect and recover |
+|---|---|
+| VS Code | Use MCP: List Servers and server output. Check `servers` at the root, the private `envFile` path and workspace trust. Restart the server. Interactive input configurations are not forwarded to current Agent Host sessions. |
+| Cursor IDE | Inspect Customize > MCPs and Output > MCP Logs. Check `mcpServers`, `envFile` and the executable path. Save and restart Cursor. |
+| Claude Code | Use `claude mcp list` and `/mcp`. A missing `${VAR}` can remain literal with a warning. Export the credential before starting a fresh session. |
+| Claude Desktop | Use Developer settings/logs and Connectors. Check absolute paths and the private key file; fully quit and restart. Manual setup is not `.mcpb` installation. |
+| Codex CLI | `codex mcp get judgevet` checks saved configuration; `/mcp` in a fresh session checks active tools. Check project trust and the exported variable named by `env_vars`. |
+| Pi CLI route | Inspect the actual Bash tool execution, exit status and JSON. Check the uvx or persistent CLI path and restart Pi from the configured shell. There is no MCP discovery in this route. |
+
+These controls and schemas follow the sources in the
+[host recipes](connect-mcp.md). A controlled nonexistent executable in an
+isolated test entry can confirm the host reports a startup failure. Restore
+that test entry after the check; do not modify unrelated user servers.
 
 If initialization fails with `invalid_data`, record the judgevet version,
 launcher command with sensitive values removed, host version and failure stage.
