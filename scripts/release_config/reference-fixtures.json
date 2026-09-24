@@ -1,0 +1,10 @@
+[
+  {
+    "sha": "97fff00d00402778d491033c67c69c170faa733d",
+    "message": "fix(cli): propagate handled failures to installed command exit status\n\nPreserve helper and non-standalone success return contracts. Verify real\nprocess errors, mixed answers, request counts and adapter cleanup.\n\nCloses #123\nRefs #124\nSpecified-By: Qwen3.8-27B-UD-Q4_K_M (local, via pi, --thinking medium), with Codex compatibility and test-contract corrections\nGenerated-By: Qwen3-Coder-Next-UD-IQ4_XS (local, via pi), wrapper; Codex authored tests, integration, documentation corrections and STATUS\n\n"
+  },
+  {
+    "sha": "5f2c34622febb2c0dfc3804a1a0c5f268f4b3068",
+    "message": "docs: reconcile backlog acceptance after 0.4.0\n\nRecord source, focused test and live criteria evidence. Keep logging and\nCLI behavior work separate from fulfilled historical issues.\n\nCloses #34\nCloses #22\nCloses #19\nRefs #3\nRefs #27\nRefs #43\nRefs #67\nRefs #68\nRefs #8\nRefs #124\n\n"
+  }
+]

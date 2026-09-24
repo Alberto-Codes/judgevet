@@ -178,6 +178,18 @@ index verification, submission and confirmed listing. Evidence remains on
 [#47](https://github.com/Alberto-Codes/judgevet/issues/47). No new service body,
 model, gateway deployment or modern protocol path is promoted.
 
+## Generated issue references
+
+#125 changes the release-please commit template label from `closes` to
+`references`. Four real-renderer cases cover Closes-only, Refs-only and both
+historical mixed-footer regressions. Generated notes otherwise match the
+unmodified renderer byte for byte; links, subjects and parsed footer actions
+remain intact. Seven runner/workflow cases cover engine delegation, fresh
+manifests, consumed outputs, absent credentials, failure propagation and
+sanitized workflow errors. Together with the three version-updater cases,
+14 Node tests pass. Restoring the original label makes all four renderer
+cases fail. GitHub closure still comes from factual commit trailers.
+
 ## MCP adapter decomposition
 
 #80 moves discovery schemas and tool handlers out of the server factory.

@@ -2,7 +2,7 @@
   "name": "judgevet-release-checks",
   "private": true,
   "version": "0.0.0",
-  "description": "Checks using the release-please version resolved by the configured v4 action",
-  "scripts": {"test": "node --test versions.cjs"},
+  "description": "Checks using the release-please version used by the release workflow",
+  "scripts": {"test": "node --test versions.cjs references.cjs runner.test.cjs"},
   "devDependencies": {"release-please": "17.3.0"}
 }

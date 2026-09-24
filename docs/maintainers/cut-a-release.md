@@ -29,6 +29,16 @@ updates `.release-please-manifest.json` and all three version values in
 `server.json`. See [registry publication](mcp-registry.md). The separate `update-lockfile` job
 refreshes `uv.lock` on the release branch. Never edit a version by hand.
 
+The workflow runs the locked release-please engine through
+`scripts/release_config/runner.cjs`. Its registered default changelog renderer
+changes the prepared commit template's issue label to `references`. Commit
+subjects, links and factual `Closes`/`Refs` trailers remain unchanged. This uses
+[release-please's extension API](https://github.com/googleapis/release-please/blob/v17.3.0/docs/customizing.md).
+GitHub applies closing keywords in commits independently of generated notes;
+see [linking issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
+The runner delegates release and PR creation to fresh engine manifests and
+preserves the outputs used by the lockfile job. Historical notes are not rewritten.
+
 Merging the release PR creates a draft and tag. Publishing the draft triggers
 `publish.yml`. A draft permits a pause; it does not upload to PyPI.
 
