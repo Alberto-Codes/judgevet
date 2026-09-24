@@ -1,8 +1,8 @@
 """Boundary tests for the file-size gate in `scripts/check_loc.py`.
 
 Every fixture module is generated into `tmp_path`, so each case pins one
-boundary of the real counter and the real `main`: the 300 soft and 320 hard
-module limits, and the 50-line function report.
+boundary of the real counter and the real `main`: the single 300-line
+module limit, and the 50-line function report.
 
 Examples:
     ```python
@@ -71,22 +71,22 @@ def _write_pkg(tmp_path: Path, source: str) -> Path:
 
 
 @pytest.mark.parametrize(
-    ("lines", "exit_code", "warns"),
-    [(300, 0, False), (301, 0, True), (320, 0, True), (321, 1, False)],
+    ("lines", "exit_code"),
+    [(300, 0), (301, 1), (320, 1), (321, 1)],
 )
-def test_module_limits(
+def test_module_limit(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     lines: int,
     exit_code: int,
-    warns: bool,
 ) -> None:
-    """Hold 300 soft and 320 hard at their exact boundaries."""
+    """Hold the single 300-line module limit at its exact boundary."""
     pkg = _write_pkg(tmp_path, _module_source(lines))
     assert count_code_lines(pkg / "mod.py") == lines
     assert main([str(pkg)]) == exit_code
     captured = capsys.readouterr()
-    assert ("WARN" in captured.err) is warns
+    assert "WARN" not in captured.out + captured.err
+    assert ("mod.py" in captured.out) is (exit_code == 1)
     assert ("FAIL" in captured.out) is (exit_code == 1)
 
 

@@ -103,8 +103,8 @@ code proving it.
   move the code, never weaken the contract.
 - **Modules cap at 300 code lines, functions at 50.** Over the limit means
   decompose. `scripts/check_loc.py` counts code lines under `src`, excluding
-  comments and docstrings. It warns past 300 and fails past 320. The function
-  cap is read by eye.
+  comments and docstrings. A module at 300 passes and 301 fails. The function
+  cap is reported by the same script and read by eye until #8 slice B.
 - **Never silence a gate.** Fix the cause. Do not add `per-file-ignores`,
   `# noqa`, `# type: ignore`, `--no-verify`, or a narrowed scope. If a type
   checker rejects a test double, the fix is a better double — a small class

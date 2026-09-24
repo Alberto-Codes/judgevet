@@ -2,8 +2,9 @@
 
 Counts *code* lines — lines carrying at least one real token, excluding
 comments and docstrings — so docvet-mandated documentation never pushes a
-file over the limit. Soft limit 300 (warn), hard limit 320 (fail):
-anything larger gets decomposed, not excused.
+file over the limit. The limit is 300 code lines: a module at 300
+passes, and a module at 301 or more fails the gate. Anything larger gets
+decomposed, not excused.
 
 Functions are measured the same way, over the body only: decorators and
 the signature do not count, and a nested function counts toward its
@@ -41,8 +42,7 @@ import sys
 import tokenize
 from pathlib import Path
 
-SOFT_LIMIT = 300
-HARD_LIMIT = 320
+LIMIT = 300
 FUNCTION_LIMIT = 50
 
 _SKIP_TOKENS = frozenset(
@@ -181,7 +181,7 @@ def main(roots: list[str]) -> int:
         roots: Directories to scan (defaults to ``src`` when empty).
 
     Returns:
-        Process exit code: 1 if any file exceeds the hard limit, else 0.
+        Process exit code: 1 if any file exceeds the limit, else 0.
     """
     failures = 0
     checked = 0
@@ -197,14 +197,9 @@ def main(roots: list[str]) -> int:
             checked += 1
             n = count_code_lines(path)
             _report_functions(path)
-            if n > HARD_LIMIT:
-                print(f"FAIL {path}: {n} code lines (hard limit {HARD_LIMIT})")
+            if n > LIMIT:
+                print(f"FAIL {path}: {n} code lines (limit {LIMIT})")
                 failures += 1
-            elif n > SOFT_LIMIT:
-                print(
-                    f"WARN {path}: {n} code lines (soft limit {SOFT_LIMIT})",
-                    file=sys.stderr,
-                )
     print(f"checked {checked} files")
     return 1 if failures else 0
 
