@@ -181,6 +181,16 @@ still pass. All eighteen Node checks pass. Full local push gates measure
 1614 passed, 6 live deselected and 95.33% coverage. Refreshed candidate CI and
 index artifact verification remain required before release publication.
 
+The regenerated candidate exposed a second fixture defect: pip read the direct
+wheel requirement but still sought the unpublished base package on PyPI.
+The fixture now exposes the wheel directory without changing documented argv.
+A new no-index test verifies the installed wheel URL and SHA-256. Removing that
+exposure or corrupting installed provenance makes the test fail. Both persistent
+install routes and the provenance test pass against the unpublished candidate.
+Full local gates now measure 1615 passed, 6 live deselected and 95.33% coverage.
+The [pip evidence](https://github.com/Alberto-Codes/judgevet/issues/168#issuecomment-5807807946)
+keeps artifact selection distinct from dependency installation and native hosts.
+
 ## Documentation program
 
 [#145](https://github.com/Alberto-Codes/judgevet/issues/145) is complete.
@@ -352,7 +362,7 @@ with the final round evidence on [#80](https://github.com/Alberto-Codes/judgevet
 
 ## Gates
 
-**1614 tests pass, 6 live tests deselected.** The last measured coverage is
+**1615 tests pass, 6 live tests deselected.** The last measured coverage is
 **95.33%** (1836/1926 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

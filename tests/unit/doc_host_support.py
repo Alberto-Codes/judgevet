@@ -93,6 +93,7 @@ def environment(workdir: Path, wheel: Path, requirement: str) -> dict[str, str]:
         "UV_ISOLATED": "1",
         "UV_CACHE_DIR": str(workdir / "cache"),
         "UV_OVERRIDE": str(override),
+        "PIP_FIND_LINKS": str(wheel.resolve().parent),
     }
 
 

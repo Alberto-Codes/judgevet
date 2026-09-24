@@ -6,6 +6,7 @@ import os
 import shlex
 import shutil
 from contextlib import chdir
+from hashlib import sha256
 from importlib.metadata import version
 from pathlib import Path
 from typing import Any
@@ -129,3 +130,32 @@ def test_documented_persistent_install(
         asyncio.run(smoke([str(executable)], version("judgevet"), env, 120))
     assert len(requests) == 3
     assert all(item["auth"] == "Bearer host-canary" for item in requests)
+
+
+def test_pip_recipe_selects_exact_candidate_without_an_index(
+    candidate: Path, tmp_path: Path
+) -> None:
+    command = shlex.split(exact_block(1, "bash"))
+    env = environment(tmp_path, candidate, command[-1])
+    python = create_venv(tmp_path)
+    command[0] = str(python)
+    env.update(
+        PIP_REQUIREMENT=env["UV_OVERRIDE"],
+        PIP_CONFIG_FILE=os.devnull,
+        PIP_NO_INDEX="1",
+        PIP_NO_DEPS="1",
+    )
+    result = run_process(command, env, tmp_path, timeout=120)
+    assert result.returncode == 0, result.stderr
+    inspect = (
+        "from importlib.metadata import distribution; "
+        "print(distribution('judgevet').read_text('direct_url.json'))"
+    )
+    provenance = run_process([str(python), "-I", "-c", inspect], env, tmp_path)
+    assert provenance.returncode == 0
+    source = json.loads(provenance.stdout)
+    assert source["url"] == candidate.resolve().as_uri()
+    assert (
+        source["archive_info"]["hashes"]["sha256"]
+        == sha256(candidate.read_bytes()).hexdigest()
+    )
