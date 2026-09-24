@@ -5,40 +5,46 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.9.0 is published. Library, CLI and optional MCP share one version.
-The release adds explicit gateway authentication and metadata, caller-controlled
-state redaction, dependency auditing, and configuration/workflow checks.
-Direct TypeSafe defaults remain unchanged. The documentation site is
-[live](https://alberto-codes.github.io/judgevet/).
+judgevet 0.10.0 is published. Library, CLI and optional MCP share one version.
+The release adds registry metadata and an exact optional-runtime launcher,
+decomposes the MCP adapter without changing public behavior, and corrects
+release-note reference labels. Direct TypeSafe defaults remain unchanged.
+The documentation site is [live](https://alberto-codes.github.io/judgevet/).
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.9.0`, commit `9f4bfc25f5910fa7571aaffbbb7e1b417dab6dc4` |
-| Accepted candidate | `6c7b8a0cb2abb99dd68693b40c9dca587bff32fb`; release tree is identical |
-| Wheel SHA-256 | `03cb15e2e5983bc05f76a218af7bb6426a7c8eb672f67f17f79a93dc270bd2e6` |
-| Source distribution SHA-256 | `7ebbe0d0f68528e97652a36b681dee6759add5403fdeacf95c9826d9835c6d6e` |
+| Release/tag | `v0.10.0`, commit `3830804ac3bdb737b77f5773a51e5d8346a87b27` |
+| Accepted candidate | `d95aeaed01bf6def7f804468f4d783c4f20588a0`; release tree is identical |
+| Wheel SHA-256 | `f194f173eaf65d51d62c5e6508ce574d9ede5b498b07fe56f63350f51fad9d6d` |
+| Source distribution SHA-256 | `a53ef1ef34e6a9246e71eb39e160d4e7f1cca7ca8f25178bd7b80ae04f6cd4c6` |
 | Actual TestPyPI/PyPI downloads | Both distributions match workflow artifacts and each other |
-| Library | Isolated base imports, typing marker, live example and all four policy-guide examples passed; policy examples also type-checked |
+| Library | Isolated base imports without MCP, typing marker, live example and all four policy-guide examples passed; policy examples also type-checked |
 | CLI | Installed mixed live judgment passed on both index wheels; one test each, no skip |
-| MCP | Isolated discovery and all three live tools passed on both wheels; fresh published uvx launcher initialized and called all three tools |
-| New features | All 219 gateway/redaction acceptance cases pass against both isolated installed wheels |
-| Documentation | Both index wheels execute and type-check all 17 exact Python programs; five CLI blocks and three continuation commands pass |
+| MCP | Isolated discovery and all three live tools passed on both wheels and through the exact manifest launcher |
+| Published launcher | Fresh uvx cache resolved PyPI 0.10.0 directly, then discovered and called all three tools |
+| Registry | Official schema and production validation passed; publisher submission succeeded; independent query confirmed exact active 0.10.0 listing |
 
-[Release evidence](https://github.com/Alberto-Codes/judgevet/issues/157) records
-commands, hashes and limits. [Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35941053887),
-[TestPyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35940775919)
-and [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35941229046)
+[Release evidence](https://github.com/Alberto-Codes/judgevet/issues/160#issuecomment-5806358358)
+records commands, hashes, submission and acceptance separately.
+[Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35946813481),
+[TestPyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35946653879)
+and [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35947013431)
 passed. Both publication workflows passed base/MCP smoke checks before upload.
-The first TestPyPI lookup did not yet list 0.9.0; direct downloads and a fresh
-uncached pip lookup succeeded. The first fresh MCP launcher probe failed during
-initialization. A separate synthetic-key diagnostic initialized successfully;
-a full fresh-cache recheck passed. The initial cause remains unproven.
-This does not prove an existing host session reloaded its tools.
-No unseen API body or gateway vendor became verified.
+The first direct-PyPI manifest probe failed during initialization. A separate
+synthetic-key diagnostic initialized successfully; a full fresh-cache recheck
+passed. The initial cause remains unproven. This does not prove an existing
+host session reloaded its tools or every registry consumer constructs the same
+command. No unseen API body, other model, modern protocol path or gateway
+became verified.
 
-The prior [0.8.0 release evidence](https://github.com/Alberto-Codes/judgevet/issues/155)
-retains its hashes and container verification. That container exercise used
-0.8.0, not the new release.
+The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
+reports `io.github.Alberto-Codes/judgevet` version `0.10.0`, published at
+`2026-09-24T02:25:54.839241Z`. Package and launcher fields match the release
+manifest. No external account or namespace blocker remains.
+Prior [0.9.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/157)
+retains its gateway/redaction and exact-documentation checks.
+The [0.8.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/155)
+retains its container exercise; it did not exercise this release.
 
 ## Documentation program
 
@@ -157,8 +163,8 @@ examples were removed; the task guides retain their executable coverage.
 `judgevet-mcp` launcher and a secret TypeSafe key input. The official 2025-12-11
 schema and production validation endpoint accept the manifest. Removing the
 required name is rejected. This is validation, not a submitted or accepted listing.
-The published 0.9.0 description lacks the ownership marker; the next release
-must publish the new README marker before registry submission.
+The published 0.9.0 description lacks the ownership marker. Release 0.10.0
+publishes it; the submission and confirmed listing are recorded above.
 
 Fifteen regression cases cover schema/package/configuration agreement, version
 drift, private key inputs and isolated candidate launches. The manifest-derived

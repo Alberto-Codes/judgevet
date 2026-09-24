@@ -38,9 +38,9 @@ the registry uses that identifier to fetch PyPI metadata.
 release-please updates the manifest's root version, package version and runtime
 variable through three JSONPath extra-file entries. The
 [release configuration checks](../../scripts/release_config/versions.cjs) execute
-the actual release-please 17.3.0 updater resolved by the configured v4 action.
-When upgrading that action, review its resolved dependency and update the locked
-check tooling together. Node and npm are development gate prerequisites; they
+the actual release-please 17.3.0 updater used by the workflow runner.
+When upgrading the engine, update the locked workflow and check tooling
+together. Node and npm are development gate prerequisites; they
 are not library or CLI dependencies. Install hooks as described in AGENTS.md.
 
 ## Validate before submission

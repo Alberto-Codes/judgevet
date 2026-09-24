@@ -32,10 +32,10 @@ configuration, command arguments, or diagnostics.
 Execute the following command to launch the MCP server:
 
 ```bash
-direnv exec /absolute/path/to/project uvx --from 'judgevet[mcp]==0.9.0' judgevet-mcp
+direnv exec /absolute/path/to/project uvx --from 'judgevet[mcp]==0.10.0' judgevet-mcp
 ```
 
-This command pins judgevet to version 0.9.0. To update, replace `0.9.0` with a
+This command pins judgevet to version 0.10.0. To update, replace `0.10.0` with a
 newer published version after verification. Note that only the judgevet package
 is pinned; transitive dependencies may still resolve differently. The server
 waits for client input on stdin and closes on EOF, emitting frames on stdout
@@ -71,7 +71,7 @@ paths.
 ```toml
 [mcp_servers.judgevet]
 command = "direnv"
-args = ["exec", "/absolute/path/to/project", "uvx", "--from", "judgevet[mcp]==0.9.0", "judgevet-mcp"]
+args = ["exec", "/absolute/path/to/project", "uvx", "--from", "judgevet[mcp]==0.10.0", "judgevet-mcp"]
 ```
 
 Codex loads project settings only for trusted projects. User-wide settings
