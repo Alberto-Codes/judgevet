@@ -7,7 +7,7 @@ status: draft
 Status: **draft**. These recipes follow current host documentation. Mechanical
 checks parse the exact configurations and exercise isolated launchers. They do
 not prove that a host loaded them. Actual host observations belong in the
-[evidence ledger](../../STATUS.md#onboarding-release-in-progress).
+[evidence ledger](../../STATUS.md#onboarding-release).
 Codex CLI and Pi returned live answers. VS Code and Claude Code reached
 discovery; account access blocked their calls. Cursor and Desktop remain
 unverified in-host. See the ledger for exact versions and limits.

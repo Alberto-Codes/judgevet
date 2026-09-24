@@ -5,48 +5,54 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.10.0 is published. Library, CLI and optional MCP share one version.
-The release adds registry metadata and an exact optional-runtime launcher,
-decomposes the MCP adapter without changing public behavior, and corrects
-release-note reference labels. Direct TypeSafe defaults remain unchanged.
+judgevet 0.10.1 is published. Library, CLI and optional MCP share one version.
+This release adds host-native setup, contributor guidance and issue forms.
+It fixes release recipe updates and unpublished-wheel test selection.
+Public runtime behavior and dependency requirements remain unchanged.
 The documentation site is [live](https://alberto-codes.github.io/judgevet/).
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.10.0`, commit `3830804ac3bdb737b77f5773a51e5d8346a87b27` |
-| Accepted candidate | `d95aeaed01bf6def7f804468f4d783c4f20588a0`; release tree is identical |
-| Wheel SHA-256 | `f194f173eaf65d51d62c5e6508ce574d9ede5b498b07fe56f63350f51fad9d6d` |
-| Source distribution SHA-256 | `a53ef1ef34e6a9246e71eb39e160d4e7f1cca7ca8f25178bd7b80ae04f6cd4c6` |
+| Release/tag | `v0.10.1`, commit `032cae03be62b2697c834e6be045640e0abedda7` |
+| Accepted candidate | `9d661a47f028a8c3f302cf0c4cb3837583a3fbab`; release tree is identical |
+| Wheel SHA-256 | `826dda23e35d934842fd42076ebeaff305a73d05e6f513377af7c48477eee3e0` |
+| Source distribution SHA-256 | `c1d4e6f6af4da4be46e1365f9ec4638c98757722ea3646f8cbdac626a6f908ed` |
 | Actual TestPyPI/PyPI downloads | Both distributions match workflow artifacts and each other |
 | Library | Isolated base imports without MCP, typing marker, live example and all four policy-guide examples passed; policy examples also type-checked |
 | CLI | Installed mixed live judgment passed on both index wheels; one test each, no skip |
 | MCP | Isolated discovery and all three live tools passed on both wheels and through the exact manifest launcher |
-| Published launcher | Fresh uvx cache resolved PyPI 0.10.0 directly, then discovered and called all three tools |
-| Registry | Official schema and production validation passed; publisher submission succeeded; independent query confirmed exact active 0.10.0 listing |
+| Published launcher | Fresh uvx cache resolved PyPI 0.10.1 directly, then discovered and called all three tools |
+| Registry | Official schema and production validation passed; publisher submission succeeded; independent query confirmed exact active 0.10.1 listing |
 
-[Release evidence](https://github.com/Alberto-Codes/judgevet/issues/160#issuecomment-5806358358)
-records commands, hashes, submission and acceptance separately.
-[Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35946813481),
-[TestPyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35946653879)
-and [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35947013431)
+[Candidate acceptance](https://github.com/Alberto-Codes/judgevet/issues/165#issuecomment-5807947133)
+and [production evidence](https://github.com/Alberto-Codes/judgevet/issues/165#issuecomment-5808070601)
+record commands, hashes, submission and acceptance separately.
+[Release CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35957836048),
+[TestPyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35957559456)
+and [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/35958128842)
 passed. Both publication workflows passed base/MCP smoke checks before upload.
-The first direct-PyPI manifest probe failed during initialization. A separate
-synthetic-key diagnostic initialized successfully; a full fresh-cache recheck
-passed. The initial cause remains unproven. This does not prove an existing
-host session reloaded its tools or every registry consumer constructs the same
-command. No unseen API body, other model, modern protocol path or gateway
-became verified.
+
+The downloaded source archive also built outside the checkout with no cache.
+Its rebuilt wheel passed the same isolated checks, including the live CLI test.
+All package files match the index wheel except the generator marker and its
+RECORD checksum. The archive build used uv_build 0.11.33; the workflow wheel
+records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
+The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.10.0`, published at
-`2026-09-24T02:25:54.839241Z`. Package and launcher fields match the release
-manifest. No external account or namespace blocker remains.
+reports `io.github.Alberto-Codes/judgevet` version `0.10.1`, published at
+`2026-09-24T05:03:11.420755Z`. Package and launcher fields match the release
+manifest. Registry acceptance does not verify a host installation or reload.
+No unseen API body, other model, modern protocol path or gateway became verified.
+
+Prior [0.10.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/160)
+retains its initial unexplained launcher failure and successful fresh recheck.
 Prior [0.9.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/157)
 retains its gateway/redaction and exact-documentation checks.
 The [0.8.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/155)
 retains its container exercise; it did not exercise this release.
 
-## Onboarding release in progress
+## Onboarding release
 
 [#165](https://github.com/Alberto-Codes/judgevet/issues/165) includes the host
 survey, setup recipes, host checks, contributor setup, contribution policy
@@ -57,7 +63,7 @@ installation alternatives and source disagreements. It is research, not
 host integration evidence. Pi uses the existing CLI route, explicitly outside
 MCP. The complete landed scope has now been reviewed for 0.10.1.
 Runtime sources and dependencies are unchanged; this is an onboarding and
-repository-tooling patch. Publication remains pending.
+repository-tooling patch. Published artifact evidence appears above.
 
 The [user-approved revision](https://github.com/Alberto-Codes/judgevet/issues/162#issuecomment-5806551798)
 accepts cited documentation and mechanical checks for unavailable hosts.
@@ -117,6 +123,22 @@ unverified and are carried by #167. Claude's account-limit response does not
 verify a TypeSafe 429 body. No other model, gateway or modern protocol path
 became verified.
 
+### Published 0.10.1 host follow-up
+
+Pi 0.86.1 ran all three exact released CLI commands through its Bash tool
+with a fresh uvx cache. Extensions and skills were disabled. Actual successful
+tool results returned Noul 0.96, Choice `yes` and Score 2.71. The resolved
+model was `jev-1.13.0`; usage remained 275/22, 309/32 and 305/18 respectively.
+
+Codex CLI 0.156.1 first reported no available tools and made no calls.
+The cause is unproven. The next native configuration lookup confirmed the
+enabled 0.10.1 launcher, but execution failed at the account usage limit.
+No native 0.10.1 Codex tool call is claimed. Earlier 0.10.0 calls remain
+historical evidence. Test-owned trust entries were removed; unrelated settings
+were preserved. Account-enabled checks join the existing deferred rows in
+[#167](https://github.com/Alberto-Codes/judgevet/issues/167#issuecomment-5808070810).
+This account response does not verify a TypeSafe 429 body.
+
 ### Contributor setup
 
 [#21](https://github.com/Alberto-Codes/judgevet/issues/21#issuecomment-5807239311)
@@ -163,8 +185,9 @@ configuration optional, enable blank issues or prefill the proof; each causes
 one failure. The original forms pass again. Full local push gates measure
 1614 passed, 6 live deselected and 95.33% coverage (1836/1926 statements).
 Parsed checks do not emulate GitHub's entire form engine or establish the
-truth of a report. Native rendering and exact-commit CI evidence are recorded
-on #36 after publication of the templates. No service claim changed.
+truth of a report. Published template bytes and exact-commit CI passed.
+The browser required sign-in, so native form rendering and required-field
+interaction remain deferred in #167. No service claim changed.
 
 ### Release preparation
 
@@ -178,8 +201,8 @@ Four real-engine cases cover patch, minor, major and prerelease targets. They
 require every package pin to change and all other document bytes to survive.
 Removing the updater or one marker makes all four fail while registry cases
 still pass. All eighteen Node checks pass. Full local push gates measure
-1614 passed, 6 live deselected and 95.33% coverage. Refreshed candidate CI and
-index artifact verification remain required before release publication.
+1614 passed, 6 live deselected and 95.33% coverage. Subsequent candidate and
+index artifact checks passed after the fixture correction below.
 
 The regenerated candidate exposed a second fixture defect: pip read the direct
 wheel requirement but still sought the unpublished base package on PyPI.
@@ -190,6 +213,8 @@ install routes and the provenance test pass against the unpublished candidate.
 Full local gates now measure 1615 passed, 6 live deselected and 95.33% coverage.
 The [pip evidence](https://github.com/Alberto-Codes/judgevet/issues/168#issuecomment-5807807946)
 keeps artifact selection distinct from dependency installation and native hosts.
+[Exact candidate CI](https://github.com/Alberto-Codes/judgevet/actions/runs/35957261086)
+passed all 1615 tests with 95.33% coverage before TestPyPI publication.
 
 ## Documentation program
 
