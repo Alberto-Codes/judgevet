@@ -12,6 +12,7 @@ _EXPORTS = {
         "HTTPSystemOneAdapter",
         "AsyncHTTPSystemOneAdapter",
     ),
+    "judgevet.adapters.outbound.gateway": ("GatewayConfig", "RequestMetadata"),
     "judgevet.adapters.outbound.network": ("NetworkConfig",),
     "judgevet.adapters.outbound.retries": ("RetryPolicy",),
     "judgevet.diagnostics": ("bind_request_id",),

@@ -220,6 +220,13 @@
       "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
     }
   ],
+  "docs/reference/configuration.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete synthetic gateway program; execute and type-check exactly against an isolated wheel with offline HTTP fixtures."
+    }
+  ],
   "docs/reference/errors.md": [
     {
       "language": "python",

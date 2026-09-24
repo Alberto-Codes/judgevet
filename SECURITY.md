@@ -69,12 +69,20 @@ files and command arguments.
 
 The [HTTP adapter](src/judgevet/adapters/outbound/http.py) sends the supplied
 state, named questions (including instructions and criteria), and requested
-model as JSON. It sends the API key in a Bearer authorization header. This follows
+model as JSON. By default it sends the API key in a Bearer authorization header. This follows
 the [official API quick start](https://docs.typesafe.ai/introduction/quickstart).
 The default service is `https://api.typesafe.ai`; the CLI and MCP accept
 `JEV_API__BASE_URL` or `TYPESAFE_BASE_URL`, and library callers can supply
 `base_url` directly. A configured replacement service receives the same data
 and credential. Only send content you are authorized to disclose to it.
+
+Explicit [gateway configuration](docs/reference/configuration.md#gateway-authentication-and-metadata)
+can replace the credential header and scheme and add caller-selected metadata.
+A configured correlation header forwards only the dedicated scoped request ID.
+Other bound context remains local. Custom headers are not a secret vault, and
+state handling does not redact questions or header values. Gateway operators own
+upstream credential injection and removal. Credentials and metadata are sent to
+the selected destination on every retry; redirects remain disabled.
 
 CLI file/stdin inputs become state or questions before the call. CLI policy
 rules are evaluated locally; they are not added to the API payload. MCP tools

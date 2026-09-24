@@ -1,4 +1,4 @@
-"""HTTP outbound adapter with TLS, retries and correlated terminal metadata.
+"""HTTP outbound adapter with explicit gateway metadata, TLS and bounded retries.
 
 Error handling:
     The API error `detail` field is polymorphic:
@@ -65,10 +65,15 @@ Async adapters:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Self
+from typing import Any, Self, Unpack
 
 import httpx
 
+from judgevet.adapters.outbound.gateway import (
+    GatewayOptions,
+    RequestMetadata,
+    configured_gateway,
+)
 from judgevet.adapters.outbound.http_events import CallEvent, call_event
 from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
@@ -338,6 +343,7 @@ class HTTPSystemOneAdapter:
         *,
         retry: RetryPolicy | None = None,
         network: NetworkConfig | None = None,
+        **gateway_options: Unpack[GatewayOptions],
     ) -> None:
         """Initialize the HTTP adapter.
 
@@ -350,6 +356,10 @@ class HTTPSystemOneAdapter:
             retry: Validated retry policy. None preserves one attempt.
             network: Proxy and TLS options. None retains HTTPX defaults.
 
+        Other Parameters:
+            gateway (GatewayConfig | None): Explicit authentication and metadata.
+                Omission retains direct defaults.
+
         Raises:
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
         """
@@ -361,15 +371,13 @@ class HTTPSystemOneAdapter:
             raise ValueError(f"timeout_seconds must be positive, got {timeout_seconds}")
 
         self._retry = retry or RetryPolicy()
+        self._gateway = configured_gateway(gateway_options)
         network = network or NetworkConfig()
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
         self._client = httpx.Client(
             base_url=self._base_url,
-            headers={
-                "Authorization": f"Bearer {self._api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=self._gateway.authentication(self._api_key),
             transport=transport,
             proxy=network.proxy,
             verify=network.verification(),
@@ -381,6 +389,8 @@ class HTTPSystemOneAdapter:
         state: str | dict[str, Any] | list[Any],
         questions: Mapping[str, Any],
         model: str | None = None,
+        *,
+        metadata: RequestMetadata | None = None,
     ) -> SystemOneResponse:
         """Call Jev with bounded retries and emit terminal status and typed usage.
 
@@ -388,11 +398,13 @@ class HTTPSystemOneAdapter:
             state: The content to evaluate.
             questions: Mapping of question names to question definitions.
             model: Model name override.
+            metadata: Explicit per-call headers overriding gateway defaults.
 
         Returns:
             Typed SystemOneResponse with parsed answer objects.
 
         Raises:
+            ValueError: If merged request metadata violates gateway rules.
             JevAuthError: If the API returns 401 or 403.
             JevRateLimitError: If the API returns 429 (rate limit exceeded).
             JevRequestError: If the API returns 4xx (except 401/403, 429).
@@ -420,20 +432,24 @@ class HTTPSystemOneAdapter:
             and error translation to ensure consistent behavior across adapters.
         """
         with call_event(model or self._default_model, len(questions)) as event:
+            headers = self._gateway.request_headers(metadata)
             payload = _build_payload(state, questions, model, self._default_model)
-            answer = self._retry.run(lambda: self._request(payload, event))
+            answer = self._retry.run(lambda: self._request(payload, event, headers))
             event.resolved_model = answer.model
             event.input_tokens = answer.usage.input_tokens
             event.output_tokens = answer.usage.output_tokens
             event.outcome = "success"
             return answer
 
-    def _request(self, payload: dict[str, Any], event: CallEvent) -> SystemOneResponse:
+    def _request(
+        self, payload: dict[str, Any], event: CallEvent, headers: dict[str, str]
+    ) -> SystemOneResponse:
         """Send one attempt and translate HTTP errors.
 
         Args:
             payload: Serialized judgment inputs.
             event: Terminal metadata for this logical call.
+            headers: Validated metadata snapshot shared by every attempt.
 
         Returns:
             Parsed judgment response.
@@ -444,7 +460,7 @@ class HTTPSystemOneAdapter:
         """
         event.status_code = None
         try:
-            response = self._client.post("/v1/systemone", json=payload)
+            response = self._client.post("/v1/systemone", json=payload, headers=headers)
             event.status_code = response.status_code
             response.raise_for_status()
             return _parse_body(response)
@@ -538,6 +554,7 @@ class AsyncHTTPSystemOneAdapter:
         *,
         retry: RetryPolicy | None = None,
         network: NetworkConfig | None = None,
+        **gateway_options: Unpack[GatewayOptions],
     ) -> None:
         """Initialize the async HTTP adapter.
 
@@ -550,6 +567,10 @@ class AsyncHTTPSystemOneAdapter:
             retry: Validated retry policy. None preserves one attempt.
             network: Proxy and TLS options. None retains HTTPX defaults.
 
+        Other Parameters:
+            gateway (GatewayConfig | None): Explicit authentication and metadata.
+                Omission retains direct defaults.
+
         Raises:
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
         """
@@ -561,15 +582,13 @@ class AsyncHTTPSystemOneAdapter:
 
         self._api_key = api_key
         self._retry = retry or RetryPolicy()
+        self._gateway = configured_gateway(gateway_options)
         network = network or NetworkConfig()
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
         self._client = httpx.AsyncClient(
             base_url=self._base_url,
-            headers={
-                "Authorization": f"Bearer {self._api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=self._gateway.authentication(self._api_key),
             transport=transport,
             proxy=network.proxy,
             verify=network.verification(),
@@ -581,6 +600,8 @@ class AsyncHTTPSystemOneAdapter:
         state: str | dict[str, Any] | list[Any],
         questions: Mapping[str, Any],
         model: str | None = None,
+        *,
+        metadata: RequestMetadata | None = None,
     ) -> SystemOneResponse:
         """Call Jev asynchronously with retries and correlated typed response metadata.
 
@@ -588,11 +609,13 @@ class AsyncHTTPSystemOneAdapter:
             state: The content to evaluate.
             questions: Mapping of question names to question definitions.
             model: Model name override.
+            metadata: Explicit per-call headers overriding gateway defaults.
 
         Returns:
             Typed SystemOneResponse with parsed answer objects.
 
         Raises:
+            ValueError: If merged request metadata violates gateway rules.
             JevAuthError: If the API returns 401 or 403.
             JevRateLimitError: If the API returns 429 (rate limit exceeded).
             JevRequestError: If the API returns 4xx (except 401/403, 429).
@@ -616,8 +639,11 @@ class AsyncHTTPSystemOneAdapter:
             the first attempt.
         """
         with call_event(model or self._default_model, len(questions)) as event:
+            headers = self._gateway.request_headers(metadata)
             payload = _build_payload(state, questions, model, self._default_model)
-            answer = await self._retry.arun(lambda: self._request(payload, event))
+            answer = await self._retry.arun(
+                lambda: self._request(payload, event, headers)
+            )
             event.resolved_model = answer.model
             event.input_tokens = answer.usage.input_tokens
             event.output_tokens = answer.usage.output_tokens
@@ -625,13 +651,14 @@ class AsyncHTTPSystemOneAdapter:
             return answer
 
     async def _request(
-        self, payload: dict[str, Any], event: CallEvent
+        self, payload: dict[str, Any], event: CallEvent, headers: dict[str, str]
     ) -> SystemOneResponse:
         """Send one attempt and translate HTTP errors.
 
         Args:
             payload: Serialized judgment inputs.
             event: Terminal metadata for this logical call.
+            headers: Validated metadata snapshot shared by every attempt.
 
         Returns:
             Parsed judgment response.
@@ -642,7 +669,9 @@ class AsyncHTTPSystemOneAdapter:
         """
         event.status_code = None
         try:
-            response = await self._client.post("/v1/systemone", json=payload)
+            response = await self._client.post(
+                "/v1/systemone", json=payload, headers=headers
+            )
             event.status_code = response.status_code
             response.raise_for_status()
             return _parse_body(response)

@@ -52,7 +52,7 @@ def bind_request_id(request_id: str | None) -> Iterator[None]:
 
     None temporarily clears correlation. Nested scopes restore the outer value.
     New asyncio tasks inherit their creation context; sibling bindings stay isolated.
-    The identifier is local diagnostic metadata and is never added to HTTP headers.
+    The identifier stays local unless GatewayConfig opts into HTTP propagation.
 
     Args:
         request_id: None or an ASCII identifier of at most 128 characters.

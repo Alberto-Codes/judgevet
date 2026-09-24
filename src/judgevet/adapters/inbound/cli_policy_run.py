@@ -123,7 +123,7 @@ def _render_policy(
 def _build_adapter(
     settings: Settings, api_key: str | None, model: str
 ) -> HTTPSystemOneAdapter:
-    """Resolve the policy credential once and construct its configured adapter.
+    """Resolve the policy credential and construct its gateway-aware HTTP adapter.
 
     Args:
         settings: Validated connection, retry and network settings.
@@ -144,6 +144,7 @@ def _build_adapter(
         timeout_seconds=settings.api.timeout_seconds,
         retry=settings.api.retry_policy,
         network=settings.api.network_config,
+        gateway=settings.api.gateway_config,
     )
 
 

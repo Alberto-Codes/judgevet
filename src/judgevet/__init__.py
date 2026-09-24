@@ -59,6 +59,8 @@ Attributes:
     SystemOneResponse (type): Answer container with typed accessors.
     Usage (type): Token usage metadata.
     RetryPolicy (type): Immutable opt-in retry limits.
+    GatewayConfig (type): Explicit gateway authentication and metadata.
+    RequestMetadata (type): Immutable per-call HTTP metadata.
     NetworkConfig (type): Explicit proxy and certificate verification options.
     JevError (type): Base Jev exception.
     JevAuthError (type): Authentication failure.
@@ -85,6 +87,7 @@ See Also:
     - https://docs.typesafe.ai/introduction.md: Introduction to Jev
 """
 
+from judgevet.adapters.outbound.gateway import GatewayConfig, RequestMetadata
 from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
     HTTPSystemOneAdapter,
@@ -114,6 +117,7 @@ __all__ = [
     "AsyncSystemOnePort",
     "Choice",
     "ChoiceAnswer",
+    "GatewayConfig",
     "HTTPSystemOneAdapter",
     "JevAuthError",
     "JevError",
@@ -125,6 +129,7 @@ __all__ = [
     "Noul",
     "NoulAnswer",
     "Question",
+    "RequestMetadata",
     "RetryPolicy",
     "Score",
     "ScoreAnswer",

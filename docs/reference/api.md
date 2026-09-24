@@ -43,16 +43,20 @@ Python types. The outbound adapter adds the wire `type` and omits optional
 
 `HTTPSystemOneAdapter` and `AsyncHTTPSystemOneAdapter` implement the synchronous
 and asynchronous calls respectively. Their constructors accept `api_key`,
-`base_url`, `default_model`, `transport` and `timeout_seconds`; see the
+`base_url`, `default_model`, `transport`, `timeout_seconds`, `retry`, `network`
+and `gateway`; see the
 [defaults and validation table](configuration.md#direct-python-adapters).
 Both send the [documented request](https://api.typesafe.ai/docs) to
-`POST /v1/systemone` with bearer authentication.
+`POST /v1/systemone` with bearer authentication by default. Explicit
+[gateway configuration](configuration.md#gateway-authentication-and-metadata)
+selects alternate authentication, path prefixes and metadata.
 
 | Call argument | Python contract |
 |---|---|
 | `state` | Required string, dictionary or list containing the content to judge. |
 | `questions` | Required mapping from caller-chosen names to typed questions or raw mappings. |
 | `model` | Optional string on the concrete adapters; omitted/empty uses the constructor default. |
+| `metadata` | Keyword-only `RequestMetadata` on concrete HTTP adapters; overrides gateway default headers. |
 
 `system_one` returns `SystemOneResponse`; the async call must be awaited. By default, one
 call produces one HTTP request. Optional [retry limits](configuration.md#retry-limits)
@@ -70,7 +74,8 @@ recipes.
 `SystemOnePort` and `AsyncSystemOnePort` are structural protocols, not client
 factories. They declare the same state and question inputs and typed return,
 but require the `model` argument. Only the concrete adapters offer a default
-for that call argument. The async port declares an async method. Neither port
+for that call argument. Transport-specific metadata is also limited to the
+concrete HTTP adapters. The async port declares an async method. Neither port
 requires lifecycle methods; ownership belongs to the code that creates the
 concrete adapter. See [port signatures](../../src/judgevet/ports/__init__.py).
 

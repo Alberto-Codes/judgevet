@@ -17,6 +17,7 @@ arguments. Neither reads judgevet environment settings or installs logging.
 | `api_key` | `None` | Supply a key explicitly. `None` raises `ValueError`; this is not an authentication check. |
 | `base_url` | `None` | Uses `https://api.typesafe.ai` when omitted or empty. |
 | `default_model` | `"jev-latest"` | Used when `system_one` receives no model or an empty model string. |
+| `gateway` | `None` | Optional `GatewayConfig`; omission retains direct authentication and no metadata. |
 | `network` | `None` | Optional `NetworkConfig`; omission retains HTTPX proxy and TLS defaults. |
 | `retry` | `None` | Optional `RetryPolicy`; omission preserves one attempt. |
 | `transport` | `None` | Optional HTTPX transport; use the sync or async transport type appropriate to the adapter. |
@@ -50,6 +51,10 @@ The nested settings use the `JEV_` prefix and `__` separator.
 | `JEV_API__BASE_URL` | `TYPESAFE_BASE_URL` | `https://api.typesafe.ai` | Service base URL. |
 | `JEV_API__DEFAULT_MODEL` | None | `jev-latest` | Stored adapter default; entry-point call overrides are described below. |
 | `JEV_API__TIMEOUT_SECONDS` | None | `30.0` | Adapter timeout; must be greater than zero. |
+| `JEV_API__AUTH_HEADER` | None | `Authorization` | Credential field name. |
+| `JEV_API__AUTH_SCHEME` | None | `Bearer` | Prefix token; empty sends the bare credential. |
+| `JEV_API__HEADERS` | None | `{}` | JSON map of explicit string metadata. Values are literal. |
+| `JEV_API__REQUEST_ID_HEADER` | None | Unset | Opt into forwarding the scoped request ID under this field. |
 | `JEV_API__PROXY` | None | Unset | Explicit HTTPX proxy URL; overrides standard proxy routing. |
 | `JEV_API__CA_BUNDLE` | None | Unset | PEM file replacing default trust roots; must load successfully. |
 | `JEV_API__VERIFY` | None | `true` | Verify certificate chains and hostnames. Disable only in controlled tests. |
@@ -231,3 +236,96 @@ Keep the returned key wrapped until the adapter call expression, as in the
 [sync recipe](../how-to/use-library.md). Resolution is synchronous; perform it
 during startup before serving async requests. See
 [credential security](../../SECURITY.md#credentials) for disclosure limits.
+
+
+## Gateway authentication and metadata
+
+Both HTTP adapters accept `gateway=GatewayConfig(...)`. Its defaults preserve
+`Authorization: Bearer <key>`, direct TypeSafe routing and no custom metadata.
+The gateway receives the supplied credential instead of a second TypeSafe key.
+Gateway operators own upstream credential injection. See [TypeSafe authentication](https://docs.typesafe.ai/api).
+
+`auth_header` chooses the credential field. `auth_scheme` chooses its token
+prefix; an empty string sends a bare key. [Apigee's example](https://docs.cloud.google.com/apigee/docs/api-platform/reference/policies/verify-api-key-policy)
+uses `x-apikey`. [Kong Key Auth](https://developer.konghq.com/plugins/key-auth/)
+supports configured key names. [Azure APIM](https://learn.microsoft.com/en-us/azure/api-management/api-management-subscriptions)
+uses `Ocp-Apim-Subscription-Key` by default. These are vendor conventions,
+not proof of compatibility with an untested deployment.
+
+The following program uses a synthetic gateway URL and credential. Replace them
+with your approved destination and credential before calling a real gateway.
+Documentation checks run the exact program with a synthetic HTTP transport.
+
+```python
+from judgevet import GatewayConfig, HTTPSystemOneAdapter, Noul, RequestMetadata
+
+gateway = GatewayConfig(
+    auth_header="x-apikey",
+    auth_scheme="",
+    headers={"Example-Tenant": "synthetic", "Example-Route": "default"},
+)
+with HTTPSystemOneAdapter(
+    api_key="dummy-gateway-key",
+    base_url="https://gateway.example/organization/jev",
+    gateway=gateway,
+) as adapter:
+    response = adapter.system_one(
+        state="Synthetic support ticket",
+        questions={"billing": Noul(instructions="Is this about billing?")},
+        metadata=RequestMetadata(headers={"example-route": "review"}),
+    )
+    print(response.answers["billing"])
+```
+
+Both trailing-slash forms of this base URL send to
+`/organization/jev/v1/systemone`. URL path prefixes are separate from header
+names and header values. Supply complete field names and values; no prefix
+expansion occurs. Names compare case-insensitively. Per-call metadata replaces
+matching defaults. Duplicates within one mapping are rejected. Configuration
+and per-call maps are copied; later changes to the caller's dictionaries do not
+affect requests. Each logical call snapshots merged fields once for every retry.
+Concurrent calls do not change client-wide headers.
+
+Names follow [HTTP token syntax](https://www.rfc-editor.org/rfc/rfc9110.html#section-5.6.2).
+Values accept printable ASCII, including empty strings, without leading or
+trailing spaces. Controls, tabs, DEL and non-ASCII fail with `ValueError` before
+transmission. Local metadata limits are 32 fields, 128 bytes per name, 2048 bytes
+per value and 8192 total name/value bytes after merging. These limits are
+judgevet policy, not published vendor limits.
+
+Metadata cannot set the selected authentication header, `Authorization`,
+`Proxy-Authorization`, `Host`, `Content-Type`, `Content-Length`,
+`Content-Encoding`, `Transfer-Encoding`, `Connection`, `Keep-Alive`, `TE`,
+`Trailer`, `Upgrade`, `Expect`, `Cookie` or `Set-Cookie`. Authentication can use
+`Authorization` or a custom token name, but cannot reuse another protected name
+or `traceparent`, `tracestate` or `baggage`.
+
+`request_id_header` forwards only the dedicated [scoped request ID](events.md#caller-correlation).
+Without a binding it sends no field. It cannot use a protected or trace field,
+and collision with explicit metadata raises `ValueError`. Arbitrary logging
+context remains local. Explicit `traceparent`, `tracestate` and `baggage` values
+are opaque caller text. Callers own their format and disclosure choices under
+[W3C Trace Context](https://www.w3.org/TR/trace-context/) and
+[W3C Baggage](https://www.w3.org/TR/baggage/). The client does not create spans,
+extract context or claim tracing conformance.
+
+CLI, policy CLI and MCP consume the gateway environment settings listed above.
+For example, set `JEV_API__AUTH_HEADER=x-apikey` and `JEV_API__AUTH_SCHEME` to an
+empty string. Supply `JEV_API__HEADERS` as a JSON string map. `$NAME` and
+`!command` metadata values remain literal. Only existing credential sources
+resolve files or commands. MCP configuration belongs to the host environment;
+its tool schemas do not accept headers or authentication overrides.
+
+Credentials and metadata reach the configured base URL on each attempt. Choosing
+another base URL changes their recipient. Redirects remain disabled, including
+same-origin redirects. A plain HTTP proxy can inspect fields. HTTPS CONNECT
+exposes the destination, and a TLS-terminating intermediary can inspect content.
+TLS verification defaults remain unchanged. Header values are omitted from
+configuration repr, validation messages and built-in events; arbitrary caller
+tracebacks remain outside that guarantee. Metadata is not a secret vault.
+
+Gateway-owned errors use the existing [status-based error mapping](errors.md).
+A gateway 429 remains retryable without TypeSafe JSON. Unknown JSON, HTML and
+text error bodies are omitted from messages; recognized TypeSafe detail parsing
+remains unchanged. Local loopback tests prove these client properties. They do
+not verify a deployed gateway or unseen TypeSafe error bodies.

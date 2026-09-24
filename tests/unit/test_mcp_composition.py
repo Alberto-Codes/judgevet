@@ -7,7 +7,7 @@ from io import StringIO
 import anyio
 import pytest
 
-from judgevet import NetworkConfig, RetryPolicy
+from judgevet import GatewayConfig, NetworkConfig, RetryPolicy
 from judgevet.adapters.inbound import mcp_entrypoint as entry
 from judgevet.adapters.inbound.settings import Settings
 from tests.unit.test_mcp_entrypoint import RecordingPort
@@ -73,7 +73,7 @@ def test_settings_once_and_constructor_propagation(
     monkeypatch.setenv("JEV_API__TIMEOUT_SECONDS", "7.5")
     settings_calls: list[Settings] = []
     constructor_calls: list[
-        tuple[str | None, str, str, float, RetryPolicy, NetworkConfig]
+        tuple[str | None, str, str, float, RetryPolicy, NetworkConfig, GatewayConfig]
     ] = []
     seen: list[RecordingPort] = []
     port = RecordingPort()
@@ -90,9 +90,10 @@ def test_settings_once_and_constructor_propagation(
         timeout_seconds: float,
         retry: RetryPolicy,
         network: NetworkConfig,
+        gateway: GatewayConfig,
     ) -> RecordingPort:
         constructor_calls.append(
-            (api_key, base_url, default_model, timeout_seconds, retry, network)
+            (api_key, base_url, default_model, timeout_seconds, retry, network, gateway)
         )
         return port
 
@@ -112,6 +113,7 @@ def test_settings_once_and_constructor_propagation(
             7.5,
             RetryPolicy(),
             NetworkConfig(),
+            GatewayConfig(),
         )
     ]
     assert seen == [port]
@@ -138,6 +140,7 @@ def test_real_eof(monkeypatch: pytest.MonkeyPatch) -> None:
         timeout_seconds: float,
         retry: RetryPolicy,
         network: NetworkConfig,
+        gateway: GatewayConfig,
     ) -> RecordingPort:
         return port
 

@@ -385,7 +385,8 @@ def main(
     Reads Settings and configures stderr logging. An explicit --api-key overrides
     the selected credential source. Resolves it once as a wrapped key.
     Constructs HTTPSystemOneAdapter once with the settings
-    timeout, network options and retry limits, then calls run_cli with it as the port.
+    timeout, gateway fields, network options and retry limits, then calls run_cli.
+    Configuration failures produce a generic handled diagnostic.
     Closes the adapter in finally.
     The command wrapper supplies separate help and propagates failure status.
 
@@ -399,28 +400,26 @@ def main(
     Returns:
         Exit code: 0 for success, 1 for error.
     """
-    settings = Settings()
-    configure(settings.log)
-    timeout_seconds = settings.api.timeout_seconds
-    base_url = settings.api.base_url
     try:
+        settings = Settings()
+        configure(settings.log)
         key = settings.api.resolve_key(api_key)
+        adapter = HTTPSystemOneAdapter(
+            api_key=key.get_secret_value() if key is not None else None,
+            base_url=settings.api.base_url,
+            default_model=model,
+            timeout_seconds=settings.api.timeout_seconds,
+            retry=settings.api.retry_policy,
+            network=settings.api.network_config,
+            gateway=settings.api.gateway_config,
+        )
     except ValueError:
-        message = "API key source failed"
+        message = "Invalid API configuration or credential source"
         print(
             json.dumps({"error": message}) if json_output else f"Error: {message}",
             file=sys.stderr,
         )
         return 1
-
-    adapter = HTTPSystemOneAdapter(
-        api_key=key.get_secret_value() if key is not None else None,
-        base_url=base_url,
-        default_model=model,
-        timeout_seconds=timeout_seconds,
-        retry=settings.api.retry_policy,
-        network=settings.api.network_config,
-    )
 
     try:
         return run_cli(

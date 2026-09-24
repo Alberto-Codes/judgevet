@@ -46,7 +46,7 @@ __all__ = ["main"]
 
 
 def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
-    """Resolve one wrapped credential and build the configured HTTP adapter.
+    """Resolve one wrapped credential and apply host-selected gateway configuration.
 
     Args:
         settings: The Settings instance.
@@ -65,6 +65,7 @@ def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
         timeout_seconds=settings.api.timeout_seconds,
         retry=settings.api.retry_policy,
         network=settings.api.network_config,
+        gateway=settings.api.gateway_config,
     )
 
 

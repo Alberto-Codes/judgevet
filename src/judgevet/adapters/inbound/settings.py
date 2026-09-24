@@ -1,4 +1,4 @@
-"""Configure credential sources, connection options and logging without IO.
+"""Configure credentials, gateway metadata, network options and logging without IO.
 
 ``Settings`` nests ``ApiSettings`` and ``LogSettings`` under ``api`` and
 ``log`` respectively. pydantic-settings splits the environment on ``__``, so
@@ -48,6 +48,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from judgevet.adapters.inbound.credentials import resolve_key
 from judgevet.adapters.inbound.logs import LogSettings as LogsLogSettings
+from judgevet.adapters.outbound.gateway import GatewayConfig
 from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
 
@@ -78,6 +79,11 @@ class ApiSettings(BaseSettings):
         proxy (SecretStr | None): Explicit proxy URL; masks optional credentials.
         ca_bundle (str | None): Explicit PEM trust bundle path.
         verify (bool): Enable certificate and hostname verification.
+        auth_header (str): Credential header name.
+        auth_scheme (str): Credential prefix; empty sends a bare key.
+        headers (dict): Explicit gateway metadata, omitted from repr.
+        request_id_header (str | None): Opt-in field for scoped correlation.
+        gateway_config (GatewayConfig): Validated gateway options.
         network_config (NetworkConfig): Network configuration for the adapter.
         timeout_seconds (float): Read timeout in seconds. Defaults to 30.0.
             Can be set via ``JEV_API__TIMEOUT_SECONDS`` environment variable.
@@ -92,7 +98,9 @@ class ApiSettings(BaseSettings):
         - [judgevet.adapters.inbound.settings.Settings][]: Nests this model.
     """
 
-    model_config = SettingsConfigDict(extra="ignore", frozen=True)
+    model_config = SettingsConfigDict(
+        extra="ignore", frozen=True, hide_input_in_errors=True
+    )
 
     base_url: str = Field(
         default=DEFAULT_BASE_URL,
@@ -186,6 +194,28 @@ class ApiSettings(BaseSettings):
             verify=self.verify,
         )
 
+    auth_header: str = "Authorization"
+    auth_scheme: str = "Bearer"
+    headers: dict[str, str] = Field(default_factory=dict, repr=False)
+    request_id_header: str | None = None
+
+    @property
+    def gateway_config(self) -> GatewayConfig:
+        """Validate explicit gateway settings without expanding metadata values.
+
+        Returns:
+            Immutable configuration consumed by each composition root.
+
+        Raises:
+            ValueError: If authentication or metadata violates header rules.
+        """
+        return GatewayConfig(
+            auth_header=self.auth_header,
+            auth_scheme=self.auth_scheme,
+            headers=self.headers,
+            request_id_header=self.request_id_header,
+        )
+
     max_attempts: int = Field(default=1, ge=1)
 
     @field_validator("max_attempts", mode="before")
@@ -249,7 +279,7 @@ class ApiSettings(BaseSettings):
 
 
 class Settings(BaseSettings):
-    """Every setting this client reads, nested per adapter.
+    """Nest connection and logging settings with input-free validation diagnostics.
 
     Attributes:
         api (ApiSettings): Base URL, key, default model and timeout for the Jev API.
@@ -271,6 +301,7 @@ class Settings(BaseSettings):
         env_nested_delimiter="__",
         extra="ignore",
         frozen=True,
+        hide_input_in_errors=True,
     )
 
     api: ApiSettings = Field(default_factory=ApiSettings)

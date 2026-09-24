@@ -40,6 +40,8 @@ EXPECTED_EXPORTS = {
     "Choice",
     "HTTPSystemOneAdapter",
     "NetworkConfig",
+    "GatewayConfig",
+    "RequestMetadata",
     "Noul",
     "Score",
     "__version__",

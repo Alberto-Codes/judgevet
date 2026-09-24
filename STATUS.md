@@ -145,8 +145,8 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1309 tests pass, 6 live tests deselected.** The last measured coverage is
-**94.75%** (1695/1789 statements).
+**1478 tests pass, 6 live tests deselected.** The last measured coverage is
+**94.97%** (1792/1887 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
@@ -169,8 +169,26 @@ checks remain separate; Pages deployment is tracked below.
 It compares HTTP and W3C standards with Apigee, Kong and Azure documentation.
 The contract selects explicit authentication and metadata configuration,
 bounded header validation, opt-in correlation and loopback acceptance tests.
-Implementation remains #63. No gateway deployment or new service behavior
-was verified. Test count and coverage remain unchanged in this research round.
+The implementation below completes #63. No gateway deployment or new service
+behavior was verified.
+
+#63 adds root-exported `GatewayConfig` and `RequestMetadata`. Sync and async
+adapters accept explicit authentication, immutable metadata defaults and per-call
+overrides. CLI, policy CLI and MCP consume the same gateway settings. Direct
+TypeSafe defaults remain unchanged. Scoped request IDs leave the process only
+when a correlation header is configured; arbitrary logging context stays local.
+
+The 169 gateway acceptance cases observe actual prefixed loopback requests,
+protected fields, case-insensitive precedence, size bounds, retry snapshots,
+concurrent calls, gateway-owned errors and disabled redirects. Independent
+mutations break each selected property and all three composition paths; the
+restored source passes. The exact gateway documentation program executes and
+type-checks against an isolated wheel. Full commit and push gates pass, including
+all-file docvet, isolated examples, strict docs and coverage. This is synthetic
+client evidence, not gateway certification or new live-service verification.
+[Specification, failures and proofs](https://github.com/Alberto-Codes/judgevet/issues/63)
+remain on the issue. Redaction and the supporting release gates remain #53,
+#35 and #48 under #157.
 
 #33 adds opt-in bounded retries through the root-exported `RetryPolicy`.
 The default remains one attempt. Sync and async adapters share classification,

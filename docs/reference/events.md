@@ -96,8 +96,9 @@ Unrelated threads do not receive automatic propagation. These semantics follow
 [Python context variables](https://docs.python.org/3/library/contextvars.html).
 
 Correlation does not configure logging, generate an identifier, alter port
-signatures or add HTTP headers. The CLI has no request-ID flag, and MCP tool
-schemas have no request-ID field. Gateway header propagation remains separate.
+signatures. It stays out of HTTP headers by default. The CLI has no request-ID flag, and MCP tool
+schemas have no request-ID field. Explicit `GatewayConfig(request_id_header=...)` opts into header propagation;
+see [gateway configuration](configuration.md#gateway-authentication-and-metadata).
 Do not use arbitrary structlog context fields to supply this dedicated binding.
 See [structlog context behavior](https://www.structlog.org/en/stable/contextvars.html)
 for application-owned logging context.
