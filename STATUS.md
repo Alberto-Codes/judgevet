@@ -406,7 +406,7 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**1938 tests pass, 6 live tests deselected.** The last measured coverage is
+**1947 tests pass, 6 live tests deselected.** The last measured coverage is
 **95.81%** (1850/1931 statements).
 Local commit and push gates pass for #170. The issue holds delivery evidence.
 The documentation rounds retain the existing local gates: suppressions,
@@ -414,7 +414,10 @@ dependencies, test hygiene, Ruff lint/format, ty, import contracts, file size
 (300/320 code lines), docvet (diff/all), pytest and pytest with coverage.
 Hooks remain enabled. The file-size gate `scripts/check_loc.py` is new at
 commit and in CI; all 43 modules under `src` measure at or under 300 code
-lines.
+lines. Slice A of #8 adds nine boundary tests for the module cap and a
+report-only function counter: the gate prints every function over 50 code
+lines and still exits 0. No function under `src` is over 50; enforcement is
+slice B.
 `[tool.ty.src] include` pins ty to `src`, `tests` and `scripts` (#49). A
 probe file with one type error in each root yields 3 diagnostics.
 Ordinary tests exclude live service calls. The coverage floor is 90%.

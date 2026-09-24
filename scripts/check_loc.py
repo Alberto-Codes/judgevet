@@ -5,12 +5,28 @@ comments and docstrings — so docvet-mandated documentation never pushes a
 file over the limit. Soft limit 300 (warn), hard limit 320 (fail):
 anything larger gets decomposed, not excused.
 
+Functions are measured the same way, over the body only: decorators and
+the signature do not count, and a nested function counts toward its
+parent. A function past 50 code lines is reported but does not fail the
+gate yet.
+
 Examples:
     Run against the source tree:
 
     ```console
     $ uv run python scripts/check_loc.py src
     checked 14 files
+    ```
+
+    Count the body lines of every function in one file:
+
+    ```python
+    from pathlib import Path
+
+    from scripts.check_loc import count_function_lines
+
+    for qualname, lines in count_function_lines(Path("scripts/check_loc.py")):
+        print(qualname, lines)
     ```
 
 See Also:
@@ -27,6 +43,7 @@ from pathlib import Path
 
 SOFT_LIMIT = 300
 HARD_LIMIT = 320
+FUNCTION_LIMIT = 50
 
 _SKIP_TOKENS = frozenset(
     {
@@ -69,6 +86,27 @@ def _docstring_lines(tree: ast.Module) -> set[int]:
     return lines
 
 
+def _code_lines(text: str) -> set[int]:
+    """Collect the line numbers that carry code.
+
+    A line carries code when it holds at least one token that is not a
+    comment, and it is not part of a docstring.
+
+    Args:
+        text: Python source text.
+
+    Returns:
+        All 1-based code line numbers.
+    """
+    doc_lines = _docstring_lines(ast.parse(text))
+    token_lines: set[int] = set()
+    for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+        if tok.type in _SKIP_TOKENS:
+            continue
+        token_lines.update(range(tok.start[0], tok.end[0] + 1))
+    return token_lines - doc_lines
+
+
 def count_code_lines(path: Path) -> int:
     """Count lines of actual code in a Python file.
 
@@ -81,18 +119,63 @@ def count_code_lines(path: Path) -> int:
     Returns:
         The number of code lines.
     """
+    return len(_code_lines(path.read_text(encoding="utf-8")))
+
+
+def count_function_lines(path: Path) -> list[tuple[str, int]]:
+    """Count the body code lines of every function and method in a file.
+
+    A body spans its first statement to the function's last line, so
+    decorators and the signature are excluded. Docstring, comment and
+    blank lines do not count. A nested function is listed on its own and
+    also counts toward its parent.
+
+    Args:
+        path: The Python file to measure.
+
+    Returns:
+        ``(qualname, code lines)`` pairs in source order, where the
+        qualname joins enclosing class and function names with dots.
+    """
     text = path.read_text(encoding="utf-8")
-    doc_lines = _docstring_lines(ast.parse(text))
-    token_lines: set[int] = set()
-    for tok in tokenize.generate_tokens(io.StringIO(text).readline):
-        if tok.type in _SKIP_TOKENS:
-            continue
-        token_lines.update(range(tok.start[0], tok.end[0] + 1))
-    return len(token_lines - doc_lines)
+    code = _code_lines(text)
+    results: list[tuple[str, int]] = []
+    stack: list[tuple[ast.AST, str]] = [(ast.parse(text), "")]
+    while stack:
+        node, prefix = stack.pop()
+        children = list(ast.iter_child_nodes(node))
+        for child in reversed(children):
+            name = getattr(child, "name", "")
+            qualname = f"{prefix}{name}" if name else prefix.rstrip(".")
+            stack.append((child, f"{qualname}." if qualname else ""))
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            end = node.end_lineno or node.body[-1].lineno
+            span = range(node.body[0].lineno, end + 1)
+            results.append((prefix.rstrip("."), len(code.intersection(span))))
+    return results
+
+
+def _report_functions(path: Path) -> None:
+    """Print every function in `path` past the function limit.
+
+    Report only: the function cap is not enforced yet.
+
+    Args:
+        path: The Python file to measure.
+    """
+    for qualname, n in count_function_lines(path):
+        if n > FUNCTION_LIMIT:
+            print(
+                f"LONG {path}:{qualname}: {n} code lines "
+                f"(function limit {FUNCTION_LIMIT}, report only)"
+            )
 
 
 def main(roots: list[str]) -> int:
     """Check every Python file under the given roots.
+
+    Prints each function past the function limit as a ``LONG`` line. The
+    function report never changes the exit code.
 
     Args:
         roots: Directories to scan (defaults to ``src`` when empty).
@@ -113,6 +196,7 @@ def main(roots: list[str]) -> int:
         for path in paths:
             checked += 1
             n = count_code_lines(path)
+            _report_functions(path)
             if n > HARD_LIMIT:
                 print(f"FAIL {path}: {n} code lines (hard limit {HARD_LIMIT})")
                 failures += 1
