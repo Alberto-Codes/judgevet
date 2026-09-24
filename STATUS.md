@@ -46,6 +46,26 @@ retains its gateway/redaction and exact-documentation checks.
 The [0.8.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/155)
 retains its container exercise; it did not exercise this release.
 
+## Onboarding release in progress
+
+[#165](https://github.com/Alberto-Codes/judgevet/issues/165) includes the host
+survey, setup recipes, host checks, contributor setup, contribution policy
+and issue templates. The
+[#162 survey](https://github.com/Alberto-Codes/judgevet/issues/162#issuecomment-5806538121)
+records current primary sources, host schemas, credential mechanisms,
+installation alternatives and source disagreements. It is research, not
+host integration evidence. Pi uses the existing CLI route, explicitly outside
+MCP. No release version has been selected.
+
+The [user-approved revision](https://github.com/Alberto-Codes/judgevet/issues/162#issuecomment-5806551798)
+accepts cited documentation and mechanical checks for unavailable hosts.
+Those routes must remain labeled not host-tested. Available hosts still need
+actual host checks. Desktop uses documented manual setup for this release.
+The Desktop bundle is deferred to [#166](https://github.com/Alberto-Codes/judgevet/issues/166).
+Checks on another machine, including Windows or a suitable Linux environment,
+are tracked in [#167](https://github.com/Alberto-Codes/judgevet/issues/167).
+Neither follow-up is a release requirement. No new live claim is verified.
+
 ## Documentation program
 
 [#145](https://github.com/Alberto-Codes/judgevet/issues/145) is complete.
