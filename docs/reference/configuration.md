@@ -18,6 +18,7 @@ arguments. Neither reads judgevet environment settings or installs logging.
 | `base_url` | `None` | Uses `https://api.typesafe.ai` when omitted or empty. |
 | `default_model` | `"jev-latest"` | Used when `system_one` receives no model or an empty model string. |
 | `gateway` | `None` | Optional `GatewayConfig`; omission retains direct authentication and no metadata. |
+| `redactor` | `None` | Optional synchronous `StateRedactor`; transforms a private state copy before transmission. |
 | `network` | `None` | Optional `NetworkConfig`; omission retains HTTPX proxy and TLS defaults. |
 | `retry` | `None` | Optional `RetryPolicy`; omission preserves one attempt. |
 | `transport` | `None` | Optional HTTPX transport; use the sync or async transport type appropriate to the adapter. |
@@ -329,3 +330,76 @@ A gateway 429 remains retryable without TypeSafe JSON. Unknown JSON, HTML and
 text error bodies are omitted from messages; recognized TypeSafe detail parsing
 remains unchanged. Local loopback tests prove these client properties. They do
 not verify a deployed gateway or unseen TypeSafe error bodies.
+
+
+## Caller-owned state redaction
+
+Pass `redactor=` to either HTTP adapter to transform state before transmission.
+Import the structural `StateRedactor` protocol from `judgevet` or
+`judgevet.ports`. It defines one synchronous method,
+`redact(state: str | dict[str, Any] | list[Any]) -> str | dict[str, Any] | list[Any]`.
+The client supplies no detection rules. The caller owns what to remove or retain.
+See the [protocol](../../src/judgevet/ports/__init__.py) and
+[outbound preparation](../../src/judgevet/adapters/outbound/request_body.py).
+
+The following synthetic example replaces all state. It demonstrates the seam,
+not a useful judgment policy or a sensitive-data detector. Replace the callback,
+URL and credential with approved application choices for a real call.
+Documentation checks execute the exact program against an isolated wheel with
+synthetic HTTP responses.
+
+```python
+from typing import Any
+
+from judgevet import GatewayConfig, HTTPSystemOneAdapter, Noul, StateRedactor
+
+
+class ReplaceState:
+    def redact(self, state: str | dict[str, Any] | list[Any]) -> str:
+        return "Caller-approved synthetic summary"
+
+
+redactor: StateRedactor = ReplaceState()
+with HTTPSystemOneAdapter(
+    api_key="dummy-gateway-key",
+    base_url="https://gateway.example/organization/jev",
+    gateway=GatewayConfig(auth_header="x-apikey", auth_scheme=""),
+    redactor=redactor,
+) as adapter:
+    response = adapter.system_one(
+        state={"private_note": "Synthetic original content"},
+        questions={"billing": Noul(instructions="Is this about billing?")},
+    )
+    print(response.answers["billing"])
+```
+
+The adapter deep-copies ordinary JSON state before invoking the callback.
+Mutating that copy does not change caller-owned nested lists or dictionaries,
+including when the callback raises. The callback receives no questions, model,
+credentials or headers. Its return value must be a string, dictionary or list
+that can be serialized as finite JSON. Invalid output fails before transmission.
+
+A configured redactor runs once per logical call, immediately before the shared
+outbound serializer. The adapter reuses the same immutable UTF-8 body on every
+retry. Changes to input or retained callback output after preparation cannot
+rewrite later attempts. Separate calls invoke the callback again. Copy failures,
+callback exceptions and serialization failures propagate before retry handling,
+with no request and no fallback to original state. Callback exceptions may carry
+sensitive content; arbitrary application tracebacks are not scrubbed.
+
+The same synchronous method runs in async adapters. Keep it fast and nonblocking;
+async callbacks are not supported. Applications own synchronization for stateful
+callbacks shared across concurrent calls. Do not mutate inputs concurrently
+with preparation. A callback that changes external references or performs IO
+remains caller-owned code; copying is not a sandbox.
+
+Omitting `redactor`, or passing `None`, preserves the existing state and HTTPX
+serialization path without copying. Gateway authentication, metadata and
+correlation remain independent. State redaction does not redact question text
+or header values. The [egress contract](../../SECURITY.md#data-sent-to-the-service)
+lists each transmitted channel and its limits.
+
+CLI and MCP command entry points retain the default. There is no environment
+setting, command option or MCP tool argument that loads Python redactor code.
+An application can construct a redaction-enabled HTTP adapter and pass it to
+`run_cli` or `create_mcp_server` through the existing judgment port.

@@ -60,6 +60,7 @@ Attributes:
     Usage (type): Token usage metadata.
     RetryPolicy (type): Immutable opt-in retry limits.
     GatewayConfig (type): Explicit gateway authentication and metadata.
+    StateRedactor (type): Caller-owned state transformation before transmission.
     RequestMetadata (type): Immutable per-call HTTP metadata.
     NetworkConfig (type): Explicit proxy and certificate verification options.
     JevError (type): Base Jev exception.
@@ -107,7 +108,7 @@ from judgevet.domain.errors import (
 from judgevet.domain.questions import Choice, Noul, Question, Score
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
-from judgevet.ports import AsyncSystemOnePort, SystemOnePort
+from judgevet.ports import AsyncSystemOnePort, StateRedactor, SystemOnePort
 
 __version__ = "0.8.0"  # x-release-please-version
 
@@ -133,6 +134,7 @@ __all__ = [
     "RetryPolicy",
     "Score",
     "ScoreAnswer",
+    "StateRedactor",
     "SystemOnePort",
     "SystemOneResponse",
     "Usage",

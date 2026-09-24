@@ -145,8 +145,8 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1478 tests pass, 6 live tests deselected.** The last measured coverage is
-**94.97%** (1792/1887 statements).
+**1529 tests pass, 6 live tests deselected.** The last measured coverage is
+**94.98%** (1815/1911 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
@@ -187,8 +187,24 @@ type-checks against an isolated wheel. Full commit and push gates pass, includin
 all-file docvet, isolated examples, strict docs and coverage. This is synthetic
 client evidence, not gateway certification or new live-service verification.
 [Specification, failures and proofs](https://github.com/Alberto-Codes/judgevet/issues/63)
-remain on the issue. Redaction and the supporting release gates remain #53,
-#35 and #48 under #157.
+remain on the issue. Supporting release gates remain #35 and #48 under #157.
+
+#53 adds the root-exported `StateRedactor` protocol and an optional callback on
+both HTTP adapters. The shared preparation helper copies JSON state, invokes
+the callback once and serializes the returned state before retry handling.
+Configured retries reuse immutable bytes. Callback, copy and serialization
+failures cause no request or original-state fallback. The default retains the
+existing JSON path without copying. Questions and gateway metadata stay separate.
+
+Fifty redaction cases and the existing adapter contracts cover nested ownership,
+gateway composition, sync/async parity, invalid output, cancellation, concurrent
+calls and mutation of retained output between attempts. Nine independent
+mutations fail; restoration passes. The exact redaction example executes and
+type-checks against an isolated wheel. SECURITY.md holds the complete egress
+contract and limits. All local commit/push gates pass. No detection library,
+remote retention guarantee or new live-service evidence was added.
+[Contract, red tests and failure proofs](https://github.com/Alberto-Codes/judgevet/issues/53)
+remain on the issue.
 
 #33 adds opt-in bounded retries through the root-exported `RetryPolicy`.
 The default remains one attempt. Sync and async adapters share classification,

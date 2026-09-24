@@ -33,6 +33,7 @@ EXPECTED_EXPORTS = {
     "Question",
     "RetryPolicy",
     "ScoreAnswer",
+    "StateRedactor",
     "SystemOnePort",
     "SystemOneResponse",
     "Usage",
@@ -96,6 +97,7 @@ def test_the_async_adapter_refuses_the_sync_lifecycle() -> None:
 @pytest.mark.parametrize(
     "name,original",
     [
+        ("StateRedactor", ports.StateRedactor),
         ("SystemOnePort", ports.SystemOnePort),
         ("AsyncSystemOnePort", ports.AsyncSystemOnePort),
         ("Question", questions.Question),

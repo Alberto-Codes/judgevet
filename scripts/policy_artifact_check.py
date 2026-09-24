@@ -16,7 +16,7 @@ _EXPORTS = {
     "judgevet.adapters.outbound.network": ("NetworkConfig",),
     "judgevet.adapters.outbound.retries": ("RetryPolicy",),
     "judgevet.diagnostics": ("bind_request_id",),
-    "judgevet.ports": ("SystemOnePort", "AsyncSystemOnePort"),
+    "judgevet.ports": ("SystemOnePort", "AsyncSystemOnePort", "StateRedactor"),
     "judgevet.domain.questions": ("Question", "Noul", "Choice", "Score"),
     "judgevet.domain.answers": ("Answer", "NoulAnswer", "ChoiceAnswer", "ScoreAnswer"),
     "judgevet.domain.response": ("SystemOneResponse",),

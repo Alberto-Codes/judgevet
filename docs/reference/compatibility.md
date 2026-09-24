@@ -18,6 +18,7 @@ The root `__all__` declares these supported names:
 |---|---|
 | Explicit adapters | `HTTPSystemOneAdapter`, `AsyncHTTPSystemOneAdapter` |
 | Network configuration | `NetworkConfig` |
+| State transformation | `StateRedactor` |
 | Gateway configuration | `GatewayConfig`, `RequestMetadata` |
 | Retry configuration | `RetryPolicy` |
 | Scoped diagnostic correlation | `bind_request_id` |

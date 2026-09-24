@@ -44,12 +44,14 @@ Python types. The outbound adapter adds the wire `type` and omits optional
 `HTTPSystemOneAdapter` and `AsyncHTTPSystemOneAdapter` implement the synchronous
 and asynchronous calls respectively. Their constructors accept `api_key`,
 `base_url`, `default_model`, `transport`, `timeout_seconds`, `retry`, `network`
-and `gateway`; see the
+`gateway` and `redactor`; see the
 [defaults and validation table](configuration.md#direct-python-adapters).
 Both send the [documented request](https://api.typesafe.ai/docs) to
 `POST /v1/systemone` with bearer authentication by default. Explicit
 [gateway configuration](configuration.md#gateway-authentication-and-metadata)
-selects alternate authentication, path prefixes and metadata.
+selects alternate authentication, path prefixes and metadata. Optional
+[state redaction](configuration.md#caller-owned-state-redaction) transforms a
+private copy before serialization and reuses the resulting bytes across retries.
 
 | Call argument | Python contract |
 |---|---|

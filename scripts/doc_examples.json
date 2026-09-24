@@ -225,6 +225,11 @@
       "language": "python",
       "kind": "runnable",
       "reason": "Complete synthetic gateway program; execute and type-check exactly against an isolated wheel with offline HTTP fixtures."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete synthetic state-redaction program; execute and type-check exactly against an isolated wheel with offline HTTP fixtures."
     }
   ],
   "docs/reference/errors.md": [

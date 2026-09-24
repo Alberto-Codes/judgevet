@@ -1,4 +1,4 @@
-"""Port protocols that the domain calls out through.
+"""Ports for judgment calls and caller-owned state transformation.
 
 Examples:
     ```python
@@ -21,6 +21,7 @@ See Also:
 Attributes:
     AsyncSystemOnePort (Protocol): Async structural protocol for calling the Jev System One API.
     SystemOnePort (Protocol): Structural protocol for calling the Jev System One API.
+    StateRedactor (Protocol): Synchronous state transformation before HTTP serialization.
 """
 
 from __future__ import annotations
@@ -139,5 +140,50 @@ class AsyncSystemOnePort(Protocol):
                 model="jev-latest",
             )
             ```
+        """
+        ...
+
+
+class StateRedactor(Protocol):
+    """Transform caller-owned state through a synchronous structural callback.
+
+    The HTTP adapters pass a deep copy of JSON state and serialize the returned
+    state once per logical call. The same callback runs in sync and async clients.
+    Applications own detection rules, callback IO and concurrency safety.
+
+    Attributes:
+        redact (method): Transform copied state before serialization.
+
+    Examples:
+        ```python
+        from typing import Any
+
+
+        class ReplaceState:
+            def redact(self, state: str | dict[str, Any] | list[Any]) -> str:
+                return "caller-selected replacement"
+
+
+        redactor: StateRedactor = ReplaceState()
+        assert redactor.redact("synthetic") == "caller-selected replacement"
+        ```
+
+    See Also:
+        - [judgevet.adapters.outbound.request_body][]: Copy and serialization boundary.
+    """
+
+    def redact(
+        self, state: str | dict[str, Any] | list[Any]
+    ) -> str | dict[str, Any] | list[Any]:
+        """Return replacement state without receiving questions or transport metadata.
+
+        Args:
+            state: A private copy of the logical call's text, dictionary or list.
+
+        Returns:
+            A JSON-serializable string, dictionary or list chosen by the caller.
+
+        Raises:
+            Exception: Caller-defined failures propagate before any transmission.
         """
         ...
