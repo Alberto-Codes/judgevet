@@ -86,6 +86,9 @@ For focused diagnosis, the core commands are:
 | Suppressions | `uv run python scripts/check_suppressions.py` |
 | Documentation | `uv run mkdocs build --strict` |
 
+`[tool.ty.src] include` in `pyproject.toml` pins ty's checked roots to `src`,
+`tests` and `scripts`.
+
 The stage commands also check lock consistency, YAML, workflows, dependency
 constraints, test hygiene, registry metadata, release configuration, example
 inventory, prose and terminology. Focused checks do not replace full stages.

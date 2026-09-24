@@ -186,6 +186,10 @@ source = ["judgevet"]
 fail_under = 90
 show_missing = true
 
+# ty src include: https://docs.astral.sh/ty/reference/configuration
+[tool.ty.src]
+include = ["src", "tests", "scripts"]
+
 # --------------------------------------------------------------------------- #
 # import-linter — the hex map. Inbound drives, outbound implements ports,
 # domain stays pure.
