@@ -1,0 +1,47 @@
+---
+name: Bounded task
+description: Define one deliverable, its exclusions and a reproducible proof.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read the [contribution policy][policy] and [contributor setup][setup].
+        Use the setup-problem form for installation or host connection failures.
+        Keep secrets and private inputs out of this public issue.
+        Report vulnerabilities [privately][security].
+
+        [policy]:
+          https://github.com/Alberto-Codes/judgevet/blob/main/CONTRIBUTING.md
+        [setup]:
+          https://alberto-codes.github.io/judgevet/maintainers/contributor-setup/
+        [security]:
+          https://github.com/Alberto-Codes/judgevet/security/advisories/new
+  - type: textarea
+    id: do
+    attributes:
+      label: Do
+      description: State the problem and one concrete deliverable.
+      placeholder: Describe the behavior or artifact this task should produce.
+    validations:
+      required: true
+  - type: textarea
+    id: do-not
+    attributes:
+      label: Do not
+      description: Name excluded work and contracts that must remain intact.
+      placeholder: List boundaries, unrelated features and compatibility limits.
+    validations:
+      required: true
+  - type: textarea
+    id: prove
+    attributes:
+      label: Prove
+      description: >-
+        Give a reproducible command or check and its expected result.
+        For behavioral work, include the failing baseline and a regression test.
+        State how an independent failure proof will challenge the result.
+      placeholder: >-
+        From these prerequisites, run this command. It currently fails with
+        this output. Completion requires this exit status or observable result.
+    validations:
+      required: true

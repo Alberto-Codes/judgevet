@@ -147,6 +147,23 @@ A modified copy with broken setup links produced two missing-target findings;
 the original passed again. Full push gates measured 1600 passed, 6 live
 deselected and 95.33% coverage. No runtime or service-verification claim changed.
 
+### Issue intake
+
+[#36](https://github.com/Alberto-Codes/judgevet/issues/36#issuecomment-5807514716)
+adds required Do / Do not / Prove task fields and a separate setup-problem form.
+Setup reports capture host/version, environment, installation method, sanitized
+configuration, reproduction, expected and observed behavior, and an acceptance
+check. The chooser disables blank issues and links private security reporting.
+GitHub API creation and later edits can still bypass the form's intake rules.
+
+Fourteen new parsed-YAML acceptance cases pass. Independent mutations make
+configuration optional, enable blank issues or prefill the proof; each causes
+one failure. The original forms pass again. Full local push gates measure
+1614 passed, 6 live deselected and 95.33% coverage (1836/1926 statements).
+Parsed checks do not emulate GitHub's entire form engine or establish the
+truth of a report. Native rendering and exact-commit CI evidence are recorded
+on #36 after publication of the templates. No service claim changed.
+
 ## Documentation program
 
 [#145](https://github.com/Alberto-Codes/judgevet/issues/145) is complete.
@@ -318,7 +335,7 @@ with the final round evidence on [#80](https://github.com/Alberto-Codes/judgevet
 
 ## Gates
 
-**1600 tests pass, 6 live tests deselected.** The last measured coverage is
+**1614 tests pass, 6 live tests deselected.** The last measured coverage is
 **95.33%** (1836/1926 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet

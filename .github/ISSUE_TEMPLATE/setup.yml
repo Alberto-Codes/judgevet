@@ -1,0 +1,107 @@
+---
+name: Setup or host connection problem
+description: Reproduce an installation, credential-loading or host failure.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read the [contribution policy][policy] and [contributor setup][setup].
+        Consumer recipes are in the [host guide][hosts].
+        Share synthetic inputs and sanitized configuration only.
+        Replace keys, tokens, credentials and private content with REDACTED.
+        Keep variable names, command structure and relevant file-path shape.
+        Never paste credential files or an unreviewed environment dump.
+        Report vulnerabilities [privately][security].
+
+        [policy]:
+          https://github.com/Alberto-Codes/judgevet/blob/main/CONTRIBUTING.md
+        [setup]:
+          https://alberto-codes.github.io/judgevet/maintainers/contributor-setup/
+        [hosts]: https://alberto-codes.github.io/judgevet/how-to/connect-mcp/
+        [security]:
+          https://github.com/Alberto-Codes/judgevet/security/advisories/new
+  - type: input
+    id: host
+    attributes:
+      label: Host and exact version
+      description: >-
+        Name VS Code, Cursor, Claude Code, Claude Desktop, Codex, Pi or another
+        host. Specify CLI versus GUI and extension-host versus Agent Host.
+        For library-only problems, say no host.
+      placeholder: Host, version, product surface and extension version if used.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Operating system and tool versions
+      description: >-
+        Include OS/distribution, architecture, Python, uv or pip, and judgevet
+        versions. For ChromeOS, include the Linux container details.
+      placeholder: Record exact versions; mark unavailable tools as not used.
+    validations:
+      required: true
+  - type: textarea
+    id: installation
+    attributes:
+      label: Installation method and exact command
+      description: >-
+        Distinguish persistent pip or uv tool installation from uvx execution.
+        Include the MCP extra, version pin, executable path and package source.
+        For a checkout, include its commit. Remove any embedded credentials.
+      placeholder: Paste the sanitized command and identify the method.
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Sanitized configuration
+      description: >-
+        Include the relevant JSON/TOML and its location. Name the credential
+        mechanism and environment variable, never the value. For CLI or library
+        use, give sanitized arguments. Say none if no configuration was used.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: >-
+        Give minimal commands or host actions from a fresh session, using
+        synthetic inputs. Include trust approval, restart and discovery steps.
+      placeholder: Number the steps and state their prerequisites.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: >-
+        State the observable result and the guide or contract behind it.
+      placeholder: Specify the expected tool, output, exit status or host state.
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior and sanitized diagnostics
+      description: >-
+        Include the actual error, exit status and failing stage. Separate
+        package installation, standalone transport, native discovery and tool
+        calls. Report account or host unavailability without claiming success.
+      placeholder: >-
+        Paste only reviewed diagnostics; redact secrets and private data.
+    validations:
+      required: true
+  - type: textarea
+    id: prove
+    attributes:
+      label: Reproducible acceptance check
+      description: >-
+        Give the command or host action to repeat after a fix and its expected
+        result. Name which stage it proves; transport success alone does not
+        prove native host integration.
+      placeholder: Run this check and require this observable result.
+    validations:
+      required: true
