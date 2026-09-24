@@ -1,3 +1,4 @@
+---
 # Commit stage: the fast gates. Push stage: whole-repo docs and coverage.
 #
 # Every Python tool runs from the project environment through `uv run`. The
@@ -12,6 +13,32 @@ default_stages: [pre-commit]
 repos:
   - repo: local
     hooks:
+      # Run before uv run can synchronize or refresh stale project metadata.
+      - id: uv-lock
+        name: uv lock is current
+        entry: uv lock --check
+        language: system
+        pass_filenames: false
+        files: ^(uv\.lock|pyproject\.toml|uv\.toml)$
+        stages: [pre-commit, pre-push]
+
+  # actionlint is a Go binary; uv.lock cannot pin its upstream toolchain.
+  # CI runs this same hook so both paths use the upstream version below.
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+        stages: [pre-commit, pre-push]
+
+  - repo: local
+    hooks:
+      - id: yamllint
+        name: YAML syntax and style
+        entry: uv run yamllint --strict
+        language: system
+        types: [yaml]
+        stages: [pre-commit, pre-push]
+
       - id: check-suppressions
         name: no gate suppressions
         entry: uv run python scripts/check_suppressions.py
@@ -31,7 +58,6 @@ repos:
         entry: uv run python scripts/check_test_hygiene.py
         language: system
         pass_filenames: false
-        always_run: true
         always_run: true
 
       - id: ruff-check
@@ -154,7 +180,7 @@ repos:
         always_run: true
         stages: [pre-push]
 
-      # Commit message gate: verify every message follows Conventional Commits 1.0.0
+      # Verify commit messages follow Conventional Commits 1.0.0.
       - id: commit-msg-check
         name: commit-msg check
         entry: uv run python scripts/check_commit_msg.py

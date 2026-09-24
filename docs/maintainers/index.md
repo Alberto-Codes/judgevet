@@ -40,3 +40,20 @@ The [audit-command preview](https://docs.astral.sh/uv/concepts/preview/)
 is experimental. Recheck supported flags and failure behavior when upgrading
 uv. Commit-stage checks do not contact the audit service; the network audit
 runs at push and in its own CI job.
+
+## Check configuration and workflows
+
+The first commit and push hook runs `uv lock --check` when project or lockfile
+metadata changes. It reports stale metadata before another hook can refresh it.
+CI retains the same check before dependency synchronization.
+
+The YAML hook runs strict yamllint with its default rules on all tracked YAML
+files. It checks hidden configuration and workflows, including duplicate keys.
+The workflow hook runs upstream actionlint v1.7.12. This Go tool has a separate
+upstream pin because the Python lockfile cannot install it.
+
+Run `uv run pre-commit run yamllint --all-files` and
+`uv run pre-commit run actionlint --all-files` to check the complete tracked scope.
+CI runs these same commands. See the [yamllint documentation](https://yamllint.readthedocs.io/en/stable/)
+and [actionlint hook instructions](https://github.com/rhysd/actionlint/blob/v1.7.12/docs/usage.md#pre-commit).
+These checks validate configuration; they do not exercise deployed workflows.

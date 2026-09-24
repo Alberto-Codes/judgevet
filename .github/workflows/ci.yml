@@ -1,6 +1,7 @@
+---
 name: CI
 
-on:
+"on":
   pull_request:
     branches: [main]
   push:
@@ -38,6 +39,8 @@ jobs:
       - run: uv python install 3.12
       - run: uv lock --check
       - run: uv sync --locked --dev
+      - run: uv run pre-commit run yamllint --all-files
+      - run: uv run pre-commit run actionlint --all-files
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run python -m scripts.doc_example_inventory
@@ -47,9 +50,16 @@ jobs:
       - run: uv run mkdocs build --strict
       - run: uv run lint-imports
       - run: uv run python scripts/check_suppressions.py
-      - run: uv run python scripts/check_commit_msg.py --range ${{ github.event.before }}..${{ github.sha }}
-        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
-      - run: uv run python scripts/check_commit_msg.py --range ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+      - run: >-
+          uv run python scripts/check_commit_msg.py
+          --range ${{ github.event.before }}..${{ github.sha }}
+        if: >-
+          github.event_name == 'push' &&
+          github.event.before != '0000000000000000000000000000000000000000'
+      - run: >-
+          uv run python scripts/check_commit_msg.py --range
+          ${{ github.event.pull_request.base.sha }}..${{
+          github.event.pull_request.head.sha }}
         if: github.event_name == 'pull_request'
       - run: uv cache prune --ci
         if: always()

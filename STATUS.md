@@ -145,7 +145,7 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1533 tests pass, 6 live tests deselected.** The last measured coverage is
+**1546 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.98%** (1815/1911 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
@@ -175,6 +175,23 @@ lockfile. All three preserve lockfile bytes. Full commit and push gates pass.
 [Contract, red tests and proofs](https://github.com/Alberto-Codes/judgevet/issues/35)
 remain on the issue. No runtime dependency or service claim changed.
 
+#48 adds commit and push checks for lockfile consistency, YAML and workflows.
+The lockfile hook precedes tools that can synchronize dependencies. CI retains
+its existing lock check and invokes the same YAML and workflow hooks.
+Strict default yamllint covers every tracked YAML file. Upstream actionlint
+v1.7.12 has a separate Go hook pin. The duplicate YAML key is removed;
+formatting changes preserve parsed workflow commands and structure.
+
+Thirteen acceptance cases exercise clean and failing fixtures at both stages
+and verify required CI wiring. Independent repository mutations fail for stale
+metadata, duplicate keys and invalid expressions; restoration passes. Three
+mutations that bypass gates also fail the acceptance tests. Full commit and
+push gates pass. The current public audit covers 87 packages after adding the
+locked development tool and reports no known vulnerabilities or adverse statuses.
+[Contract, red tests and proofs](https://github.com/Alberto-Codes/judgevet/issues/48)
+remain on the issue. Runtime dependencies and live-service claims are unchanged.
+Release publication and installed-artifact verification remain on #157.
+
 ## Deployment-readiness work
 
 #154 records the public-source gateway contract on the
@@ -200,7 +217,7 @@ type-checks against an isolated wheel. Full commit and push gates pass, includin
 all-file docvet, isolated examples, strict docs and coverage. This is synthetic
 client evidence, not gateway certification or new live-service verification.
 [Specification, failures and proofs](https://github.com/Alberto-Codes/judgevet/issues/63)
-remain on the issue. The remaining release gate is #48 under #157.
+remain on the issue. The supporting release gates #35 and #48 are complete under #157.
 
 #53 adds the root-exported `StateRedactor` protocol and an optional callback on
 both HTTP adapters. The shared preparation helper copies JSON state, invokes

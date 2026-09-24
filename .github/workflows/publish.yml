@@ -1,6 +1,7 @@
+---
 name: Publish to PyPI
 
-on:
+"on":
   release:
     types: [published]
 
@@ -82,4 +83,6 @@ jobs:
         run: |
           "$(uv python find 3.12)" -m scripts.smoke_mcp_release --wheel "$WHEEL"
 
-      - run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/
+      - run: >-
+          uv publish --trusted-publishing always
+          --check-url https://pypi.org/simple/
