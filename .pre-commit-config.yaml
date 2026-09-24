@@ -69,6 +69,15 @@ repos:
         pass_filenames: false
         always_run: true
 
+      # Native uv audit is experimental; verify flags when upgrading uv.
+      - id: dependency-audit
+        name: current lockfile dependency audit
+        entry: uv audit --locked --preview-features audit-command
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
       # The whole-repo check guards the branch at push time. The pre-commit
       # stage keeps its fast diff mode: a whole-repo check there would fail
       # commits for debt they did not introduce.

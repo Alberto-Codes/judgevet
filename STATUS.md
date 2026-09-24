@@ -145,7 +145,7 @@ examples were removed; the task guides retain their executable coverage.
 
 ## Gates
 
-**1529 tests pass, 6 live tests deselected.** The last measured coverage is
+**1533 tests pass, 6 live tests deselected.** The last measured coverage is
 **94.98%** (1815/1911 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
@@ -161,6 +161,19 @@ Two further acceptance cases cover project-path assets and anchors while
 preserving missing-target findings. Removing the prefix mapping fails the test.
 Strict building does not prove publication. Example execution and editorial
 checks remain separate; Pages deployment is tracked below.
+
+#35 adds the native uv lockfile audit to pre-push and a required CI job.
+CI pins verified uv 0.11.20 and enables its experimental audit command.
+The public audit reports no known vulnerabilities or adverse project statuses
+across 86 locked packages, including MCP and development dependencies.
+This result is time-bound public advisory evidence, not a security guarantee.
+
+Four execution cases verify the actual configured commands and failure status.
+Four independent configuration mutations fail; restoration passes. Real uv
+rejects a synthetic OSV advisory, an audit-service error and a stale copied
+lockfile. All three preserve lockfile bytes. Full commit and push gates pass.
+[Contract, red tests and proofs](https://github.com/Alberto-Codes/judgevet/issues/35)
+remain on the issue. No runtime dependency or service claim changed.
 
 ## Deployment-readiness work
 
@@ -187,7 +200,7 @@ type-checks against an isolated wheel. Full commit and push gates pass, includin
 all-file docvet, isolated examples, strict docs and coverage. This is synthetic
 client evidence, not gateway certification or new live-service verification.
 [Specification, failures and proofs](https://github.com/Alberto-Codes/judgevet/issues/63)
-remain on the issue. Supporting release gates remain #35 and #48 under #157.
+remain on the issue. The remaining release gate is #48 under #157.
 
 #53 adds the root-exported `StateRedactor` protocol and an optional callback on
 both HTTP adapters. The shared preparation helper copies JSON state, invokes
