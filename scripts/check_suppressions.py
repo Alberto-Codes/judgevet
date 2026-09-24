@@ -38,15 +38,14 @@ SUPPRESSION = re.compile(
 
 # Deliberate `per-file-ignores` codes in pyproject.toml. Raise this only with
 # a reason in the commit message.
-# Current budget: 18 codes
+# Current budget: 15 codes
 # - 7 in tests/**/*.py (S101, D100, D101, D102, D103, D104, PLR2004)
 # - 1 in conftest.py (PLC0415 - import inside function; E402 would fire at module level)
-# - 3 in mcp.py (PLC0415, C901, PLR0915)
 # - 1 in test_secret_guard.py (S603 - subprocess call required for end-to-end proof)
 # - 4 in scripts/smoke_release_child.py (S102, BLE001, S603, PLC0415)
 # - 1 in scripts/check_commit_msg.py (S603 - git is invoked by absolute path with a list argv)
 # - 1 in scripts/smoke_release.py (S603 - uv and python by absolute path, list argv)
-ALLOWED_PER_FILE_IGNORE_CODES = 18
+ALLOWED_PER_FILE_IGNORE_CODES = 15
 
 
 def _scan_with_tokenize(file: Path) -> list[tuple[int, str]]:

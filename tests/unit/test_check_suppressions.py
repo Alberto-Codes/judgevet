@@ -100,24 +100,21 @@ class TestCountPerFileIgnores:
     def test_current_pyproject_toml_budget(self) -> None:
         """The actual pyproject.toml has the expected budget."""
         total, per_pattern = count_per_file_ignores(Path("pyproject.toml"))
-        # Current budget: 18 codes
+        # Current budget: 15 codes
         # - 7 in tests/**/*.py (S101, D100, D101, D102, D103, D104, PLR2004)
         # - 1 in conftest.py (PLC0415 - import inside function; module level trips E402)
-        # - 3 in mcp.py (PLC0415, C901, PLR0915)
         # - 1 in test_secret_guard.py (S603 - subprocess for the end-to-end proof)
         # - 4 in smoke_release_child.py (S102 exec, BLE001 arbitrary example
         #   failures, S603 subprocess, PLC0415 lazy import so --selftest runs
         #   where judgevet is NOT installed)
         # - 1 in check_commit_msg.py (S603 - git is invoked by absolute path with a list argv)
         # - 1 in smoke_release.py (S603 - uv and python by absolute path, list argv)
-        assert total == 18
-        assert len(per_pattern) == 7
+        assert total == 15
+        assert len(per_pattern) == 6
         # tests/**/*.py has 7 codes
         assert len(per_pattern["tests/**/*.py"]) == 7
         # conftest.py has 1 code
         assert len(per_pattern["tests/conftest.py"]) == 1
-        # mcp.py has 3 codes
-        assert len(per_pattern["src/judgevet/adapters/inbound/mcp.py"]) == 3
         # test_secret_guard.py has 1 code (S105 and PLW1510 were avoidable)
         assert len(per_pattern["tests/unit/test_secret_guard.py"]) == 1
         # smoke_release_child.py has 4 codes

@@ -1,0 +1,192 @@
+{
+  "tools": {
+    "_meta": null,
+    "ttlMs": 0,
+    "cacheScope": "private",
+    "nextCursor": null,
+    "tools": [
+      {
+        "name": "ask_noul",
+        "title": null,
+        "description": "Ask a yes/no question with a probability of true. Takes a state (text or JSON) and an instruction, returns the NoulAnswer.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "The content to evaluate. Can be plain text or a JSON object/array."
+            },
+            "instruction": {
+              "type": "string",
+              "description": "The yes/no question or statement to evaluate about the state."
+            }
+          },
+          "required": [
+            "state",
+            "instruction"
+          ]
+        },
+        "execution": null,
+        "outputSchema": null,
+        "icons": null,
+        "annotations": null,
+        "_meta": null
+      },
+      {
+        "name": "ask_choice",
+        "title": null,
+        "description": "Ask a multiple-choice question. Takes a state (text or JSON) and an instruction, returns the ChoiceAnswer with choice name, confidence, and probabilities.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "The content to evaluate. Can be plain text or a JSON object/array."
+            },
+            "instruction": {
+              "type": "string",
+              "description": "The multiple-choice question or statement to evaluate about the state."
+            },
+            "criteria": {
+              "type": "object",
+              "description": "Mapping of choice names to descriptions. If omitted, defaults to {\"yes\": \"Yes\", \"no\": \"No\"}."
+            }
+          },
+          "required": [
+            "state",
+            "instruction"
+          ]
+        },
+        "execution": null,
+        "outputSchema": null,
+        "icons": null,
+        "annotations": null,
+        "_meta": null
+      },
+      {
+        "name": "ask_score",
+        "title": null,
+        "description": "Ask a scored question. Takes a state (text or JSON) and an instruction, returns the ScoreAnswer with score, confidence, legend, and probabilities.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "The content to evaluate. Can be plain text or a JSON object/array."
+            },
+            "instruction": {
+              "type": "string",
+              "description": "The scored question or statement to evaluate about the state."
+            },
+            "criteria": {
+              "type": "array",
+              "description": "Ordered list of rubric level descriptions. If omitted, defaults to [\"Poor\", \"Fair\", \"Good\", \"Excellent\"]."
+            }
+          },
+          "required": [
+            "state",
+            "instruction"
+          ]
+        },
+        "execution": null,
+        "outputSchema": null,
+        "icons": null,
+        "annotations": null,
+        "_meta": null
+      }
+    ],
+    "resultType": "complete"
+  },
+  "results": {
+    "noul": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "Probability of true: 0.7500\nModel: jev-latest\nUsage: 100 input tokens, 10 output tokens",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "noul": 0.75,
+        "model": "jev-latest",
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      },
+      "isError": false,
+      "resultType": "complete"
+    },
+    "choice": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "Choice: yes\nConfidence: 0.8000\nModel: jev-latest\nUsage: 100 input tokens, 10 output tokens",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "choice": "yes",
+        "confidence": 0.8,
+        "probabilities": {
+          "yes": 0.8,
+          "no": 0.2
+        },
+        "model": "jev-latest",
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      },
+      "isError": false,
+      "resultType": "complete"
+    },
+    "score": {
+      "_meta": null,
+      "content": [
+        {
+          "type": "text",
+          "text": "Score: 3.5000\nConfidence: 0.9000\nModel: jev-latest\nUsage: 100 input tokens, 10 output tokens",
+          "annotations": null,
+          "_meta": null
+        }
+      ],
+      "structuredContent": {
+        "score": 3.5,
+        "legend": {
+          "1": "poor",
+          "2": "fair",
+          "3": "good",
+          "4": "excellent"
+        },
+        "probabilities": {
+          "1": 0.1,
+          "2": 0.2,
+          "3": 0.3,
+          "4": 0.4
+        },
+        "confidence": 0.9,
+        "model": "jev-latest",
+        "usage": {
+          "input_tokens": 100,
+          "output_tokens": 10
+        }
+      },
+      "isError": false,
+      "resultType": "complete"
+    }
+  }
+}

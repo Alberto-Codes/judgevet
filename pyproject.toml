@@ -136,14 +136,6 @@ convention = "google"
 "tests/unit/test_secret_guard.py" = [
     "S603",  # subprocess call for test proof (the guard must be tested end-to-end)
 ]
-"src/judgevet/adapters/inbound/mcp.py" = [
-    "PLC0415",  # imports inside functions for import-linter contract
-    "C901",     # too complex: nested async functions for each tool handler
-    "PLR0915",  # too many statements: nested async functions counted as statements
-]
-# The import happens when create_mcp_server() is called, which is in the mcp
-# adapter module, not from domain/ports/outbound.
-
 "scripts/smoke_release_child.py" = [
     "S102",  # exec(): running extracted docstring examples is the point of this script
     "BLE001",  # except Exception: catching arbitrary failures from example code

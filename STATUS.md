@@ -151,10 +151,29 @@ descriptions and now receive offline destination/anchor checks. Three acceptance
 cases prove valid targets and reject missing files or fragments. Duplicate README
 examples were removed; the task guides retain their executable coverage.
 
+## MCP adapter decomposition
+
+#80 moves discovery schemas and tool handlers out of the server factory.
+The public factory signature, tool schemas, defaults, output and errors remain
+unchanged. The original 17 direct tests remain intact. Seven characterization
+cases cover complete serialized outputs and missing/wrong-answer failures.
+Combined factory, schema and handler coverage is 109/109 statements (100%),
+against the fresh 88/94 (93.62%) baseline. A deliberate text-output mutation
+fails the characterization test. The suppression budget falls from 18 to 15;
+architecture contracts remain unchanged. Changed functions have at most 36 code
+lines and implementation modules at most 174 code lines.
+
+The isolated local wheel passes base imports and CLI help without MCP, including
+imports of the optional factory and entrypoint. Its optional installation passes
+discovery and all three live tools. These calls exercise existing direct-service
+paths only. No unseen body, other model, gateway or modern protocol path gains
+verified status. Required push gates pass; commit gates and main CI are recorded
+with the final round evidence on [#80](https://github.com/Alberto-Codes/judgevet/issues/80).
+
 ## Gates
 
-**1546 tests pass, 6 live tests deselected.** The last measured coverage is
-**94.98%** (1815/1911 statements).
+**1553 tests pass, 6 live tests deselected.** The last measured coverage is
+**95.33%** (1836/1926 statements).
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
 (diff/all), pytest and pytest with coverage. Hooks remain enabled.
