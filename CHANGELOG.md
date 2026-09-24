@@ -3,6 +3,23 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.10.1](https://github.com/Alberto-Codes/judgevet/compare/v0.10.0...v0.10.1) (2026-09-24)
+
+
+### Fixes
+
+* synchronize host recipe pins in release candidates ([2d95997](https://github.com/Alberto-Codes/judgevet/commit/2d95997e47aa4cb9fecd9986b46018201fa3ec3f)), references [#168](https://github.com/Alberto-Codes/judgevet/issues/168) [#165](https://github.com/Alberto-Codes/judgevet/issues/165)
+
+
+### Documentation
+
+* **mcp:** add host-native setup and credential recipes ([0dbad55](https://github.com/Alberto-Codes/judgevet/commit/0dbad5535e43d7d0ad2dd439913a35709d114836)), references [#163](https://github.com/Alberto-Codes/judgevet/issues/163) [#165](https://github.com/Alberto-Codes/judgevet/issues/165)
+* record host onboarding survey and release scope ([d712af1](https://github.com/Alberto-Codes/judgevet/commit/d712af148fb1822387c5ed37b8f3ab353f5539e5)), references [#162](https://github.com/Alberto-Codes/judgevet/issues/162) [#165](https://github.com/Alberto-Codes/judgevet/issues/165) [#167](https://github.com/Alberto-Codes/judgevet/issues/167)
+* record verified 0.10.0 release and registry listing ([0b09e97](https://github.com/Alberto-Codes/judgevet/commit/0b09e977c7e21040ae70ab266c4a14b75544adb0)), references [#65](https://github.com/Alberto-Codes/judgevet/issues/65) [#160](https://github.com/Alberto-Codes/judgevet/issues/160)
+* state the repository contribution policy ([6b07e7c](https://github.com/Alberto-Codes/judgevet/commit/6b07e7ceb9ed9e3d1659e29227bb9b7cdfcd90b1)), references [#44](https://github.com/Alberto-Codes/judgevet/issues/44) [#165](https://github.com/Alberto-Codes/judgevet/issues/165)
+* validate native host setup and record remaining limits ([7f92793](https://github.com/Alberto-Codes/judgevet/commit/7f9279378f97e9124c8e3605c499f929aa0f611f)), references [#164](https://github.com/Alberto-Codes/judgevet/issues/164) [#165](https://github.com/Alberto-Codes/judgevet/issues/165) [#167](https://github.com/Alberto-Codes/judgevet/issues/167)
+* verify a credential-free contributor setup route ([baefc01](https://github.com/Alberto-Codes/judgevet/commit/baefc010912e8c184005a1883e85a0eb39f2dd18)), references [#21](https://github.com/Alberto-Codes/judgevet/issues/21) [#165](https://github.com/Alberto-Codes/judgevet/issues/165)
+
 ## [0.10.0](https://github.com/Alberto-Codes/judgevet/compare/v0.9.0...v0.10.0) (2026-09-24)
 
 
