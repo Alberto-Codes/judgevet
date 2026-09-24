@@ -22,3 +22,6 @@ scratchpad/
 
 # Locked Node tooling used by release configuration checks
 node_modules/
+
+# Per-user Claude Code settings; never shared
+.claude/settings.local.json

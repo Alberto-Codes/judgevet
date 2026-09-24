@@ -410,8 +410,11 @@ This is a local correction. No release or live-service evidence is promoted.
 **95.81%** (1850/1931 statements).
 Local commit and push gates pass for #170. The issue holds delivery evidence.
 The documentation rounds retain the existing local gates: suppressions,
-dependencies, test hygiene, Ruff lint/format, ty, import contracts, docvet
-(diff/all), pytest and pytest with coverage. Hooks remain enabled.
+dependencies, test hygiene, Ruff lint/format, ty, import contracts, file size
+(300/320 code lines), docvet (diff/all), pytest and pytest with coverage.
+Hooks remain enabled. The file-size gate `scripts/check_loc.py` is new at
+commit and in CI; all 43 modules under `src` measure at or under 300 code
+lines.
 Ordinary tests exclude live service calls. The coverage floor is 90%.
 
 #12 adds the strict MkDocs build to commit/push hooks and CI. It checks authored

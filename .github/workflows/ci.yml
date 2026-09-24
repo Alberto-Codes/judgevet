@@ -51,6 +51,7 @@ jobs:
       - run: uv run python -m scripts.check_doc_python
       - run: uv run mkdocs build --strict
       - run: uv run lint-imports
+      - run: uv run python scripts/check_loc.py src
       - run: uv run python scripts/check_suppressions.py
       - run: >-
           uv run python scripts/check_commit_msg.py

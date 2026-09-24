@@ -18,6 +18,51 @@ Conventions are inherited from the sister projects
 [vramfit](https://github.com/Alberto-Codes/vramfit) and
 [docvet](https://github.com/Alberto-Codes/docvet).
 
+## Supervised workers
+
+Roles describe responsibility, not model brands. Record the actual supervisor,
+worker and harness for each dispatch.
+
+judgevet has two verified worker harnesses: pi, through the `delegate-to-pi`
+skill, and Claude Code sub agents, through the Agent tool and the definitions
+in `.claude/agents/`.
+
+- The supervising session selects work, decides boundaries, accepts the
+  result and commits.
+- A worker follows its brief and skips session bookkeeping.
+- A worker never commits, pushes, edits `STATUS.md` or changes policy unless
+  the brief assigns that action.
+- Each checkout has one writer. Workers preserve unrelated changes.
+
+Use [the delegation procedure](docs/maintainers/delegate-work.md) for sizing,
+acceptance, repairs and the brief. Use
+[the worker run contract](docs/reference/worker-runs.md) for launch evidence
+and commit trailers.
+
+## Bounded execution
+
+The supervisor owns the cost of the whole assignment, including workers and
+repeated context. Explicit user scope and required gates still govern.
+
+- **Define done first.** State the decision, necessary evidence, allowed
+  repairs and stopping condition on the existing issue. Keep it under 150
+  words. Link existing specifications instead of rewriting them.
+- **Require a reason for each action.** Advance the decision, repair a
+  demonstrated blocker, or satisfy a required gate. Skip actions that serve
+  none of these.
+- **Bound delegation.** Default to one implementation dispatch, one
+  independent acceptance review and one repair dispatch per behaviour. Before
+  exceeding these limits, report the unresolved assertion and why another
+  dispatch could resolve it.
+- **Use one validation path.** The gate table and the hooks are that path. Do
+  not add a second review pipeline. Reuse passing checks for unchanged
+  revisions. Do not duplicate by hand what the commit or push hook runs.
+- **Keep delivery small.** Use the existing issue and one commit. Create no
+  extra report or dashboard unless the deliverable requires it.
+- **Stop at the agreed outcome.** Report the result and remaining evidence
+  gaps. Do not turn a worker outage or harness failure into another project.
+  Report unavailable usage counters as unknown.
+
 ## Trust levels
 
 Docs pages carry `status: sketch | draft | stable`. Do not write code against a
@@ -56,7 +101,9 @@ code proving it.
   everywhere else. If that contract fails, the import is in the wrong layer —
   move the code, never weaken the contract.
 - **Modules cap at 300 code lines, functions at 50.** Over the limit means
-  decompose.
+  decompose. `scripts/check_loc.py` counts code lines under `src`, excluding
+  comments and docstrings. It warns past 300 and fails past 320. The function
+  cap is read by eye.
 - **Never silence a gate.** Fix the cause. Do not add `per-file-ignores`,
   `# noqa`, `# type: ignore`, `--no-verify`, or a narrowed scope. If a type
   checker rejects a test double, the fix is a better double — a small class
@@ -102,6 +149,7 @@ uv run judgevet --help
 | format | `uv run ruff format --check .` |
 | types | `uv run ty check` |
 | layers | `uv run lint-imports` |
+| size | `uv run python scripts/check_loc.py src` |
 | docs | `uv run docvet check` |
 | tests | `uv run pytest -q --cov` |
 
@@ -119,10 +167,14 @@ still pass.
 
 ### Gates run themselves
 
-A turn-end hook runs these gates after any turn that edits Python and reports
-only failures. Silence means green. Do not spend tool calls re-running them by
-hand; read what the hook reports. A gate slower than two seconds runs every
-fifth turn rather than every turn.
+A `PostToolUse` hook in `.claude/settings.json` runs `scripts/vet_file.sh`
+after every `Write`, `Edit` or `Bash` call. It runs ruff format, ruff check and
+docvet on each changed Python file, plus `check_loc` on files under `src`,
+and returns their findings as context. A clean file returns nothing, so
+silence means those gates are green for the files touched. Do not spend tool calls re-running them by hand; read what
+the hook reports. `ty`, `lint-imports` and `pytest` do not run in this hook.
+They run in the pre-commit hook and the gate table above. The whole table is
+still the report of record.
 
 A tool that fails to spawn is a failure, not an environment detail — it means
 a tool is configured but not installed, and installing it is part of the work.
@@ -232,6 +284,14 @@ history and the log agree.
 A commit with no `Specified-By` went to the coder from an issue and a prompt.
 That absence is data too, so do not add the trailer to make a commit look more
 rigorous than it was.
+
+**Claude sub agents carry their own trailers.** A commit a Claude sub agent
+wrote carries `Generated-By: <resolved model id> (via Claude Code Agent tool,
+<agent name>)`. A specification it wrote carries `Specified-By: <resolved model
+id> (via Claude Code Agent tool, specifier)`. The resolved model ID comes from
+the agent's return, never from the requested alias. If the agent does not
+report it, record `unknown`. The supervisor's own commits carry no
+`Generated-By` trailer.
 
 **The specification lives on the issue, not on disk.** A reasoning pass posts
 its definition of ready and done as an issue comment, bylined with the model

@@ -60,6 +60,7 @@ nav:
       - Glossary: reference/glossary.md
       - Compatibility: reference/compatibility.md
       - Configuration: reference/configuration.md
+      - Worker runs: reference/worker-runs.md
       - Diagnostic events: reference/events.md
       - Errors: reference/errors.md
       - Typing marker: reference/py-typed-marker.md
@@ -73,5 +74,6 @@ nav:
       - Verify package: maintainers/verify-package.md
       - Release: maintainers/cut-a-release.md
       - MCP registry: maintainers/mcp-registry.md
+      - Delegate work: maintainers/delegate-work.md
       - Evidence: project/STATUS.md
       - Repository rules: project/AGENTS.md
