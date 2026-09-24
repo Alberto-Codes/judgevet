@@ -132,6 +132,21 @@ Downloads and advisory checks need network access, but ordinary setup needs
 no live service account. Windows and ChromeOS Linux remain unverified under
 #167. No runtime behavior, dependencies or service evidence changed.
 
+### Contribution policy
+
+[#44](https://github.com/Alberto-Codes/judgevet/issues/44#issuecomment-5807371002)
+adds [CONTRIBUTING.md](https://github.com/Alberto-Codes/judgevet/blob/main/CONTRIBUTING.md).
+It explains issue-led work, authorized direct commits and the automated release
+pull-request exception. It links the canonical contributor setup and detailed
+rules instead of duplicating the setup sequence. README and the maintainer
+index expose the policy. All three hook stages and factual issue footers remain
+required.
+
+Explicit link, prose and terminology checks passed for the new root guide.
+A modified copy with broken setup links produced two missing-target findings;
+the original passed again. Full push gates measured 1600 passed, 6 live
+deselected and 95.33% coverage. No runtime or service-verification claim changed.
+
 ## Documentation program
 
 [#145](https://github.com/Alberto-Codes/judgevet/issues/145) is complete.

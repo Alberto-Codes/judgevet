@@ -10,6 +10,7 @@ These guides are for people who build and publish judgevet.
 For package use, follow [installation](../how-to/install.md) or the
 [typed policy guide](../how-to/use-policy-library.md).
 
+- [Contribution policy](https://github.com/Alberto-Codes/judgevet/blob/main/CONTRIBUTING.md): issue-led work and authorized commits.
 - [Set up a contributor checkout](contributor-setup.md) without API credentials.
 - [Write and review technical prose](writing-guide.md).
 - [Build documentation and check links](build-docs.md).

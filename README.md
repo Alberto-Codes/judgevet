@@ -128,6 +128,8 @@ describes credential, disclosure and diagnostic limits.
 
 ## Maintainers
 
+Read the [contribution policy](https://github.com/Alberto-Codes/judgevet/blob/main/CONTRIBUTING.md)
+before proposing work.
 Use the [maintainer procedures](https://alberto-codes.github.io/judgevet/maintainers/)
 for documentation checks, package verification and releases.
 [Repository contribution rules](https://github.com/Alberto-Codes/judgevet/blob/main/AGENTS.md)
