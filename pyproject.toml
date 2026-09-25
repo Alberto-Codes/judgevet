@@ -205,9 +205,18 @@ type = "layers"
 layers = [
     "judgevet.adapters.inbound",
     "judgevet.adapters.outbound",
+    "judgevet.testing",
     "judgevet.ports",
     "judgevet.domain",
 ]
+
+[[tool.importlinter.contracts]]
+# The public offline fakes build answers from the domain alone. They never
+# import an adapter, so a caller test cannot reach the network through them.
+name = "Fakes stay off the adapters"
+type = "forbidden"
+source_modules = ["judgevet.testing"]
+forbidden_modules = ["judgevet.adapters"]
 
 [[tool.importlinter.contracts]]
 # The domain is pure: no IO, no serialization, no CLI or server framework.

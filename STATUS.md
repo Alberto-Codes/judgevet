@@ -1,6 +1,6 @@
 # STATUS
 
-Last written: 2026-09-23. Current evidence ledger. Detailed implementation,
+Last written: 2026-09-24. Current evidence ledger. Detailed implementation,
 release and credential history remains in Git and the linked issues.
 
 ## Published release
@@ -418,14 +418,18 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**1953 tests pass, 6 live tests deselected.** The last measured coverage is
-**95.81%** (1850/1931 statements).
-Local commit and push gates pass for #170. The issue holds delivery evidence.
+**2019 tests pass, 6 live tests deselected.** The last measured coverage is
+**95.93%** (1908/1989 statements).
+Local commit and push gates pass for #171. The issue holds delivery evidence.
+#171 ships `judgevet.testing` with `FakeSystemOnePort` and
+`AsyncFakeSystemOnePort` inside the wheel, no extra. An import contract keeps
+the fakes off the adapters and the layers contract keeps the domain and ports
+off the fakes. No live-service claim changes.
 The documentation rounds retain the existing local gates: suppressions,
 dependencies, test hygiene, Ruff lint/format, ty, import contracts, file size
 (300 code lines), docvet (diff/all), pytest and pytest with coverage.
 Hooks remain enabled. The file-size gate `scripts/check_loc.py` is new at
-commit and in CI; all 43 modules under `src` measure at or under 300 code
+commit and in CI; all 44 modules under `src` measure at or under 300 code
 lines. Slice A of #8 adds nine boundary tests for the module cap and a
 report-only function counter: the gate prints every function over 50 code
 lines and still exits 0. No function under `src` is over 50; enforcement is
@@ -623,7 +627,7 @@ Published README links retain offline source and fragment validation.
 | resolved models other than `jev-1.13.0` | untested; both `jev-latest` and explicit `jev-1.13.0` have been called |
 | probabilities on the wire are rounded to two decimals | observed once — a consumer call on 2026-09-24 against `jev-1.13.0` returned a four-level Score summing to 0.99 (#175); the tolerance is 0.005 per probability since that fix; not reproduced by this repository's live suite |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
-| fake and real adapter produce identical outcomes | verified — contract tests on 12 hand-authored fixtures, inferred from docs/reference/api.md |
+| fake and real adapter produce identical outcomes | verified — contract tests on 12 hand-authored fixtures, inferred from docs/reference/api.md; the shipped `judgevet.testing` fakes match the adapter's model and answers on every success fixture (#171) |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
 | the adapter drops the `input` field from 422 bodies to avoid echoing caller data | **verified** — live test asserts test state does not leak |
 | API keys do not leak in error str/repr | **verified** — live tests assert key not in str or repr |

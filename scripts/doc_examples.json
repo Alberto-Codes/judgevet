@@ -361,5 +361,17 @@
       "kind": "output",
       "reason": "Illustrative stdout, not an executable command; compare with the associated program where deterministic."
     }
+  ],
+  "docs/how-to/test-offline.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete offline test against the sync fake; execute with no network."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete offline test against the async fake; execute with no network."
+    }
   ]
 }

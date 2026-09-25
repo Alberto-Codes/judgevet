@@ -39,6 +39,7 @@ nav:
       - Install: how-to/install.md
       - Synchronous Python: how-to/use-library.md
       - Asynchronous Python: how-to/use-async-library.md
+      - Offline tests: how-to/test-offline.md
       - Library errors: how-to/handle-errors.md
       - Connect MCP: how-to/connect-mcp.md
       - Troubleshooting: how-to/troubleshoot.md

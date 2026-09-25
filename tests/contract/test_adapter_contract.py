@@ -38,7 +38,8 @@ from judgevet.domain.errors import (
 )
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
-from judgevet.ports import SystemOnePort
+from judgevet.ports import AsyncSystemOnePort, SystemOnePort
+from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
 
 from .fixtures import get_fixture_by_name, get_fixtures
 
@@ -288,3 +289,45 @@ def test_async_adapter_parses_rounded_score() -> None:
         )
 
     _assert_responses_equal(anyio.run(call), fake)
+
+
+def _success_fixtures() -> list[dict[str, Any]]:
+    """Return the fixtures whose expected outcome is a response."""
+    return [f for f in get_fixtures() if f["expect"][0] == "response"]
+
+
+def _scripted_answers(fixture: dict[str, Any]) -> dict[str, Answer]:
+    """Build the fixture's expected answers with the replay port's constructors."""
+    replay = _ReplayPort(fixture)
+    expected = fixture["expect"][1]["answers"]
+    return {name: replay._build_answer(data) for name, data in expected.items()}
+
+
+def _assert_model_and_answers(real: SystemOneResponse, fake: SystemOneResponse) -> None:
+    """Assert that the model and every answer agree between two responses."""
+    assert real.model == fake.model, f"model: {real.model!r} != {fake.model!r}"
+    assert set(real.answers) == set(fake.answers)
+    for key in real.answers:
+        _assert_answers_equal(real.answers[key], fake.answers[key])
+
+
+@pytest.mark.contract
+@pytest.mark.parametrize("fixture", _success_fixtures(), ids=lambda f: f["name"])
+def test_scripted_fakes_match_real_adapter(fixture: dict[str, Any]) -> None:
+    """Both public fakes, scripted with a fixture's answers, agree with the adapter."""
+    request = fixture["request"]
+    args = (request["state"], request["questions"], request["model"])
+    sync_port: SystemOnePort = FakeSystemOnePort(answers=_scripted_answers(fixture))
+    async_port: AsyncSystemOnePort = AsyncFakeSystemOnePort(
+        answers=_scripted_answers(fixture)
+    )
+    with HTTPSystemOneAdapter(
+        api_key="test-key", transport=_transport_for(fixture)
+    ) as adapter:
+        real = adapter.system_one(*args)
+
+    async def call_async_fake() -> SystemOneResponse:
+        return await async_port.system_one(*args)
+
+    _assert_model_and_answers(real, sync_port.system_one(*args))
+    _assert_model_and_answers(real, anyio.run(call_async_fake))
