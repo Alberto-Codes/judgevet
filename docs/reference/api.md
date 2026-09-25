@@ -66,7 +66,7 @@ Python types. The outbound adapter adds the wire `type` and omits optional
 `HTTPSystemOneAdapter` and `AsyncHTTPSystemOneAdapter` implement the synchronous
 and asynchronous calls respectively. Their constructors accept `api_key`,
 `base_url`, `default_model`, `transport`, `timeout_seconds`, `retry`, `network`,
-`gateway`, `redactor`, `spend_cap` and `audit`; see the
+`gateway`, `redactor`, `spend_cap`, `audit` and `fingerprint_key`; see the
 [defaults and validation table](configuration.md#direct-python-adapters).
 Both send the [documented request](https://api.typesafe.ai/docs) to
 `POST /v1/systemone` with bearer authentication by default. Explicit
@@ -74,6 +74,10 @@ Both send the [documented request](https://api.typesafe.ai/docs) to
 selects alternate authentication, path prefixes and metadata. Optional
 [state redaction](configuration.md#caller-owned-state-redaction) transforms a
 private copy before serialization and reuses the resulting bytes across retries.
+An `audit` sink receives one `JudgmentRecord` per logical call. Its
+`state_fingerprint` field holds a keyed HMAC-SHA-256 of the state before
+redaction when `fingerprint_key` is set, and `None` otherwise; see
+[audit records](configuration.md#audit-records).
 
 | Call argument | Python contract |
 |---|---|
@@ -115,7 +119,7 @@ Other typed questions receive seeded answers that pass the answer
 constructors; an unscripted raw mapping raises `TypeError`. The response echoes
 the `model` argument and carries the scripted `usage`, default `Usage()`. A
 scripted `error` is raised after the call is recorded. The fakes accept the
-same `spend_cap` and `audit` options as the HTTP adapters and honour them the
+same `spend_cap`, `audit` and `fingerprint_key` options as the HTTP adapters and honour them the
 same way. Seeded answers are local test data, not service behaviour. See the
 [offline testing recipe](../how-to/test-offline.md) and the
 [fake source](../../src/judgevet/testing.py).

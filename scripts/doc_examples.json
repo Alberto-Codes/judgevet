@@ -292,6 +292,11 @@
       "reason": "Complete synthetic retry opt-out program; constructs a policy without calling the service."
     },
     {
+      "language": "text",
+      "kind": "template",
+      "reason": "State fingerprint byte contract as a formula over key and state; the unit test vector exercises it, so never execute it."
+    },
+    {
       "language": "python",
       "kind": "runnable",
       "reason": "Complete synthetic gateway program; execute and type-check exactly against an isolated wheel with offline HTTP fixtures."

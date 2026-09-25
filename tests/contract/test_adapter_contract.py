@@ -16,6 +16,7 @@ questions, model) arguments. Both outcomes are compared field-by-field.
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Mapping
 from typing import Any
 
@@ -558,3 +559,39 @@ def _fields(record: JudgmentRecord, *ignored: str) -> dict[str, Any]:
     """Return a record's fields without its timestamp and the named fields."""
     skip = {"timestamp", *ignored}
     return {k: v for k, v in vars(record).items() if k not in skip}
+
+
+@pytest.mark.contract
+@FAKE_KINDS
+@pytest.mark.parametrize("fixture", get_fixtures(), ids=lambda f: f["name"])
+def test_fakes_match_real_adapter_state_fingerprint(
+    fixture: dict[str, Any], fake_kind: str
+) -> None:
+    """With one key on both sides, the records agree on the state fingerprint."""
+    key = b"\x00" * 32
+    real_sink, fake_sink = _ListSink(), _ListSink()
+    request = fixture["request"]
+    with (
+        HTTPSystemOneAdapter(
+            api_key="test-key",
+            transport=_transport_for(fixture),
+            audit=real_sink,
+            fingerprint_key=key,
+            retry=RetryPolicy(max_attempts=1),
+        ) as adapter,
+        contextlib.suppress(JevError),
+    ):
+        adapter.system_one(request["state"], request["questions"], request["model"])
+    fake = _fake_caller(
+        fake_kind,
+        fixture,
+        audit=fake_sink,
+        fingerprint_key=key,
+        **_fake_script(fixture),
+    )
+    with contextlib.suppress(JevError):
+        fake()
+    [real], [fake_record] = real_sink.records, fake_sink.records
+    assert real.state_fingerprint is not None
+    assert real.state_fingerprint == fake_record.state_fingerprint
+    assert _fields(real, "status_code") == _fields(fake_record, "status_code")

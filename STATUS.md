@@ -426,8 +426,15 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2165 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.25%** (2130/2213 statements).
+**2211 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.29%** (2154/2237 statements).
+#191 adds an optional keyed `state_fingerprint` to `JudgmentRecord`, `None`
+unless `fingerprint_key=` is set on an HTTP adapter or a fake. The value is
+HMAC-SHA-256 over a versioned label and compact sorted-key JSON of the raw
+state, computed before redaction, lowercase hex, untruncated. The key never
+reaches a record, an event or an exception. `schema_version` stays 1. The
+contract test compares the field between each fake and the adapter on every
+fixture. No live call has written a fingerprint.
 #195 adds `judgevet.domain.choice_options.check_choice_options`, a pure check
 that both HTTP adapters run inside the attempt and both fakes run when they
 bind answers: a Choice `choice` or probability key outside the question's
@@ -683,6 +690,7 @@ Published README links retain offline source and fragment validation.
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 15 hand-authored fixtures, inferred from docs/reference/api.md except the oversized-request fixture, which replays the body recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; the shipped `judgevet.testing` fakes match the adapter's whole response, error type and status, spend counters and audit record on every fixture (#171, #189) |
 | an off-list Choice option or probability key raises JevResponseError | **inferred** — offline only (#195); the check runs where the response is bound to the questions; no live call has returned one |
+| `state_fingerprint` is HMAC-SHA-256 over the raw pre-redaction state under a caller-held key, and `None` without one | **inferred** — offline tests against `httpx.MockTransport` and a fixed test vector (#191); no live call has written a fingerprint |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
 | the adapter drops the `input` field from 422 bodies to avoid echoing caller data | **verified** — live test asserts test state does not leak |
 | API keys do not leak in error str/repr | **verified** — live tests assert key not in str or repr |

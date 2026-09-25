@@ -12,8 +12,8 @@ Seeded values are synthetic. They exercise caller code paths; they do not
 predict what the service would answer. The returned `model` echoes the model
 argument.
 
-Each fake takes four keyword-only arguments. Two script the whole call and
-two match the HTTP adapter options of the same name:
+Each fake takes five keyword-only arguments. Two script the whole call and
+three match the HTTP adapter options of the same name:
 
 Args:
     usage (Usage | None): The `Usage` every response carries. The default is
@@ -30,6 +30,9 @@ Args:
         call, whether it returned, raised or was refused. The record carries
         no HTTP status on success, because no HTTP response arrived. A sink
         failure never changes the result.
+    fingerprint_key (bytes | None): A caller-held key. With it, each record
+        carries the keyed `state_fingerprint` the HTTP adapters compute.
+        Without it, the field is None.
 
 Examples:
     ```python
@@ -106,6 +109,7 @@ from contextlib import suppress
 from datetime import UTC, datetime
 from typing import Any
 
+from judgevet._fingerprint import state_fingerprint
 from judgevet.diagnostics import current_request_id
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.audit import JudgmentRecord
@@ -221,6 +225,8 @@ class _FakeCore:
             it is recorded, or None to answer normally.
         spend_cap (SpendCap | None): The cap claimed before each call.
         audit (AuditSink | None): The sink that receives one record per call.
+        fingerprint_key (bytes | None): The key for each record's state
+            fingerprint, or None for no fingerprint.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -241,6 +247,7 @@ class _FakeCore:
         error: BaseException | None = None,
         spend_cap: SpendCap | None = None,
         audit: AuditSink | None = None,
+        fingerprint_key: bytes | None = None,
     ):
         """Store the seed, a copy of the scripted answers and the call options.
 
@@ -254,6 +261,8 @@ class _FakeCore:
                 successful one. None means no cap.
             audit: The sink that receives one record per call. None means no
                 record.
+            fingerprint_key: The key for each record's state fingerprint.
+                None means the field is None.
         """
         self.seed = seed
         self.answers: dict[str, Answer] = dict(answers or {})
@@ -261,12 +270,13 @@ class _FakeCore:
         self.error = error
         self.spend_cap = spend_cap
         self.audit = audit
+        self.fingerprint_key = fingerprint_key
         self.calls: list[Call] = []
 
     def _respond(
         self, state: State, questions: Questions, model: str
     ) -> SystemOneResponse:
-        """Claim, answer and settle one call, then write its audit record.
+        """Fingerprint, claim, answer and settle one call, then write its record.
 
         Args:
             state: The content the caller would judge.
@@ -283,7 +293,10 @@ class _FakeCore:
         """
         response: SystemOneResponse | None = None
         failure: BaseException | None = None
+        fingerprint: str | None = None
         try:
+            if self.fingerprint_key is not None:
+                fingerprint = state_fingerprint(self.fingerprint_key, state)
             if self.spend_cap is not None:
                 self.spend_cap.claim()
             response = self._answer_all(state, questions, model)
@@ -295,7 +308,7 @@ class _FakeCore:
                 self.spend_cap.settle(response.usage.input_tokens)
             return response
         finally:
-            self._write(model, questions, response, failure)
+            self._write(model, questions, response, failure, fingerprint)
 
     def _write(
         self,
@@ -303,6 +316,7 @@ class _FakeCore:
         questions: Questions,
         response: SystemOneResponse | None,
         failure: BaseException | None,
+        fingerprint: str | None = None,
     ) -> None:
         """Write one record to the sink and contain any failure of the write.
 
@@ -314,6 +328,7 @@ class _FakeCore:
             questions: Question names mapped to typed or raw questions.
             response: The returned response, or None when the call failed.
             failure: The exception that ended the call, or None on success.
+            fingerprint: The keyed state fingerprint, or None without a key.
         """
         if self.audit is None:
             return
@@ -335,6 +350,7 @@ class _FakeCore:
                     answers=None if answer is None else answer.answers,
                     usage=None if answer is None else answer.usage,
                     request_id=current_request_id(),
+                    state_fingerprint=fingerprint,
                 )
             )
 
@@ -408,6 +424,8 @@ class FakeSystemOnePort(_FakeCore):
             it is recorded, or None to answer normally.
         spend_cap (SpendCap | None): The cap claimed before each call.
         audit (AuditSink | None): The sink that receives one record per call.
+        fingerprint_key (bytes | None): The key for each record's state
+            fingerprint, or None for no fingerprint.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -463,6 +481,8 @@ class AsyncFakeSystemOnePort(_FakeCore):
             it is recorded, or None to answer normally.
         spend_cap (SpendCap | None): The cap claimed before each call.
         audit (AuditSink | None): The sink that receives one record per call.
+        fingerprint_key (bytes | None): The key for each record's state
+            fingerprint, or None for no fingerprint.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.

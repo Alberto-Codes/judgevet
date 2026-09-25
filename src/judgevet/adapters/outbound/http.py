@@ -1,5 +1,7 @@
 """HTTP outbound adapter with optional redaction, gateway metadata, retries, spend cap and audit.
 
+An opt-in `fingerprint_key` adds a keyed state fingerprint to each audit record.
+
 Error handling:
     The API error `detail` field is polymorphic:
 
@@ -83,6 +85,7 @@ from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.request_body import (
     AdapterOptions,
     configured_redactor,
+    keyed_fingerprint,
     prepare_body,
     wire_question,
 )
@@ -367,6 +370,9 @@ class HTTPSystemOneAdapter:
                 Omission sends every attempt the retry policy permits.
             audit (AuditSink | None): Destination for one record per logical call.
                 Omission writes no record. A sink failure never changes the result.
+            fingerprint_key (bytes | None): Caller-held key for the record's
+                `state_fingerprint`. Omission leaves the field None. The key is
+                never logged or stored on a record.
 
         Raises:
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
@@ -381,6 +387,7 @@ class HTTPSystemOneAdapter:
         self._retry = retry or RetryPolicy()
         self._spend = options.get("spend_cap")
         self._audit = options.get("audit")
+        self._fingerprint_key = options.get("fingerprint_key")
         self._redactor = configured_redactor(options)
         self._gateway = configured_gateway({"gateway": options.get("gateway")})
         network = network or NetworkConfig()
@@ -405,6 +412,7 @@ class HTTPSystemOneAdapter:
     ) -> SystemOneResponse:
         """Call Jev once per logical call, emit metadata and write an audit record.
 
+        An optional keyed fingerprint hashes the state before redaction.
         Optional redaction runs once before retries. A configured audit sink
         receives one record when the call ends; its failure never changes the result.
 
@@ -450,6 +458,7 @@ class HTTPSystemOneAdapter:
             and error translation to ensure consistent behavior across adapters.
         """
         with call_event(model or self._default_model, questions, self._audit) as event:
+            event.state_fingerprint = keyed_fingerprint(self._fingerprint_key, state)
             headers = self._gateway.request_headers(metadata)
             payload = prepare_body(
                 _build_payload(state, questions, model, self._default_model),
@@ -609,6 +618,9 @@ class AsyncHTTPSystemOneAdapter:
                 Omission sends every attempt the retry policy permits.
             audit (AuditSink | None): Destination for one record per logical call.
                 Omission writes no record. A sink failure never changes the result.
+            fingerprint_key (bytes | None): Caller-held key for the record's
+                `state_fingerprint`. Omission leaves the field None. The key is
+                never logged or stored on a record.
 
         Raises:
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
@@ -623,6 +635,7 @@ class AsyncHTTPSystemOneAdapter:
         self._retry = retry or RetryPolicy()
         self._spend = options.get("spend_cap")
         self._audit = options.get("audit")
+        self._fingerprint_key = options.get("fingerprint_key")
         self._redactor = configured_redactor(options)
         self._gateway = configured_gateway({"gateway": options.get("gateway")})
         network = network or NetworkConfig()
@@ -647,6 +660,7 @@ class AsyncHTTPSystemOneAdapter:
     ) -> SystemOneResponse:
         """Await bounded HTTP attempts, emit metadata and write an audit record.
 
+        An optional keyed fingerprint hashes the state before redaction.
         Optional redaction runs once before retries. A configured audit sink
         receives one record inline when the call ends; a slow sink blocks the loop.
 
@@ -688,6 +702,7 @@ class AsyncHTTPSystemOneAdapter:
             the first attempt.
         """
         with call_event(model or self._default_model, questions, self._audit) as event:
+            event.state_fingerprint = keyed_fingerprint(self._fingerprint_key, state)
             headers = self._gateway.request_headers(metadata)
             payload = prepare_body(
                 _build_payload(state, questions, model, self._default_model),

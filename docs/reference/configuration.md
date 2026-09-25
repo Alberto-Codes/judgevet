@@ -23,6 +23,7 @@ arguments. Neither reads judgevet environment settings or installs logging.
 | `retry` | `None` | Optional `RetryPolicy`; omission uses `RetryPolicy()`, three attempts. |
 | `spend_cap` | `None` | Optional `SpendCap`; omission sends every attempt the retry policy permits. See [spend cap](#spend-cap). |
 | `audit` | `None` | Optional `AuditSink`; omission writes no record. See [audit records](#audit-records). |
+| `fingerprint_key` | `None` | Optional `bytes` key; omission leaves `state_fingerprint` as `None`. See [state fingerprint](#state-fingerprint). |
 | `transport` | `None` | Optional HTTPX transport; use the sync or async transport type appropriate to the adapter. |
 | `timeout_seconds` | `30.0` | HTTPX read, write and pool timeout in seconds; connect timeout is fixed at 5 seconds. Values at or below zero raise `ValueError`. |
 
@@ -246,6 +247,7 @@ A record holds these fields:
 | `answers` | Typed answers on success; `None` otherwise. | none |
 | `usage` | Token counts on success; `None` otherwise. | `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` |
 | `request_id` | Client-bound correlation from `bind_request_id`, or `None`. No service response identifier is read, because none has been observed. | none |
+| `state_fingerprint` | Keyed fingerprint of the state before redaction, or `None` without a `fingerprint_key`. See [state fingerprint](#state-fingerprint). | none |
 
 Source: https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/.
 The UTC timestamp follows the OWASP ASVS logging requirements.
@@ -278,6 +280,50 @@ CLI and MCP entry points do not set a sink. The offline fakes in
 `judgevet.testing` accept the same `audit=` option and write one record per
 call the same way, with `status_code=None` on success because no HTTP response
 arrived.
+
+### State fingerprint
+
+Pass `fingerprint_key=` with `audit=` to link records of equal state without
+storing the state. Each record then carries `state_fingerprint`. Without a key,
+the field is `None`. The adapter computes this value:
+
+```text
+HMAC-SHA-256(key, b"judgevet-state-v1\x00" + json.dumps(state, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8"))
+```
+
+The value is 64 lowercase hex characters and is not truncated. The state is
+the value passed to `system_one`, before any [redaction](#caller-owned-state-redaction).
+The label and zero byte follow the labelled input of NIST SP 800-108.
+Source: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-108r1-upd1.pdf.
+The serialization is compact sorted-key JSON as written, not RFC 8785; the `v1`
+in the label versions it.
+Source: https://www.rfc-editor.org/info/rfc8785/.
+A string state and a list state never collide, because JSON quotes the string.
+A state that is not JSON data, or that holds a non-finite number, raises
+`TypeError` or `ValueError` and writes an error record. The fingerprint is
+computed before the redactor runs, so the raw state must be JSON data even
+when a redactor would remove the offending value.
+
+The threat model has five parts:
+
+- The caller holds the key. judgevet never logs the key, stores it on a record
+  or puts it in an event or exception.
+- The fingerprint must not reveal the state.
+- Equal fingerprints under one key mean equal hashed bytes.
+- The value is pseudonymous and reveals frequency: a common state produces a
+  common fingerprint.
+- A leaked key lets anyone confirm a guessed state.
+
+Source: https://arxiv.org/pdf/1802.07975.
+
+judgevet enforces no minimum key length. Use at least 32 bytes from
+`secrets.token_bytes(32)`. That length matches the 32-byte SHA-256 output.
+RFC 2104 discourages an HMAC key shorter than the hash output.
+Source: https://www.rfc-editor.org/rfc/rfc2104.
+Rotating the key breaks linkage
+between records written before and after the rotation. The offline fakes in
+`judgevet.testing` accept the same `fingerprint_key=` option and compute the
+same value.
 
 ## Proxy and TLS configuration
 

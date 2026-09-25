@@ -49,6 +49,8 @@ class CallEvent:
         input_tokens (int | None): Successful typed input token count.
         output_tokens (int | None): Successful typed output token count.
         answer (SystemOneResponse | None): Successful typed response for the audit record.
+        state_fingerprint (str | None): Keyed state fingerprint the adapter
+            computed, or None when no key is configured.
 
     Examples:
         ```python
@@ -62,6 +64,7 @@ class CallEvent:
     input_tokens: int | None = None
     output_tokens: int | None = None
     answer: SystemOneResponse | None = None
+    state_fingerprint: str | None = None
 
     def succeed(self, answer: SystemOneResponse) -> SystemOneResponse:
         """Record a successful typed response and return it unchanged.
@@ -88,6 +91,8 @@ def _record(
 ) -> JudgmentRecord:
     """Build the audit record from terminal metadata, never from the state.
 
+    The keyed state fingerprint arrives precomputed on the event.
+
     Args:
         model: Effective requested model identifier.
         questions: Question objects or raw wire dictionaries keyed by id.
@@ -113,6 +118,7 @@ def _record(
         answers=None if answer is None else answer.answers,
         usage=None if answer is None else answer.usage,
         request_id=current_request_id(),
+        state_fingerprint=event.state_fingerprint,
     )
 
 

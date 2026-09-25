@@ -411,3 +411,39 @@ def test_fake_rejects_off_list_probability_key() -> None:
     assert info.value.status_code == 200
     assert "'queue'" in str(info.value)
     assert "'refunds'" in str(info.value)
+
+
+FINGERPRINT_KEY = b"\x00" * 32
+FINGERPRINT_VECTOR = "ddc817f8d4f77bdd497151cf4c4614acaa49f4e151da3ff948f4d8f32d6a1212"
+
+
+def _run_state(
+    fake: FakeSystemOnePort | AsyncFakeSystemOnePort, state: str
+) -> SystemOneResponse:
+    """Call either fake once with the given state and the shared questions."""
+    if isinstance(fake, FakeSystemOnePort):
+        return fake.system_one(state, QUESTIONS, "jev-test")
+
+    async def call() -> SystemOneResponse:
+        return await fake.system_one(state, QUESTIONS, "jev-test")
+
+    return anyio.run(call)
+
+
+@pytest.mark.unit
+@FAKES
+def test_fingerprint_key_records_the_vector(fake_type: type) -> None:
+    sink = ListSink()
+    fake = _make(fake_type, audit=sink, fingerprint_key=FINGERPRINT_KEY)
+    _run_state(fake, "synthetic")
+    [record] = sink.records
+    assert record.state_fingerprint == FINGERPRINT_VECTOR
+
+
+@pytest.mark.unit
+@FAKES
+def test_without_fingerprint_key_the_field_is_none(fake_type: type) -> None:
+    sink = ListSink()
+    _run_state(_make(fake_type, audit=sink), "synthetic")
+    [record] = sink.records
+    assert record.state_fingerprint is None

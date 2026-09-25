@@ -2,6 +2,7 @@
 
 Redaction sees a deep copy of ordinary JSON state. The immutable serialized body
 is reused across retries. The unconfigured path retains HTTPX JSON handling.
+The options also carry the caller-held key for the audit record's fingerprint.
 Wire payload fields follow https://docs.typesafe.ai/api.
 
 Examples:
@@ -24,6 +25,7 @@ import json
 from copy import deepcopy
 from typing import Any
 
+from judgevet._fingerprint import state_fingerprint
 from judgevet.adapters.outbound.gateway import GatewayOptions
 from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.spend import SpendCap
@@ -37,6 +39,8 @@ class AdapterOptions(GatewayOptions, total=False):
         redactor (StateRedactor | None): Caller-owned synchronous state transformation.
         spend_cap (SpendCap | None): Shared attempt and input-token cap.
         audit (AuditSink | None): Caller-owned destination for one record per call.
+        fingerprint_key (bytes | None): Caller-held key for the record's
+            `state_fingerprint`. It is never stored on a record or logged.
 
     Examples:
         ```python
@@ -48,14 +52,15 @@ class AdapterOptions(GatewayOptions, total=False):
     redactor: StateRedactor | None
     spend_cap: SpendCap | None
     audit: AuditSink | None
+    fingerprint_key: bytes | None
 
 
 def configured_redactor(options: AdapterOptions) -> StateRedactor | None:
     """Validate constructor extensions and select explicit redaction.
 
     Args:
-        options: Typed gateway, redactor, spend cap and audit keywords from an
-            HTTP constructor.
+        options: Typed gateway, redactor, spend cap, audit and fingerprint key
+            keywords from an HTTP constructor.
 
     Returns:
         The optional callback; None leaves the existing path unchanged.
@@ -63,9 +68,27 @@ def configured_redactor(options: AdapterOptions) -> StateRedactor | None:
     Raises:
         TypeError: If an untyped caller supplies an unknown keyword.
     """
-    if options.keys() - {"gateway", "redactor", "spend_cap", "audit"}:
+    known = {"gateway", "redactor", "spend_cap", "audit", "fingerprint_key"}
+    if options.keys() - known:
         raise TypeError("Unknown HTTP adapter option")
     return options.get("redactor")
+
+
+def keyed_fingerprint(key: bytes | None, state: object) -> str | None:
+    """Fingerprint the caller's state under a configured key.
+
+    Args:
+        key: Caller-held key, or None when fingerprinting is off.
+        state: The caller's state, before any redaction.
+
+    Returns:
+        The 64-character hex fingerprint, or None when no key is configured.
+
+    Raises:
+        TypeError: If the state is not JSON data.
+        ValueError: If the state holds a non-finite number.
+    """
+    return None if key is None else state_fingerprint(key, state)
 
 
 def prepare_body(
