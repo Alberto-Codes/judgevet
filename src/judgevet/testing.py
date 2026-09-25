@@ -5,6 +5,8 @@
 make no network call. A scripted answer is returned for its question name.
 Every other typed question receives a seeded answer that passes the domain
 answer validators. The same seed, state and question give the same answer.
+A scripted Choice answer whose option is outside its question's criteria
+raises `JevResponseError` with status 200, as the HTTP adapters do.
 
 Seeded values are synthetic. They exercise caller code paths; they do not
 predict what the service would answer. The returned `model` echoes the model
@@ -90,6 +92,7 @@ Examples:
 See Also:
     - [judgevet.ports][]: The protocols these fakes satisfy
     - [judgevet.domain.answers][]: The answer types and their validators
+    - [judgevet.domain.choice_options][]: The off-list Choice check both fakes run
     - [judgevet.domain.questions][]: The typed questions the fakes answer
     - [judgevet.domain.spend][]: The cap both fakes accept as `spend_cap=`
     - [judgevet.domain.audit][]: The record both fakes write to `audit=`
@@ -106,6 +109,7 @@ from typing import Any
 from judgevet.diagnostics import current_request_id
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.audit import JudgmentRecord
+from judgevet.domain.choice_options import check_choice_options
 from judgevet.domain.questions import Choice, Noul, Question, Score, question_types
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.spend import SpendCap
@@ -275,6 +279,7 @@ class _FakeCore:
         Raises:
             JevBudgetExceededError: If the spend cap refuses the call.
             BaseException: The scripted error, when one is set.
+            JevResponseError: If a scripted Choice answer names an off-list option.
         """
         response: SystemOneResponse | None = None
         failure: BaseException | None = None
@@ -348,6 +353,8 @@ class _FakeCore:
 
         Raises:
             BaseException: The scripted error, when one is set.
+            JevResponseError: If a scripted Choice answer names an option
+                outside its question's criteria, as the HTTP adapters do.
         """
         self.calls.append((state, dict(questions), model))
         if self.error is not None:
@@ -356,6 +363,7 @@ class _FakeCore:
             name: self._answer(state, name, question)
             for name, question in questions.items()
         }
+        check_choice_options(questions, answers)
         return SystemOneResponse(model=model, usage=self.usage, answers=answers)
 
     def _answer(

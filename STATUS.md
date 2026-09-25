@@ -426,8 +426,15 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2144 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.20%** (2101/2184 statements).
+**2165 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.25%** (2130/2213 statements).
+#195 adds `judgevet.domain.choice_options.check_choice_options`, a pure check
+that both HTTP adapters run inside the attempt and both fakes run when they
+bind answers: a Choice `choice` or probability key outside the question's
+criteria raises `JevResponseError` with status 200, naming the question and
+the option. A subset of probabilities passes. Contract fixture 15
+`choice_off_list` proves the adapters and the fakes agree. No live call has
+returned an off-list option.
 #196 turns retries on by default: `RetryPolicy()` makes three attempts on 429
 and every 5xx with the existing 0.5 s base, 5 s cap and subtractive jitter,
 both HTTP adapters use it when `retry` is None, and the CLI and MCP attempts
@@ -674,7 +681,8 @@ Published README links retain offline source and fragment validation.
 | probabilities on the wire are rounded to two decimals | observed once — a consumer call on 2026-09-24 against `jev-1.13.0` returned a four-level Score summing to 0.99 (#175); the tolerance is 0.005 per probability since that fix. This repository's live suite asked a four-level Score once on 2026-09-24 (#184) and the resolved `jev-1.13.0` returned probabilities summing to exactly 1.0, which neither confirms nor refutes the rounding |
 | Choice `confidence` sits below `probabilities[choice]` | **observed twice**. The 0.12.0 production smoke on 2026-09-25 returned `ChoiceAnswer(choice='a', confidence=0.9, probabilities={'b': 0.05, 'a': 0.95})` with both values in one run record, at https://github.com/Alberto-Codes/judgevet/issues/194#issuecomment-5826847175. The 0.11.0 production smoke on 2026-09-25 returned `confidence=0.89` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/186#issuecomment-5825514560; that comment elides the probabilities, and `probabilities={'b': 0.05, 'a': 0.95}` is recorded only in the body of https://github.com/Alberto-Codes/judgevet/issues/187. The 0.10.2 production smoke on 2026-09-25 returned `confidence=0.9` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/183#issuecomment-5824552631, with the probabilities elided. The vendor defines confidence as a spread measure and publishes no formula; the formula is unverified |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
-| fake and real adapter produce identical outcomes | verified — contract tests on 14 hand-authored fixtures, inferred from docs/reference/api.md except the oversized-request fixture, which replays the body recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; the shipped `judgevet.testing` fakes match the adapter's model and answers on every success fixture (#171) |
+| fake and real adapter produce identical outcomes | verified — contract tests on 15 hand-authored fixtures, inferred from docs/reference/api.md except the oversized-request fixture, which replays the body recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; the shipped `judgevet.testing` fakes match the adapter's whole response, error type and status, spend counters and audit record on every fixture (#171, #189) |
+| an off-list Choice option or probability key raises JevResponseError | **inferred** — offline only (#195); the check runs where the response is bound to the questions; no live call has returned one |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
 | the adapter drops the `input` field from 422 bodies to avoid echoing caller data | **verified** — live test asserts test state does not leak |
 | API keys do not leak in error str/repr | **verified** — live tests assert key not in str or repr |

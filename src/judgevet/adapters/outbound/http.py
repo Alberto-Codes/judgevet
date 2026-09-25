@@ -14,7 +14,7 @@ Error handling:
 
 Helper functions:
     - _build_payload: Build the request payload.
-    - _parse_body: Parse the response body into a SystemOneResponse.
+    - _parse_body: Parse the body and check each Choice option.
     - _read_error_detail: Read the message and wire error type of an error body.
     - _translate_status_error: Translate HTTP status errors to JevError subclasses.
     - _translate_request_error: Translate request errors to JevServiceError.
@@ -52,7 +52,8 @@ Raises:
     JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
     JevRequestError: If the API returns 4xx (except 401/403, 429).
     JevServiceError: If the API returns 5xx or a transport error occurs.
-    JevResponseError: If the API returns 2xx with unparseable body.
+    JevResponseError: If a 2xx body does not parse or names an off-list
+            Choice option.
     JevBudgetExceededError: If an opt-in spend cap refuses an attempt before sending.
 
 Async adapters:
@@ -87,6 +88,7 @@ from judgevet.adapters.outbound.request_body import (
 )
 from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.adapters.outbound.spend import ametered, metered
+from judgevet.domain.choice_options import check_choice_options
 from judgevet.domain.errors import (
     JevAuthError,
     JevError,
@@ -177,17 +179,21 @@ def _build_payload(
     }
 
 
-def _parse_body(response: httpx.Response) -> SystemOneResponse:
-    """Parse the JSON response body into a SystemOneResponse.
+def _parse_body(
+    response: httpx.Response, questions: Mapping[str, Any]
+) -> SystemOneResponse:
+    """Parse the JSON response body and bind it to the request's questions.
 
     Args:
         response: The HTTP response from the API.
+        questions: The request's questions, which bound each Choice option.
 
     Returns:
         A parsed SystemOneResponse.
 
     Raises:
-        JevResponseError: If the response body is not valid JSON.
+        JevResponseError: If the body is not valid JSON, does not parse, or
+            names a Choice option outside its question's criteria.
     """
     try:
         raw = response.json()
@@ -196,7 +202,9 @@ def _parse_body(response: httpx.Response) -> SystemOneResponse:
             f"Failed to parse response body: {exc}",
             response.status_code,
         ) from exc
-    return parse_system_one_response("system-one", raw)
+    parsed = parse_system_one_response("system-one", raw)
+    check_choice_options(questions, parsed.answers)
+    return parsed
 
 
 def _read_error_detail(exc: httpx.HTTPStatusError) -> tuple[str, str]:
@@ -292,7 +300,8 @@ class HTTPSystemOneAdapter:
         JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
         JevRequestError: If the API returns 4xx (except 401/403, 429).
         JevServiceError: If the API returns 5xx or a transport error occurs.
-        JevResponseError: If the API returns 2xx with unparseable body.
+        JevResponseError: If a 2xx body does not parse or names an off-list
+            Choice option.
         JevBudgetExceededError: If the spend cap refuses an attempt before sending.
 
     Error details:
@@ -416,7 +425,8 @@ class HTTPSystemOneAdapter:
             JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
             JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
-            JevResponseError: If the API returns 2xx with unparseable body.
+            JevResponseError: If a 2xx body does not parse or names an off-list
+                Choice option.
             JevBudgetExceededError: If the spend cap refuses an attempt before sending.
 
         Error details:
@@ -445,11 +455,17 @@ class HTTPSystemOneAdapter:
                 _build_payload(state, questions, model, self._default_model),
                 self._redactor,
             )
-            send = metered(self._spend, lambda: self._request(payload, event, headers))
+            send = metered(
+                self._spend, lambda: self._request(payload, event, headers, questions)
+            )
             return event.succeed(self._retry.run(send))
 
     def _request(
-        self, payload: dict[str, Any] | bytes, event: CallEvent, headers: dict[str, str]
+        self,
+        payload: dict[str, Any] | bytes,
+        event: CallEvent,
+        headers: dict[str, str],
+        questions: Mapping[str, Any],
     ) -> SystemOneResponse:
         """Send one attempt and translate HTTP errors.
 
@@ -457,6 +473,7 @@ class HTTPSystemOneAdapter:
             payload: Existing JSON data or a redacted immutable body snapshot.
             event: Terminal metadata for this logical call.
             headers: Validated metadata snapshot shared by every attempt.
+            questions: The caller's questions, which bound each Choice option.
 
         Returns:
             Parsed judgment response.
@@ -475,7 +492,7 @@ class HTTPSystemOneAdapter:
             )
             event.status_code = response.status_code
             response.raise_for_status()
-            return _parse_body(response)
+            return _parse_body(response, questions)
         except httpx.HTTPStatusError as exc:
             translated = _translate_status_error(exc)
             if translated is None:
@@ -521,7 +538,8 @@ class AsyncHTTPSystemOneAdapter:
         JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
         JevRequestError: If the API returns 4xx (except 401/403, 429).
         JevServiceError: If the API returns 5xx or a transport error occurs.
-        JevResponseError: If the API returns 2xx with unparseable body.
+        JevResponseError: If a 2xx body does not parse or names an off-list
+            Choice option.
         JevBudgetExceededError: If the spend cap refuses an attempt before sending.
 
     Error details:
@@ -649,7 +667,8 @@ class AsyncHTTPSystemOneAdapter:
             JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
             JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
-            JevResponseError: If the API returns 2xx with unparseable body.
+            JevResponseError: If a 2xx body does not parse or names an off-list
+                Choice option.
             JevBudgetExceededError: If the spend cap refuses an attempt before sending.
 
         Error details:
@@ -674,11 +693,17 @@ class AsyncHTTPSystemOneAdapter:
                 _build_payload(state, questions, model, self._default_model),
                 self._redactor,
             )
-            send = ametered(self._spend, lambda: self._request(payload, event, headers))
+            send = ametered(
+                self._spend, lambda: self._request(payload, event, headers, questions)
+            )
             return event.succeed(await self._retry.arun(send))
 
     async def _request(
-        self, payload: dict[str, Any] | bytes, event: CallEvent, headers: dict[str, str]
+        self,
+        payload: dict[str, Any] | bytes,
+        event: CallEvent,
+        headers: dict[str, str],
+        questions: Mapping[str, Any],
     ) -> SystemOneResponse:
         """Send one attempt and translate HTTP errors.
 
@@ -686,6 +711,7 @@ class AsyncHTTPSystemOneAdapter:
             payload: Existing JSON data or a redacted immutable body snapshot.
             event: Terminal metadata for this logical call.
             headers: Validated metadata snapshot shared by every attempt.
+            questions: The caller's questions, which bound each Choice option.
 
         Returns:
             Parsed judgment response.
@@ -704,7 +730,7 @@ class AsyncHTTPSystemOneAdapter:
             )
             event.status_code = response.status_code
             response.raise_for_status()
-            return _parse_body(response)
+            return _parse_body(response, questions)
         except httpx.HTTPStatusError as exc:
             translated = _translate_status_error(exc)
             if translated is None:

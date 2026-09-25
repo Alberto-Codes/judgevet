@@ -330,6 +330,29 @@ def test_async_adapter_parses_rounded_score() -> None:
     _assert_responses_equal(anyio.run(call), fake)
 
 
+@pytest.mark.contract
+def test_async_adapter_rejects_off_list_choice() -> None:
+    """The async adapter rejects a choice outside the question's criteria (#195)."""
+    fixture = get_fixture_by_name("choice_off_list")
+    request = fixture["request"]
+
+    async def call() -> SystemOneResponse:
+        adapter = AsyncHTTPSystemOneAdapter(
+            api_key="test-key",
+            transport=_transport_for(fixture),
+            retry=RetryPolicy(max_attempts=1),
+        )
+        return await adapter.system_one(
+            request["state"], request["questions"], request["model"]
+        )
+
+    with pytest.raises(JevResponseError) as info:
+        anyio.run(call)
+    assert info.value.status_code == 200
+    assert "'queue'" in str(info.value)
+    assert "'sales'" in str(info.value)
+
+
 def _fixtures_of(kind: str) -> list[dict[str, Any]]:
     """Return the fixtures whose expected outcome has the given kind."""
     return [f for f in get_fixtures() if f["expect"][0] == kind]

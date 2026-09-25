@@ -146,6 +146,18 @@ consumes an answer; see [policy validation](policy.md#evaluation-and-reports).
 The [answer source](../../src/judgevet/domain/answers.py) is authoritative for
 constructor behavior. Do not infer service guarantees from local checks.
 
+Both HTTP adapters and both offline fakes check each Choice answer against the
+question the caller sent. The answer's `choice` and every `probabilities` key
+must be a key of that question's `criteria`. Otherwise the call raises
+`JevResponseError` with status 200, and the message names the question and the
+option. `probabilities` may cover a subset of the criteria. The adapters run
+the check when they parse the body, before the spend cap settles the attempt.
+A raw question mapping is checked when its `type` is `"choice"` and its
+`criteria` is a mapping. Other questions and unasked answer names are not
+checked. The criteria keys are the Choice options. Source:
+https://docs.typesafe.ai/primitives/choice. No live call has returned an
+off-list option, so the check guards an inferred failure.
+
 Wire precision: one consumer call on 2026-09-24 against `jev-1.13.0` returned a
 four-level Score whose probabilities summed to 0.99
 ([issue #175](https://github.com/Alberto-Codes/judgevet/issues/175)). Two-decimal

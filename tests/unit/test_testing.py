@@ -13,6 +13,7 @@ from judgevet.domain.audit import JudgmentRecord
 from judgevet.domain.errors import (
     JevBudgetExceededError,
     JevRateLimitError,
+    JevResponseError,
     JevServiceError,
 )
 from judgevet.domain.questions import Choice, Noul, Score
@@ -370,3 +371,43 @@ def test_record_carries_the_bound_request_id(fake_type: type) -> None:
         _run(fake)
     _run(fake)
     assert [r.request_id for r in sink.records] == ["req-fake-1", None]
+
+
+OFF_LIST_CHOICE = ChoiceAnswer("sales", 0.6, {"billing": 0.4, "sales": 0.6})
+
+
+@pytest.mark.unit
+def test_fake_rejects_off_list_choice() -> None:
+    port: SystemOnePort = FakeSystemOnePort(answers={"queue": OFF_LIST_CHOICE})
+    with pytest.raises(JevResponseError) as info:
+        _call(port)
+    assert info.value.status_code == 200
+    assert "'queue'" in str(info.value)
+    assert "'sales'" in str(info.value)
+
+
+@pytest.mark.unit
+def test_async_fake_rejects_off_list_choice() -> None:
+    port: AsyncSystemOnePort = AsyncFakeSystemOnePort(
+        answers={"queue": OFF_LIST_CHOICE}
+    )
+
+    async def call() -> SystemOneResponse:
+        return await port.system_one("I was charged twice.", QUESTIONS, "jev-test")
+
+    with pytest.raises(JevResponseError) as info:
+        anyio.run(call)
+    assert info.value.status_code == 200
+    assert "'queue'" in str(info.value)
+    assert "'sales'" in str(info.value)
+
+
+@pytest.mark.unit
+def test_fake_rejects_off_list_probability_key() -> None:
+    answer = ChoiceAnswer("billing", 0.7, {"billing": 0.7, "refunds": 0.3})
+    port: SystemOnePort = FakeSystemOnePort(answers={"queue": answer})
+    with pytest.raises(JevResponseError) as info:
+        _call(port)
+    assert info.value.status_code == 200
+    assert "'queue'" in str(info.value)
+    assert "'refunds'" in str(info.value)

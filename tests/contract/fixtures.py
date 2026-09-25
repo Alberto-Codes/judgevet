@@ -412,8 +412,47 @@ def _make_error_max_tokens_exceeded_fixture() -> dict[str, Any]:
     }
 
 
+def _make_choice_off_list_fixture() -> dict[str, Any]:
+    """Fixture 15: 200 whose choice answer names a label outside the criteria.
+
+    This body is synthetic; no live call has returned an off-list option.
+    See: https://github.com/Alberto-Codes/judgevet/issues/195
+
+    Returns:
+        The fixture mapping.
+    """
+    return {
+        "name": "choice_off_list",
+        "request": {
+            "state": "My credit card was declined",
+            "questions": {
+                "queue": {
+                    "type": "choice",
+                    "instructions": "Which team handles this?",
+                    "criteria": {"billing": "Money issues", "technical": "Bugs"},
+                }
+            },
+            "model": "jev-1.13.0",
+        },
+        "status": 200,
+        "body": {
+            "model": "jev-1.13.0",
+            "usage": {"input_tokens": 120, "output_tokens": 12},
+            "answers": {
+                "queue": {
+                    "type": "choice",
+                    "choice": "sales",
+                    "confidence": 0.6,
+                    "probabilities": {"billing": 0.2, "technical": 0.2, "sales": 0.6},
+                }
+            },
+        },
+        "expect": ("error", "JevResponseError", 200),
+    }
+
+
 def get_fixtures() -> list[dict[str, Any]]:
-    """Return the list of all 14 fixtures."""
+    """Return the list of all 15 fixtures."""
     return [
         _make_noul_fixture(),
         _make_choice_fixture(),
@@ -429,6 +468,7 @@ def get_fixtures() -> list[dict[str, Any]]:
         _make_missing_model_fixture(),
         _make_non_json_fixture(),
         _make_rounded_score_fixture(),
+        _make_choice_off_list_fixture(),
     ]
 
 
