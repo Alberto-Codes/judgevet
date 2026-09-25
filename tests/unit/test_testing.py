@@ -2,13 +2,22 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import anyio
 import pytest
 
+from judgevet.diagnostics import bind_request_id
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
-from judgevet.domain.errors import JevRateLimitError, JevServiceError
+from judgevet.domain.audit import JudgmentRecord
+from judgevet.domain.errors import (
+    JevBudgetExceededError,
+    JevRateLimitError,
+    JevServiceError,
+)
 from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.spend import SpendCap
 from judgevet.domain.usage import Usage
 from judgevet.ports import AsyncSystemOnePort, SystemOnePort
 from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
@@ -192,3 +201,172 @@ def test_async_scripted_error_is_raised_after_the_call_is_recorded() -> None:
         anyio.run(call)
     assert info.value is error
     assert fake.calls == [("second", dict(QUESTIONS), "jev-test")]
+
+
+class ListSink:
+    """Collect every record a fake writes."""
+
+    def __init__(self) -> None:
+        """Start with no records."""
+        self.records: list[JudgmentRecord] = []
+
+    def record(self, record: JudgmentRecord) -> None:
+        """Store one record.
+
+        Args:
+            record: The record written by the fake.
+        """
+        self.records.append(record)
+
+
+class FailingSink:
+    """Raise on every write, as a full disk would."""
+
+    def record(self, record: JudgmentRecord) -> None:
+        """Refuse the record.
+
+        Args:
+            record: The record written by the fake.
+
+        Raises:
+            OSError: Always.
+        """
+        raise OSError("sink-failure-canary")
+
+
+FAKES = pytest.mark.parametrize(
+    "fake_type", [FakeSystemOnePort, AsyncFakeSystemOnePort], ids=["sync", "async"]
+)
+
+
+def _run(fake: FakeSystemOnePort | AsyncFakeSystemOnePort) -> SystemOneResponse:
+    """Call either fake once with the shared questions."""
+    if isinstance(fake, FakeSystemOnePort):
+        return _call(fake)
+
+    async def call() -> SystemOneResponse:
+        return await fake.system_one("text", QUESTIONS, "jev-test")
+
+    return anyio.run(call)
+
+
+def _make(
+    fake_type: type, **options: Any
+) -> FakeSystemOnePort | AsyncFakeSystemOnePort:
+    """Build the named fake with the given keyword options."""
+    fake = fake_type(**options)
+    assert isinstance(fake, FakeSystemOnePort | AsyncFakeSystemOnePort)
+    return fake
+
+
+@pytest.mark.unit
+@FAKES
+def test_refused_claim_writes_one_record_and_records_no_call(fake_type: type) -> None:
+    sink = ListSink()
+    cap = SpendCap(max_attempts=1)
+    cap.claim()
+    fake = _make(fake_type, spend_cap=cap, audit=sink)
+    with pytest.raises(JevBudgetExceededError):
+        _run(fake)
+    assert fake.calls == []
+    [record] = sink.records
+    assert (record.outcome, record.error_type, record.status_code) == (
+        "error",
+        "JevBudgetExceededError",
+        None,
+    )
+    assert (record.answers, record.usage, record.resolved_model) == (None, None, None)
+
+
+@pytest.mark.unit
+@FAKES
+def test_success_settles_input_tokens_and_records_no_status(fake_type: type) -> None:
+    sink = ListSink()
+    cap = SpendCap()
+    usage = Usage(input_tokens=9, output_tokens=1)
+    fake = _make(fake_type, usage=usage, spend_cap=cap, audit=sink)
+    response = _run(fake)
+    assert (cap.attempts, cap.input_tokens) == (1, 9)
+    [record] = sink.records
+    assert (record.outcome, record.status_code, record.error_type) == (
+        "success",
+        None,
+        None,
+    )
+    assert record.usage == usage
+    assert record.answers == response.answers
+    assert record.resolved_model == "jev-test"
+    assert record.questions == {"billing": "noul", "queue": "choice", "tone": "score"}
+
+
+@pytest.mark.unit
+@FAKES
+def test_scripted_error_settles_nothing(fake_type: type) -> None:
+    cap = SpendCap()
+    usage = Usage(input_tokens=9, output_tokens=1)
+    fake = _make(
+        fake_type, usage=usage, error=JevServiceError("down", 503), spend_cap=cap
+    )
+    with pytest.raises(JevServiceError):
+        _run(fake)
+    assert (cap.attempts, cap.input_tokens) == (1, 0)
+
+
+@pytest.mark.unit
+@FAKES
+def test_failing_sink_does_not_change_the_response(fake_type: type) -> None:
+    plain = _run(_make(fake_type, seed=4))
+    assert _run(_make(fake_type, seed=4, audit=FailingSink())) == plain
+
+
+@pytest.mark.unit
+@FAKES
+def test_failing_sink_does_not_change_the_scripted_error(fake_type: type) -> None:
+    error = JevRateLimitError("slow down", 429)
+    with pytest.raises(JevRateLimitError) as info:
+        _run(_make(fake_type, error=error, audit=FailingSink()))
+    assert info.value is error
+
+
+@pytest.mark.unit
+@FAKES
+def test_non_jev_error_records_no_status(fake_type: type) -> None:
+    sink = ListSink()
+    with pytest.raises(RuntimeError):
+        _run(_make(fake_type, error=RuntimeError("boom"), audit=sink))
+    [record] = sink.records
+    assert (record.outcome, record.error_type, record.status_code) == (
+        "error",
+        "RuntimeError",
+        None,
+    )
+
+
+@pytest.mark.unit
+@FAKES
+def test_scripted_error_records_its_status(fake_type: type) -> None:
+    sink = ListSink()
+    with pytest.raises(JevRateLimitError):
+        _run(_make(fake_type, error=JevRateLimitError("slow", 429), audit=sink))
+    assert [r.status_code for r in sink.records] == [429]
+
+
+@pytest.mark.unit
+@FAKES
+def test_base_exception_records_cancelled(fake_type: type) -> None:
+    sink = ListSink()
+    with pytest.raises(KeyboardInterrupt):
+        _run(_make(fake_type, error=KeyboardInterrupt(), audit=sink))
+    [record] = sink.records
+    assert (record.outcome, record.error_type) == ("cancelled", "KeyboardInterrupt")
+
+
+@pytest.mark.unit
+@FAKES
+def test_record_carries_the_bound_request_id(fake_type: type) -> None:
+    sink = ListSink()
+    fake = _make(fake_type, audit=sink)
+    with bind_request_id("req-fake-1"):
+        _run(fake)
+    _run(fake)
+    assert [r.request_id for r in sink.records] == ["req-fake-1", None]

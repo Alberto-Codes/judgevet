@@ -10,7 +10,8 @@ Seeded values are synthetic. They exercise caller code paths; they do not
 predict what the service would answer. The returned `model` echoes the model
 argument.
 
-Each fake takes two keyword-only arguments that script the whole call:
+Each fake takes four keyword-only arguments. Two script the whole call and
+two match the HTTP adapter options of the same name:
 
 Args:
     usage (Usage | None): The `Usage` every response carries. The default is
@@ -19,6 +20,14 @@ Args:
         records the call in `calls` first, then raises this instance. The error
         covers the whole call, because the real adapter never fails one
         question of a call.
+    spend_cap (SpendCap | None): A cap the fake claims one attempt from before
+        each call. A refused claim raises `JevBudgetExceededError` before the
+        call is recorded. A successful call settles its `usage.input_tokens`;
+        a failed call settles nothing.
+    audit (AuditSink | None): A sink that receives one `JudgmentRecord` per
+        call, whether it returned, raised or was refused. The record carries
+        no HTTP status on success, because no HTTP response arrived. A sink
+        failure never changes the result.
 
 Examples:
     ```python
@@ -52,24 +61,56 @@ Examples:
     else:
         raise AssertionError("the scripted error was not raised")
     assert len(limited.calls) == 1
+
+    from judgevet.domain.errors import JevBudgetExceededError
+    from judgevet.domain.spend import SpendCap
+
+
+    class ListSink:
+        def __init__(self) -> None:
+            self.records = []
+
+        def record(self, record) -> None:
+            self.records.append(record)
+
+
+    sink = ListSink()
+    capped = FakeSystemOnePort(spend_cap=SpendCap(max_attempts=1), audit=sink)
+    capped.system_one("text", {"q": Noul()}, "m")
+    try:
+        capped.system_one("text", {"q": Noul()}, "m")
+    except JevBudgetExceededError as error:
+        assert error.limit == "attempts"
+    else:
+        raise AssertionError("the spend cap did not refuse the second call")
+    assert [r.outcome for r in sink.records] == ["success", "error"]
+    assert len(capped.calls) == 1
     ```
 
 See Also:
     - [judgevet.ports][]: The protocols these fakes satisfy
     - [judgevet.domain.answers][]: The answer types and their validators
     - [judgevet.domain.questions][]: The typed questions the fakes answer
+    - [judgevet.domain.spend][]: The cap both fakes accept as `spend_cap=`
+    - [judgevet.domain.audit][]: The record both fakes write to `audit=`
 """
 
 from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping
+from contextlib import suppress
+from datetime import UTC, datetime
 from typing import Any
 
+from judgevet.diagnostics import current_request_id
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
-from judgevet.domain.questions import Choice, Noul, Question, Score
+from judgevet.domain.audit import JudgmentRecord
+from judgevet.domain.questions import Choice, Noul, Question, Score, question_types
 from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.spend import SpendCap
 from judgevet.domain.usage import Usage
+from judgevet.ports import AuditSink
 
 State = str | dict[str, Any] | list[Any]
 Questions = Mapping[str, Question | Mapping[str, Any]]
@@ -174,6 +215,8 @@ class _FakeCore:
         usage (Usage): The usage every response carries.
         error (BaseException | None): The exception every call raises after
             it is recorded, or None to answer normally.
+        spend_cap (SpendCap | None): The cap claimed before each call.
+        audit (AuditSink | None): The sink that receives one record per call.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -192,8 +235,10 @@ class _FakeCore:
         *,
         usage: Usage | None = None,
         error: BaseException | None = None,
+        spend_cap: SpendCap | None = None,
+        audit: AuditSink | None = None,
     ):
-        """Store the seed, a copy of the scripted answers, the usage and the error.
+        """Store the seed, a copy of the scripted answers and the call options.
 
         Args:
             seed: The seed mixed into every generated answer.
@@ -201,17 +246,97 @@ class _FakeCore:
             usage: The usage every response carries. None means `Usage()`.
             error: The exception every call raises after it is recorded.
                 None means every call answers.
+            spend_cap: The cap claimed before each call and settled after a
+                successful one. None means no cap.
+            audit: The sink that receives one record per call. None means no
+                record.
         """
         self.seed = seed
         self.answers: dict[str, Answer] = dict(answers or {})
         self.usage = usage if usage is not None else Usage()
         self.error = error
+        self.spend_cap = spend_cap
+        self.audit = audit
         self.calls: list[Call] = []
 
     def _respond(
         self, state: State, questions: Questions, model: str
     ) -> SystemOneResponse:
-        """Record the call, then raise the scripted error or answer every question.
+        """Claim, answer and settle one call, then write its audit record.
+
+        Args:
+            state: The content the caller would judge.
+            questions: Question names mapped to typed or raw questions.
+            model: The model name, echoed into the response.
+
+        Returns:
+            A response with one answer per question name and the scripted usage.
+
+        Raises:
+            JevBudgetExceededError: If the spend cap refuses the call.
+            BaseException: The scripted error, when one is set.
+        """
+        response: SystemOneResponse | None = None
+        failure: BaseException | None = None
+        try:
+            if self.spend_cap is not None:
+                self.spend_cap.claim()
+            response = self._answer_all(state, questions, model)
+        except BaseException as exc:
+            failure = exc
+            raise
+        else:
+            if self.spend_cap is not None:
+                self.spend_cap.settle(response.usage.input_tokens)
+            return response
+        finally:
+            self._write(model, questions, response, failure)
+
+    def _write(
+        self,
+        model: str,
+        questions: Questions,
+        response: SystemOneResponse | None,
+        failure: BaseException | None,
+    ) -> None:
+        """Write one record to the sink and contain any failure of the write.
+
+        The fields follow the HTTP adapter's record. A success carries no
+        status code, because no HTTP response arrived.
+
+        Args:
+            model: The requested model name.
+            questions: Question names mapped to typed or raw questions.
+            response: The returned response, or None when the call failed.
+            failure: The exception that ended the call, or None on success.
+        """
+        if self.audit is None:
+            return
+        answer = response if failure is None else None
+        if failure is None:
+            outcome = "success"
+        else:
+            outcome = "error" if isinstance(failure, Exception) else "cancelled"
+        with suppress(Exception):
+            self.audit.record(
+                JudgmentRecord(
+                    timestamp=datetime.now(UTC),
+                    outcome=outcome,
+                    requested_model=model,
+                    questions=question_types(questions),
+                    error_type=None if failure is None else type(failure).__name__,
+                    status_code=getattr(failure, "status_code", None),
+                    resolved_model=None if answer is None else answer.model,
+                    answers=None if answer is None else answer.answers,
+                    usage=None if answer is None else answer.usage,
+                    request_id=current_request_id(),
+                )
+            )
+
+    def _answer_all(
+        self, state: State, questions: Questions, model: str
+    ) -> SystemOneResponse:
+        """Append the call to `calls`, then raise the scripted error or answer it.
 
         Args:
             state: The content the caller would judge.
@@ -273,6 +398,8 @@ class FakeSystemOnePort(_FakeCore):
         usage (Usage): The usage every response carries.
         error (BaseException | None): The exception every call raises after
             it is recorded, or None to answer normally.
+        spend_cap (SpendCap | None): The cap claimed before each call.
+        audit (AuditSink | None): The sink that receives one record per call.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -311,6 +438,7 @@ class FakeSystemOnePort(_FakeCore):
             usage.
 
         Raises:
+            JevBudgetExceededError: If the spend cap refuses the call.
             BaseException: The scripted error, after the call is recorded.
         """
         return self._respond(state, questions, model)
@@ -325,6 +453,8 @@ class AsyncFakeSystemOnePort(_FakeCore):
         usage (Usage): The usage every response carries.
         error (BaseException | None): The exception every call raises after
             it is recorded, or None to answer normally.
+        spend_cap (SpendCap | None): The cap claimed before each call.
+        audit (AuditSink | None): The sink that receives one record per call.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -366,6 +496,7 @@ class AsyncFakeSystemOnePort(_FakeCore):
             usage.
 
         Raises:
+            JevBudgetExceededError: If the spend cap refuses the call.
             BaseException: The scripted error, after the call is recorded.
         """
         return self._respond(state, questions, model)

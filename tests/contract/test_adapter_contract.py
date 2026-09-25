@@ -27,9 +27,12 @@ from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
     HTTPSystemOneAdapter,
 )
+from judgevet.adapters.outbound.spend import SpendCap
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.audit import JudgmentRecord
 from judgevet.domain.errors import (
     JevAuthError,
+    JevBudgetExceededError,
     JevError,
     JevMaxTokensExceededError,
     JevRateLimitError,
@@ -400,3 +403,122 @@ def test_scripted_fakes_match_real_adapter_error(
     with pytest.raises(JevError) as fake_info:
         _call_fake(fake_kind, fixture, error=_error_for(fixture["expect"]))
     _assert_errors_equal(real_info.value, fake_info.value)
+
+
+class _ListSink:
+    """Collect every record a port writes, in order."""
+
+    def __init__(self) -> None:
+        """Start with no records."""
+        self.records: list[JudgmentRecord] = []
+
+    def record(self, record: JudgmentRecord) -> None:
+        """Store one record.
+
+        Args:
+            record: The record written by the port.
+        """
+        self.records.append(record)
+
+
+def _counting_transport(
+    fixture: dict[str, Any],
+) -> tuple[httpx.MockTransport, list[int]]:
+    """Wrap the fixture's transport so the test can count the requests it sees."""
+    seen: list[int] = []
+    inner = _transport_for(fixture)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(1)
+        return inner.handle_request(request)
+
+    return httpx.MockTransport(handler), seen
+
+
+def _call_twice(call: Any) -> BaseException | None:
+    """Run the call once, then prove a second identical call is refused.
+
+    Returns:
+        The first call's exception, or None when it returned.
+    """
+    first: BaseException | None = None
+    try:
+        call()
+    except JevError as exc:
+        first = exc
+    with pytest.raises(JevBudgetExceededError):
+        call()
+    return first
+
+
+def _fake_caller(fake_kind: str, fixture: dict[str, Any], **script: Any) -> Any:
+    """Build one fake and return a zero-argument function that calls it."""
+    request = fixture["request"]
+    args = (request["state"], request["questions"], request["model"])
+    if fake_kind == "sync":
+        port: SystemOnePort = FakeSystemOnePort(**script)
+        return lambda: port.system_one(*args)
+    async_port: AsyncSystemOnePort = AsyncFakeSystemOnePort(**script)
+
+    async def call() -> SystemOneResponse:
+        return await async_port.system_one(*args)
+
+    return lambda: anyio.run(call)
+
+
+def _fake_script(fixture: dict[str, Any]) -> dict[str, Any]:
+    """Script a fake with the fixture's answers and usage, or its error."""
+    if fixture["expect"][0] == "error":
+        return {"error": _error_for(fixture["expect"])}
+    return {"answers": _scripted_answers(fixture), "usage": _scripted_usage(fixture)}
+
+
+@pytest.mark.contract
+@FAKE_KINDS
+@pytest.mark.parametrize("fixture", get_fixtures(), ids=lambda f: f["name"])
+def test_fakes_match_real_adapter_spend_cap_and_audit(
+    fixture: dict[str, Any], fake_kind: str
+) -> None:
+    """Both sides spend, refuse and record one call the same way."""
+    real_cap, fake_cap = SpendCap(max_attempts=1), SpendCap(max_attempts=1)
+    real_sink, fake_sink = _ListSink(), _ListSink()
+    transport, seen = _counting_transport(fixture)
+    request = fixture["request"]
+    with HTTPSystemOneAdapter(
+        api_key="test-key", transport=transport, spend_cap=real_cap, audit=real_sink
+    ) as adapter:
+        _call_twice(
+            lambda: adapter.system_one(
+                request["state"], request["questions"], request["model"]
+            )
+        )
+    fake = _fake_caller(
+        fake_kind,
+        fixture,
+        spend_cap=fake_cap,
+        audit=fake_sink,
+        **_fake_script(fixture),
+    )
+    _call_twice(fake)
+    assert len(seen) == 1
+    assert (real_cap.attempts, real_cap.input_tokens) == (
+        fake_cap.attempts,
+        fake_cap.input_tokens,
+    )
+    assert len(real_sink.records) == 2
+    assert len(fake_sink.records) == 2
+    real, fake_record = real_sink.records[0], fake_sink.records[0]
+    if fixture["expect"][0] == "error":
+        assert real.status_code == fake_record.status_code
+    else:
+        assert (real.status_code, fake_record.status_code) == (200, None)
+    assert _fields(real, "status_code") == _fields(fake_record, "status_code")
+    real_refused, fake_refused = real_sink.records[1], fake_sink.records[1]
+    assert real_refused.error_type == "JevBudgetExceededError"
+    assert _fields(real_refused) == _fields(fake_refused)
+
+
+def _fields(record: JudgmentRecord, *ignored: str) -> dict[str, Any]:
+    """Return a record's fields without its timestamp and the named fields."""
+    skip = {"timestamp", *ignored}
+    return {k: v for k, v in vars(record).items() if k not in skip}

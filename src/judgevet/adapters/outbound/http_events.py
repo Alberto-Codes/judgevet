@@ -6,6 +6,7 @@ failure never changes the call's result. The diagnostic event reports the
 failure's class name and the call returns its answer or re-raises its error.
 Source: https://opentelemetry.io/docs/specs/otel/error-handling/.
 Source: https://docs.python.org/3/library/logging.html#logging.Handler.handleError.
+The record's question type names come from `judgevet.domain.questions`.
 
 Examples:
     ```python
@@ -30,9 +31,9 @@ from typing import Any
 
 import structlog
 
-from judgevet.adapters.outbound.request_body import question_types
 from judgevet.diagnostics import current_request_id, diagnostic_model
 from judgevet.domain.audit import JudgmentRecord
+from judgevet.domain.questions import question_types
 from judgevet.domain.response import SystemOneResponse
 from judgevet.ports import AuditSink
 

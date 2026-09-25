@@ -199,7 +199,9 @@ and no preflight size estimate.
 
 CLI and MCP entry points do not set a spend cap. An application can construct
 a capped HTTP adapter and pass it to `run_cli` or `create_mcp_server` through
-the existing judgment port.
+the existing judgment port. The offline fakes in `judgevet.testing` accept the
+same `spend_cap=` option and claim, refuse and settle one attempt per call the
+same way; see [offline tests](../how-to/test-offline.md).
 
 ## Audit records
 
@@ -259,7 +261,9 @@ The async adapter calls the same synchronous method inline, so a slow sink
 blocks the event loop. Async sinks are not supported. Every adapter that
 receives the same sink writes to it; the sink owns its own thread safety.
 CLI and MCP entry points do not set a sink. The offline fakes in
-`judgevet.testing` write no records.
+`judgevet.testing` accept the same `audit=` option and write one record per
+call the same way, with `status_code=None` on success because no HTTP response
+arrived.
 
 ## Proxy and TLS configuration
 

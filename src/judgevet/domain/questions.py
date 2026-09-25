@@ -1,5 +1,7 @@
 """Question types for Jev API.
 
+`question_types` maps each question id to its wire type name for audit records.
+
 Examples:
     ```python
     from judgevet.domain.questions import Noul, Choice, Score
@@ -189,3 +191,32 @@ class Score:
 
 Question = Noul | Choice | Score
 """A question object."""
+
+_TYPE_NAMES: tuple[tuple[type, str], ...] = (
+    (Noul, "noul"),
+    (Choice, "choice"),
+    (Score, "score"),
+)
+
+
+def question_types(questions: Mapping[str, Any]) -> dict[str, str | None]:
+    """Map each question id to its wire type name, never its instructions.
+
+    A typed question maps to `noul`, `choice` or `score`. A raw wire dictionary
+    maps to its `type` value when that value is a string. The wire type names
+    follow https://docs.typesafe.ai/api.
+
+    Args:
+        questions: Question objects or raw wire dictionaries keyed by id.
+
+    Returns:
+        The id to type mapping; None where a raw question has no string type.
+    """
+    types: dict[str, str | None] = {}
+    for name, value in questions.items():
+        kind = next((n for cls, n in _TYPE_NAMES if isinstance(value, cls)), None)
+        if kind is None and isinstance(value, dict):
+            raw = value.get("type")
+            kind = raw if isinstance(raw, str) else None
+        types[name] = kind
+    return types

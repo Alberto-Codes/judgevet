@@ -426,13 +426,19 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2093 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.14%** (2067/2150 statements).
+**2139 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.20%** (2101/2184 statements).
 #189 slice (a) lets both fakes take scripted `usage=` and a scripted whole-call
 `error=`. The contract test now runs every fixture through both fakes and the
 HTTP adapter: whole-response equality on the five response fixtures and error
-type plus `status_code` on the nine error fixtures. No live-service claim
-changes.
+type plus `status_code` on the nine error fixtures. Slice (b) gives both fakes
+the same `spend_cap=` and `audit=` options as the HTTP adapters: claim before
+the call, settle on success, one `JudgmentRecord` per call including a refused
+claim, sink failures contained. `SpendCap` now lives in `judgevet.domain.spend`
+and `question_types` in `judgevet.domain.questions`; the adapter import paths
+and `judgevet.SpendCap` are unchanged. The contract test compares counters and
+records between each fake and the adapter on every fixture. No live-service
+claim changes.
 #54 slice 1 adds an opt-in `AuditSink` port and a frozen `JudgmentRecord`.
 Both HTTP adapters write one record per logical call. A sink failure is
 reported on `http.call` as `audit_error` and never changes the result. The

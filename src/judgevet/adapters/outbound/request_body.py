@@ -15,19 +15,18 @@ Examples:
 See Also:
     - [judgevet.ports.StateRedactor][]: Caller-owned transformation protocol.
     - [judgevet.ports.AuditSink][]: Optional caller-owned audit destination.
-    - [judgevet.adapters.outbound.spend.SpendCap][]: Optional shared spend cap.
+    - [judgevet.domain.spend.SpendCap][]: Optional shared spend cap.
     - [judgevet.adapters.outbound.http][]: Shared preparation before retries.
     - [judgevet.adapters.outbound.gateway][]: Independent metadata configuration.
 """
 
 import json
-from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
 
 from judgevet.adapters.outbound.gateway import GatewayOptions
-from judgevet.adapters.outbound.spend import SpendCap
 from judgevet.domain.questions import Choice, Noul, Score
+from judgevet.domain.spend import SpendCap
 from judgevet.ports import AuditSink, StateRedactor
 
 
@@ -136,20 +135,3 @@ def wire_question(question: Any) -> Any:
         return result
     # Non-Question values pass through untouched
     return question
-
-
-def question_types(questions: Mapping[str, Any]) -> dict[str, str | None]:
-    """Map each question id to its wire type name, never its instructions.
-
-    Args:
-        questions: Question objects or raw wire dictionaries keyed by id.
-
-    Returns:
-        The id to type mapping; None where a raw question has no string type.
-    """
-    types: dict[str, str | None] = {}
-    for name, value in questions.items():
-        wire = wire_question(value)
-        kind = wire.get("type") if isinstance(wire, dict) else None
-        types[name] = kind if isinstance(kind, str) else None
-    return types

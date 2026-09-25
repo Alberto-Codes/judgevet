@@ -35,6 +35,16 @@ call: the fake appends the call to `calls` first, then raises the instance you
 passed. No option fails one question of a call, because the real adapter never
 does.
 
+Each fake takes `spend_cap` and `audit` too. They behave as the
+[HTTP adapter options](../reference/configuration.md#spend-cap) of the same
+name. The fake claims one attempt from the `SpendCap` before each call. A
+refused claim raises `JevBudgetExceededError` and the call is not recorded in
+`calls`. A successful call settles its `usage.input_tokens`; a failed call
+settles nothing. The `audit` sink receives one `JudgmentRecord` per call,
+whether the call returned, raised or was refused. A successful record carries
+`status_code=None`, because no HTTP response arrived. A sink failure never
+changes the result.
+
 Seeded answers are synthetic. They exercise your code paths. They do not
 predict what the service would answer.
 
@@ -134,6 +144,45 @@ if __name__ == "__main__":
     test_route_defers_when_rate_limited()
 ```
 
-Both fakes import only the domain and the ports. An import-linter contract
+## Spend cap and audit
+
+Save this program as `test_route_ticket_budget.py`. It caps the fake at one
+attempt and collects each audit record in a list:
+
+```python
+from judgevet import JevBudgetExceededError, JudgmentRecord, Noul, SpendCap
+from judgevet.testing import FakeSystemOnePort
+
+
+class ListSink:
+    def __init__(self) -> None:
+        self.records: list[JudgmentRecord] = []
+
+    def record(self, record: JudgmentRecord) -> None:
+        self.records.append(record)
+
+
+def test_second_call_is_refused_by_the_cap() -> None:
+    sink = ListSink()
+    fake = FakeSystemOnePort(spend_cap=SpendCap(max_attempts=1), audit=sink)
+    questions = {"billing": Noul(instructions="Is this about billing?")}
+    fake.system_one("I was charged twice.", questions, "jev-1.13.0")
+    try:
+        fake.system_one("I was charged twice.", questions, "jev-1.13.0")
+    except JevBudgetExceededError as error:
+        assert error.limit == "attempts"
+    else:
+        raise AssertionError("the cap did not refuse the second call")
+    assert len(fake.calls) == 1
+    assert [record.outcome for record in sink.records] == ["success", "error"]
+
+
+if __name__ == "__main__":
+    test_second_call_is_refused_by_the_cap()
+```
+
+The refused call writes the second record. The first call wrote one record.
+
+Both fakes import only the domain, the ports and `judgevet.diagnostics`. An import-linter contract
 forbids them from importing an adapter. Use the
 [HTTP adapters](use-library.md) when a test must reach the service.

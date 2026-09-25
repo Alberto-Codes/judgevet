@@ -107,13 +107,16 @@ concrete adapter. See [port signatures](../../src/judgevet/ports/__init__.py).
 
 `judgevet.testing` provides `FakeSystemOnePort` for `SystemOnePort` and
 `AsyncFakeSystemOnePort` for `AsyncSystemOnePort`. They ship in the installed
-package without an extra and import only the domain and the ports. Each takes
-`seed: int = 0` and `answers: Mapping[str, Answer] | None`, and records each
-call's `(state, questions, model)` in `calls`. A scripted name returns its
-answer. Other typed questions receive seeded answers that pass the answer
+package without an extra and import only the domain, the ports and the
+request-id binding in `judgevet.diagnostics`. Each takes `seed: int = 0` and
+`answers: Mapping[str, Answer] | None`, and records each call's
+`(state, questions, model)` in `calls`. A scripted name returns its answer.
+Other typed questions receive seeded answers that pass the answer
 constructors; an unscripted raw mapping raises `TypeError`. The response echoes
-the `model` argument and carries a `Usage` with no token counts. Seeded answers
-are local test data, not service behaviour. See the
+the `model` argument and carries the scripted `usage`, default `Usage()`. A
+scripted `error` is raised after the call is recorded. The fakes accept the
+same `spend_cap` and `audit` options as the HTTP adapters and honour them the
+same way. Seeded answers are local test data, not service behaviour. See the
 [offline testing recipe](../how-to/test-offline.md) and the
 [fake source](../../src/judgevet/testing.py).
 
