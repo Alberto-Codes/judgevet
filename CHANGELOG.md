@@ -3,6 +3,17 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.13.0](https://github.com/Alberto-Codes/judgevet/compare/v0.12.0...v0.13.0) (2026-09-25)
+
+
+### Features
+
+* **adapters:** retry 429 and 5xx by default with three attempts ([ac457a2](https://github.com/Alberto-Codes/judgevet/commit/ac457a2886ae79888330e55f6f6155505d1842ba)), references [#196](https://github.com/Alberto-Codes/judgevet/issues/196)
+* **audit:** add a keyed state fingerprint to the judgment record ([a31fb11](https://github.com/Alberto-Codes/judgevet/commit/a31fb11cd179173176d99a3deaa14cf45a4abe74)), references [#191](https://github.com/Alberto-Codes/judgevet/issues/191)
+* **domain:** reject a Choice answer whose option is outside the criteria ([f96b792](https://github.com/Alberto-Codes/judgevet/commit/f96b7925c6e51e3d86c3f6b5daf6a9cd09d1d371)), references [#195](https://github.com/Alberto-Codes/judgevet/issues/195)
+* **testing:** give both fakes the spend cap and audit sink options ([c202bb0](https://github.com/Alberto-Codes/judgevet/commit/c202bb053cfab007c3dc662b21fa709b5249c620)), references [#189](https://github.com/Alberto-Codes/judgevet/issues/189)
+* **testing:** script usage and a whole-call error on both fakes ([4ac006a](https://github.com/Alberto-Codes/judgevet/commit/4ac006a1e286f19e9155d5e7df6b053008acea28)), references [#189](https://github.com/Alberto-Codes/judgevet/issues/189)
+
 ## [0.12.0](https://github.com/Alberto-Codes/judgevet/compare/v0.11.0...v0.12.0) (2026-09-25)
 
 
