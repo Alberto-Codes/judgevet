@@ -5,29 +5,33 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.11.0 is published. Library, CLI and optional MCP share one version.
-This release makes `Noul`, `Choice` and `Score` construction keyword-only with
-no deprecation cycle, ships `judgevet.testing` with the sync and async fakes
-inside the wheel, and exports `VERIFIED_MODEL`. Runtime requirements and the
+judgevet 0.12.0 is published. Library, CLI and optional MCP share one version.
+This release raises `JevMaxTokensExceededError` for the service's
+`max_tokens_exceeded` body, adds the opt-in `SpendCap` adapter option with
+`JevBudgetExceededError`, and adds the `AuditSink` port with one
+`JudgmentRecord` per call. No surface breaks. Runtime requirements and the
 `mcp` extra are unchanged. The documentation site is [live](https://alberto-codes.github.io/judgevet/).
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.11.0`, commit `29299be8a53c8b493604176fa3f02d78b829b97f` |
-| Accepted candidate | none; the maintainer merged and published without a TestPyPI round, as for 0.10.2 |
-| Wheel SHA-256 | `f40323b8640b7ffc57aec2e481d70494fe74454520b0fdf0c91e289fac4e5139` |
-| Source distribution SHA-256 | `d830aa675fef830c1171abaf610db92590aab6ace0a3568f0204744e8bb53802` |
+| Release/tag | `v0.12.0`, commit `5d7882b9a018e9628500cfb7d9056406879e7102` |
+| Accepted candidate | none; the maintainer merged and published without a TestPyPI round, as for 0.10.2 and 0.11.0 |
+| Wheel SHA-256 | `63953f84a23e8d9f1d21d5abd6ee859502e5bf8b2b73d1e905379aef1fbef22e` |
+| Source distribution SHA-256 | `43995c1de9849bdd3276d65159c47bf2ea772b7860d858a8cb974e66b5b92509` |
 | Actual PyPI download | Index wheel is byte-identical to the workflow artifact; JSON digests agree |
-| Library | Isolated base import, typing marker, live examples and all four policy examples passed on the workflow wheel, which is byte-identical to the index wheel; policy examples also type-checked |
-| CLI | Installed live CLI test passed on that wheel; one test, no skip |
-| MCP | Isolated MCP smoke passed on that wheel; registry launcher discovery and all three tools passed, with the wheel and against the live listing |
-| Published launcher | not rechecked through a fresh uvx cache for 0.11.0 |
-| Registry | Manifest validated and submitted after a fresh publisher login; independent query lists `io.github.Alberto-Codes/judgevet` 0.11.0 active and latest, published `2026-09-25T02:06:34.122151Z`, package and launcher fields match |
+| Library | Isolated base import, typing marker and the two live examples passed on the workflow wheel, which is byte-identical to the index wheel; the policy examples were not rerun for 0.12.0 |
+| CLI | not rerun for 0.12.0; the CLI code did not change in this release |
+| MCP | Registry launcher discovery and all three tools passed with the wheel and against the live listing, on synthetic loopback answers; the live MCP smoke was not rerun for 0.12.0 |
+| Published launcher | not rechecked through a fresh uvx cache for 0.12.0 |
+| Registry | Manifest validated and submitted after a fresh publisher login; independent query lists `io.github.Alberto-Codes/judgevet` 0.12.0 active and latest, published `2026-09-25T04:38:56.176195Z`, package and launcher fields match |
 
-[Release tracker](https://github.com/Alberto-Codes/judgevet/issues/186) records the
+[Release tracker](https://github.com/Alberto-Codes/judgevet/issues/194) records the
 freeze, merge, publication and live evidence separately.
-[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36084575336)
-passed its wheel and MCP smoke checks before upload.
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36095153076)
+passed its wheel and MCP smoke checks before upload. The live footprint of the
+release verification was one authorized smoke of two example calls.
+Prior [0.11.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/186)
+retains its fuller production checks.
 No source-archive rebuild outside the checkout was done for this release.
 The generated release note for the breaking change named a private downstream
 repository; the release notes, the merged release PR body and `CHANGELOG.md`
@@ -56,8 +60,8 @@ records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
 The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.11.0`, published at
-`2026-09-25T02:06:34.122151Z`; 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
+reports `io.github.Alberto-Codes/judgevet` version `0.12.0`, published at
+`2026-09-25T04:38:56.176195Z`; 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
 manifest. Registry acceptance does not verify a host installation or reload.
 No unseen API body, other model, modern protocol path or gateway became verified.
 
@@ -649,7 +653,7 @@ Published README links retain offline source and fragment validation.
 | every other field name | inferred from documentation |
 | resolved models other than `jev-1.13.0` | untested; both `jev-latest` and explicit `jev-1.13.0` have been called |
 | probabilities on the wire are rounded to two decimals | observed once — a consumer call on 2026-09-24 against `jev-1.13.0` returned a four-level Score summing to 0.99 (#175); the tolerance is 0.005 per probability since that fix. This repository's live suite asked a four-level Score once on 2026-09-24 (#184) and the resolved `jev-1.13.0` returned probabilities summing to exactly 1.0, which neither confirms nor refutes the rounding |
-| Choice `confidence` sits below `probabilities[choice]` | **observed once**. The 0.11.0 production smoke on 2026-09-25 returned `confidence=0.89` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/186#issuecomment-5825514560; that comment elides the probabilities, and `probabilities={'b': 0.05, 'a': 0.95}` is recorded only in the body of https://github.com/Alberto-Codes/judgevet/issues/187. The 0.10.2 production smoke on 2026-09-25 returned `confidence=0.9` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/183#issuecomment-5824552631, with the probabilities elided. The vendor defines confidence as a spread measure and publishes no formula; the formula is unverified |
+| Choice `confidence` sits below `probabilities[choice]` | **observed twice**. The 0.12.0 production smoke on 2026-09-25 returned `ChoiceAnswer(choice='a', confidence=0.9, probabilities={'b': 0.05, 'a': 0.95})` with both values in one run record, at https://github.com/Alberto-Codes/judgevet/issues/194#issuecomment-5826847175. The 0.11.0 production smoke on 2026-09-25 returned `confidence=0.89` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/186#issuecomment-5825514560; that comment elides the probabilities, and `probabilities={'b': 0.05, 'a': 0.95}` is recorded only in the body of https://github.com/Alberto-Codes/judgevet/issues/187. The 0.10.2 production smoke on 2026-09-25 returned `confidence=0.9` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/183#issuecomment-5824552631, with the probabilities elided. The vendor defines confidence as a spread measure and publishes no formula; the formula is unverified |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 14 hand-authored fixtures, inferred from docs/reference/api.md except the oversized-request fixture, which replays the body recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; the shipped `judgevet.testing` fakes match the adapter's model and answers on every success fixture (#171) |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
