@@ -5,24 +5,36 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.10.1 is published. Library, CLI and optional MCP share one version.
-This release adds host-native setup, contributor guidance and issue forms.
-It fixes release recipe updates and unpublished-wheel test selection.
-Public runtime behavior and dependency requirements remain unchanged.
-The documentation site is [live](https://alberto-codes.github.io/judgevet/).
+judgevet 0.10.2 is published. Library, CLI and optional MCP share one version.
+This release makes the domain accept two-decimal probability rounding on the
+wire and rejects nonfinite answer values with normalised response errors.
+Dependency and action pins moved through Dependabot; runtime requirements are
+unchanged. The documentation site is [live](https://alberto-codes.github.io/judgevet/).
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.10.1`, commit `032cae03be62b2697c834e6be045640e0abedda7` |
-| Accepted candidate | `9d661a47f028a8c3f302cf0c4cb3837583a3fbab`; release tree is identical |
-| Wheel SHA-256 | `826dda23e35d934842fd42076ebeaff305a73d05e6f513377af7c48477eee3e0` |
-| Source distribution SHA-256 | `c1d4e6f6af4da4be46e1365f9ec4638c98757722ea3646f8cbdac626a6f908ed` |
-| Actual TestPyPI/PyPI downloads | Both distributions match workflow artifacts and each other |
-| Library | Isolated base imports without MCP, typing marker, live example and all four policy-guide examples passed; policy examples also type-checked |
-| CLI | Installed mixed live judgment passed on both index wheels; one test each, no skip |
-| MCP | Isolated discovery and all three live tools passed on both wheels and through the exact manifest launcher |
-| Published launcher | Fresh uvx cache resolved PyPI 0.10.1 directly, then discovered and called all three tools |
-| Registry | Official schema and production validation passed; publisher submission succeeded; independent query confirmed exact active 0.10.1 listing |
+| Release/tag | `v0.10.2`, commit `8ecfc6065818b6048d97dcd8d0b19337f072a8ac` |
+| Accepted candidate | none; the maintainer merged and published without a TestPyPI round |
+| Wheel SHA-256 | `4a6a94341cee10fa35fa0bd2f5b9edf510d462a731b6a23e5c7691fb5f49b0a5` |
+| Source distribution SHA-256 | `ddebbe4a4d2d4323d5cb958be6d4c4c54ff6886f551c9024054b799741030589` |
+| Actual PyPI download | Index wheel is byte-identical to the workflow artifact; JSON digests agree |
+| Library | Isolated base import, typing marker, live examples and all four policy examples passed on the index wheel; policy examples also type-checked |
+| CLI | Installed live CLI test passed on the index wheel; one test, no skip |
+| MCP | Isolated MCP smoke passed on the index wheel; registry launcher discovery and all three tools passed |
+| Published launcher | not rechecked through a fresh uvx cache for 0.10.2 |
+| Registry | Manifest validated and submitted; independent query lists `io.github.Alberto-Codes/judgevet` 0.10.2 active and latest, published `2026-09-25T00:26:59.691261Z`, package and launcher fields match |
+
+[Release tracker](https://github.com/Alberto-Codes/judgevet/issues/183) records the
+non-live and live evidence separately.
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36077169568)
+passed its wheel and MCP smoke checks before upload, on `actions/upload-artifact@v7`,
+`actions/download-artifact@v8` and `astral-sh/setup-uv@v10.2.0`.
+No source-archive rebuild outside the checkout was done for this release.
+No unseen API body, other model, modern protocol path or gateway became verified.
+
+Prior [0.10.1 evidence](https://github.com/Alberto-Codes/judgevet/issues/165)
+retains its TestPyPI candidate round, source-archive rebuild and registry
+submission checks; the paragraphs below are its record.
 
 [Candidate acceptance](https://github.com/Alberto-Codes/judgevet/issues/165#issuecomment-5807947133)
 and [production evidence](https://github.com/Alberto-Codes/judgevet/issues/165#issuecomment-5808070601)
@@ -40,8 +52,8 @@ records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
 The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.10.1`, published at
-`2026-09-24T05:03:11.420755Z`. Package and launcher fields match the release
+reports `io.github.Alberto-Codes/judgevet` version `0.10.2`, published at
+`2026-09-25T00:26:59.691261Z`; 0.10.1 stays listed as an earlier active version. Package and launcher fields match the release
 manifest. Registry acceptance does not verify a host installation or reload.
 No unseen API body, other model, modern protocol path or gateway became verified.
 

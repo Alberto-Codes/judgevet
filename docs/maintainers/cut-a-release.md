@@ -44,6 +44,14 @@ preserves the outputs used by the lockfile job. Historical notes are not rewritt
 Merging the release PR creates a draft and tag. Publishing the draft triggers
 `publish.yml`. A draft permits a pause; it does not upload to PyPI.
 
+A post-release evidence commit records a published release in `STATUS.md` and
+on its tracker. It uses the type and scope `chore(release)` with the subject
+`record verified X.Y.Z`. release-please hides `chore` from the changelog, so
+the commit opens no release pull request on its own and needs no configuration
+change. A `docs:` type would propose a new version to record the old one. Keep
+`Closes` and `Refs` trailers factual. Decided on
+[#159](https://github.com/Alberto-Codes/judgevet/issues/159).
+
 ## Authority and prerequisites
 
 Standing authorization permits merging and publishing a release that meets
