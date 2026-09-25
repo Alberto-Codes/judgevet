@@ -624,6 +624,7 @@ Published README links retain offline source and fragment validation.
 | noul has no confidence; score is continuous; legend is a map | verified — both sources |
 | noul criteria keys `true`/`false` are read by the service — inverted criteria moved the measured answer by ≥ 0.13, while `yes`/`no` (normal and inverted) did not move it | **verified** — live differential test, issue #105 |
 | score `legend` echoes the sent criteria list exactly | **verified** — live test asserts legend equals `{0: "Poor", 1: "Fair", 2: "Good", 3: "Excellent"}` |
+| choice criteria string values | **verified** — every live call has sent string values only: `tests/live/test_cli_live.py::test_installed_cli_mixed_live` (`{"yes": "Clear", "no": "Unclear"}`) passed on the 0.10.2 index wheel and the release smoke's live run of the package-docstring Choice example (`{"a": "Option A", "b": "Option B"}`) returned a `ChoiceAnswer`, both recorded on #183, 2026-09-25; `tests/live/test_system_one_live.py::test_system_one_live_with_all_question_types` sends `{"cat": "Feline", ...}` and its legend assertion is the row above. Object, array and null forms are inferred from the vendor docs; no call has sent them (#174) |
 | 401 returns `{"detail": {"error_type", "message"}}` | **verified** — live call with an invalid key, 2026-09-21 |
 | 422 returns `{"detail": [ {type, loc, msg, input} ]}` | **verified** — live call omitting `questions`, 2026-09-21 |
 | `detail` is polymorphic: an object for auth, an array for validation | **verified** — the two calls above disagree in shape |

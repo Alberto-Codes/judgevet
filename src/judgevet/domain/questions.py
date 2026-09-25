@@ -87,7 +87,17 @@ class Choice:
     Construction is keyword-only; a positional argument raises `TypeError`.
 
     Attributes:
-        criteria (Mapping[str, str | dict | Sequence | None]): Labels mapped to descriptions.
+        criteria (Mapping[str, str | dict | Sequence | None]): Labels mapped to
+            descriptions. Each description takes one of four forms. A string
+            describes the option in plain text. A live call has sent only the
+            string form. An object gives structured guidance, such as what the
+            option covers and what it does not. Source:
+            https://docs.typesafe.ai/primitives/choice#structured-instructions-and-criteria.
+            An array is an accepted form with no vendor example. Source:
+            https://docs.typesafe.ai/primitives/choice. `None` means the
+            option needs no extra detail. Source: https://docs.typesafe.ai/api.
+            The object, array and `None` forms are inferred from those pages.
+            No call has exercised them.
         instructions (str | dict | Sequence | None): The question to ask.
 
     Examples:

@@ -33,6 +33,28 @@ accept strings, dictionaries or sequences. Noul criteria accepts a dictionary.
 These annotations are not evidence that every possible value has been exercised
 against the service. Prefer the simple text examples in the task guides.
 
+### Choice criteria values
+
+Each value in a Choice `criteria` map takes one of four forms.
+
+| Form | Meaning | Source | Evidence |
+|---|---|---|---|
+| string | A plain-text description of the option. | [Choice](https://docs.typesafe.ai/primitives/choice) | Verified. The live tests send only string values. |
+| object | Structured guidance, such as what the option covers, what it does not cover and example inputs. | [Structured instructions and criteria](https://docs.typesafe.ai/primitives/choice#structured-instructions-and-criteria) | Inferred from the page. No call has sent it. |
+| array | An accepted form. The page gives no array example. | [Choice](https://docs.typesafe.ai/primitives/choice) | Inferred from the page. No call has sent it. |
+| `None` (`null`) | The option needs no extra detail. | [API reference](https://docs.typesafe.ai/api) | Inferred from the page. No call has sent it. |
+
+The Choice page states that "each entry in `criteria` can be a string, an
+object, or an array". The API reference types `criteria` as
+`map<string, string | object | array | null>` and states "use null when an
+option needs no extra detail".
+
+**Open question:** the two pages disagree on `null`. The Choice page lists
+three forms and omits `null` from that list, although one of its later request
+examples sends `null` descriptions. The API reference lists `null` as a fourth
+form. No call from this repository has sent `null`, so the service behaviour is
+unknown.
+
 Choice copies its criteria into a dictionary; Score copies its criteria into a
 list. These are shallow copies. Noul keeps its supplied criteria reference.
 The [question source](../../src/judgevet/domain/questions.py) defines the exact
