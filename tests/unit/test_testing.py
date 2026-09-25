@@ -6,8 +6,10 @@ import anyio
 import pytest
 
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.errors import JevRateLimitError, JevServiceError
 from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.usage import Usage
 from judgevet.ports import AsyncSystemOnePort, SystemOnePort
 from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
 
@@ -138,3 +140,55 @@ def test_non_string_score_criteria_enter_the_legend_as_repr() -> None:
     answer = response.answers["q"]
     assert isinstance(answer, ScoreAnswer)
     assert answer.legend == {0: "Low", 1: repr({"label": "High"})}
+
+
+@pytest.mark.unit
+def test_defaults_carry_empty_usage_and_no_error() -> None:
+    fake = FakeSystemOnePort()
+    assert fake.usage == Usage()
+    assert fake.error is None
+    assert _call(fake).usage == Usage()
+
+
+@pytest.mark.unit
+def test_scripted_usage_is_on_every_response() -> None:
+    usage = Usage(input_tokens=40, output_tokens=2)
+    fake = FakeSystemOnePort(usage=usage)
+    assert _call(fake).usage == usage
+    assert _call(fake).usage == usage
+
+
+@pytest.mark.unit
+def test_async_scripted_usage_is_on_the_response() -> None:
+    usage = Usage(input_tokens=5, output_tokens=1)
+    port: AsyncSystemOnePort = AsyncFakeSystemOnePort(usage=usage)
+
+    async def call() -> SystemOneResponse:
+        return await port.system_one("text", QUESTIONS, "jev-test")
+
+    assert anyio.run(call).usage == usage
+
+
+@pytest.mark.unit
+def test_sync_scripted_error_is_raised_after_the_call_is_recorded() -> None:
+    error = JevRateLimitError("slow down", 429)
+    fake = FakeSystemOnePort(error=error)
+    with pytest.raises(JevRateLimitError) as info:
+        _call(fake, state="first")
+    assert info.value is error
+    assert [call[0] for call in fake.calls] == ["first"]
+
+
+@pytest.mark.unit
+def test_async_scripted_error_is_raised_after_the_call_is_recorded() -> None:
+    error = JevServiceError("down", 503)
+    fake = AsyncFakeSystemOnePort(error=error)
+    port: AsyncSystemOnePort = fake
+
+    async def call() -> SystemOneResponse:
+        return await port.system_one("second", QUESTIONS, "jev-test")
+
+    with pytest.raises(JevServiceError) as info:
+        anyio.run(call)
+    assert info.value is error
+    assert fake.calls == [("second", dict(QUESTIONS), "jev-test")]

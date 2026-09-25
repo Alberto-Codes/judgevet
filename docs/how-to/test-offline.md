@@ -25,8 +25,15 @@ other typed question receives a seeded answer that passes the
 
 The same seed, state and question give the same answer. A raw mapping
 question without a scripted answer raises `TypeError`. The response `model`
-echoes the `model` argument, and `usage` carries no token counts. Each call
-appends `(state, questions, model)` to `calls`.
+echoes the `model` argument. Each call appends `(state, questions, model)` to
+`calls`.
+
+Each fake also takes two keyword-only arguments. `usage` sets the `Usage` that
+every response carries; the default is `Usage()`, which has no token counts.
+`error` sets an exception that every call raises. The error covers the whole
+call: the fake appends the call to `calls` first, then raises the instance you
+passed. No option fails one question of a call, because the real adapter never
+does.
 
 Seeded answers are synthetic. They exercise your code paths. They do not
 predict what the service would answer.
@@ -92,6 +99,39 @@ def test_queue_is_stable_for_a_seed() -> None:
 
 if __name__ == "__main__":
     test_queue_is_stable_for_a_seed()
+```
+
+## Scripted errors
+
+Save this program as `test_route_ticket_errors.py`. It scripts a rate limit
+and checks that the caller falls back:
+
+```python
+from judgevet import JevRateLimitError, Noul
+from judgevet.ports import SystemOnePort
+from judgevet.testing import FakeSystemOnePort
+
+
+def route(port: SystemOnePort, ticket: str) -> str:
+    try:
+        response = port.system_one(
+            state=ticket,
+            questions={"billing": Noul(instructions="Is this about billing?")},
+            model="jev-1.13.0",
+        )
+    except JevRateLimitError:
+        return "retry-later"
+    return "billing" if response.nouls["billing"].noul >= 0.5 else "general"
+
+
+def test_route_defers_when_rate_limited() -> None:
+    fake = FakeSystemOnePort(error=JevRateLimitError("rate limit", 429))
+    assert route(fake, "I was charged twice.") == "retry-later"
+    assert len(fake.calls) == 1
+
+
+if __name__ == "__main__":
+    test_route_defers_when_rate_limited()
 ```
 
 Both fakes import only the domain and the ports. An import-linter contract

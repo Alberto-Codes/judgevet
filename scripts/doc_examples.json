@@ -372,6 +372,11 @@
       "language": "python",
       "kind": "runnable",
       "reason": "Complete offline test against the async fake; execute with no network."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete offline test that scripts a whole-call error on the sync fake; execute with no network."
     }
   ]
 }

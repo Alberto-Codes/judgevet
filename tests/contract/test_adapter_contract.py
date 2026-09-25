@@ -45,6 +45,29 @@ from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
 from .fixtures import get_fixture_by_name, get_fixtures
 
 
+def _error_for(expect_data: tuple[str, str, int | None]) -> JevError:
+    """Build the expected error type with the expected status_code."""
+    _, error_name, status_code = expect_data
+
+    # The only fixture with None status_code is transport_failure,
+    # which expects JevServiceError. Other errors always have int status_code.
+    if error_name == "JevServiceError":
+        return JevServiceError("service error", status_code)
+    assert status_code is not None
+    if error_name == "JevAuthError":
+        return JevAuthError("auth error", status_code)
+    elif error_name == "JevRateLimitError":
+        return JevRateLimitError("rate limit", status_code)
+    elif error_name == "JevMaxTokensExceededError":
+        return JevMaxTokensExceededError("max_tokens_exceeded", status_code)
+    elif error_name == "JevRequestError":
+        return JevRequestError("request error", status_code)
+    elif error_name == "JevResponseError":
+        return JevResponseError("response error", status_code)
+    else:
+        raise ValueError(f"Unknown error type: {error_name}")
+
+
 class _ReplayPort:
     """Fake SystemOnePort that replays a fixture.
 
@@ -125,29 +148,7 @@ class _ReplayPort:
 
     def _raise_error(self, expect_data: tuple[str, str, int | None]) -> None:
         """Raise the expected error type with the expected status_code."""
-        _, error_name, status_code = expect_data
-
-        # The only fixture with None status_code is transport_failure,
-        # which expects JevServiceError. Other errors always have int status_code.
-        if error_name == "JevAuthError":
-            assert status_code is not None
-            raise JevAuthError("auth error", status_code)
-        elif error_name == "JevRateLimitError":
-            assert status_code is not None
-            raise JevRateLimitError("rate limit", status_code)
-        elif error_name == "JevMaxTokensExceededError":
-            assert status_code is not None
-            raise JevMaxTokensExceededError("max_tokens_exceeded", status_code)
-        elif error_name == "JevRequestError":
-            assert status_code is not None
-            raise JevRequestError("request error", status_code)
-        elif error_name == "JevServiceError":
-            raise JevServiceError("service error", status_code)
-        elif error_name == "JevResponseError":
-            assert status_code is not None
-            raise JevResponseError("response error", status_code)
-        else:
-            raise ValueError(f"Unknown error type: {error_name}")
+        raise _error_for(expect_data)
 
 
 def _transport_for(fixture: dict[str, Any]) -> httpx.MockTransport:
@@ -319,9 +320,9 @@ def test_async_adapter_parses_rounded_score() -> None:
     _assert_responses_equal(anyio.run(call), fake)
 
 
-def _success_fixtures() -> list[dict[str, Any]]:
-    """Return the fixtures whose expected outcome is a response."""
-    return [f for f in get_fixtures() if f["expect"][0] == "response"]
+def _fixtures_of(kind: str) -> list[dict[str, Any]]:
+    """Return the fixtures whose expected outcome has the given kind."""
+    return [f for f in get_fixtures() if f["expect"][0] == kind]
 
 
 def _scripted_answers(fixture: dict[str, Any]) -> dict[str, Answer]:
@@ -331,31 +332,71 @@ def _scripted_answers(fixture: dict[str, Any]) -> dict[str, Answer]:
     return {name: replay._build_answer(data) for name, data in expected.items()}
 
 
-def _assert_model_and_answers(real: SystemOneResponse, fake: SystemOneResponse) -> None:
-    """Assert that the model and every answer agree between two responses."""
-    assert real.model == fake.model, f"model: {real.model!r} != {fake.model!r}"
-    assert set(real.answers) == set(fake.answers)
-    for key in real.answers:
-        _assert_answers_equal(real.answers[key], fake.answers[key])
+def _scripted_usage(fixture: dict[str, Any]) -> Usage:
+    """Build the fixture's expected usage from its plain data."""
+    usage = fixture["expect"][1]["usage"]
+    return Usage(
+        input_tokens=usage["input_tokens"], output_tokens=usage["output_tokens"]
+    )
 
 
-@pytest.mark.contract
-@pytest.mark.parametrize("fixture", _success_fixtures(), ids=lambda f: f["name"])
-def test_scripted_fakes_match_real_adapter(fixture: dict[str, Any]) -> None:
-    """Both public fakes, scripted with a fixture's answers, agree with the adapter."""
+def _call_fake(
+    fake_kind: str, fixture: dict[str, Any], **script: Any
+) -> SystemOneResponse:
+    """Call the named public fake, scripted as given, with the fixture's request."""
     request = fixture["request"]
     args = (request["state"], request["questions"], request["model"])
-    sync_port: SystemOnePort = FakeSystemOnePort(answers=_scripted_answers(fixture))
-    async_port: AsyncSystemOnePort = AsyncFakeSystemOnePort(
-        answers=_scripted_answers(fixture)
-    )
+    if fake_kind == "sync":
+        port: SystemOnePort = FakeSystemOnePort(**script)
+        return port.system_one(*args)
+    async_port: AsyncSystemOnePort = AsyncFakeSystemOnePort(**script)
+
+    async def call() -> SystemOneResponse:
+        return await async_port.system_one(*args)
+
+    return anyio.run(call)
+
+
+def _call_real(fixture: dict[str, Any]) -> SystemOneResponse:
+    """Call the HTTP adapter over the fixture's MockTransport."""
+    request = fixture["request"]
     with HTTPSystemOneAdapter(
         api_key="test-key", transport=_transport_for(fixture)
     ) as adapter:
-        real = adapter.system_one(*args)
+        return adapter.system_one(
+            request["state"], request["questions"], request["model"]
+        )
 
-    async def call_async_fake() -> SystemOneResponse:
-        return await async_port.system_one(*args)
 
-    _assert_model_and_answers(real, sync_port.system_one(*args))
-    _assert_model_and_answers(real, anyio.run(call_async_fake))
+FAKE_KINDS = pytest.mark.parametrize("fake_kind", ["sync", "async"])
+
+
+@pytest.mark.contract
+@FAKE_KINDS
+@pytest.mark.parametrize("fixture", _fixtures_of("response"), ids=lambda f: f["name"])
+def test_scripted_fakes_match_real_adapter_response(
+    fixture: dict[str, Any], fake_kind: str
+) -> None:
+    """A fake scripted with a fixture's answers and usage equals the adapter."""
+    real = _call_real(fixture)
+    fake = _call_fake(
+        fake_kind,
+        fixture,
+        answers=_scripted_answers(fixture),
+        usage=_scripted_usage(fixture),
+    )
+    assert real == fake
+
+
+@pytest.mark.contract
+@FAKE_KINDS
+@pytest.mark.parametrize("fixture", _fixtures_of("error"), ids=lambda f: f["name"])
+def test_scripted_fakes_match_real_adapter_error(
+    fixture: dict[str, Any], fake_kind: str
+) -> None:
+    """A fake scripted with a fixture's error raises what the adapter raises."""
+    with pytest.raises(JevError) as real_info:
+        _call_real(fixture)
+    with pytest.raises(JevError) as fake_info:
+        _call_fake(fake_kind, fixture, error=_error_for(fixture["expect"]))
+    _assert_errors_equal(real_info.value, fake_info.value)

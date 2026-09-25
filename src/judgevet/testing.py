@@ -8,7 +8,17 @@ answer validators. The same seed, state and question give the same answer.
 
 Seeded values are synthetic. They exercise caller code paths; they do not
 predict what the service would answer. The returned `model` echoes the model
-argument, and `usage` carries no token counts.
+argument.
+
+Each fake takes two keyword-only arguments that script the whole call:
+
+Args:
+    usage (Usage | None): The `Usage` every response carries. The default is
+        `Usage()`, which has no token counts.
+    error (BaseException | None): An exception every call raises. The fake
+        records the call in `calls` first, then raises this instance. The error
+        covers the whole call, because the real adapter never fails one
+        question of a call.
 
 Examples:
     ```python
@@ -28,6 +38,20 @@ Examples:
     assert response.nouls["billing"].noul == 0.9
     assert response.choices["queue"].choice in {"billing", "technical"}
     assert len(fake.calls) == 1
+
+    from judgevet.domain.errors import JevRateLimitError
+    from judgevet.domain.usage import Usage
+
+    metered = FakeSystemOnePort(usage=Usage(input_tokens=12, output_tokens=3))
+    assert metered.system_one("text", {"q": Noul()}, "m").usage.input_tokens == 12
+    limited = FakeSystemOnePort(error=JevRateLimitError("slow down", 429))
+    try:
+        limited.system_one("text", {"q": Noul()}, "m")
+    except JevRateLimitError as error:
+        assert error.status_code == 429
+    else:
+        raise AssertionError("the scripted error was not raised")
+    assert len(limited.calls) == 1
     ```
 
 See Also:
@@ -147,6 +171,9 @@ class _FakeCore:
     Attributes:
         seed (int): The seed mixed into every generated answer.
         answers (dict[str, Answer]): Scripted answers keyed by question name.
+        usage (Usage): The usage every response carries.
+        error (BaseException | None): The exception every call raises after
+            it is recorded, or None to answer normally.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -158,21 +185,33 @@ class _FakeCore:
         ```
     """
 
-    def __init__(self, seed: int = 0, answers: Mapping[str, Answer] | None = None):
-        """Store the seed and a copy of the scripted answers.
+    def __init__(
+        self,
+        seed: int = 0,
+        answers: Mapping[str, Answer] | None = None,
+        *,
+        usage: Usage | None = None,
+        error: BaseException | None = None,
+    ):
+        """Store the seed, a copy of the scripted answers, the usage and the error.
 
         Args:
             seed: The seed mixed into every generated answer.
             answers: Scripted answers keyed by question name.
+            usage: The usage every response carries. None means `Usage()`.
+            error: The exception every call raises after it is recorded.
+                None means every call answers.
         """
         self.seed = seed
         self.answers: dict[str, Answer] = dict(answers or {})
+        self.usage = usage if usage is not None else Usage()
+        self.error = error
         self.calls: list[Call] = []
 
     def _respond(
         self, state: State, questions: Questions, model: str
     ) -> SystemOneResponse:
-        """Record the call and answer every question.
+        """Record the call, then raise the scripted error or answer every question.
 
         Args:
             state: The content the caller would judge.
@@ -180,14 +219,19 @@ class _FakeCore:
             model: The model name, echoed into the response.
 
         Returns:
-            A response with one answer per question name.
+            A response with one answer per question name and the scripted usage.
+
+        Raises:
+            BaseException: The scripted error, when one is set.
         """
         self.calls.append((state, dict(questions), model))
+        if self.error is not None:
+            raise self.error
         answers = {
             name: self._answer(state, name, question)
             for name, question in questions.items()
         }
-        return SystemOneResponse(model=model, usage=Usage(), answers=answers)
+        return SystemOneResponse(model=model, usage=self.usage, answers=answers)
 
     def _answer(
         self, state: State, name: str, question: Question | Mapping[str, Any]
@@ -226,6 +270,9 @@ class FakeSystemOnePort(_FakeCore):
     Attributes:
         seed (int): The seed mixed into every generated answer.
         answers (dict[str, Answer]): Scripted answers keyed by question name.
+        usage (Usage): The usage every response carries.
+        error (BaseException | None): The exception every call raises after
+            it is recorded, or None to answer normally.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -260,7 +307,11 @@ class FakeSystemOnePort(_FakeCore):
             model: The model name, echoed into the response.
 
         Returns:
-            A response with one answer per question name and empty usage.
+            A response with one answer per question name and the scripted
+            usage.
+
+        Raises:
+            BaseException: The scripted error, after the call is recorded.
         """
         return self._respond(state, questions, model)
 
@@ -271,6 +322,9 @@ class AsyncFakeSystemOnePort(_FakeCore):
     Attributes:
         seed (int): The seed mixed into every generated answer.
         answers (dict[str, Answer]): Scripted answers keyed by question name.
+        usage (Usage): The usage every response carries.
+        error (BaseException | None): The exception every call raises after
+            it is recorded, or None to answer normally.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -308,6 +362,10 @@ class AsyncFakeSystemOnePort(_FakeCore):
             model: The model name, echoed into the response.
 
         Returns:
-            A response with one answer per question name and empty usage.
+            A response with one answer per question name and the scripted
+            usage.
+
+        Raises:
+            BaseException: The scripted error, after the call is recorded.
         """
         return self._respond(state, questions, model)

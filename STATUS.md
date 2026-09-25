@@ -426,8 +426,13 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2065 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.13%** (2063/2146 statements).
+**2093 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.14%** (2067/2150 statements).
+#189 slice (a) lets both fakes take scripted `usage=` and a scripted whole-call
+`error=`. The contract test now runs every fixture through both fakes and the
+HTTP adapter: whole-response equality on the five response fixtures and error
+type plus `status_code` on the nine error fixtures. No live-service claim
+changes.
 #54 slice 1 adds an opt-in `AuditSink` port and a frozen `JudgmentRecord`.
 Both HTTP adapters write one record per logical call. A sink failure is
 reported on `http.call` as `audit_error` and never changes the result. The
