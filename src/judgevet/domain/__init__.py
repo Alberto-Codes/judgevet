@@ -41,6 +41,7 @@ Attributes:
     ChoiceAnswer (type): Answer type for multiple choice.
     JevAuthError (type): 401/403 authentication errors.
     JevError (type): Base exception for all Jev errors.
+    JevMaxTokensExceededError (type): Request over a service token budget.
     JevRateLimitError (type): 429 rate limit errors.
     JevRequestError (type): 4xx client request errors.
     JevResponseError (type): 2xx with unparseable body.
@@ -63,6 +64,7 @@ from judgevet.domain.answers import (
 from judgevet.domain.errors import (
     JevAuthError,
     JevError,
+    JevMaxTokensExceededError,
     JevRateLimitError,
     JevRequestError,
     JevResponseError,
@@ -78,6 +80,7 @@ __all__ = [
     "ChoiceAnswer",
     "JevAuthError",
     "JevError",
+    "JevMaxTokensExceededError",
     "JevRateLimitError",
     "JevRequestError",
     "JevResponseError",

@@ -5,6 +5,8 @@ Error handling:
 
     - Array for validation errors (422): [{"type", "loc", "msg", "input"}]
     - Object for auth errors (401/403): {"error_type", "message"}
+    - Object for an oversized request (400 observed): {"error_type"} equal to
+      "max_tokens_exceeded", raised as JevMaxTokensExceededError
     - Absent, malformed or unrecognised: falls back to status line alone.
 
     The `input` key in validation errors contains the caller's request payload
@@ -13,6 +15,7 @@ Error handling:
 Helper functions:
     - _build_payload: Build the request payload.
     - _parse_body: Parse the response body into a SystemOneResponse.
+    - _read_error_detail: Read the message and wire error type of an error body.
     - _translate_status_error: Translate HTTP status errors to JevError subclasses.
     - _translate_request_error: Translate request errors to JevServiceError.
     - _convert_question_to_wire: Convert a Question object to its wire dict.
@@ -47,6 +50,7 @@ See Also:
 Raises:
     JevAuthError: If the API returns 401 or 403.
     JevRateLimitError: If the API returns 429 (rate limit exceeded).
+    JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
     JevRequestError: If the API returns 4xx (except 401/403, 429).
     JevServiceError: If the API returns 5xx or a transport error occurs.
     JevResponseError: If the API returns 2xx with unparseable body.
@@ -84,6 +88,7 @@ from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.domain.errors import (
     JevAuthError,
     JevError,
+    JevMaxTokensExceededError,
     JevRateLimitError,
     JevRequestError,
     JevResponseError,
@@ -233,10 +238,40 @@ def _parse_body(response: httpx.Response) -> SystemOneResponse:
     return parse_system_one_response("system-one", raw)
 
 
+def _read_error_detail(exc: httpx.HTTPStatusError) -> tuple[str, str]:
+    """Read the error message and the wire error type from an error body.
+
+    Args:
+        exc: The HTTP status error whose response body is read.
+
+    Returns:
+        The message, with any extracted detail appended, and the string
+        `detail.error_type`, or an empty string when the body carries none.
+    """
+    error_message = str(exc)
+    error_type = ""
+    try:
+        body = exc.response.json()
+    except ValueError:
+        return error_message, error_type  # Body is not JSON
+    detail = body.get("detail") if isinstance(body, dict) else None
+    if detail is not None:
+        extracted = _extract_error_detail(detail)
+        if extracted:
+            error_message = f"{exc!s}; {extracted}"
+    if isinstance(detail, dict) and isinstance(detail.get("error_type"), str):
+        error_type = detail["error_type"]
+    return error_message, error_type
+
+
 def _translate_status_error(
     exc: httpx.HTTPStatusError,
 ) -> JevError | None:
     """Translate an httpx.HTTPStatusError to a JevError subclass.
+
+    A 4xx body whose `detail.error_type` is `max_tokens_exceeded` becomes
+    JevMaxTokensExceededError. One live call returned that marker with 400.
+    Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575.
 
     Args:
         exc: The HTTP status error to translate.
@@ -246,19 +281,7 @@ def _translate_status_error(
         None for unhandled status codes (e.g., 3xx).
     """
     status_code = exc.response.status_code
-    error_message = str(exc)
-
-    # Try to extract detailed error information from response body
-    try:
-        body = exc.response.json()
-        if isinstance(body, dict):
-            detail = body.get("detail")
-            if detail is not None:
-                extracted = _extract_error_detail(detail)
-                if extracted:
-                    error_message = f"{exc!s}; {extracted}"
-    except ValueError:
-        pass  # Body is not JSON, use default message
+    error_message, error_type = _read_error_detail(exc)
 
     if status_code == JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS:
         return JevRateLimitError(error_message, status_code)
@@ -268,6 +291,8 @@ def _translate_status_error(
     ):
         return JevAuthError(error_message, status_code)
     elif JevError.HTTP_STATUS_400_MIN <= status_code < JevError.HTTP_STATUS_500_MIN:
+        if error_type == JevMaxTokensExceededError.WIRE_ERROR_TYPE:
+            return JevMaxTokensExceededError(error_message, status_code)
         return JevRequestError(error_message, status_code)
     elif status_code >= JevError.HTTP_STATUS_500_MIN:
         return JevServiceError(error_message, status_code)
@@ -303,6 +328,7 @@ class HTTPSystemOneAdapter:
     Raises:
         JevAuthError: If the API returns 401 or 403.
         JevRateLimitError: If the API returns 429 (rate limit exceeded).
+        JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
         JevRequestError: If the API returns 4xx (except 401/403, 429).
         JevServiceError: If the API returns 5xx or a transport error occurs.
         JevResponseError: If the API returns 2xx with unparseable body.
@@ -415,6 +441,7 @@ class HTTPSystemOneAdapter:
             Exception: If a configured redactor or its input copy fails before IO.
             JevAuthError: If the API returns 401 or 403.
             JevRateLimitError: If the API returns 429 (rate limit exceeded).
+            JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
             JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
             JevResponseError: If the API returns 2xx with unparseable body.
@@ -522,6 +549,7 @@ class AsyncHTTPSystemOneAdapter:
     Raises:
         JevAuthError: If the API returns 401 or 403.
         JevRateLimitError: If the API returns 429 (rate limit exceeded).
+        JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
         JevRequestError: If the API returns 4xx (except 401/403, 429).
         JevServiceError: If the API returns 5xx or a transport error occurs.
         JevResponseError: If the API returns 2xx with unparseable body.
@@ -638,6 +666,7 @@ class AsyncHTTPSystemOneAdapter:
             Exception: If a configured redactor or its input copy fails before IO.
             JevAuthError: If the API returns 401 or 403.
             JevRateLimitError: If the API returns 429 (rate limit exceeded).
+            JevMaxTokensExceededError: If a 4xx body reports `max_tokens_exceeded`.
             JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
             JevResponseError: If the API returns 2xx with unparseable body.

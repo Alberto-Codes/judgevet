@@ -422,8 +422,8 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2025 tests pass, 7 live tests deselected.** The last measured coverage is
-**95.93%** (1909/1990 statements).
+**2034 tests pass, 7 live tests deselected.** The last measured coverage is
+**95.95%** (1921/2002 statements).
 Local commit and push gates pass for #172. The issue holds delivery evidence.
 #172 makes `Noul`, `Choice` and `Score` construction keyword-only with no
 deprecation cycle; positional construction raises `TypeError`. The commit
@@ -632,13 +632,16 @@ Published README links retain offline source and fragment validation.
 | 401 returns `{"detail": {"error_type", "message"}}` | **verified** — live call with an invalid key, 2026-09-21 |
 | 422 returns `{"detail": [ {type, loc, msg, input} ]}` | **verified** — live call omitting `questions`, 2026-09-21 |
 | `detail` is polymorphic: an object for auth, an array for validation | **verified** — the two calls above disagree in shape |
+| an oversized request returns 400 with `{"detail": {"error_type": "max_tokens_exceeded"}}` | **verified, observed once** — live call on 2026-09-25 with a 400,000-character state against `jev-1.13.0`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575. The body does not say which budget fired; the request exceeded both the 32k and the 64k budget, so the threshold remains unverified |
+| a 2,959-byte JSON state with seven `choice` questions of up to 16 options fits the context budgets | **verified** — live call on 2026-09-25 against `jev-1.13.0` returned 200 with `input_tokens=3110`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825777868 |
+| 400 with `detail.error_type` = `max_tokens_exceeded` becomes JevMaxTokensExceededError, retryable=False | **inferred** — the body is the one the 2026-09-25 live call returned, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; that call raised plain JevRequestError, and the mapping now runs offline against the recorded body. No live call has run the new mapping |
 | a 422 body echoes the request payload back under `input` | **verified**, and the adapter discards it (#85) |
 | 429 and 529 | still unseen. 429 needs abusing the service and 529 cannot be forced |
 | every other field name | inferred from documentation |
 | resolved models other than `jev-1.13.0` | untested; both `jev-latest` and explicit `jev-1.13.0` have been called |
 | probabilities on the wire are rounded to two decimals | observed once — a consumer call on 2026-09-24 against `jev-1.13.0` returned a four-level Score summing to 0.99 (#175); the tolerance is 0.005 per probability since that fix. This repository's live suite asked a four-level Score once on 2026-09-24 (#184) and the resolved `jev-1.13.0` returned probabilities summing to exactly 1.0, which neither confirms nor refutes the rounding |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
-| fake and real adapter produce identical outcomes | verified — contract tests on 12 hand-authored fixtures, inferred from docs/reference/api.md; the shipped `judgevet.testing` fakes match the adapter's model and answers on every success fixture (#171) |
+| fake and real adapter produce identical outcomes | verified — contract tests on 14 hand-authored fixtures, inferred from docs/reference/api.md except the oversized-request fixture, which replays the body recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; the shipped `judgevet.testing` fakes match the adapter's model and answers on every success fixture (#171) |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
 | the adapter drops the `input` field from 422 bodies to avoid echoing caller data | **verified** — live test asserts test state does not leak |
 | API keys do not leak in error str/repr | **verified** — live tests assert key not in str or repr |

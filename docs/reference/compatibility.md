@@ -25,7 +25,7 @@ The root `__all__` declares these supported names:
 | Structural ports | `SystemOnePort`, `AsyncSystemOnePort` |
 | Questions | `Question`, `Noul`, `Choice`, `Score` |
 | Answers and metadata | `Answer`, `NoulAnswer`, `ChoiceAnswer`, `ScoreAnswer`, `SystemOneResponse`, `Usage` |
-| Service errors | `JevError`, `JevAuthError`, `JevRequestError`, `JevResponseError`, `JevServiceError`, `JevRateLimitError` |
+| Service errors | `JevError`, `JevAuthError`, `JevRequestError`, `JevMaxTokensExceededError`, `JevResponseError`, `JevServiceError`, `JevRateLimitError` |
 | Version | `__version__` |
 | Verified model | `VERIFIED_MODEL` |
 

@@ -25,6 +25,7 @@ _EXPORTS = {
         "JevError",
         "JevAuthError",
         "JevRequestError",
+        "JevMaxTokensExceededError",
         "JevResponseError",
         "JevServiceError",
         "JevRateLimitError",

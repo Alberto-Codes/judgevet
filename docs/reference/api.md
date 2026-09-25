@@ -161,9 +161,9 @@ wrong-type names raise normal `KeyError` when indexed in a filtered mapping.
 ## Service limits
 
 The [TypeSafe models page](https://docs.typesafe.ai/models.md) states these
-limits. This section records that page as fetched on 2026-09-24. No judgevet
-call has exercised any of these limits. They are vendor statements, not
-verified behavior.
+limits. This section records that page as fetched on 2026-09-24. The values
+are vendor statements. Two judgevet calls on 2026-09-25 tested the context
+budget. Neither call established where the threshold lies.
 
 The service enforces these limits. judgevet does not check them before a call.
 It counts no tokens, because the vendor documents no tokenizer. It does not
@@ -178,6 +178,27 @@ throttle requests.
 The page explains the two context budgets. The 64k budget "covers the `state`
 plus all questions combined". The 32k budget "applies to the `state` plus the
 single longest question".
+Source: https://docs.typesafe.ai/models.md.
+
+Size a request against both budgets. The `state` and the longest single
+question share the 32k-token budget. The whole request shares the 64k-token
+budget. Size the `state` against 32k tokens minus the longest question. The page
+does not state how the other questions count toward the 64k budget beyond
+"all questions combined".
+
+A request over the budget fails. One call sent a 400,000-character state with
+one `noul` question to `jev-1.13.0`. The service returned status 400 with the
+body `{"detail": {"error_type": "max_tokens_exceeded"}}`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575.
+The client raises `JevMaxTokensExceededError`, a subclass of `JevRequestError`
+with `retryable=False`. The adapter matches the `max_tokens_exceeded` marker,
+not the status. The body does not say which budget the request exceeded. That
+request exceeded both budgets, so the call proves the marker, not the
+threshold. See the [error reference](errors.md).
+
+A second call sent a 2,959-byte JSON state and seven `choice` questions with up
+to 16 options. The service returned 200 and reported 3,110 input tokens.
+Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825777868.
 
 The page says a request over either rate limit "returns `429 Too Many
 Requests`". judgevet has never observed a 429 body. See the

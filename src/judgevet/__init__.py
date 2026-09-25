@@ -66,6 +66,7 @@ Attributes:
     JevError (type): Base Jev exception.
     JevAuthError (type): Authentication failure.
     JevRequestError (type): Rejected request.
+    JevMaxTokensExceededError (type): Request over a service token budget.
     JevResponseError (type): Unparseable successful answer body.
     JevServiceError (type): Service or transport failure.
     JevRateLimitError (type): Rate limit failure.
@@ -104,6 +105,7 @@ from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswe
 from judgevet.domain.errors import (
     JevAuthError,
     JevError,
+    JevMaxTokensExceededError,
     JevRateLimitError,
     JevRequestError,
     JevResponseError,
@@ -129,6 +131,7 @@ __all__ = [
     "HTTPSystemOneAdapter",
     "JevAuthError",
     "JevError",
+    "JevMaxTokensExceededError",
     "JevRateLimitError",
     "JevRequestError",
     "JevResponseError",

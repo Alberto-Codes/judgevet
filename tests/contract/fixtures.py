@@ -392,8 +392,28 @@ def _make_rounded_score_fixture() -> dict[str, Any]:
     }
 
 
+def _make_error_max_tokens_exceeded_fixture() -> dict[str, Any]:
+    """Fixture 14: 400 with the oversized-payload marker.
+
+    Real body from live API on 2026-09-25, `jev-1.13.0`, a 400,000-character
+    state: {"detail": {"error_type": "max_tokens_exceeded"}}.
+    The service sent it as `application/json`; the replay transport does too.
+    See: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575
+
+    Returns:
+        The fixture mapping.
+    """
+    return {
+        "name": "error_max_tokens_exceeded",
+        "request": {"state": "test", "questions": {}, "model": "jev-1.13.0"},
+        "status": 400,
+        "body": {"detail": {"error_type": "max_tokens_exceeded"}},
+        "expect": ("error", "JevMaxTokensExceededError", 400),
+    }
+
+
 def get_fixtures() -> list[dict[str, Any]]:
-    """Return the list of all 13 fixtures."""
+    """Return the list of all 14 fixtures."""
     return [
         _make_noul_fixture(),
         _make_choice_fixture(),
@@ -403,6 +423,7 @@ def get_fixtures() -> list[dict[str, Any]]:
         _make_error_403_fixture(),
         _make_error_429_fixture(),
         _make_error_422_fixture(),
+        _make_error_max_tokens_exceeded_fixture(),
         _make_error_500_fixture(),
         _make_transport_failure_fixture(),
         _make_missing_model_fixture(),

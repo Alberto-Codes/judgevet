@@ -5,6 +5,7 @@ Examples:
     from judgevet.domain.errors import (
         JevAuthError,
         JevError,
+        JevMaxTokensExceededError,
         JevRequestError,
         JevResponseError,
         JevServiceError,
@@ -18,6 +19,9 @@ Examples:
         if exc.retryable:
             # Retry with backoff
             pass
+    except JevMaxTokensExceededError as exc:
+        # Shrink the state or the longest question (do not retry)
+        pass
     except JevRequestError as exc:
         # Handle client request errors (do not retry)
         pass
@@ -39,6 +43,7 @@ Attributes:
     JevError (type): Base exception for all Jev errors.
     JevAuthError (type): 401/403 authentication errors.
     JevRequestError (type): 4xx client request errors.
+    JevMaxTokensExceededError (type): Request over a service token budget.
     JevResponseError (type): 2xx with unparseable body.
     JevServiceError (type): 5xx or transport errors.
 """
@@ -205,6 +210,43 @@ class JevRequestError(JevError):
 
         Returns:
             False for request errors (4xx).
+        """
+        return False
+
+
+class JevMaxTokensExceededError(JevRequestError):
+    """Oversized request - the service reported `max_tokens_exceeded`.
+
+    The HTTP adapter raises this error when an error body carries
+    `detail.error_type` equal to `max_tokens_exceeded`. One live call returned
+    that marker with status 400. The adapter matches the marker, not the status.
+    The body does not say which token budget the request exceeded.
+    Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575.
+    The vendor states a 64k-token request budget and a 32k-token budget for
+    `state` plus the longest question.
+    Source: https://docs.typesafe.ai/models.md.
+
+    Attributes:
+        args (tuple): Standard exception arguments containing the message.
+        status_code (int): The HTTP status code (4xx); 400 in the observed call.
+        WIRE_ERROR_TYPE (str): The `detail.error_type` marker the adapter matches.
+
+    Examples:
+        ```python
+        error = JevMaxTokensExceededError("max_tokens_exceeded", 400)
+        assert isinstance(error, JevRequestError)
+        assert error.retryable is False
+        ```
+    """
+
+    WIRE_ERROR_TYPE = "max_tokens_exceeded"
+
+    @property
+    def retryable(self) -> bool:
+        """Return True if the error is retryable.
+
+        Returns:
+            False: the same oversized request fails again.
         """
         return False
 

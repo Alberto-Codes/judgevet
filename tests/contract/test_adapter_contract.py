@@ -31,6 +31,7 @@ from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswe
 from judgevet.domain.errors import (
     JevAuthError,
     JevError,
+    JevMaxTokensExceededError,
     JevRateLimitError,
     JevRequestError,
     JevResponseError,
@@ -134,6 +135,9 @@ class _ReplayPort:
         elif error_name == "JevRateLimitError":
             assert status_code is not None
             raise JevRateLimitError("rate limit", status_code)
+        elif error_name == "JevMaxTokensExceededError":
+            assert status_code is not None
+            raise JevMaxTokensExceededError("max_tokens_exceeded", status_code)
         elif error_name == "JevRequestError":
             assert status_code is not None
             raise JevRequestError("request error", status_code)
@@ -269,6 +273,30 @@ class TestHTTPAdapterContract:
                 )
 
             _assert_errors_equal(real_exc_info.value, fake_exc_info.value)
+
+
+@pytest.mark.contract
+def test_max_tokens_exceeded_is_distinguishable() -> None:
+    """Both sides raise the oversized-payload error from the probe 1 body (#39)."""
+    fixture = get_fixture_by_name("error_max_tokens_exceeded")
+    request = fixture["request"]
+    args = (request["state"], request["questions"], request["model"])
+    port: SystemOnePort = _ReplayPort(fixture)
+    with pytest.raises(JevMaxTokensExceededError) as fake_info:
+        port.system_one(*args)
+    with (
+        HTTPSystemOneAdapter(
+            api_key="test-key", transport=_transport_for(fixture)
+        ) as adapter,
+        pytest.raises(JevMaxTokensExceededError) as real_info,
+    ):
+        adapter.system_one(*args)
+    for exc in (fake_info.value, real_info.value):
+        assert type(exc) is JevMaxTokensExceededError
+        assert isinstance(exc, JevRequestError)
+        assert exc.status_code == 400
+        assert exc.retryable is False
+        assert "max_tokens_exceeded" in str(exc)
 
 
 @pytest.mark.contract

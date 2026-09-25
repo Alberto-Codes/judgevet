@@ -11,6 +11,7 @@ import pytest
 
 from judgevet.adapters.inbound.mcp import create_mcp_server
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.errors import JevMaxTokensExceededError
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
 from judgevet.ports import SystemOnePort
@@ -385,3 +386,48 @@ class TestAskScoreTool:
 
         with pytest.raises(ValueError, match="Missing required argument: instruction"):
             anyio.run(run_test)
+
+
+class OversizedPort(SystemOnePort):
+    """Port that rejects every call as an oversized request (#39)."""
+
+    def system_one(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Any],
+        model: str,
+    ) -> SystemOneResponse:
+        """Raise the oversized-payload error from the probe 1 body.
+
+        Args:
+            state: Input state.
+            questions: Typed questions.
+            model: Selected model.
+
+        Raises:
+            JevMaxTokensExceededError: Always.
+        """
+        raise JevMaxTokensExceededError("Client error; max_tokens_exceeded", 400)
+
+
+@pytest.mark.skipif(not HAS_MCP, reason="mcp not installed")
+@pytest.mark.parametrize("tool", ["ask_noul", "ask_choice", "ask_score"])
+def test_tool_error_text_names_max_tokens_exceeded(tool: str) -> None:
+    """Each tool call surfaces the wire marker in its error text."""
+    server = create_mcp_server(OversizedPort())
+    call_tool_handler = server._request_handlers.get("tools/call")
+    assert call_tool_handler is not None
+    params = MockParams(
+        name=tool, arguments={"state": "test content", "instruction": "Fits?"}
+    )
+
+    async def run_test() -> Any:
+        """Dispatch the tool call.
+
+        Returns:
+            The tool result; the port raises first.
+        """
+        return await call_tool_handler.handler(MockContext(), params)
+
+    with pytest.raises(JevMaxTokensExceededError, match="max_tokens_exceeded"):
+        anyio.run(run_test)

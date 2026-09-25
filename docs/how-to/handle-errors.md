@@ -50,6 +50,7 @@ without publishing arbitrary traceback contents. See
 |---|---|
 | `JevAuthError` | Check credential selection and service authorization without printing the key. |
 | `JevRequestError` | Correct the supplied questions/state or configuration before repeating the call. |
+| `JevMaxTokensExceededError` | Shrink the state or the longest question. This subclass of `JevRequestError` is not retryable. |
 | `JevResponseError` | Preserve a minimal synthetic reproduction of the unusable answer and report it. |
 | `JevRateLimitError` | Defer work under your application's retry and spending policy. |
 | `JevServiceError` | Check transport/service availability; decide whether another attempt is appropriate. |

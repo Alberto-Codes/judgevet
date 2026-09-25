@@ -11,7 +11,8 @@ Only the recorded calls establish what the service returned; see the
 ## Service and transport errors
 
 The supported names are exported from `judgevet`. Each concrete error below
-inherits directly from `JevError`, which inherits from `Exception`.
+inherits directly from `JevError`, which inherits from `Exception`. The one
+exception is `JevMaxTokensExceededError`, which inherits from `JevRequestError`.
 `JevRateLimitError` is not a subclass of `JevRequestError` or `JevServiceError`.
 
 | Type | Constructor | HTTP adapter mapping | `retryable` |
@@ -19,6 +20,7 @@ inherits directly from `JevError`, which inherits from `Exception`.
 | `JevError` | `JevError(message, status_code=None)` | Base type; not a catch-all for every failure | `False` |
 | `JevAuthError` | `JevAuthError(message, status_code)` | 401 or 403 | `False` |
 | `JevRequestError` | `JevRequestError(message, status_code)` | Other 400–499 statuses, excluding 429 | `False` |
+| `JevMaxTokensExceededError` | `JevMaxTokensExceededError(message, status_code)` | A 400–499 body whose `detail.error_type` is `max_tokens_exceeded` | `False` |
 | `JevRateLimitError` | `JevRateLimitError(message, status_code)` | 429 | `True` |
 | `JevServiceError` | `JevServiceError(message, status_code=None)` | 500–599, or HTTPX `RequestError` such as a timeout | `True` |
 | `JevResponseError` | `JevResponseError(message, status_code)` | Successful 200–299 answer that cannot be parsed | `False` |
@@ -26,8 +28,8 @@ inherits directly from `JevError`, which inherits from `Exception`.
 This table describes the [adapter mapping](../../src/judgevet/adapters/outbound/http.py)
 and [error classes](../../src/judgevet/domain/errors.py). It does not assert that
 every status has been observed. The [vendor API reference](https://docs.typesafe.ai/api.md)
-is the source for documented service errors. Live 401 and 422 bodies have been
-observed; 429 and 529 bodies remain unseen. Other mapped statuses are local
+is the source for documented service errors. Live 400, 401 and 422 bodies have
+been observed; 429 and 529 bodies remain unseen. Other mapped statuses are local
 compatibility behavior, not additional verified service outcomes.
 
 Concrete constructors validate the status range and raise `ValueError` for an
@@ -35,6 +37,20 @@ invalid code. `JevRequestError` permits 400–499 except 401/403 when constructe
 directly, including 429; the HTTP adapter nevertheless maps 429 to
 `JevRateLimitError`. `JevServiceError` permits `None` for transport failures.
 `JevError` itself does not validate the status or infer retryability from it.
+
+### Oversized requests
+
+One call with a 400,000-character state returned status 400 and the body
+`{"detail": {"error_type": "max_tokens_exceeded"}}`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575.
+The adapter raises `JevMaxTokensExceededError` for that marker on any 4xx
+status. It matches the marker, not the status, because one call has seen the
+status. The error has `retryable=False`, because the same request fails again.
+`except JevRequestError` still catches it. The body does not say which token
+budget the request exceeded. The vendor states a 64k-token request budget and a
+32k-token budget for `state` plus the longest question.
+Source: https://docs.typesafe.ai/models.md.
+See [service limits](api.md#service-limits).
 
 All errors expose `status_code` and the `retryable` property. The message is in
 standard exception `args`, not a `.message` attribute. `str(error)` appends
