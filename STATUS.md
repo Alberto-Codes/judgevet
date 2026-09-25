@@ -426,8 +426,16 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2139 tests pass, 7 live tests deselected.** The last measured coverage is
+**2144 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.20%** (2101/2184 statements).
+#196 turns retries on by default: `RetryPolicy()` makes three attempts on 429
+and every 5xx with the existing 0.5 s base, 5 s cap and subtractive jitter,
+both HTTP adapters use it when `retry` is None, and the CLI and MCP attempts
+setting defaults to 3. The opt-out is `retry=RetryPolicy(max_attempts=1)`.
+`Retry-After` is still not honoured, the spend cap counts every attempt and
+the audit record stays one per logical call. The contract tests pin one
+attempt because they prove translation, not retries. Offline tests prove a 503
+then a 200 returns the answer; no live call has exercised the default.
 #189 slice (a) lets both fakes take scripted `usage=` and a scripted whole-call
 `error=`. The contract test now runs every fixture through both fakes and the
 HTTP adapter: whole-response equality on the five response fixtures and error

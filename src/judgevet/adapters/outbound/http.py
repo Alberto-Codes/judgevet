@@ -345,7 +345,8 @@ class HTTPSystemOneAdapter:
             default_model: Default model to use. Defaults to jev-latest.
             transport: Optional httpx transport for testing. Defaults to None.
             timeout_seconds: Read timeout in seconds. Defaults to 30.0.
-            retry: Validated retry policy. None preserves one attempt.
+            retry: Validated retry policy. None uses `RetryPolicy()`, three
+                attempts; `RetryPolicy(max_attempts=1)` opts out.
             network: Proxy and TLS options. None retains HTTPX defaults.
 
         Other Parameters:
@@ -577,7 +578,8 @@ class AsyncHTTPSystemOneAdapter:
             default_model: Default model to use. Defaults to jev-latest.
             transport: Optional httpx async transport for testing. Defaults to None.
             timeout_seconds: Read timeout in seconds. Defaults to 30.0.
-            retry: Validated retry policy. None preserves one attempt.
+            retry: Validated retry policy. None uses `RetryPolicy()`, three
+                attempts; `RetryPolicy(max_attempts=1)` opts out.
             network: Proxy and TLS options. None retains HTTPX defaults.
 
         Other Parameters:

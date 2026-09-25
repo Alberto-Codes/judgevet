@@ -80,7 +80,7 @@ def test_installed_rate_limit(tmp_path: Path, policy: bool, as_json: bool) -> No
     args = arguments(tmp_path, policy, as_json)
     with serve(429, PAYLOAD) as peer:
         code, stdout, stderr = invoke_files(peer.url, args)
-    assert len(peer.requests) == 1
+    assert len(peer.requests) == 3
     assert_error(code, stdout, stderr, as_json)
 
 
@@ -104,6 +104,6 @@ def test_rate_limit_cleanup(
         monkeypatch.setenv("JEV_API__BASE_URL", peer.url)
         result = CliRunner().invoke(cli.app, arguments(tmp_path, policy, as_json))
     assert closed == [True]
-    assert len(peer.requests) == 1
+    assert len(peer.requests) == 3
     assert_error(result.exit_code, result.stdout, result.stderr, as_json)
     assert isinstance(result.exception, SystemExit)

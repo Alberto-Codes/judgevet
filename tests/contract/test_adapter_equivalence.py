@@ -30,6 +30,7 @@ import anyio
 import httpx
 import pytest
 
+from judgevet import RetryPolicy
 from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
     HTTPSystemOneAdapter,
@@ -207,8 +208,12 @@ def _assert_agree(
 def test_adapters_agree(fixture: dict[str, Any]) -> None:
     """Test that sync and async adapters produce identical outcomes."""
     transport = _transport_for(fixture)
-    sync_adapter = HTTPSystemOneAdapter(api_key="test-key", transport=transport)
-    async_adapter = AsyncHTTPSystemOneAdapter(api_key="test-key", transport=transport)
+    sync_adapter = HTTPSystemOneAdapter(
+        api_key="test-key", transport=transport, retry=RetryPolicy(max_attempts=1)
+    )
+    async_adapter = AsyncHTTPSystemOneAdapter(
+        api_key="test-key", transport=transport, retry=RetryPolicy(max_attempts=1)
+    )
 
     expected = _call_sync(sync_adapter, fixture)
     sync_adapter.close()
@@ -233,8 +238,12 @@ def test_3xx_fallthrough_agrees() -> None:
 
     transport = httpx.MockTransport(handler)
 
-    sync_adapter = HTTPSystemOneAdapter(api_key="test-key", transport=transport)
-    async_adapter = AsyncHTTPSystemOneAdapter(api_key="test-key", transport=transport)
+    sync_adapter = HTTPSystemOneAdapter(
+        api_key="test-key", transport=transport, retry=RetryPolicy(max_attempts=1)
+    )
+    async_adapter = AsyncHTTPSystemOneAdapter(
+        api_key="test-key", transport=transport, retry=RetryPolicy(max_attempts=1)
+    )
 
     expected = _call_sync(
         sync_adapter,
@@ -308,10 +317,12 @@ def test_adapters_handle_question_objects() -> None:
     sync_adapter = HTTPSystemOneAdapter(
         api_key="test-key",
         transport=transport_sync,
+        retry=RetryPolicy(max_attempts=1),
     )
     async_adapter = AsyncHTTPSystemOneAdapter(
         api_key="test-key",
         transport=transport_async,
+        retry=RetryPolicy(max_attempts=1),
     )
 
     # Use bare Noul without criteria to test the omission rule

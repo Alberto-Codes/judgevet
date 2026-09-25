@@ -23,6 +23,7 @@ import anyio
 import httpx
 import pytest
 
+from judgevet import RetryPolicy
 from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
     HTTPSystemOneAdapter,
@@ -241,7 +242,9 @@ class TestHTTPAdapterContract:
         # Build the real adapter with MockTransport
         transport = _transport_for(fixture)
         api_key = "test-key"  # required by real adapter but not used by transport
-        adapter = HTTPSystemOneAdapter(api_key=api_key, transport=transport)
+        adapter = HTTPSystemOneAdapter(
+            api_key=api_key, transport=transport, retry=RetryPolicy(max_attempts=1)
+        )
 
         # Call both with the same arguments
         expect_kind = fixture["expect"][0]
@@ -290,7 +293,9 @@ def test_max_tokens_exceeded_is_distinguishable() -> None:
         port.system_one(*args)
     with (
         HTTPSystemOneAdapter(
-            api_key="test-key", transport=_transport_for(fixture)
+            api_key="test-key",
+            transport=_transport_for(fixture),
+            retry=RetryPolicy(max_attempts=1),
         ) as adapter,
         pytest.raises(JevMaxTokensExceededError) as real_info,
     ):
@@ -314,7 +319,9 @@ def test_async_adapter_parses_rounded_score() -> None:
 
     async def call() -> SystemOneResponse:
         adapter = AsyncHTTPSystemOneAdapter(
-            api_key="test-key", transport=_transport_for(fixture)
+            api_key="test-key",
+            transport=_transport_for(fixture),
+            retry=RetryPolicy(max_attempts=1),
         )
         return await adapter.system_one(
             request["state"], request["questions"], request["model"]
@@ -364,7 +371,9 @@ def _call_real(fixture: dict[str, Any]) -> SystemOneResponse:
     """Call the HTTP adapter over the fixture's MockTransport."""
     request = fixture["request"]
     with HTTPSystemOneAdapter(
-        api_key="test-key", transport=_transport_for(fixture)
+        api_key="test-key",
+        transport=_transport_for(fixture),
+        retry=RetryPolicy(max_attempts=1),
     ) as adapter:
         return adapter.system_one(
             request["state"], request["questions"], request["model"]
@@ -485,7 +494,11 @@ def test_fakes_match_real_adapter_spend_cap_and_audit(
     transport, seen = _counting_transport(fixture)
     request = fixture["request"]
     with HTTPSystemOneAdapter(
-        api_key="test-key", transport=transport, spend_cap=real_cap, audit=real_sink
+        api_key="test-key",
+        transport=transport,
+        spend_cap=real_cap,
+        audit=real_sink,
+        retry=RetryPolicy(max_attempts=1),
     ) as adapter:
         _call_twice(
             lambda: adapter.system_one(

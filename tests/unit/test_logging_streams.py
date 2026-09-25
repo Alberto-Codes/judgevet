@@ -179,7 +179,7 @@ def test_installed_cli_debug(tmp_path: Path, policy: bool, status: int) -> None:
         )
         result = run(args, env=env)
     assert result.returncode == (0 if status == 200 else 1)
-    assert len(peer.requests) == 1
+    assert len(peer.requests) == (1 if status == 200 else 3)
     if status == 200:
         assert set(json.loads(result.stdout)["answers"]) == set(QUESTIONS)
     else:

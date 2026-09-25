@@ -1,14 +1,16 @@
-"""Bound opt-in retries without changing service-error classifications.
+"""Bound default retries without changing service-error classifications.
 
-Defaults and jitter follow the timing values documented at
-https://docs.typesafe.ai/sdk/python/api/retries.md. Unlike that SDK, judgevet
-requires opt-in for retries and separately for transport failures.
+Defaults and jitter follow the values documented at
+https://docs.typesafe.ai/sdk/python/api/retries.md: three attempts in total.
+Unlike that SDK, judgevet retries transport failures only on opt-in, leaves
+408 unretried and does not honour `Retry-After`.
 
 Examples:
     ```python
     from judgevet.adapters.outbound.retries import RetryPolicy
 
-    assert RetryPolicy().max_attempts == 1
+    assert RetryPolicy().max_attempts == 3
+    assert RetryPolicy(max_attempts=1).max_attempts == 1
     ```
 
 See Also:
@@ -32,8 +34,12 @@ random = SystemRandom()
 class RetryPolicy:
     """Hold validated attempt and delay limits.
 
+    The default makes three attempts on a retryable status, 429 or any 5xx.
+    `RetryPolicy(max_attempts=1)` opts out of retries.
+
     Attributes:
         max_attempts (int): Total attempts including the initial request.
+            Defaults to 3.
         retry_base_delay (float): Initial delay ceiling in seconds.
         retry_max_delay (float): Maximum delay ceiling in seconds.
         retry_transport (bool): Permit replay when a transport failure has no status.
@@ -45,7 +51,7 @@ class RetryPolicy:
         ```
     """
 
-    max_attempts: int = 1
+    max_attempts: int = 3
     retry_base_delay: float = 0.5
     retry_max_delay: float = 5.0
     retry_transport: bool = False

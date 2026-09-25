@@ -110,6 +110,23 @@ remain. Callers name `instructions` and `criteria`, for example
 [TypeSafe Python SDK](https://docs.typesafe.ai/sdk/python) constructs these
 types by keyword only, and the three types share no positional order.
 
+## Retries on by default
+
+The change in [#196](https://github.com/Alberto-Codes/judgevet/issues/196)
+turns retries on by default. `RetryPolicy()` now makes three attempts, and an
+adapter built without `retry` uses it. The CLI and MCP server follow through
+the `JEV_API__MAX_ATTEMPTS` default, which moves from `1` to `3`. The variable
+name is unchanged.
+
+A caller who relied on one attempt now gets three on HTTP 429 or any 5xx
+status. A persistent failure takes longer to surface and sends up to two more
+requests. Other errors still make one attempt. Transport retries stay opt-in,
+and `Retry-After` is not honoured. To keep one attempt, pass
+`retry=RetryPolicy(max_attempts=1)` or set `JEV_API__MAX_ATTEMPTS=1`. A spend
+cap counts every attempt. Audit records stay one per call. The default follows
+the vendor SDK.
+Source: https://docs.typesafe.ai/sdk/python/api/retries.md.
+
 ## Verification limits
 
 Policy tests are synthetic local acceptance evidence. They do not establish model

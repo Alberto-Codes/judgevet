@@ -20,7 +20,7 @@ arguments. Neither reads judgevet environment settings or installs logging.
 | `gateway` | `None` | Optional `GatewayConfig`; omission retains direct authentication and no metadata. |
 | `redactor` | `None` | Optional synchronous `StateRedactor`; transforms a private state copy before transmission. |
 | `network` | `None` | Optional `NetworkConfig`; omission retains HTTPX proxy and TLS defaults. |
-| `retry` | `None` | Optional `RetryPolicy`; omission preserves one attempt. |
+| `retry` | `None` | Optional `RetryPolicy`; omission uses `RetryPolicy()`, three attempts. |
 | `spend_cap` | `None` | Optional `SpendCap`; omission sends every attempt the retry policy permits. See [spend cap](#spend-cap). |
 | `audit` | `None` | Optional `AuditSink`; omission writes no record. See [audit records](#audit-records). |
 | `transport` | `None` | Optional HTTPX transport; use the sync or async transport type appropriate to the adapter. |
@@ -29,7 +29,8 @@ arguments. Neither reads judgevet environment settings or installs logging.
 These are judgevet defaults from the [HTTP adapter](../../src/judgevet/adapters/outbound/http.py).
 The service host and endpoint are documented by [TypeSafe](https://api.typesafe.ai/docs).
 Timeouts apply to HTTPX operations, not a guaranteed total wall-clock deadline.
-Retries are disabled by default. See [retry limits](#retry-limits) before enabling them.
+Retries are on by default: three attempts on a rate limit or a 5xx status.
+See [retry limits](#retry-limits) for the opt-out.
 A timed-out request may still be running at the service.
 
 The `jev-latest` alias follows the model the service currently serves.
@@ -66,7 +67,7 @@ The nested settings use the `JEV_` prefix and `__` separator.
 | `JEV_API__PROXY` | None | Unset | Explicit HTTPX proxy URL; overrides standard proxy routing. |
 | `JEV_API__CA_BUNDLE` | None | Unset | PEM file replacing default trust roots; must load successfully. |
 | `JEV_API__VERIFY` | None | `true` | Verify certificate chains and hostnames. Disable only in controlled tests. |
-| `JEV_API__MAX_ATTEMPTS` | None | `1` | Total requests per call; must be a positive integer. |
+| `JEV_API__MAX_ATTEMPTS` | None | `3` | Total requests per call; must be a positive integer. `1` disables retries. |
 | `JEV_API__RETRY_BASE_DELAY` | None | `0.5` | Initial backoff ceiling in seconds. |
 | `JEV_API__RETRY_MAX_DELAY` | None | `5.0` | Maximum backoff ceiling in seconds. |
 | `JEV_API__RETRY_TRANSPORT` | None | `false` | Permit retries after transport failures. |
@@ -121,12 +122,25 @@ before logging or sharing output. For recovery steps, use
 ## Retry limits
 
 Pass `retry=RetryPolicy(...)` to either adapter. Import `RetryPolicy` from
-`judgevet`. Its defaults are `max_attempts=1`, `retry_base_delay=0.5`,
-`retry_max_delay=5.0` and `retry_transport=False`.
+`judgevet`. Its defaults are `max_attempts=3`, `retry_base_delay=0.5`,
+`retry_max_delay=5.0` and `retry_transport=False`. An adapter built without
+`retry` uses `RetryPolicy()`. The CLI and MCP server share that default through
+`JEV_API__MAX_ATTEMPTS`.
 
-`max_attempts=1` preserves the default single request. Set a larger value to
-retry errors whose `retryable` property is true. This covers rate limits and
-service failures. Transport failures also require `retry_transport=True`.
+The default retries errors whose `retryable` property is true. This covers
+HTTP 429 and every 500 to 599 status. Transport failures also require
+`retry_transport=True`. To make one request per call, opt out:
+
+```python
+from judgevet import RetryPolicy
+
+single = RetryPolicy(max_attempts=1)
+assert single.max_attempts == 1
+```
+
+Pass it as `retry=RetryPolicy(max_attempts=1)`.
+A retried 5xx can repeat a billed attempt. A [spend cap](#spend-cap) counts
+every attempt, including each retry, and bounds that cost.
 A read or write failure can occur after the service accepted the request;
 replaying it can duplicate a billed judgment. The library does not provide
 an idempotency guarantee.
@@ -152,9 +166,9 @@ waits when choosing a platform request deadline.
 
 The [official SDK retry reference](https://docs.typesafe.ai/sdk/python/api/retries.md)
 documents two retries by default, 0.5-second initial delay, a 5-second cap and
-25% subtractive jitter. judgevet uses those timing defaults but requires retry
-opt-in and separate transport opt-in. It does not honor `Retry-After` or
-`retry-after-ms` headers. These are local policy choices, not live-service
+25% subtractive jitter. judgevet uses those defaults: three attempts in total.
+It keeps transport retries opt-in and leaves HTTP 408 unretried. It does not
+honour `Retry-After` or `retry-after-ms` headers. These are local policy choices, not live-service
 observations. The [error recipe](../how-to/handle-errors.md) shows a bounded call.
 
 

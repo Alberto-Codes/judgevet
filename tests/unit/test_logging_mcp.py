@@ -128,5 +128,5 @@ def test_mcp_debug_error() -> None:
     """A failed tool preserves MCP framing and emits one safe debug event."""
     with serve(429, {"detail": {"message": "private-key-canary"}}) as peer:
         stderr = asyncio.run(session(peer.url, False))
-    assert len(peer.requests) == 1
+    assert len(peer.requests) == 3
     assert_diagnostics(stderr, 429, 1)

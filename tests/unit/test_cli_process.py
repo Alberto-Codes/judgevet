@@ -50,7 +50,7 @@ def test_installed_http_failure(status: int, payload: dict, as_json: bool) -> No
         code, stdout, stderr = asyncio.run(
             invoke(peer.url, "test", json.dumps(QUESTIONS), as_json)
         )
-    assert len(peer.requests) == 1
+    assert len(peer.requests) == (3 if status == 503 else 1)
     assert peer.requests[0]["path"] == "/v1/systemone"
     assert stdout == ""
     assert CANARY not in stderr

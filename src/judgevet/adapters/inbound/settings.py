@@ -72,6 +72,7 @@ class ApiSettings(BaseSettings):
         has_key_source (bool): Source presence without IO.
         default_model (str): Model id sent when a call names none.
         max_attempts (int): Total requests per call, including the first.
+            Defaults to 3, the library default.
         retry_base_delay (float): Initial delay ceiling in seconds.
         retry_max_delay (float): Maximum delay ceiling in seconds.
         retry_transport (bool): Permit retries of transport errors.
@@ -216,7 +217,7 @@ class ApiSettings(BaseSettings):
             request_id_header=self.request_id_header,
         )
 
-    max_attempts: int = Field(default=1, ge=1)
+    max_attempts: int = Field(default=3, ge=1)
 
     @field_validator("max_attempts", mode="before")
     @classmethod

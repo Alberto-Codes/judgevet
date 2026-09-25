@@ -11,6 +11,7 @@ Use this pattern after [installing judgevet](install.md) and supplying
 prints error category and retry metadata, not service-supplied message text.
 It retries eligible HTTP failures and keeps an unavailable answer separate from
 a policy rejection. Transport retries remain disabled.
+The adapter retries a transient 5xx or a rate limit by default.
 
 ```python
 import os
@@ -56,9 +57,10 @@ without publishing arbitrary traceback contents. See
 | `JevRateLimitError` | Defer work under your application's retry and spending policy. |
 | `JevServiceError` | Check transport/service availability; decide whether another attempt is appropriate. |
 
-`retryable` is a classification, not a promise of success. The example enables
-bounded retries; the default adapter makes one attempt. Each retry sends another
-service request. Choose [retry limits](../reference/configuration.md#retry-limits)
+`retryable` is a classification, not a promise of success. The example states
+the default of three attempts explicitly. The adapter retries a transient 5xx
+by default. Pass `retry=RetryPolicy(max_attempts=1)` to make one attempt. Each
+retry sends another service request. Choose [retry limits](../reference/configuration.md#retry-limits)
 under your spending policy. Error mappings are defined
 by the [adapter](../../src/judgevet/adapters/outbound/http.py) and
 [error types](../../src/judgevet/domain/errors.py).
