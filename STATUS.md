@@ -406,7 +406,7 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**1948 tests pass, 6 live tests deselected.** The last measured coverage is
+**1953 tests pass, 6 live tests deselected.** The last measured coverage is
 **95.81%** (1850/1931 statements).
 Local commit and push gates pass for #170. The issue holds delivery evidence.
 The documentation rounds retain the existing local gates: suppressions,
@@ -609,6 +609,7 @@ Published README links retain offline source and fragment validation.
 | 429 and 529 | still unseen. 429 needs abusing the service and 529 cannot be forced |
 | every other field name | inferred from documentation |
 | resolved models other than `jev-1.13.0` | untested; both `jev-latest` and explicit `jev-1.13.0` have been called |
+| probabilities on the wire are rounded to two decimals | observed once — a consumer call on 2026-09-24 against `jev-1.13.0` returned a four-level Score summing to 0.99 (#175); the tolerance is 0.005 per probability since that fix; not reproduced by this repository's live suite |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 12 hand-authored fixtures, inferred from docs/reference/api.md |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |

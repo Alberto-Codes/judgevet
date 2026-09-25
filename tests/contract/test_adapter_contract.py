@@ -19,10 +19,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+import anyio
 import httpx
 import pytest
 
-from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
+from judgevet.adapters.outbound.http import (
+    AsyncHTTPSystemOneAdapter,
+    HTTPSystemOneAdapter,
+)
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.errors import (
     JevAuthError,
@@ -36,7 +40,7 @@ from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
 from judgevet.ports import SystemOnePort
 
-from .fixtures import get_fixtures
+from .fixtures import get_fixture_by_name, get_fixtures
 
 
 class _ReplayPort:
@@ -264,3 +268,23 @@ class TestHTTPAdapterContract:
                 )
 
             _assert_errors_equal(real_exc_info.value, fake_exc_info.value)
+
+
+@pytest.mark.contract
+def test_async_adapter_parses_rounded_score() -> None:
+    """The async adapter accepts a four-level score that sums to 0.99 (#175)."""
+    fixture = get_fixture_by_name("score_rounded_sum")
+    request = fixture["request"]
+    fake = _ReplayPort(fixture).system_one(
+        request["state"], request["questions"], request["model"]
+    )
+
+    async def call() -> SystemOneResponse:
+        adapter = AsyncHTTPSystemOneAdapter(
+            api_key="test-key", transport=_transport_for(fixture)
+        )
+        return await adapter.system_one(
+            request["state"], request["questions"], request["model"]
+        )
+
+    _assert_responses_equal(anyio.run(call), fake)

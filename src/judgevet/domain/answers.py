@@ -1,7 +1,8 @@
 """Answer types returned by the Jev API.
 
 The domain checks noul and confidence against [0,1] on construction. It checks
-that probabilities sum to 1 and contain the selected choice. It also checks
+that probabilities sum to 1 within 0.005 per probability and contain the
+selected choice. It also checks
 that score lies in legend range and legend/probability keys match. Frozen
 dataclasses prevent attribute reassignment; nested dictionaries remain mutable.
 All numeric answer values must be finite integers or floats, excluding booleans.
@@ -34,18 +35,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import isfinite
 
-PROBABILITY_SUM_TOLERANCE = 1e-6
-"""Tolerance for probability sum validation.
+PROBABILITY_SUM_TOLERANCE = 0.005
+"""Allowed deviation of a probability sum from 1.0, per probability.
 
-Recorded sums in this repo deviate by 0.0. Float64 accumulation bound is k·ε
-with ε = 2.22e-16. A 1000-key distribution accumulates at most ≈2.2e-13, so
-1e-6 sits four orders of magnitude above the arithmetic worst case.
+A distribution of k probabilities may sum off by at most 0.005·k. The value
+0.005 is half a unit of two-decimal rounding: each rounded probability can move
+by up to 0.005, so k of them can move the sum by up to 0.005·k.
 
-Open question: if the live service rounds probabilities to 2-3 decimals, a
-normalized distribution can sum off by up to ~0.0005·k and would be rejected.
-Change this tolerance only with observed evidence and record any rounding
-behavior in docs/reference/api.md. Existing calls do not establish a general
-rounding guarantee."""
+One consumer call on 2026-09-24 against `jev-1.13.0` returned a four-level
+Score whose probabilities summed to 0.99. That call is the only observation of
+wire rounding. This repository's live suite has not reproduced it, and it
+establishes no general rounding guarantee.
+See: https://github.com/Alberto-Codes/judgevet/issues/175
+
+Float64 accumulation adds at most k·ε with ε = 2.22e-16. A 1000-key
+distribution accumulates at most ≈2.2e-13, far below the rounding allowance."""
 
 
 def _validate_finite_number(value: float, name: str) -> None:
@@ -141,8 +145,9 @@ class ChoiceAnswer:
     def __post_init__(self) -> None:
         """Validate choice, confidence, and probabilities.
 
-        Ensures confidence is finite in [0.0, 1.0], all probability values are
-        finite in [0.0, 1.0], probabilities sum to 1.0, and choice is a key.
+        Ensures confidence and each probability are finite in [0.0, 1.0]. The
+        probabilities sum to 1.0 within PROBABILITY_SUM_TOLERANCE per
+        probability, and choice is a key.
 
         Raises:
             TypeError: If confidence or any probability is nonnumeric or a boolean.
@@ -166,7 +171,7 @@ class ChoiceAnswer:
             raise ValueError(f"choice '{self.choice}' not in probabilities keys")
 
         total = sum(self.probabilities.values())
-        if abs(total - 1.0) > PROBABILITY_SUM_TOLERANCE:
+        if abs(total - 1.0) > PROBABILITY_SUM_TOLERANCE * len(self.probabilities):
             raise ValueError(f"probabilities must sum to 1.0, got {total:.6f}")
 
 
@@ -212,7 +217,8 @@ class ScoreAnswer:
         """Validate score, confidence, legend, and probabilities.
 
         Checks finite score against legend range and finite confidence against [0.0, 1.0].
-        Checks finite numeric probabilities against [0.0, 1.0] and their sum against 1.0.
+        Checks finite numeric probabilities against [0.0, 1.0] and their sum against
+        1.0 within PROBABILITY_SUM_TOLERANCE per probability.
         Checks that legend/probability keys match.
 
         Raises:
@@ -238,7 +244,7 @@ class ScoreAnswer:
                 )
 
         total = sum(self.probabilities.values())
-        if abs(total - 1.0) > PROBABILITY_SUM_TOLERANCE:
+        if abs(total - 1.0) > PROBABILITY_SUM_TOLERANCE * len(self.probabilities):
             raise ValueError(f"probabilities must sum to 1.0, got {total:.6f}")
 
         _validate_finite_number(self.score, "score")

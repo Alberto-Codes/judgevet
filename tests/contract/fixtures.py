@@ -339,8 +339,61 @@ def _make_non_json_fixture() -> dict[str, Any]:
     }
 
 
+def _make_rounded_score_fixture() -> dict[str, Any]:
+    """Fixture 13: A four-level score whose rounded probabilities sum to 0.99.
+
+    One consumer call on 2026-09-24 (`jev-1.13.0`) returned a four-level Score
+    with two-decimal probabilities that summed to 0.99. This body is synthetic;
+    it reproduces that shape, not a recorded response.
+    See: https://github.com/Alberto-Codes/judgevet/issues/175
+    """
+    legend = {1: "poor", 2: "fair", 3: "good", 4: "excellent"}
+    probabilities = {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.39}
+    answer = {"score": 2.96, "confidence": 0.39, "legend": legend}
+    return {
+        "name": "score_rounded_sum",
+        "request": {
+            "state": "The product arrived damaged",
+            "questions": {
+                "satisfaction": {
+                    "type": "score",
+                    "instructions": "Rate your satisfaction",
+                    "criteria": legend,
+                }
+            },
+            "model": "jev-1.13.0",
+        },
+        "status": 200,
+        "body": {
+            "model": "jev-1.13.0",
+            "usage": {"input_tokens": 140, "output_tokens": 14},
+            "answers": {
+                "satisfaction": {
+                    "type": "score",
+                    **answer,
+                    "probabilities": probabilities,
+                }
+            },
+        },
+        "expect": (
+            "response",
+            {
+                "model": "jev-1.13.0",
+                "usage": {"input_tokens": 140, "output_tokens": 14},
+                "answers": {
+                    "satisfaction": {
+                        "answer_type": "score",
+                        **answer,
+                        "probabilities": probabilities,
+                    }
+                },
+            },
+        ),
+    }
+
+
 def get_fixtures() -> list[dict[str, Any]]:
-    """Return the list of all 12 fixtures."""
+    """Return the list of all 13 fixtures."""
     return [
         _make_noul_fixture(),
         _make_choice_fixture(),
@@ -354,6 +407,7 @@ def get_fixtures() -> list[dict[str, Any]]:
         _make_transport_failure_fixture(),
         _make_missing_model_fixture(),
         _make_non_json_fixture(),
+        _make_rounded_score_fixture(),
     ]
 
 

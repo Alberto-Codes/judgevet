@@ -101,11 +101,19 @@ confidence and each probability. Booleans and nonnumeric values raise `TypeError
 NaN, either infinity and out-of-range values raise `ValueError`. Constructors
 retain inclusive probability/confidence bounds of `[0,1]`, choice membership,
 matching Score legend/distribution keys, inclusive score range and the
-probability-sum tolerance of `1e-6`. They do not enforce argmax selection or
+probability-sum tolerance of `0.005` per probability. They do not enforce argmax selection or
 expected-score equality. Public policy evaluation also checks values when it
 consumes an answer; see [policy validation](policy.md#evaluation-and-reports).
 The [answer source](../../src/judgevet/domain/answers.py) is authoritative for
 constructor behavior. Do not infer service guarantees from local checks.
+
+Wire precision: one consumer call on 2026-09-24 against `jev-1.13.0` returned a
+four-level Score whose probabilities summed to 0.99
+([issue #175](https://github.com/Alberto-Codes/judgevet/issues/175)). Two-decimal
+rounding can move each probability by up to 0.005, so constructors accept a sum
+within `0.005 × k` of 1.0 for `k` probabilities. That call is the only
+observation. This repository's live suite has not reproduced it, and it does not
+establish a general rounding rule for the service.
 
 Answer, Usage and response instances are frozen dataclasses. Frozen prevents
 attribute reassignment, not mutation of nested dictionaries. `answers`,
