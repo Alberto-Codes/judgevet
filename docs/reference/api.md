@@ -124,7 +124,7 @@ are local test data, not service behaviour. See the
 | Type | Required fields | Semantics |
 |---|---|---|
 | `NoulAnswer` | `noul: float` | Probability of true; no confidence field. [Noul source](https://docs.typesafe.ai/primitives/noul) |
-| `ChoiceAnswer` | `choice: str`, `confidence: float`, `probabilities: dict[str, float]` | Selected label, confidence and distribution over labels. [Choice source](https://docs.typesafe.ai/primitives/choice) |
+| `ChoiceAnswer` | `choice: str`, `confidence: float`, `probabilities: dict[str, float]` | Selected label, confidence and distribution over labels. The vendor defines `confidence` as a number from 0 to 1 computed from how `probabilities` is spread. It is not `probabilities[choice]`. See [Choice confidence](#choice-confidence). Source: https://docs.typesafe.ai/primitives/choice. Source: https://docs.typesafe.ai/confidence. |
 | `ScoreAnswer` | `score: float`, `confidence: float`, `legend: dict[int, str]`, `probabilities: dict[int, float]` | Continuous expected score, confidence and rubric/distribution indexed by level. [Score source](https://docs.typesafe.ai/primitives/score) |
 | `Usage` | None required; `input_tokens=None`, `output_tokens=None` | Optional nonnegative integer token counts; booleans are rejected. [Wire fields](https://docs.typesafe.ai/api.md) |
 | `SystemOneResponse` | `model: str`, `usage: Usage`; `answers` defaults to a new empty dictionary | Answer mapping keyed by question name. The observed service model is the resolved version, not necessarily the requested alias. [Wire envelope](https://docs.typesafe.ai/api.md) |
@@ -157,6 +157,38 @@ attribute reassignment, not mutation of nested dictionaries. `answers`,
 `nouls`, `choices` and `scores` each return a fresh shallow dictionary filtered
 by answer type. Their values are the same answer objects. Missing names or
 wrong-type names raise normal `KeyError` when indexed in a filtered mapping.
+
+## Choice confidence
+
+The vendor Choice page defines the field: "A number from 0 to 1 computed from
+how `probabilities` is spread. A flat shape, with probability spread across
+several options, means low confidence. A single peak on one option means high
+confidence." The same page defines `choice` as "The option with the highest
+probability." Source: https://docs.typesafe.ai/primitives/choice.
+
+The page publishes no formula. The vendor Confidence page calls the field "a
+statistic computed from the probability distribution the answer already gives
+you" and publishes no service formula either. Source:
+https://docs.typesafe.ai/confidence. `confidence` is a spread measure. It is not
+`probabilities[choice]`, and callers must not read it as that probability.
+The client checks only that `confidence` lies in `[0, 1]`. It checks no
+relation between `confidence` and `probabilities`.
+
+Two live runs recorded a Choice `confidence`. The 0.11.0 production smoke on
+2026-09-25 returned `confidence=0.89` for `choice='a'`. Source:
+https://github.com/Alberto-Codes/judgevet/issues/186#issuecomment-5825514560.
+That comment elides the probabilities. The issue that reports the run records
+the full answer as
+`ChoiceAnswer(choice='a', confidence=0.89, probabilities={'b': 0.05, 'a': 0.95})`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/187. The 0.10.2
+production smoke on 2026-09-25 returned `confidence=0.9` for `choice='a'` and
+elides the probabilities. Source:
+https://github.com/Alberto-Codes/judgevet/issues/183#issuecomment-5824552631.
+The 0.89 value is consistent with the vendor definition. The 0.9 run recorded
+no probabilities, so it cannot be compared.
+
+**Open question:** the formula that maps `probabilities` to `confidence`.
+No source publishes it, and no differential live test has measured it.
 
 ## Service limits
 

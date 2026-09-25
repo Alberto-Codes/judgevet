@@ -114,6 +114,14 @@ value, from zero to one. It is separate from the selected label or score.
 For example, a score of `1.6` and confidence of `0.7` describe different things.
 See the [Choice](https://docs.typesafe.ai/primitives/choice) and
 [Score](https://docs.typesafe.ai/primitives/score) answer definitions.
+The vendor Choice page defines Choice confidence as "A number from 0 to 1
+computed from how `probabilities` is spread. A flat shape, with probability
+spread across several options, means low confidence. A single peak on one
+option means high confidence." Source: https://docs.typesafe.ai/primitives/choice.
+The page publishes no formula. Choice confidence is not `probabilities[choice]`.
+Source: https://docs.typesafe.ai/confidence.
+The [Choice confidence reference](api.md#choice-confidence) records the
+observed values and the open question.
 judgevet has not established statistical calibration: confidence `0.7` is not
 proof that 70% of comparable judgments are correct.
 
