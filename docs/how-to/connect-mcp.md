@@ -26,7 +26,7 @@ Choose one installation method. For a persistent command, use either a Python
 
 <!-- x-release-please-start-version -->
 ```bash
-python -m pip install 'judgevet[mcp]==0.10.1'
+python -m pip install 'judgevet[mcp]==0.10.2'
 ```
 <!-- x-release-please-end -->
 
@@ -34,7 +34,7 @@ Or install a standalone tool with uv:
 
 <!-- x-release-please-start-version -->
 ```bash
-uv tool install 'judgevet[mcp]==0.10.1'
+uv tool install 'judgevet[mcp]==0.10.2'
 ```
 <!-- x-release-please-end -->
 
@@ -50,7 +50,7 @@ or source checkout is required:
 
 <!-- x-release-please-start-version -->
 ```bash
-uvx --from 'judgevet[mcp]==0.10.1' judgevet-mcp
+uvx --from 'judgevet[mcp]==0.10.2' judgevet-mcp
 ```
 <!-- x-release-please-end -->
 
@@ -106,7 +106,7 @@ provides a guided flow. Merge the entry with existing servers.
     "judgevet": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["--from", "judgevet[mcp]==0.10.1", "judgevet-mcp"],
+      "args": ["--from", "judgevet[mcp]==0.10.2", "judgevet-mcp"],
       "envFile": "/absolute/path/to/judgevet.env"
     }
   }
@@ -142,7 +142,7 @@ when the same name appears in both locations.
     "judgevet": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["--from", "judgevet[mcp]==0.10.1", "judgevet-mcp"],
+      "args": ["--from", "judgevet[mcp]==0.10.2", "judgevet-mcp"],
       "envFile": "/absolute/path/to/judgevet.env"
     }
   }
@@ -164,7 +164,7 @@ After exporting the key, use the native project-scoped add command:
 
 <!-- x-release-please-start-version -->
 ```bash
-claude mcp add --transport stdio --scope project judgevet --env 'JEV_API__KEY=${JEV_API__KEY}' -- uvx --from 'judgevet[mcp]==0.10.1' judgevet-mcp
+claude mcp add --transport stdio --scope project judgevet --env 'JEV_API__KEY=${JEV_API__KEY}' -- uvx --from 'judgevet[mcp]==0.10.2' judgevet-mcp
 ```
 <!-- x-release-please-end -->
 
@@ -179,7 +179,7 @@ The equivalent project `.mcp.json` entry is:
     "judgevet": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["--from", "judgevet[mcp]==0.10.1", "judgevet-mcp"],
+      "args": ["--from", "judgevet[mcp]==0.10.2", "judgevet-mcp"],
       "env": {"JEV_API__KEY": "${JEV_API__KEY}"}
     }
   }
@@ -218,7 +218,7 @@ Use the UI to locate configuration on other supported platforms.
   "mcpServers": {
     "judgevet": {
       "command": "uvx",
-      "args": ["--from", "judgevet[mcp]==0.10.1", "judgevet-mcp"],
+      "args": ["--from", "judgevet[mcp]==0.10.2", "judgevet-mcp"],
       "env": {"JEV_API__KEY_FILE": "/absolute/path/to/judgevet.key"}
     }
   }
@@ -245,7 +245,7 @@ Save this in `.codex/config.toml` in a trusted project, or in
 ```toml
 [mcp_servers.judgevet]
 command = "uvx"
-args = ["--from", "judgevet[mcp]==0.10.1", "judgevet-mcp"]
+args = ["--from", "judgevet[mcp]==0.10.2", "judgevet-mcp"]
 env_vars = ["JEV_API__KEY"]
 ```
 <!-- x-release-please-end -->
@@ -283,19 +283,19 @@ the key. Ask Pi to run these exact commands through its Bash tool:
 
 <!-- x-release-please-start-version -->
 ```bash
-uvx --from 'judgevet==0.10.1' judgevet 'Two checks passed.' '{"noul_question":{"type":"noul","instructions":"Did the checks pass?"}}' --json
+uvx --from 'judgevet==0.10.2' judgevet 'Two checks passed.' '{"noul_question":{"type":"noul","instructions":"Did the checks pass?"}}' --json
 ```
 <!-- x-release-please-end -->
 
 <!-- x-release-please-start-version -->
 ```bash
-uvx --from 'judgevet==0.10.1' judgevet 'Two checks passed.' '{"choice_question":{"type":"choice","instructions":"Did the checks pass?","criteria":{"yes":"Yes","no":"No"}}}' --json
+uvx --from 'judgevet==0.10.2' judgevet 'Two checks passed.' '{"choice_question":{"type":"choice","instructions":"Did the checks pass?","criteria":{"yes":"Yes","no":"No"}}}' --json
 ```
 <!-- x-release-please-end -->
 
 <!-- x-release-please-start-version -->
 ```bash
-uvx --from 'judgevet==0.10.1' judgevet 'Two checks passed.' '{"score_question":{"type":"score","instructions":"Did the checks pass?","criteria":["Poor","Fair","Good","Excellent"]}}' --json
+uvx --from 'judgevet==0.10.2' judgevet 'Two checks passed.' '{"score_question":{"type":"score","instructions":"Did the checks pass?","criteria":["Poor","Fair","Good","Excellent"]}}' --json
 ```
 <!-- x-release-please-end -->
 
@@ -351,7 +351,7 @@ must have a reviewed, approved `.envrc` exporting the key:
 
 <!-- x-release-please-start-version -->
 ```bash
-direnv exec /absolute/path/to/project uvx --from 'judgevet[mcp]==0.10.1' judgevet-mcp
+direnv exec /absolute/path/to/project uvx --from 'judgevet[mcp]==0.10.2' judgevet-mcp
 ```
 <!-- x-release-please-end -->
 
