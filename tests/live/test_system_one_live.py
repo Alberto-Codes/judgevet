@@ -3,6 +3,9 @@
 These tests require a valid TYPESAFE_API_KEY in the environment.
 When the key is absent, tests are skipped with a clear message.
 
+One test sends a four-level Score question and prints the observed sum of
+its probabilities, so a live run records how the service rounds them (#184).
+
 Handling the key:
     A secret stays wrapped (SecretStr) until the moment it is used. The unwrap
     happens inside the call expression, never in a binding. A binding puts the
@@ -41,7 +44,7 @@ import pytest
 
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
-from judgevet.domain.answers import NoulAnswer
+from judgevet.domain.answers import NoulAnswer, ScoreAnswer
 from judgevet.domain.questions import Choice, Noul
 from judgevet.domain.response import SystemOneResponse
 
@@ -358,3 +361,53 @@ def test_noul_criteria_differential() -> None:
         )
     finally:
         adapter.close()
+
+
+@pytest.mark.live
+def test_score_with_four_levels_records_probability_sum() -> None:
+    """Test a four-level Score question and print the observed probability sum.
+
+    The test is an instrument for issue #184. It asserts the answer shape and
+    prints one line with the sum of the four probabilities, so the run output
+    records whether the wire values round to two decimals. It asserts nothing
+    about the sum itself; the domain constructor enforces the tolerance.
+
+    Raises:
+        JevAuthError: If the API key is invalid or missing.
+        JevServiceError: If the API returns 5xx or a transport error occurs.
+        JevResponseError: If the response body cannot be parsed.
+    """
+    settings = Settings()
+    key = settings.api.key
+
+    if key is None:
+        pytest.skip("Missing TYPESAFE_API_KEY environment variable")
+
+    criteria = ["Poor", "Fair", "Good", "Excellent"]
+    adapter = HTTPSystemOneAdapter(
+        api_key=key.get_secret_value(),
+        base_url=settings.api.base_url,
+        default_model=settings.api.default_model,
+    )
+
+    try:
+        response = adapter.system_one(
+            state="The report is clear, complete, and has two small typos.",
+            questions={
+                "score": {
+                    "type": "score",
+                    "instructions": "Rate the quality of the report.",
+                    "criteria": criteria,
+                },
+            },
+            model="jev-latest",
+        )
+    finally:
+        adapter.close()
+
+    score_answer = response.answers["score"]
+    assert isinstance(score_answer, ScoreAnswer)
+    _assert_score_legend_echoes_criteria(score_answer, criteria)
+    assert len(score_answer.probabilities) == 4
+    total = sum(score_answer.probabilities.values())
+    print(f"observed probability sum={total!r} model={response.model}")
