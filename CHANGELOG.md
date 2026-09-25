@@ -3,6 +3,21 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.12.0](https://github.com/Alberto-Codes/judgevet/compare/v0.11.0...v0.12.0) (2026-09-25)
+
+
+### Features
+
+* **adapters:** add an AuditSink port and write one JudgmentRecord per call ([e0362ff](https://github.com/Alberto-Codes/judgevet/commit/e0362ff761c90406f3b16ff09813acdc4cc1da7d)), references [#54](https://github.com/Alberto-Codes/judgevet/issues/54)
+* **adapters:** add an opt-in SpendCap that bounds attempts and input tokens ([b61aedf](https://github.com/Alberto-Codes/judgevet/commit/b61aedf87d2bb4cc57599dd61de29a5e37fe5826)), references [#56](https://github.com/Alberto-Codes/judgevet/issues/56)
+* **errors:** raise JevMaxTokensExceededError for the service's max_tokens_exceeded body ([9448c51](https://github.com/Alberto-Codes/judgevet/commit/9448c51c68f423c0bcd117bdfe4e14c5f826fbe0)), references [#39](https://github.com/Alberto-Codes/judgevet/issues/39)
+
+
+### Documentation
+
+* **api:** record the vendor definition of Choice confidence and the observed values ([5ef7480](https://github.com/Alberto-Codes/judgevet/commit/5ef74800695657228beb4b4777a68c7c0505fede)), references [#187](https://github.com/Alberto-Codes/judgevet/issues/187)
+* **maintainers:** add the builder brief checklist and the pre-commit step ([303a9d2](https://github.com/Alberto-Codes/judgevet/commit/303a9d2c196f0d7ab64ee45f884ac87bc6cb766a)), references [#188](https://github.com/Alberto-Codes/judgevet/issues/188)
+
 ## [0.11.0](https://github.com/Alberto-Codes/judgevet/compare/v0.10.2...v0.11.0) (2026-09-25)
 
 
