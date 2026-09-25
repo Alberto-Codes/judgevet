@@ -8,7 +8,7 @@ from conventional commit messages. Do not edit entries by hand.
 
 ### ⚠ BREAKING CHANGES
 
-* Noul(instructions, criteria), Choice(criteria, instructions) and Score(criteria, instructions) no longer accept positional arguments. Name every argument: Noul(instructions=...), Choice(criteria=...), Score(criteria=...). Known callers: judgevet's own policy tests and doc-schema script, migrated here; finvet's tests/test_jev_scorer.py builds Noul("ok?") positionally and must move to Noul(instructions="ok?") before it upgrades.
+* Noul(instructions, criteria), Choice(criteria, instructions) and Score(criteria, instructions) no longer accept positional arguments. Name every argument: Noul(instructions=...), Choice(criteria=...), Score(criteria=...). Known callers: judgevet's own policy tests and doc-schema script, migrated here. Downstream callers that construct positionally must name the arguments before they upgrade.
 
 ### Features
 
