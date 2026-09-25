@@ -14,19 +14,21 @@ Examples:
 
 See Also:
     - [judgevet.ports.StateRedactor][]: Caller-owned transformation protocol.
+    - [judgevet.ports.AuditSink][]: Optional caller-owned audit destination.
     - [judgevet.adapters.outbound.spend.SpendCap][]: Optional shared spend cap.
     - [judgevet.adapters.outbound.http][]: Shared preparation before retries.
     - [judgevet.adapters.outbound.gateway][]: Independent metadata configuration.
 """
 
 import json
+from collections.abc import Mapping
 from copy import deepcopy
 from typing import Any
 
 from judgevet.adapters.outbound.gateway import GatewayOptions
 from judgevet.adapters.outbound.spend import SpendCap
 from judgevet.domain.questions import Choice, Noul, Score
-from judgevet.ports import StateRedactor
+from judgevet.ports import AuditSink, StateRedactor
 
 
 class AdapterOptions(GatewayOptions, total=False):
@@ -35,6 +37,7 @@ class AdapterOptions(GatewayOptions, total=False):
     Attributes:
         redactor (StateRedactor | None): Caller-owned synchronous state transformation.
         spend_cap (SpendCap | None): Shared attempt and input-token cap.
+        audit (AuditSink | None): Caller-owned destination for one record per call.
 
     Examples:
         ```python
@@ -45,14 +48,15 @@ class AdapterOptions(GatewayOptions, total=False):
 
     redactor: StateRedactor | None
     spend_cap: SpendCap | None
+    audit: AuditSink | None
 
 
 def configured_redactor(options: AdapterOptions) -> StateRedactor | None:
     """Validate constructor extensions and select explicit redaction.
 
     Args:
-        options: Typed gateway, redactor and spend cap keywords from an HTTP
-            constructor.
+        options: Typed gateway, redactor, spend cap and audit keywords from an
+            HTTP constructor.
 
     Returns:
         The optional callback; None leaves the existing path unchanged.
@@ -60,7 +64,7 @@ def configured_redactor(options: AdapterOptions) -> StateRedactor | None:
     Raises:
         TypeError: If an untyped caller supplies an unknown keyword.
     """
-    if options.keys() - {"gateway", "redactor", "spend_cap"}:
+    if options.keys() - {"gateway", "redactor", "spend_cap", "audit"}:
         raise TypeError("Unknown HTTP adapter option")
     return options.get("redactor")
 
@@ -132,3 +136,20 @@ def wire_question(question: Any) -> Any:
         return result
     # Non-Question values pass through untouched
     return question
+
+
+def question_types(questions: Mapping[str, Any]) -> dict[str, str | None]:
+    """Map each question id to its wire type name, never its instructions.
+
+    Args:
+        questions: Question objects or raw wire dictionaries keyed by id.
+
+    Returns:
+        The id to type mapping; None where a raw question has no string type.
+    """
+    types: dict[str, str | None] = {}
+    for name, value in questions.items():
+        wire = wire_question(value)
+        kind = wire.get("type") if isinstance(wire, dict) else None
+        types[name] = kind if isinstance(kind, str) else None
+    return types

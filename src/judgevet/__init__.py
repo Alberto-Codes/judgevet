@@ -62,6 +62,8 @@ Attributes:
     SpendCap (type): Opt-in shared cap on attempts and settled input tokens.
     GatewayConfig (type): Explicit gateway authentication and metadata.
     StateRedactor (type): Caller-owned state transformation before transmission.
+    AuditSink (type): Caller-owned destination for one record per logical call.
+    JudgmentRecord (type): Frozen audit record of one logical call.
     RequestMetadata (type): Immutable per-call HTTP metadata.
     NetworkConfig (type): Explicit proxy and certificate verification options.
     JevError (type): Base Jev exception.
@@ -105,6 +107,7 @@ from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.adapters.outbound.spend import SpendCap
 from judgevet.diagnostics import bind_request_id
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.audit import JudgmentRecord
 from judgevet.domain.errors import (
     JevAuthError,
     JevBudgetExceededError,
@@ -118,7 +121,12 @@ from judgevet.domain.errors import (
 from judgevet.domain.questions import Choice, Noul, Question, Score
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
-from judgevet.ports import AsyncSystemOnePort, StateRedactor, SystemOnePort
+from judgevet.ports import (
+    AsyncSystemOnePort,
+    AuditSink,
+    StateRedactor,
+    SystemOnePort,
+)
 
 __version__ = "0.11.0"  # x-release-please-version
 
@@ -129,6 +137,7 @@ __all__ = [
     "Answer",
     "AsyncHTTPSystemOneAdapter",
     "AsyncSystemOnePort",
+    "AuditSink",
     "Choice",
     "ChoiceAnswer",
     "GatewayConfig",
@@ -141,6 +150,7 @@ __all__ = [
     "JevRequestError",
     "JevResponseError",
     "JevServiceError",
+    "JudgmentRecord",
     "NetworkConfig",
     "Noul",
     "NoulAnswer",

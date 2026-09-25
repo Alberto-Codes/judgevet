@@ -2,6 +2,7 @@
 
 Context tokens restore previous bindings, including after exceptions and task
 cancellation. Importing this module does not configure logging.
+The `http.call` event carries `audit_error` when an audit sink fails.
 See https://docs.python.org/3/library/contextvars.html for context inheritance.
 
 Examples:
@@ -40,6 +41,7 @@ _EVENT_FIELDS = {
             "input_tokens",
             "output_tokens",
             "request_id",
+            "audit_error",
         }
     ),
     "mcp.runtime": frozenset({"event", "request_id"}),

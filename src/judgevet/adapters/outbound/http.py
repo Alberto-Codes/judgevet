@@ -1,4 +1,4 @@
-"""HTTP outbound adapter with optional redaction, gateway metadata, retries and spend cap.
+"""HTTP outbound adapter with optional redaction, gateway metadata, retries, spend cap and audit.
 
 Error handling:
     The API error `detail` field is polymorphic:
@@ -355,6 +355,8 @@ class HTTPSystemOneAdapter:
                 Omission preserves state and the existing serialization path.
             spend_cap (SpendCap | None): Shared attempt and input-token cap.
                 Omission sends every attempt the retry policy permits.
+            audit (AuditSink | None): Destination for one record per logical call.
+                Omission writes no record. A sink failure never changes the result.
 
         Raises:
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
@@ -368,6 +370,7 @@ class HTTPSystemOneAdapter:
 
         self._retry = retry or RetryPolicy()
         self._spend = options.get("spend_cap")
+        self._audit = options.get("audit")
         self._redactor = configured_redactor(options)
         self._gateway = configured_gateway({"gateway": options.get("gateway")})
         network = network or NetworkConfig()
@@ -390,7 +393,10 @@ class HTTPSystemOneAdapter:
         *,
         metadata: RequestMetadata | None = None,
     ) -> SystemOneResponse:
-        """Prepare optional redaction once, call Jev and emit terminal metadata.
+        """Call Jev once per logical call, emit metadata and write an audit record.
+
+        Optional redaction runs once before retries. A configured audit sink
+        receives one record when the call ends; its failure never changes the result.
 
         Args:
             state: The content to evaluate.
@@ -432,19 +438,14 @@ class HTTPSystemOneAdapter:
             Uses helper functions for payload building, response parsing,
             and error translation to ensure consistent behavior across adapters.
         """
-        with call_event(model or self._default_model, len(questions)) as event:
+        with call_event(model or self._default_model, questions, self._audit) as event:
             headers = self._gateway.request_headers(metadata)
             payload = prepare_body(
                 _build_payload(state, questions, model, self._default_model),
                 self._redactor,
             )
             send = metered(self._spend, lambda: self._request(payload, event, headers))
-            answer = self._retry.run(send)
-            event.resolved_model = answer.model
-            event.input_tokens = answer.usage.input_tokens
-            event.output_tokens = answer.usage.output_tokens
-            event.outcome = "success"
-            return answer
+            return event.succeed(self._retry.run(send))
 
     def _request(
         self, payload: dict[str, Any] | bytes, event: CallEvent, headers: dict[str, str]
@@ -586,6 +587,8 @@ class AsyncHTTPSystemOneAdapter:
                 Omission preserves state and the existing serialization path.
             spend_cap (SpendCap | None): Shared attempt and input-token cap.
                 Omission sends every attempt the retry policy permits.
+            audit (AuditSink | None): Destination for one record per logical call.
+                Omission writes no record. A sink failure never changes the result.
 
         Raises:
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
@@ -599,6 +602,7 @@ class AsyncHTTPSystemOneAdapter:
         self._api_key = api_key
         self._retry = retry or RetryPolicy()
         self._spend = options.get("spend_cap")
+        self._audit = options.get("audit")
         self._redactor = configured_redactor(options)
         self._gateway = configured_gateway({"gateway": options.get("gateway")})
         network = network or NetworkConfig()
@@ -621,7 +625,10 @@ class AsyncHTTPSystemOneAdapter:
         *,
         metadata: RequestMetadata | None = None,
     ) -> SystemOneResponse:
-        """Prepare optional redaction once, then await bounded HTTP attempts.
+        """Await bounded HTTP attempts, emit metadata and write an audit record.
+
+        Optional redaction runs once before retries. A configured audit sink
+        receives one record inline when the call ends; a slow sink blocks the loop.
 
         Args:
             state: The content to evaluate.
@@ -659,19 +666,14 @@ class AsyncHTTPSystemOneAdapter:
             may be double-billed because the service may still be processing
             the first attempt.
         """
-        with call_event(model or self._default_model, len(questions)) as event:
+        with call_event(model or self._default_model, questions, self._audit) as event:
             headers = self._gateway.request_headers(metadata)
             payload = prepare_body(
                 _build_payload(state, questions, model, self._default_model),
                 self._redactor,
             )
             send = ametered(self._spend, lambda: self._request(payload, event, headers))
-            answer = await self._retry.arun(send)
-            event.resolved_model = answer.model
-            event.input_tokens = answer.usage.input_tokens
-            event.output_tokens = answer.usage.output_tokens
-            event.outcome = "success"
-            return answer
+            return event.succeed(await self._retry.arun(send))
 
     async def _request(
         self, payload: dict[str, Any] | bytes, event: CallEvent, headers: dict[str, str]

@@ -30,6 +30,7 @@ Examples:
 
 See Also:
     - [judgevet.domain.answers][]: Answer types
+    - [judgevet.domain.audit][]: Audit record
     - [judgevet.domain.errors][]: Error types
     - [judgevet.domain.questions][]: Question types
     - [judgevet.domain.response][]: Response container
@@ -39,6 +40,7 @@ Attributes:
     Answer (type): Union type of all answer types.
     Choice (type): Question type for multiple choice.
     ChoiceAnswer (type): Answer type for multiple choice.
+    JudgmentRecord (type): Audit record of one logical call.
     JevAuthError (type): 401/403 authentication errors.
     JevBudgetExceededError (type): Local spend cap refused an attempt.
     JevError (type): Base exception for all Jev errors.
@@ -62,6 +64,7 @@ from judgevet.domain.answers import (
     NoulAnswer,
     ScoreAnswer,
 )
+from judgevet.domain.audit import JudgmentRecord
 from judgevet.domain.errors import (
     JevAuthError,
     JevBudgetExceededError,
@@ -88,6 +91,7 @@ __all__ = [
     "JevRequestError",
     "JevResponseError",
     "JevServiceError",
+    "JudgmentRecord",
     "Noul",
     "NoulAnswer",
     "Question",

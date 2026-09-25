@@ -422,8 +422,12 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2050 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.09%** (1992/2073 statements).
+**2065 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.13%** (2063/2146 statements).
+#54 slice 1 adds an opt-in `AuditSink` port and a frozen `JudgmentRecord`.
+Both HTTP adapters write one record per logical call. A sink failure is
+reported on `http.call` as `audit_error` and never changes the result. The
+JSONL sink and the CLI and MCP settings wait for slices 2 and 3.
 #56 slice A adds an opt-in library `SpendCap` for both HTTP adapters and
 `JevBudgetExceededError`. CLI and MCP settings wait for slice B. No live call
 has run the cap.
@@ -639,6 +643,7 @@ Published README links retain offline source and fragment validation.
 | a 2,959-byte JSON state with seven `choice` questions of up to 16 options fits the context budgets | **verified** — live call on 2026-09-25 against `jev-1.13.0` returned 200 with `input_tokens=3110`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825777868 |
 | 400 with `detail.error_type` = `max_tokens_exceeded` becomes JevMaxTokensExceededError, retryable=False | **inferred** — the body is the one the 2026-09-25 live call returned, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; that call raised plain JevRequestError, and the mapping now runs offline against the recorded body. No live call has run the new mapping |
 | an opt-in `SpendCap` refuses an attempt before sending once a limit is reached, and a failed attempt settles zero input tokens | **inferred** — offline tests against `httpx.MockTransport` only (#56 slice A); no live call has run the cap. Whether the service bills a failed attempt is an open question on #56 |
+| an opt-in `AuditSink` receives one `JudgmentRecord` per logical call, never per attempt, with no state, and a sink failure never changes the result | **inferred** — offline tests against `httpx.MockTransport` only (#54 slice 1); no live call has written a record |
 | a 422 body echoes the request payload back under `input` | **verified**, and the adapter discards it (#85) |
 | 429 and 529 | still unseen. 429 needs abusing the service and 529 cannot be forced |
 | every other field name | inferred from documentation |

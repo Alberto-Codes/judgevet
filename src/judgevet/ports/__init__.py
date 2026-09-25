@@ -1,4 +1,4 @@
-"""Ports for judgment calls and caller-owned state transformation.
+"""Ports for judgment calls, caller-owned state transformation and audit records.
 
 Examples:
     ```python
@@ -17,8 +17,10 @@ Examples:
 
 See Also:
     - [judgevet.adapters.outbound.http][]: HTTP adapter implementation
+    - [judgevet.domain.audit][]: Audit record written to an AuditSink
 
 Attributes:
+    AuditSink (Protocol): Caller-owned destination for one record per logical call.
     AsyncSystemOnePort (Protocol): Async structural protocol for calling the Jev System One API.
     SystemOnePort (Protocol): Structural protocol for calling the Jev System One API.
     StateRedactor (Protocol): Synchronous state transformation before HTTP serialization.
@@ -29,6 +31,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Protocol
 
+from judgevet.domain.audit import JudgmentRecord
 from judgevet.domain.questions import Question
 from judgevet.domain.response import SystemOneResponse
 
@@ -185,5 +188,52 @@ class StateRedactor(Protocol):
 
         Raises:
             Exception: Caller-defined failures propagate before any transmission.
+        """
+        ...
+
+
+class AuditSink(Protocol):
+    """Receive one audit record per logical call through a synchronous callback.
+
+    The HTTP adapters call `record` once when a call ends, after any retries,
+    for success, error and cancellation alike. The async adapter calls it inline
+    on the event loop, so a slow sink blocks that loop. A sink exception never
+    changes the call's result. The adapter reports its class name on the
+    `http.call` diagnostic event. It then returns the answer or re-raises the
+    original error.
+    Source: https://opentelemetry.io/docs/specs/otel/error-handling/.
+
+    Attributes:
+        record (method): Accept one finished record.
+
+    Examples:
+        ```python
+        from judgevet.domain.audit import JudgmentRecord
+
+
+        class InMemorySink:
+            def __init__(self) -> None:
+                self.records: list[JudgmentRecord] = []
+
+            def record(self, record: JudgmentRecord) -> None:
+                self.records.append(record)
+
+
+        sink: AuditSink = InMemorySink()
+        ```
+
+    See Also:
+        - [judgevet.domain.audit.JudgmentRecord][]: What each record holds.
+        - [judgevet.adapters.outbound.http_events][]: Where records are written.
+    """
+
+    def record(self, record: JudgmentRecord) -> None:
+        """Accept one finished record.
+
+        Args:
+            record: The frozen record of one logical call.
+
+        Raises:
+            Exception: A sink may raise; the adapter catches and reports the failure.
         """
         ...

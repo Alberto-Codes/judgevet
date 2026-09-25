@@ -22,6 +22,7 @@ arguments. Neither reads judgevet environment settings or installs logging.
 | `network` | `None` | Optional `NetworkConfig`; omission retains HTTPX proxy and TLS defaults. |
 | `retry` | `None` | Optional `RetryPolicy`; omission preserves one attempt. |
 | `spend_cap` | `None` | Optional `SpendCap`; omission sends every attempt the retry policy permits. See [spend cap](#spend-cap). |
+| `audit` | `None` | Optional `AuditSink`; omission writes no record. See [audit records](#audit-records). |
 | `transport` | `None` | Optional HTTPX transport; use the sync or async transport type appropriate to the adapter. |
 | `timeout_seconds` | `30.0` | HTTPX read, write and pool timeout in seconds; connect timeout is fixed at 5 seconds. Values at or below zero raise `ValueError`. |
 
@@ -199,6 +200,66 @@ and no preflight size estimate.
 CLI and MCP entry points do not set a spend cap. An application can construct
 a capped HTTP adapter and pass it to `run_cli` or `create_mcp_server` through
 the existing judgment port.
+
+## Audit records
+
+Pass `audit=` to either HTTP adapter to receive one record per logical call.
+Auditing is off by default. Import the structural `AuditSink` protocol and the
+frozen `JudgmentRecord` from `judgevet`. The protocol defines one synchronous
+method, `record(record: JudgmentRecord) -> None`. The caller owns where records
+go, how long they stay and who reads them. This release ships no file sink.
+See the [protocol](../../src/judgevet/ports/__init__.py) and the
+[record](../../src/judgevet/domain/audit.py).
+
+The adapter writes exactly one record when a logical call ends: after success,
+after an error, and after cancellation. Retries add no records. A rate limit
+followed by success writes one success record with the final status.
+
+A record holds these fields:
+
+| Field | Meaning | OpenTelemetry attribute |
+|---|---|---|
+| `schema_version` | Record layout version, `1` in this release. | none |
+| `timestamp` | Timezone-aware UTC time from the client clock when the call ended. | none |
+| `outcome` | `success`, `error` or `cancelled`. | none |
+| `error_type` | Exception class name, or `None` on success. | `error.type` |
+| `status_code` | Final attempt's HTTP status, or `None` when no response arrived. | none |
+| `requested_model` | Effective requested model, including the adapter default. | `gen_ai.request.model` |
+| `resolved_model` | Model the service reported; `None` unless the call succeeded. | `gen_ai.response.model` |
+| `questions` | Question id to question type name. | none |
+| `answers` | Typed answers on success; `None` otherwise. | none |
+| `usage` | Token counts on success; `None` otherwise. | `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` |
+| `request_id` | Client-bound correlation from `bind_request_id`, or `None`. No service response identifier is read, because none has been observed. | none |
+
+Source: https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/.
+The UTC timestamp follows the OWASP ASVS logging requirements.
+Source: https://github.com/OWASP/ASVS/blob/master/5.0/en/0x25-V16-Security-Logging-and-Error-Handling.md.
+The schema marker follows the CloudEvents `specversion` attribute.
+Source: https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md.
+
+A record never holds the state, raw or redacted. It also never holds question
+instructions, criteria, credentials, headers or exception text.
+Source: https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html.
+Typed answers stay in the record. They are labels, booleans and probabilities,
+not generated prose. Question identifiers can contain customer data; choose
+identifiers that are safe to store. Probabilities are recorded as returned and
+are not claimed to be calibrated.
+
+A sink failure never fails the call. The adapter catches an `Exception` from
+the sink and returns the answer or re-raises the call's original error. It adds
+the failure's class name as `audit_error` to the [`http.call` event](events.md#http-terminal-event).
+When logging is configured, the adapter also logs `audit sink failed` at error
+level with the sink's class name and the traceback. The traceback can carry the
+sink's own exception text. The record for that call is lost. This follows the OpenTelemetry error-handling
+specification and the Python logging module.
+Source: https://opentelemetry.io/docs/specs/otel/error-handling/.
+Source: https://docs.python.org/3/library/logging.html#logging.Handler.handleError.
+
+The async adapter calls the same synchronous method inline, so a slow sink
+blocks the event loop. Async sinks are not supported. Every adapter that
+receives the same sink writes to it; the sink owns its own thread safety.
+CLI and MCP entry points do not set a sink. The offline fakes in
+`judgevet.testing` write no records.
 
 ## Proxy and TLS configuration
 

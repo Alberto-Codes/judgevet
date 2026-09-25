@@ -52,6 +52,13 @@ With judgevet's configured JSON renderer, every event has exactly these keys:
 | `output_tokens` | integer or null | Typed output token count; null when unavailable. |
 | `request_id` | string or null | Dedicated caller correlation binding; null outside a scope. |
 
+An adapter given `audit=` adds one key, `audit_error`, only when its sink
+raised: the exception's class name, never its message. The call's own result
+is unchanged; see [audit records](configuration.md#audit-records).
+The adapter also logs a separate `audit sink failed` error entry with a `sink`
+class name and the traceback. That entry is not a built-in event: the field
+filter does not apply, and the traceback can carry the sink's exception text.
+
 Token counts come only from a successful typed response. The current HTTP parser
 requires both counts; missing usage is a parsing failure, not estimated usage.
 The logger never computes a total or reads counts from a failed response.

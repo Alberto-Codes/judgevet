@@ -22,6 +22,7 @@ The root `__all__` declares these supported names:
 | Gateway configuration | `GatewayConfig`, `RequestMetadata` |
 | Retry configuration | `RetryPolicy` |
 | Spend cap | `SpendCap` |
+| Audit records | `AuditSink`, `JudgmentRecord` |
 | Scoped diagnostic correlation | `bind_request_id` |
 | Structural ports | `SystemOnePort`, `AsyncSystemOnePort` |
 | Questions | `Question`, `Noul`, `Choice`, `Score` |
