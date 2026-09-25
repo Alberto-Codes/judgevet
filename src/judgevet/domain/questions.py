@@ -34,6 +34,8 @@ class Noul:
 
     See: https://docs.typesafe.ai/primitives/noul
 
+    Construction is keyword-only; a positional argument raises `TypeError`.
+
     Attributes:
         instructions (str | dict | Sequence | None): Question or statement to evaluate.
         criteria (dict | None): Optional. An object with `true` and `false`
@@ -57,10 +59,13 @@ class Noul:
 
     def __init__(
         self,
+        *,
         instructions: str | dict[str, Any] | Sequence[Any] | None = None,
         criteria: dict[str, Any] | None = None,
     ) -> None:
         """Initialize a Noul question.
+
+        Every argument is keyword-only.
 
         Args:
             instructions: The yes/no question or statement to evaluate.
@@ -78,6 +83,8 @@ class Choice:
     """A question that selects between named alternatives.
 
     See: https://docs.typesafe.ai/primitives/choice
+
+    Construction is keyword-only; a positional argument raises `TypeError`.
 
     Attributes:
         criteria (Mapping[str, str | dict | Sequence | None]): Labels mapped to descriptions.
@@ -101,10 +108,13 @@ class Choice:
 
     def __init__(
         self,
+        *,
         criteria: Mapping[str, str | dict[str, Any] | Sequence[Any] | None],
         instructions: str | dict[str, Any] | Sequence[Any] | None = None,
     ) -> None:
         """Initialize a Choice question.
+
+        Every argument is keyword-only.
 
         Args:
             criteria: Labels mapped to descriptions, or None for undescribed labels.
@@ -122,6 +132,8 @@ class Score:
     """A question that assigns a score using an ordered rubric.
 
     See: https://docs.typesafe.ai/primitives/score
+
+    Construction is keyword-only; a positional argument raises `TypeError`.
 
     Attributes:
         criteria (Sequence[str | dict | Sequence]): Ordered list of descriptions.
@@ -145,10 +157,13 @@ class Score:
 
     def __init__(
         self,
+        *,
         criteria: Sequence[str | dict[str, Any] | Sequence[Any]],
         instructions: str | dict[str, Any] | Sequence[Any] | None = None,
     ) -> None:
         """Initialize a Score question.
+
+        Every argument is keyword-only.
 
         Args:
             criteria: Ordered list of descriptions, one per score from zero.

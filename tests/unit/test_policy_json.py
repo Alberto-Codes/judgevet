@@ -25,8 +25,8 @@ from tests.cli_process_support import SUCCESS
 pytestmark = pytest.mark.unit
 QUESTIONS = {
     "noul": Noul(),
-    "choice": Choice({"yes": "Yes", "no": "No"}),
-    "score": Score(["Poor", "Fair", "Good", "Excellent"]),
+    "choice": Choice(criteria={"yes": "Yes", "no": "No"}),
+    "score": Score(criteria=["Poor", "Fair", "Good", "Excellent"]),
 }
 
 

@@ -83,8 +83,8 @@ def validate_fragment(text: str) -> None:
         ValueError: If the rule or question binding is invalid.
     """
     questions = {
-        "risk": Choice({"low": "Low risk", "high": "High risk"}),
-        "quality": Score(["Poor", "Fair", "Good", "Excellent"]),
+        "risk": Choice(criteria={"low": "Low risk", "high": "High risk"}),
+        "quality": Score(criteria=["Poor", "Fair", "Good", "Excellent"]),
     }
     parse_policy(json.dumps({"rules": [json.loads(text)]}), questions)
 

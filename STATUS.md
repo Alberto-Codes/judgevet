@@ -418,9 +418,12 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2021 tests pass, 7 live tests deselected.** The last measured coverage is
+**2025 tests pass, 7 live tests deselected.** The last measured coverage is
 **95.93%** (1909/1990 statements).
-Local commit and push gates pass for #173. The issue holds delivery evidence.
+Local commit and push gates pass for #172. The issue holds delivery evidence.
+#172 makes `Noul`, `Choice` and `Score` construction keyword-only with no
+deprecation cycle; positional construction raises `TypeError`. The commit
+carries a `BREAKING CHANGE` footer for release-please.
 #173 exports `judgevet.VERIFIED_MODEL`; a test parses the verified table
 below and keeps the constant equal to the model it names. Adapters, CLI and
 MCP keep `jev-latest`.

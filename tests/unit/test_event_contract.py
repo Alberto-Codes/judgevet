@@ -59,7 +59,7 @@ def call(model: str = "jev-latest", resolved: str = "jev-1.13.0") -> None:
     ) as adapter:
         response = adapter.system_one(
             "state-canary",
-            {"question-key-canary": judgevet.Noul("question-canary")},
+            {"question-key-canary": judgevet.Noul(instructions="question-canary")},
             model,
         )
     assert response.model == resolved

@@ -98,6 +98,16 @@ Policy validation still rejects deliberately corrupted answers when it consumes
 them. Nested dictionaries remain mutable. This correction does not publish a
 release or change the live-service evidence.
 
+## Keyword-only question constructors
+
+The change in [#172](https://github.com/Alberto-Codes/judgevet/issues/172)
+makes every `Noul`, `Choice` and `Score` constructor argument keyword-only.
+Positional construction now raises `TypeError`. Parameter names and defaults
+remain. Callers name `instructions` and `criteria`, for example
+`Choice(criteria={"a": "A", "b": "B"})`. The
+[TypeSafe Python SDK](https://docs.typesafe.ai/sdk/python) constructs these
+types by keyword only, and the three types share no positional order.
+
 ## Verification limits
 
 Policy tests are synthetic local acceptance evidence. They do not establish model

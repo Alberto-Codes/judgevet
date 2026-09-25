@@ -20,8 +20,8 @@ from judgevet.policy import (
 pytestmark = pytest.mark.unit
 QUESTIONS = {
     "n": Noul(),
-    "c": Choice({"yes": "Yes", "no": "No"}),
-    "s": Score(["Low", "High"]),
+    "c": Choice(criteria={"yes": "Yes", "no": "No"}),
+    "s": Score(criteria=["Low", "High"]),
 }
 ANSWERS: dict[str, Answer] = {
     "n": NoulAnswer(0.5),
@@ -93,8 +93,8 @@ def test_invalid_answers_raise(name: str, failure: str) -> None:
 
 
 def test_question_constraints_are_snapshotted() -> None:
-    choice = Choice({"yes": "Yes", "no": "No"})
-    score = Score(["Low", "High"])
+    choice = Choice(criteria={"yes": "Yes", "no": "No"})
+    score = Score(criteria=["Low", "High"])
     questions = {"c": choice, "s": score}
     policy = validate_policy(
         Policy((ChoiceRule("c", "yes"), ScoreRule("s", minimum=0))), questions

@@ -80,10 +80,10 @@ def test_invalid_policy(rules: Any) -> None:
     "rule,questions",
     [
         (NoulRule("q", 0), {}),
-        (NoulRule("q", 0), {"q": Choice({"yes": "Yes"})}),
-        (ChoiceRule("q", "no"), {"q": Choice({"yes": "Yes"})}),
-        (ScoreRule("q", maximum=2), {"q": Score(["Poor", "Good"])}),
-        (ScoreRule("q", minimum=0), {"q": Score([])}),
+        (NoulRule("q", 0), {"q": Choice(criteria={"yes": "Yes"})}),
+        (ChoiceRule("q", "no"), {"q": Choice(criteria={"yes": "Yes"})}),
+        (ScoreRule("q", maximum=2), {"q": Score(criteria=["Poor", "Good"])}),
+        (ScoreRule("q", minimum=0), {"q": Score(criteria=[])}),
     ],
 )
 def test_question_relative_validation(rule: Any, questions: Any) -> None:
@@ -138,7 +138,7 @@ def test_error_families_are_distinct() -> None:
 def test_empty_choice_label_and_single_score_level_remain_valid() -> None:
     policy = Policy((ChoiceRule("c", ""), ScoreRule("s", maximum=0)))
     validated = validate_policy(
-        policy, {"c": Choice({"": "Empty"}), "s": Score(["Only"])}
+        policy, {"c": Choice(criteria={"": "Empty"}), "s": Score(criteria=["Only"])}
     )
     assert validated.rules == policy.rules
 
@@ -190,8 +190,8 @@ def test_malformed_report_sequence() -> None:
 
 
 def test_mutable_question_criteria_are_checked() -> None:
-    choice = Choice({"yes": "Yes"})
-    score = Score(["Low"])
+    choice = Choice(criteria={"yes": "Yes"})
+    score = Score(criteria=["Low"])
     field = "criteria"
     setattr(choice, field, None)
     with pytest.raises(PolicyDefinitionError):
