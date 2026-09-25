@@ -3,6 +3,23 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.10.2](https://github.com/Alberto-Codes/judgevet/compare/v0.10.1...v0.10.2) (2026-09-25)
+
+
+### Fixes
+
+* reject nonfinite answers and normalize response errors ([37e8fab](https://github.com/Alberto-Codes/judgevet/commit/37e8fab447bd6deee364b2a1d12e5bf5a4ba6c3a)), references [#170](https://github.com/Alberto-Codes/judgevet/issues/170)
+* scale the probability-sum tolerance with the number of levels ([eaea9b0](https://github.com/Alberto-Codes/judgevet/commit/eaea9b06075f92cce6c32882a4235117c2388a38)), references [#175](https://github.com/Alberto-Codes/judgevet/issues/175)
+
+
+### Documentation
+
+* add CI, licence, ruff and docvet badges to the README ([83a09f1](https://github.com/Alberto-Codes/judgevet/commit/83a09f120d67b9c36e87fbc361645c18383bfd30)), references [#45](https://github.com/Alberto-Codes/judgevet/issues/45)
+* add the social preview card and decline Sonar ([9d49410](https://github.com/Alberto-Codes/judgevet/commit/9d4941004f7da14aafdce29ab389be0c9c2ad619)), references [#74](https://github.com/Alberto-Codes/judgevet/issues/74)
+* record the Cursor CLI as a verified worker harness ([a20655e](https://github.com/Alberto-Codes/judgevet/commit/a20655e9883dbe283ba46860739f5844e470d31b)), references [#49](https://github.com/Alberto-Codes/judgevet/issues/49)
+* record the vendor's service limits in the API reference ([bff03df](https://github.com/Alberto-Codes/judgevet/commit/bff03dfcf3747821f20955be0e144200dc03f393)), references [#39](https://github.com/Alberto-Codes/judgevet/issues/39)
+* record verified 0.10.1 release and onboarding evidence ([70e0ceb](https://github.com/Alberto-Codes/judgevet/commit/70e0cebcc7a8e3a85af2c3fcb6850c88642dd4bb)), references [#165](https://github.com/Alberto-Codes/judgevet/issues/165)
+
 ## [0.10.1](https://github.com/Alberto-Codes/judgevet/compare/v0.10.0...v0.10.1) (2026-09-24)
 
 
