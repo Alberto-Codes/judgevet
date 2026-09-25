@@ -119,6 +119,17 @@ Return: changed paths, red/green commands and output, unrun checks,
 remaining gaps and your model identity. Leave the diff for review and stop.
 ```
 
+### Brief checklist
+
+Check each rule below before you dispatch a brief.
+
+- A new docs page needs an entry in `scripts/doc_examples.json`, or the doc-example-inventory commit hook and the doc-python-examples push hook fail.
+- A new root export needs an entry in `EXPECTED_EXPORTS` in `tests/unit/test_public_surface.py` and in the allowed-name set in `scripts/policy_artifact_check.py`.
+- A call-site sweep covers `scripts/` as well as `src`, `tests`, `docs` and README. `ty` checks scripts too.
+- Every builder runs `uv run pre-commit run --files <changed files>` at the commit stage and again with `--hook-stage pre-push` before returning, because the hand-run rows do not run every hook.
+- Write each URL citation as its own short sentence in the form "Source: <url>." A parenthesised URL merges two sentences for the plain-English checker.
+- A verified-table row in STATUS.md cites a recorded run, not a test name.
+
 ## 4. Accept behaviour and finish
 
 Read the diff against the agreed scope.

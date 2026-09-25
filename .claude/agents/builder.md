@@ -38,6 +38,9 @@ Run focused gates on the files you changed while you work.
 Then run every command in the CLAUDE.md gate table.
 Fix the cause of each failure.
 If a gate stays red, report it as red with its failing lines.
+Run `uv run pre-commit run --files <changed files>` on every file you changed.
+Then run `uv run pre-commit run --hook-stage pre-push --files <changed files>`.
+Report each hook that fails with its failing lines.
 
 ## Never do these
 
@@ -55,7 +58,7 @@ Return under 400 words, in this order:
 
 1. Changed and created paths, one per line.
 2. The red command and its output, then the green command and its output.
-3. Each gate command with PASS or FAIL and any failing lines.
+3. Each gate command and each failing pre-commit hook, with PASS or FAIL and any failing lines.
 4. Gates you did not run, and why.
 5. Remaining gaps against the contract.
 6. Unrelated modifications you saw in the tree.

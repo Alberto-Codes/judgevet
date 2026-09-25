@@ -153,6 +153,12 @@ uv run judgevet --help
 | size | `uv run python scripts/check_loc.py src` |
 | docs | `uv run docvet check` |
 | tests | `uv run pytest -q --cov` |
+| hooks | `uv run pre-commit run --files <changed files>` then `uv run pre-commit run --hook-stage pre-push --files <changed files>` |
+
+`.pre-commit-config.yaml` is the complete gate inventory. The hooks row runs
+the checks the other rows omit: plain-english, terminology, docs-build and
+doc-example-inventory at the commit stage, then doc-python-examples,
+doc-example-schemas and dependency-audit at the push stage.
 
 docvet runs in two modes: the pre-commit hook vets only the files a commit
 touches (`uv run docvet check`, diff mode), and the pre-push hook vets the
