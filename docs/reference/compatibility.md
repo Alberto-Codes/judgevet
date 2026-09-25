@@ -27,6 +27,7 @@ The root `__all__` declares these supported names:
 | Answers and metadata | `Answer`, `NoulAnswer`, `ChoiceAnswer`, `ScoreAnswer`, `SystemOneResponse`, `Usage` |
 | Service errors | `JevError`, `JevAuthError`, `JevRequestError`, `JevResponseError`, `JevServiceError`, `JevRateLimitError` |
 | Version | `__version__` |
+| Verified model | `VERIFIED_MODEL` |
 
 Re-exports retain the original objects. Existing domain, port and adapter deep
 imports remain valid. There are no wrapper classes or implicit adapter owners.

@@ -53,7 +53,10 @@ def check_surface() -> None:
     Raises:
         RuntimeError: If any supported export is missing or changed.
     """
-    names = {name for group in _EXPORTS.values() for name in group} | {"__version__"}
+    names = {name for group in _EXPORTS.values() for name in group} | {
+        "VERIFIED_MODEL",
+        "__version__",
+    }
     if set(judgevet.__all__) != names:
         raise RuntimeError("root __all__ differs from supported surface")
     for path, group in _EXPORTS.items():

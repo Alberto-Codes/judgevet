@@ -45,6 +45,7 @@ EXPECTED_EXPORTS = {
     "RequestMetadata",
     "Noul",
     "Score",
+    "VERIFIED_MODEL",
     "__version__",
     "bind_request_id",
 }

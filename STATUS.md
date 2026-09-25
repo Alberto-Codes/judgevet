@@ -418,9 +418,12 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2019 tests pass, 6 live tests deselected.** The last measured coverage is
-**95.93%** (1908/1989 statements).
-Local commit and push gates pass for #171. The issue holds delivery evidence.
+**2021 tests pass, 6 live tests deselected.** The last measured coverage is
+**95.93%** (1909/1990 statements).
+Local commit and push gates pass for #173. The issue holds delivery evidence.
+#173 exports `judgevet.VERIFIED_MODEL`; a test parses the verified table
+below and keeps the constant equal to the model it names. Adapters, CLI and
+MCP keep `jev-latest`.
 #171 ships `judgevet.testing` with `FakeSystemOnePort` and
 `AsyncFakeSystemOnePort` inside the wheel, no extra. An import contract keeps
 the fakes off the adapters and the layers contract keeps the domain and ports

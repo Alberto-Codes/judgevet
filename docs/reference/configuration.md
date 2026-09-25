@@ -30,6 +30,11 @@ Timeouts apply to HTTPX operations, not a guaranteed total wall-clock deadline.
 Retries are disabled by default. See [retry limits](#retry-limits) before enabling them.
 A timed-out request may still be running at the service.
 
+The `jev-latest` alias follows the model the service currently serves.
+`VERIFIED_MODEL` names the one model version that this repository's live tests
+have exercised; [STATUS](../../STATUS.md) records it. Pass either value as
+`model`; the choice between the latest and the verified model belongs to the caller.
+
 Direct constructors do not apply the CLI/MCP settings URL validator. Callers own
 URL selection and credential disclosure. HTTPX environment proxy and certificate
 settings can still affect transport; see [transport limits](../../SECURITY.md#transport-and-certificates).
