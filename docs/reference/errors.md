@@ -13,6 +13,7 @@ Only the recorded calls establish what the service returned; see the
 The supported names are exported from `judgevet`. Each concrete error below
 inherits directly from `JevError`, which inherits from `Exception`. The one
 exception is `JevMaxTokensExceededError`, which inherits from `JevRequestError`.
+`JevBudgetExceededError` is a local refusal, not a service outcome.
 `JevRateLimitError` is not a subclass of `JevRequestError` or `JevServiceError`.
 
 | Type | Constructor | HTTP adapter mapping | `retryable` |
@@ -24,6 +25,7 @@ exception is `JevMaxTokensExceededError`, which inherits from `JevRequestError`.
 | `JevRateLimitError` | `JevRateLimitError(message, status_code)` | 429 | `True` |
 | `JevServiceError` | `JevServiceError(message, status_code=None)` | 500–599, or HTTPX `RequestError` such as a timeout | `True` |
 | `JevResponseError` | `JevResponseError(message, status_code)` | Successful 200–299 answer that cannot be parsed | `False` |
+| `JevBudgetExceededError` | `JevBudgetExceededError(limit, cap, spent)` | No HTTP status; an opt-in `SpendCap` refused the attempt before sending | `False` |
 
 This table describes the [adapter mapping](../../src/judgevet/adapters/outbound/http.py)
 and [error classes](../../src/judgevet/domain/errors.py). It does not assert that
@@ -51,6 +53,15 @@ budget the request exceeded. The vendor states a 64k-token request budget and a
 32k-token budget for `state` plus the longest question.
 Source: https://docs.typesafe.ai/models.md.
 See [service limits](api.md#service-limits).
+
+### Spend cap refusals
+
+An adapter given `spend_cap=SpendCap(...)` raises `JevBudgetExceededError`
+before an attempt when a limit is already reached. No request is sent, so
+`status_code` is `None`. The error carries `limit` (`"attempts"` or
+`"input_tokens"`), `cap` and `spent`. Its constructor raises `ValueError` for
+any other limit name. It is not retryable, because the cap never resets.
+See [spend cap](configuration.md#spend-cap).
 
 All errors expose `status_code` and the `retryable` property. The message is in
 standard exception `args`, not a `.message` attribute. `str(error)` appends

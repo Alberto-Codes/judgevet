@@ -65,8 +65,8 @@ Python types. The outbound adapter adds the wire `type` and omits optional
 
 `HTTPSystemOneAdapter` and `AsyncHTTPSystemOneAdapter` implement the synchronous
 and asynchronous calls respectively. Their constructors accept `api_key`,
-`base_url`, `default_model`, `transport`, `timeout_seconds`, `retry`, `network`
-`gateway` and `redactor`; see the
+`base_url`, `default_model`, `transport`, `timeout_seconds`, `retry`, `network`,
+`gateway`, `redactor` and `spend_cap`; see the
 [defaults and validation table](configuration.md#direct-python-adapters).
 Both send the [documented request](https://api.typesafe.ai/docs) to
 `POST /v1/systemone` with bearer authentication by default. Explicit

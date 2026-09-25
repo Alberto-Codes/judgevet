@@ -422,8 +422,11 @@ This is a local correction. No release or live-service evidence is promoted.
 
 ## Gates
 
-**2034 tests pass, 7 live tests deselected.** The last measured coverage is
-**95.95%** (1921/2002 statements).
+**2050 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.09%** (1992/2073 statements).
+#56 slice A adds an opt-in library `SpendCap` for both HTTP adapters and
+`JevBudgetExceededError`. CLI and MCP settings wait for slice B. No live call
+has run the cap.
 Local commit and push gates pass for #172. The issue holds delivery evidence.
 #172 makes `Noul`, `Choice` and `Score` construction keyword-only with no
 deprecation cycle; positional construction raises `TypeError`. The commit
@@ -635,6 +638,7 @@ Published README links retain offline source and fragment validation.
 | an oversized request returns 400 with `{"detail": {"error_type": "max_tokens_exceeded"}}` | **verified, observed once** — live call on 2026-09-25 with a 400,000-character state against `jev-1.13.0`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575. The body does not say which budget fired; the request exceeded both the 32k and the 64k budget, so the threshold remains unverified |
 | a 2,959-byte JSON state with seven `choice` questions of up to 16 options fits the context budgets | **verified** — live call on 2026-09-25 against `jev-1.13.0` returned 200 with `input_tokens=3110`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825777868 |
 | 400 with `detail.error_type` = `max_tokens_exceeded` becomes JevMaxTokensExceededError, retryable=False | **inferred** — the body is the one the 2026-09-25 live call returned, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; that call raised plain JevRequestError, and the mapping now runs offline against the recorded body. No live call has run the new mapping |
+| an opt-in `SpendCap` refuses an attempt before sending once a limit is reached, and a failed attempt settles zero input tokens | **inferred** — offline tests against `httpx.MockTransport` only (#56 slice A); no live call has run the cap. Whether the service bills a failed attempt is an open question on #56 |
 | a 422 body echoes the request payload back under `input` | **verified**, and the adapter discards it (#85) |
 | 429 and 529 | still unseen. 429 needs abusing the service and 529 cannot be forced |
 | every other field name | inferred from documentation |

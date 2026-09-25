@@ -59,12 +59,14 @@ Attributes:
     SystemOneResponse (type): Answer container with typed accessors.
     Usage (type): Token usage metadata.
     RetryPolicy (type): Immutable opt-in retry limits.
+    SpendCap (type): Opt-in shared cap on attempts and settled input tokens.
     GatewayConfig (type): Explicit gateway authentication and metadata.
     StateRedactor (type): Caller-owned state transformation before transmission.
     RequestMetadata (type): Immutable per-call HTTP metadata.
     NetworkConfig (type): Explicit proxy and certificate verification options.
     JevError (type): Base Jev exception.
     JevAuthError (type): Authentication failure.
+    JevBudgetExceededError (type): Local spend cap refusal before sending.
     JevRequestError (type): Rejected request.
     JevMaxTokensExceededError (type): Request over a service token budget.
     JevResponseError (type): Unparseable successful answer body.
@@ -100,10 +102,12 @@ from judgevet.adapters.outbound.http import (
 )
 from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
+from judgevet.adapters.outbound.spend import SpendCap
 from judgevet.diagnostics import bind_request_id
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.errors import (
     JevAuthError,
+    JevBudgetExceededError,
     JevError,
     JevMaxTokensExceededError,
     JevRateLimitError,
@@ -130,6 +134,7 @@ __all__ = [
     "GatewayConfig",
     "HTTPSystemOneAdapter",
     "JevAuthError",
+    "JevBudgetExceededError",
     "JevError",
     "JevMaxTokensExceededError",
     "JevRateLimitError",
@@ -144,6 +149,7 @@ __all__ = [
     "RetryPolicy",
     "Score",
     "ScoreAnswer",
+    "SpendCap",
     "StateRedactor",
     "SystemOnePort",
     "SystemOneResponse",

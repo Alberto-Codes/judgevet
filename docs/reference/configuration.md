@@ -21,6 +21,7 @@ arguments. Neither reads judgevet environment settings or installs logging.
 | `redactor` | `None` | Optional synchronous `StateRedactor`; transforms a private state copy before transmission. |
 | `network` | `None` | Optional `NetworkConfig`; omission retains HTTPX proxy and TLS defaults. |
 | `retry` | `None` | Optional `RetryPolicy`; omission preserves one attempt. |
+| `spend_cap` | `None` | Optional `SpendCap`; omission sends every attempt the retry policy permits. See [spend cap](#spend-cap). |
 | `transport` | `None` | Optional HTTPX transport; use the sync or async transport type appropriate to the adapter. |
 | `timeout_seconds` | `30.0` | HTTPX read, write and pool timeout in seconds; connect timeout is fixed at 5 seconds. Values at or below zero raise `ValueError`. |
 
@@ -155,6 +156,49 @@ opt-in and separate transport opt-in. It does not honor `Retry-After` or
 `retry-after-ms` headers. These are local policy choices, not live-service
 observations. The [error recipe](../how-to/handle-errors.md) shows a bounded call.
 
+
+## Spend cap
+
+Pass `spend_cap=SpendCap(...)` to either adapter. Import `SpendCap` and
+`JevBudgetExceededError` from `judgevet`. The cap is off by default. Its limits
+are `max_attempts` and `max_input_tokens`. Each is `None` or a positive integer.
+A `None` limit does not bound that counter.
+
+The cap counts physical attempts, not logical calls. Before each attempt,
+including every retry, the adapter claims one slot from the cap. The claim
+fails when attempts already equal `max_attempts`, or when settled input tokens
+already reach `max_input_tokens`. A failed claim raises
+`JevBudgetExceededError` and sends nothing. That error is not retryable, so the
+retry loop stops. It carries `limit` (`"attempts"` or `"input_tokens"`), `cap`
+and `spent`. Its `status_code` is `None`.
+
+After a successful attempt, the cap adds the response `usage.input_tokens`.
+A failed attempt still counts as an attempt but settles zero tokens. The AWS SDK
+retry quota also charges failed attempts.
+Source: https://docs.aws.amazon.com/sdkref/latest/guide/feature-retry-behavior.html.
+LiteLLM also raises a distinct budget error that carries the spend and the cap.
+Source: https://docs.litellm.ai/docs/proxy/users.
+
+**Open question:** a timed-out or 5xx attempt may still bill input tokens at
+the service. No call has shown whether it does. Settling zero for a failed
+attempt is a local choice, tracked on
+[#56](https://github.com/Alberto-Codes/judgevet/issues/56).
+
+The counters never reset. Every adapter that receives the same `SpendCap`
+object, sync or async, draws from the same counters. A `threading.Lock` guards
+them, because an `asyncio.Lock` guards one event loop only. The lock is held
+for the counter update alone, never across an await.
+Source: https://docs.python.org/3/library/asyncio-sync.html.
+
+The attempt bound is hard: concurrent callers cannot exceed it. The token bound
+is checked before sending, and tokens settle after the response. Attempts in
+flight when the bound is reached can therefore settle past it. Set
+`max_attempts` as well when a hard ceiling matters. The cap has no currency
+and no preflight size estimate.
+
+CLI and MCP entry points do not set a spend cap. An application can construct
+a capped HTTP adapter and pass it to `run_cli` or `create_mcp_server` through
+the existing judgment port.
 
 ## Proxy and TLS configuration
 

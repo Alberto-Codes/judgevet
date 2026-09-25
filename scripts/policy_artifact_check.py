@@ -15,6 +15,7 @@ _EXPORTS = {
     "judgevet.adapters.outbound.gateway": ("GatewayConfig", "RequestMetadata"),
     "judgevet.adapters.outbound.network": ("NetworkConfig",),
     "judgevet.adapters.outbound.retries": ("RetryPolicy",),
+    "judgevet.adapters.outbound.spend": ("SpendCap",),
     "judgevet.diagnostics": ("bind_request_id",),
     "judgevet.ports": ("SystemOnePort", "AsyncSystemOnePort", "StateRedactor"),
     "judgevet.domain.questions": ("Question", "Noul", "Choice", "Score"),
@@ -24,6 +25,7 @@ _EXPORTS = {
     "judgevet.domain.errors": (
         "JevError",
         "JevAuthError",
+        "JevBudgetExceededError",
         "JevRequestError",
         "JevMaxTokensExceededError",
         "JevResponseError",

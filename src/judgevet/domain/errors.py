@@ -4,6 +4,7 @@ Examples:
     ```python
     from judgevet.domain.errors import (
         JevAuthError,
+        JevBudgetExceededError,
         JevError,
         JevMaxTokensExceededError,
         JevRequestError,
@@ -19,6 +20,9 @@ Examples:
         if exc.retryable:
             # Retry with backoff
             pass
+    except JevBudgetExceededError as exc:
+        # The caller's spend cap refused the attempt (do not retry)
+        print(exc.limit, exc.cap, exc.spent)
     except JevMaxTokensExceededError as exc:
         # Shrink the state or the longest question (do not retry)
         pass
@@ -42,6 +46,7 @@ See Also:
 Attributes:
     JevError (type): Base exception for all Jev errors.
     JevAuthError (type): 401/403 authentication errors.
+    JevBudgetExceededError (type): Local spend cap refused an attempt.
     JevRequestError (type): 4xx client request errors.
     JevMaxTokensExceededError (type): Request over a service token budget.
     JevResponseError (type): 2xx with unparseable body.
@@ -55,7 +60,9 @@ class JevError(Exception):
     """Base exception for all Jev-related errors.
 
     This is the parent of the service-error hierarchy, not local policy errors
-    or every HTTPX exception. Redirects can propagate raw HTTPX status errors.
+    or every HTTPX exception. The one local error under it is
+    JevBudgetExceededError, which a caller's spend cap raises.
+    Redirects can propagate raw HTTPX status errors.
     The base class always reports retryable=False; subclasses override it.
 
     Attributes:
@@ -392,5 +399,61 @@ class JevResponseError(JevError):
 
         Returns:
             False for response errors (2xx with invalid body).
+        """
+        return False
+
+
+class JevBudgetExceededError(JevError):
+    """Local spend cap refusal - no request was sent.
+
+    A caller's SpendCap raises this error before an attempt when a limit is
+    already reached. No HTTP call is made, so `status_code` is None. The error
+    names the limit, its cap and the amount already spent.
+    A budget layer that raises its own error with the spend and the cap follows
+    the LiteLLM budget precedent.
+    Source: https://docs.litellm.ai/docs/proxy/users.
+
+    Attributes:
+        args (tuple): Standard exception arguments containing the message.
+        status_code (None): Always None; the cap refuses before any request.
+        limit (str): The limit reached, `"attempts"` or `"input_tokens"`.
+        cap (int): The configured value of that limit.
+        spent (int): The amount of that limit already spent.
+        LIMITS (frozenset[str]): The limit names the error accepts.
+
+    Examples:
+        ```python
+        error = JevBudgetExceededError("attempts", 2, 2)
+        assert error.retryable is False
+        assert (error.limit, error.cap, error.spent) == ("attempts", 2, 2)
+        ```
+    """
+
+    LIMITS = frozenset({"attempts", "input_tokens"})
+
+    def __init__(self, limit: str, cap: int, spent: int) -> None:
+        """Initialize the budget error.
+
+        Args:
+            limit: The limit reached, `"attempts"` or `"input_tokens"`.
+            cap: The configured value of that limit.
+            spent: The amount of that limit already spent.
+
+        Raises:
+            ValueError: If limit is not a known limit name.
+        """
+        if limit not in self.LIMITS:
+            raise ValueError(f"limit must be one of {sorted(self.LIMITS)}")
+        super().__init__(f"Spend cap reached: {limit} spent {spent} of {cap}")
+        self.limit = limit
+        self.cap = cap
+        self.spent = spent
+
+    @property
+    def retryable(self) -> bool:
+        """Return True if the error is retryable.
+
+        Returns:
+            False: the cap never resets, so a retry is refused again.
         """
         return False

@@ -1,4 +1,4 @@
-"""HTTP outbound adapter with optional state redaction, gateway metadata and retries.
+"""HTTP outbound adapter with optional redaction, gateway metadata, retries and spend cap.
 
 Error handling:
     The API error `detail` field is polymorphic:
@@ -18,7 +18,6 @@ Helper functions:
     - _read_error_detail: Read the message and wire error type of an error body.
     - _translate_status_error: Translate HTTP status errors to JevError subclasses.
     - _translate_request_error: Translate request errors to JevServiceError.
-    - _convert_question_to_wire: Convert a Question object to its wire dict.
 
 Examples:
     ```python
@@ -54,6 +53,7 @@ Raises:
     JevRequestError: If the API returns 4xx (except 401/403, 429).
     JevServiceError: If the API returns 5xx or a transport error occurs.
     JevResponseError: If the API returns 2xx with unparseable body.
+    JevBudgetExceededError: If an opt-in spend cap refuses an attempt before sending.
 
 Async adapters:
     AsyncSystemOnePort: Async protocol for the System One API.
@@ -83,8 +83,10 @@ from judgevet.adapters.outbound.request_body import (
     AdapterOptions,
     configured_redactor,
     prepare_body,
+    wire_question,
 )
 from judgevet.adapters.outbound.retries import RetryPolicy
+from judgevet.adapters.outbound.spend import ametered, metered
 from judgevet.domain.errors import (
     JevAuthError,
     JevError,
@@ -94,7 +96,6 @@ from judgevet.domain.errors import (
     JevResponseError,
     JevServiceError,
 )
-from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.response_parser import parse_system_one_response
 
@@ -146,47 +147,6 @@ def _extract_error_detail(detail: Any) -> str:
     return ""
 
 
-def _convert_question_to_wire(question: Any) -> Any:
-    """Convert a Question object to its wire dict format.
-
-    The wire format is:
-        - noul:   {"type": "noul",   "instructions": ..., "criteria": {...} or None}
-        - choice: {"type": "choice", "instructions": ..., "criteria": {...} or None}
-        - score:  {"type": "score",  "instructions": ..., "criteria": [...]  or None}
-
-    A key whose value is None is omitted from the output.
-
-    Args:
-        question: A Question object or a raw dict. Non-Question values pass through.
-
-    Returns:
-        A wire dict for Question objects, or the original value otherwise.
-    """
-    if isinstance(question, Noul):
-        result: dict[str, Any] = {"type": "noul"}
-        if question.instructions is not None:
-            result["instructions"] = question.instructions
-        if question.criteria is not None:
-            result["criteria"] = question.criteria
-        return result
-    elif isinstance(question, Choice):
-        result = {"type": "choice"}
-        if question.instructions is not None:
-            result["instructions"] = question.instructions
-        if question.criteria is not None:
-            result["criteria"] = question.criteria
-        return result
-    elif isinstance(question, Score):
-        result = {"type": "score"}
-        if question.instructions is not None:
-            result["instructions"] = question.instructions
-        if question.criteria is not None:
-            result["criteria"] = question.criteria
-        return result
-    # Non-Question values pass through untouched
-    return question
-
-
 def _build_payload(
     state: str | dict[str, Any] | list[Any],
     questions: Mapping[str, Any],
@@ -199,7 +159,8 @@ def _build_payload(
         state: The content to evaluate.
         questions: Mapping of question names to question definitions.
             Both Question objects and raw dicts are accepted; mixed mappings
-            are allowed. Question objects are converted to their wire format.
+            are allowed. `wire_question` converts Question objects to their
+            wire format.
         model: Model name override, or None to use the default.
         default_model: Default model to use when model is None.
 
@@ -207,7 +168,7 @@ def _build_payload(
         A dictionary with keys "state", "questions", and "model".
     """
     converted_questions = {
-        name: _convert_question_to_wire(value) for name, value in questions.items()
+        name: wire_question(value) for name, value in questions.items()
     }
     return {
         "state": state,
@@ -332,6 +293,7 @@ class HTTPSystemOneAdapter:
         JevRequestError: If the API returns 4xx (except 401/403, 429).
         JevServiceError: If the API returns 5xx or a transport error occurs.
         JevResponseError: If the API returns 2xx with unparseable body.
+        JevBudgetExceededError: If the spend cap refuses an attempt before sending.
 
     Error details:
         Validation errors (422) include an array of error objects. Each
@@ -391,6 +353,8 @@ class HTTPSystemOneAdapter:
                 Omission retains direct defaults.
             redactor (StateRedactor | None): Synchronous caller-owned state transformation.
                 Omission preserves state and the existing serialization path.
+            spend_cap (SpendCap | None): Shared attempt and input-token cap.
+                Omission sends every attempt the retry policy permits.
 
         Raises:
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
@@ -403,6 +367,7 @@ class HTTPSystemOneAdapter:
             raise ValueError(f"timeout_seconds must be positive, got {timeout_seconds}")
 
         self._retry = retry or RetryPolicy()
+        self._spend = options.get("spend_cap")
         self._redactor = configured_redactor(options)
         self._gateway = configured_gateway({"gateway": options.get("gateway")})
         network = network or NetworkConfig()
@@ -445,6 +410,7 @@ class HTTPSystemOneAdapter:
             JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
             JevResponseError: If the API returns 2xx with unparseable body.
+            JevBudgetExceededError: If the spend cap refuses an attempt before sending.
 
         Error details:
             Validation errors (422) include an array of error objects. Each
@@ -472,7 +438,8 @@ class HTTPSystemOneAdapter:
                 _build_payload(state, questions, model, self._default_model),
                 self._redactor,
             )
-            answer = self._retry.run(lambda: self._request(payload, event, headers))
+            send = metered(self._spend, lambda: self._request(payload, event, headers))
+            answer = self._retry.run(send)
             event.resolved_model = answer.model
             event.input_tokens = answer.usage.input_tokens
             event.output_tokens = answer.usage.output_tokens
@@ -553,6 +520,7 @@ class AsyncHTTPSystemOneAdapter:
         JevRequestError: If the API returns 4xx (except 401/403, 429).
         JevServiceError: If the API returns 5xx or a transport error occurs.
         JevResponseError: If the API returns 2xx with unparseable body.
+        JevBudgetExceededError: If the spend cap refuses an attempt before sending.
 
     Error details:
         Validation errors (422) include an array of error objects. Each
@@ -616,6 +584,8 @@ class AsyncHTTPSystemOneAdapter:
                 Omission retains direct defaults.
             redactor (StateRedactor | None): Synchronous caller-owned state transformation.
                 Omission preserves state and the existing serialization path.
+            spend_cap (SpendCap | None): Shared attempt and input-token cap.
+                Omission sends every attempt the retry policy permits.
 
         Raises:
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
@@ -628,6 +598,7 @@ class AsyncHTTPSystemOneAdapter:
 
         self._api_key = api_key
         self._retry = retry or RetryPolicy()
+        self._spend = options.get("spend_cap")
         self._redactor = configured_redactor(options)
         self._gateway = configured_gateway({"gateway": options.get("gateway")})
         network = network or NetworkConfig()
@@ -670,6 +641,7 @@ class AsyncHTTPSystemOneAdapter:
             JevRequestError: If the API returns 4xx (except 401/403, 429).
             JevServiceError: If the API returns 5xx or a transport error occurs.
             JevResponseError: If the API returns 2xx with unparseable body.
+            JevBudgetExceededError: If the spend cap refuses an attempt before sending.
 
         Error details:
             Validation errors (422) include an array of error objects. Each
@@ -693,9 +665,8 @@ class AsyncHTTPSystemOneAdapter:
                 _build_payload(state, questions, model, self._default_model),
                 self._redactor,
             )
-            answer = await self._retry.arun(
-                lambda: self._request(payload, event, headers)
-            )
+            send = ametered(self._spend, lambda: self._request(payload, event, headers))
+            answer = await self._retry.arun(send)
             event.resolved_model = answer.model
             event.input_tokens = answer.usage.input_tokens
             event.output_tokens = answer.usage.output_tokens

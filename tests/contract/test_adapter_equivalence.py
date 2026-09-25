@@ -272,7 +272,7 @@ def test_adapters_handle_question_objects() -> None:
 
     This test uses the contract test pattern: both adapters are driven with
     the same question objects, and the captured requests are compared. Since
-    both adapters use the same _build_payload and _convert_question_to_wire,
+    both adapters use the same _build_payload and wire_question,
     the requests must be byte-identical.
     """
     captured_sync: list[dict[str, Any]] = []

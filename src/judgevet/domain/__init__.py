@@ -40,6 +40,7 @@ Attributes:
     Choice (type): Question type for multiple choice.
     ChoiceAnswer (type): Answer type for multiple choice.
     JevAuthError (type): 401/403 authentication errors.
+    JevBudgetExceededError (type): Local spend cap refused an attempt.
     JevError (type): Base exception for all Jev errors.
     JevMaxTokensExceededError (type): Request over a service token budget.
     JevRateLimitError (type): 429 rate limit errors.
@@ -63,6 +64,7 @@ from judgevet.domain.answers import (
 )
 from judgevet.domain.errors import (
     JevAuthError,
+    JevBudgetExceededError,
     JevError,
     JevMaxTokensExceededError,
     JevRateLimitError,
@@ -79,6 +81,7 @@ __all__ = [
     "Choice",
     "ChoiceAnswer",
     "JevAuthError",
+    "JevBudgetExceededError",
     "JevError",
     "JevMaxTokensExceededError",
     "JevRateLimitError",

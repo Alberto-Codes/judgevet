@@ -21,11 +21,12 @@ The root `__all__` declares these supported names:
 | State transformation | `StateRedactor` |
 | Gateway configuration | `GatewayConfig`, `RequestMetadata` |
 | Retry configuration | `RetryPolicy` |
+| Spend cap | `SpendCap` |
 | Scoped diagnostic correlation | `bind_request_id` |
 | Structural ports | `SystemOnePort`, `AsyncSystemOnePort` |
 | Questions | `Question`, `Noul`, `Choice`, `Score` |
 | Answers and metadata | `Answer`, `NoulAnswer`, `ChoiceAnswer`, `ScoreAnswer`, `SystemOneResponse`, `Usage` |
-| Service errors | `JevError`, `JevAuthError`, `JevRequestError`, `JevMaxTokensExceededError`, `JevResponseError`, `JevServiceError`, `JevRateLimitError` |
+| Service errors | `JevError`, `JevAuthError`, `JevRequestError`, `JevMaxTokensExceededError`, `JevResponseError`, `JevServiceError`, `JevRateLimitError`, `JevBudgetExceededError` |
 | Version | `__version__` |
 | Verified model | `VERIFIED_MODEL` |
 
