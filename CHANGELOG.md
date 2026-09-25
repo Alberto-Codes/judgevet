@@ -3,6 +3,28 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.11.0](https://github.com/Alberto-Codes/judgevet/compare/v0.10.2...v0.11.0) (2026-09-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* Noul(instructions, criteria), Choice(criteria, instructions) and Score(criteria, instructions) no longer accept positional arguments. Name every argument: Noul(instructions=...), Choice(criteria=...), Score(criteria=...). Known callers: judgevet's own policy tests and doc-schema script, migrated here; finvet's tests/test_jev_scorer.py builds Noul("ok?") positionally and must move to Noul(instructions="ok?") before it upgrades.
+
+### Features
+
+* export VERIFIED_MODEL and keep it equal to the STATUS.md model ([1e8021c](https://github.com/Alberto-Codes/judgevet/commit/1e8021c4ab615cddc64ba7e80bab13e5832729de)), references [#173](https://github.com/Alberto-Codes/judgevet/issues/173)
+* **testing:** ship FakeSystemOnePort and AsyncFakeSystemOnePort ([77587f4](https://github.com/Alberto-Codes/judgevet/commit/77587f4987bfff43abac4ce0ae887f6a8d5b19a9)), references [#171](https://github.com/Alberto-Codes/judgevet/issues/171)
+
+
+### Refactoring
+
+* make Noul, Choice and Score construction keyword-only ([33d0c36](https://github.com/Alberto-Codes/judgevet/commit/33d0c36edde93aeeabadb4e542c4ed802a4cb931)), references [#172](https://github.com/Alberto-Codes/judgevet/issues/172)
+
+
+### Documentation
+
+* **api:** document the accepted Choice criteria value forms ([3b38b42](https://github.com/Alberto-Codes/judgevet/commit/3b38b426ba735a53e66e7b99d5e0ef40f0ff8123)), references [#174](https://github.com/Alberto-Codes/judgevet/issues/174)
+
 ## [0.10.2](https://github.com/Alberto-Codes/judgevet/compare/v0.10.1...v0.10.2) (2026-09-25)
 
 

@@ -114,7 +114,7 @@ from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
 from judgevet.ports import AsyncSystemOnePort, StateRedactor, SystemOnePort
 
-__version__ = "0.10.2"  # x-release-please-version
+__version__ = "0.11.0"  # x-release-please-version
 
 VERIFIED_MODEL = "jev-1.13.0"
 
