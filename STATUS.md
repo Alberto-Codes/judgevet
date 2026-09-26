@@ -439,13 +439,13 @@ This is a local correction. No release or live-service evidence is promoted.
 The [accepted contract](https://github.com/Alberto-Codes/judgevet/issues/200#issuecomment-5850346214)
 links the detailed decisions and independent review amendments.
 Offline public-interface probes show that library injection already works.
-CLI and MCP composition still require explicit provider selection.
+The design identified missing CLI and MCP composition selection hooks.
 Applications own translation, dependencies, inference and confidence semantics.
 The design preserves hosted defaults and existing Jev error imports.
 
-The remaining slices cover ownership, CLI, MCP, ordered image evidence and
-installed artifact proofs. Each requires its own red test, independent review
-and delivery evidence. None is implemented by this design record.
+The implementation slices cover ownership, CLI, MCP, ordered image evidence
+and installed artifact proofs. Each requires its own red test, independent
+review and delivery evidence. Delivered boundaries are recorded below.
 #204 remains deferred. No live call, release or model configuration changed.
 
 ## Neutral error base
@@ -473,10 +473,26 @@ The [ownership issue](https://github.com/Alberto-Codes/judgevet/issues/201)
 records the acceptance and gate evidence. CLI, MCP, media and installed
 extension proofs remain separate work. No inference implementation is added.
 
+## Application-selected CLI providers
+
+#202 adds `create_cli_app` for borrowed ports or owned provider factories.
+Independent applications retain their selections. Ordinary and policy commands
+preserve state, instructions, question IDs, typed answers, models and usage.
+Explicit selection bypasses hosted settings and never falls back. Validation
+precedes acquisition. Owned contexts close after commands; borrowed ports stay
+open. Existing hosted entrypoints and output/exit meanings remain supported.
+Provider-owned audit and spend mechanisms remain opt-in.
+The [CLI contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850672112)
+records the missing-import regression and exact acceptance boundary.
+Independent generated-app probes pass against the checkout and isolated copy.
+Replacing forwarded state in the copy makes the same probe fail. The complete
+commit and push stages pass for this CLI slice. MCP, media and installed
+extension proofs remain separate work.
+
 ## Gates
 
-**2241 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.35%** (2193/2276 statements).
+**2253 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.43%** (2244/2327 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

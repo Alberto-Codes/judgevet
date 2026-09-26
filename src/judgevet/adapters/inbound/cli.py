@@ -4,7 +4,8 @@ The command wrapper propagates failure status to the process while helpers
 return integer codes and the composition root closes its adapter. Explicit
 file and stdin sources are validated before adapter construction. Explicit
 policies use a separate composition path and distinguish unmet policy from errors.
-Both paths resolve credential sources once before adapter construction.
+Hosted paths resolve credential sources once before adapter construction.
+Application-selected providers use their own ownership and configuration.
 They render rate limits as handled failures and configure stderr logging.
 
 Examples:
@@ -28,10 +29,16 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from typing import Annotated, Any
+from functools import partial
+from typing import Any
 
 import typer
 
+from judgevet.adapters.inbound.cli_composition import (
+    CliCommand,
+    ProviderSelection,
+    run_selected,
+)
 from judgevet.adapters.inbound.cli_inputs import InputFailure, resolve_inputs
 from judgevet.adapters.inbound.cli_policy_run import CliCallbacks, run_policy
 from judgevet.adapters.inbound.logs import configure
@@ -43,22 +50,15 @@ from judgevet.domain.answers import (
     NoulAnswer,
     ScoreAnswer,
 )
-from judgevet.domain.errors import (
-    JevAuthError,
-    JevRateLimitError,
-    JevRequestError,
-    JevResponseError,
-    JevServiceError,
-)
+from judgevet.domain.errors import JudgevetError
 from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.domain.response import SystemOneResponse
 from judgevet.ports import SystemOnePort
-
-MAX_POSITIONAL_INPUTS = 2
+from judgevet.providers import ProviderFactory
 
 app = typer.Typer(help="Call the Jev System One API")
 
-__all__ = ["app", "cli_main"]
+__all__ = ["app", "cli_main", "create_cli_app"]
 
 
 def parse_questions(questions_json: str) -> dict[str, Any]:
@@ -177,7 +177,9 @@ def run_cli(
     model: str = "jev-latest",
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> int:
-    """Run the CLI with a port and render handled errors, including rate limits.
+    """Run the CLI with a port and render declared library failures.
+
+    The neutral error catch includes provider, service and spend failures.
 
     Args:
         port: The port used for API calls.
@@ -205,11 +207,7 @@ def run_cli(
         json.JSONDecodeError,
         TypeError,
         KeyError,
-        JevAuthError,
-        JevRateLimitError,
-        JevRequestError,
-        JevResponseError,
-        JevServiceError,
+        JudgevetError,
     ) as e:
         if json_output:
             print(json.dumps({"error": str(e)}), file=sys.stderr)
@@ -272,66 +270,6 @@ def _command_inputs(
     return state, questions
 
 
-@app.command(help="Call the Jev System One API.")
-def _cli_command(
-    arguments: Annotated[
-        list[str] | None,
-        typer.Argument(
-            help=("state: State to evaluate. questions: Questions as JSON string."),
-            metavar="[STATE] [QUESTIONS]",
-        ),
-    ] = None,
-    model: str = typer.Option("jev-latest", help="Model to use"),
-    api_key: str | None = typer.Option(None, help="TypeSafe API key"),
-    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
-    *,
-    state_files: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--state-file", help="Read UTF-8 state from a file; - reads stdin"
-        ),
-    ] = None,
-    question_files: Annotated[
-        list[str] | None,
-        typer.Option("--questions-file", help="Read questions from a UTF-8 JSON file"),
-    ] = None,
-    policy_files: Annotated[
-        list[str] | None,
-        typer.Option("--policy", help="Apply an explicit acceptance policy from JSON"),
-    ] = None,
-) -> int:
-    """Validate command inputs and dispatch to the selected composition root.
-
-    Args:
-        arguments: Optional positional state followed by questions JSON.
-        model: Model to use.
-        api_key: TypeSafe API key.
-        json_output: Output as JSON.
-        state_files: Explicit state source, specified at most once.
-        question_files: Explicit questions source, specified at most once.
-        policy_files: Explicit policy source, specified at most once.
-
-    Returns:
-        0 on success. Failures raise typer.Exit.
-
-    Raises:
-        typer.Exit: If input validation or the judgment fails.
-        typer.BadParameter: If required legacy positional arguments are absent.
-    """
-    positions = arguments or []
-    if len(positions) > MAX_POSITIONAL_INPUTS:
-        raise typer.BadParameter("Expected at most state and questions")
-    state = positions[0] if positions else None
-    questions = positions[1] if len(positions) == MAX_POSITIONAL_INPUTS else None
-    state, questions = _command_inputs(
-        state, questions, state_files, question_files, policy_files, json_output
-    )
-    code = _dispatch(state, questions, model, api_key, json_output, policy_files)
-    if code != 0:
-        raise typer.Exit(code=code)
-    return code
-
-
 def _dispatch(
     state: str,
     questions: str,
@@ -339,6 +277,7 @@ def _dispatch(
     api_key: str | None,
     json_output: bool,
     policy_files: list[str] | None,
+    selection: object = None,
 ) -> int:
     """Select the composition path after command input validation.
 
@@ -349,10 +288,21 @@ def _dispatch(
         api_key: Optional explicit literal key.
         json_output: Select JSON rendering.
         policy_files: Optional validated policy file selection.
+        selection: Application provider selection, if present.
 
     Returns:
         Exit status from the selected composition root.
     """
+    if isinstance(selection, ProviderSelection):
+        return run_selected(
+            selection,
+            state,
+            questions,
+            model,
+            json_output,
+            policy_files[0] if policy_files else None,
+            CliCallbacks(parse_questions, build_response_data, output_response),
+        )
     if policy_files:
         return run_policy(
             state,
@@ -371,6 +321,50 @@ def _dispatch(
             api_key=api_key,
             json_output=json_output,
         )
+
+
+def create_cli_app(
+    *,
+    port: SystemOnePort | None = None,
+    provider_factory: ProviderFactory | None = None,
+) -> typer.Typer:
+    """Create a command with an application-selected provider or hosted defaults.
+
+    Borrowed ports stay open. A factory owns each invocation's provider lifetime.
+    Explicit selection bypasses hosted credentials and HTTP settings.
+
+    Args:
+        port: Borrowed judgment provider.
+        provider_factory: Factory returning an owning provider context.
+
+    Returns:
+        An independent Typer application with the existing command options.
+
+    Raises:
+        ValueError: Both provider selection arguments are supplied.
+
+    Examples:
+        ```python
+        from judgevet.adapters.inbound.cli import create_cli_app
+        from judgevet.testing import FakeSystemOnePort
+
+        application = create_cli_app(port=FakeSystemOnePort())
+        assert callable(application)
+        ```
+    """
+    if port is not None and provider_factory is not None:
+        raise ValueError("Supply at most one of port or provider_factory")
+    selection = (
+        ProviderSelection(port, provider_factory)
+        if port is not None or provider_factory is not None
+        else None
+    )
+    application = typer.Typer(
+        help="Call the Jev System One API", context_settings={"obj": selection}
+    )
+    command = CliCommand(partial(_dispatch, selection=selection), _command_inputs)
+    application.command(help="Call the Jev System One API.")(command.run)
+    return application
 
 
 def main(
@@ -467,6 +461,11 @@ def parse_args() -> Any:
     parser.add_argument("--api-key", help="TypeSafe API key")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
     return parser.parse_args()
+
+
+app.command(help="Call the Jev System One API.")(
+    CliCommand(_dispatch, _command_inputs).run
+)
 
 
 if __name__ == "__main__":

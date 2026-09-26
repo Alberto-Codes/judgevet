@@ -1,4 +1,6 @@
-"""Compose policy judgments with explicit adapter ownership and safe diagnostics.
+"""Compose hosted policy judgments and render declared library failures.
+
+The neutral error catch includes service, provider and spend errors.
 
 Examples:
     ```python
@@ -26,13 +28,7 @@ from judgevet.adapters.inbound.cli_policy_eval import evaluate_policy
 from judgevet.adapters.inbound.logs import configure
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
-from judgevet.domain.errors import (
-    JevAuthError,
-    JevRateLimitError,
-    JevRequestError,
-    JevResponseError,
-    JevServiceError,
-)
+from judgevet.domain.errors import JudgevetError
 from judgevet.domain.questions import Question
 from judgevet.domain.response import SystemOneResponse
 
@@ -159,6 +155,8 @@ def run_policy(
 ) -> int:
     """Validate policy, build its configured adapter and close after judgment.
 
+    Declared library failures retain their messages in handled diagnostics.
+
     Args:
         state: Existing state string interpretation.
         questions: Existing question JSON.
@@ -189,13 +187,7 @@ def run_policy(
             adapter.close()
     except InputFailure as error:
         message = str(error)
-    except (
-        JevAuthError,
-        JevRateLimitError,
-        JevRequestError,
-        JevResponseError,
-        JevServiceError,
-    ) as error:
+    except JudgevetError as error:
         message = str(error)
     except (ValueError, TypeError, KeyError, AttributeError):
         message = "Invalid state, questions or configuration for policy judgment"

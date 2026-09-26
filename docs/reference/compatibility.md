@@ -88,6 +88,23 @@ pass their ports directly. Unknown usage remains `None`; provider confidence
 semantics and policy thresholds remain application-owned.
 Source: [accepted provider contract](https://github.com/Alberto-Codes/judgevet/issues/200#issuecomment-5850335591).
 
+## Application-selected CLI providers
+
+`judgevet.adapters.inbound.cli.create_cli_app` accepts keyword-only `port` or
+`provider_factory` and returns an independent Typer application. Selection is
+explicit and applies to ordinary and policy commands. Borrowed ports remain
+open; factory contexts own acquisition and cleanup for each invocation.
+Omitting both arguments preserves hosted defaults. Both arguments raise `ValueError`.
+No provider flag, discovery or provider environment setting is added.
+
+The existing `app`, `main`, `cli_main` and helper imports remain supported.
+The generated command preserves existing grammar, output and exit meanings.
+Explicit selection bypasses hosted settings and credentials without fallback.
+Declared `JudgevetError` subclasses, including provider and spend failures,
+use the existing handled-error output. Provider-owned audit and spend mechanisms
+remain opt-in; selecting a port adds neither mechanism.
+Source: [CLI provider contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850672112).
+
 ## 0.7.0 compatibility assessment
 
 | Surface | Assessment | Migration |

@@ -123,3 +123,29 @@ script, finish with `exit "$status"` to propagate it. Treat exits 1 and 2 as
 operational failures, not rejected content. Framework usage diagnostics on
 stderr are not necessarily JSON despite the output filename.
 See [troubleshooting](troubleshoot.md) for safe recovery checks.
+
+## Select an application provider
+
+An application wrapper can call `create_cli_app(port=provider)` from
+`judgevet.adapters.inbound.cli` and run the returned Typer application.
+The provider implements `SystemOnePort`. Both ordinary commands and `--policy`
+use that provider. Each application retains its own selection.
+
+A borrowed `port` stays open across commands. For owned resources, pass
+`provider_factory` instead. The factory returns a context manager that yields
+the provider and cleans it up after each command, including a failed judgment
+or unmet policy. Input and policy validation run before factory acquisition.
+Supplying both selection arguments raises `ValueError`.
+
+Explicit selection bypasses hosted credentials and HTTP settings. It never
+falls back to the hosted service. Omitting both arguments retains the existing
+hosted behavior. The installed `judgevet` command also retains that behavior;
+applications run their own wrapper to select a provider.
+
+State, question instructions and IDs reach the selected provider unchanged.
+The CLI preserves requested and resolved model identifiers and unknown usage.
+Declared `JudgevetError` failures use the existing error output and exit 1.
+The existing policy comparisons, answer output and exit meanings remain.
+Applications own provider installation, state transformation, audit and spend
+accounting. Selection does not add those mechanisms to an arbitrary provider.
+Source: [accepted CLI provider contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850672112).
