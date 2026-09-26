@@ -1,4 +1,4 @@
-"""Domain error types for Jev System One API.
+"""Neutral error base and Jev System One error types.
 
 Examples:
     ```python
@@ -44,6 +44,7 @@ See Also:
     - [judgevet.adapters.outbound.http][]: HTTP adapter
 
 Attributes:
+    JudgevetError (type): Neutral base for declared library errors.
     JevError (type): Base exception for all Jev errors.
     JevAuthError (type): 401/403 authentication errors.
     JevBudgetExceededError (type): Local spend cap refused an attempt.
@@ -56,8 +57,29 @@ Attributes:
 from __future__ import annotations
 
 
-class JevError(Exception):
+class JudgevetError(Exception):
+    """Neutral base for declared library errors.
+
+    Jev and local policy errors share this base. Ordinary Python validation
+    errors and arbitrary provider exceptions retain their original types.
+    This base adds no status or retry metadata to standard exception behavior.
+    Source: https://github.com/Alberto-Codes/judgevet/issues/78#issuecomment-5850346340.
+
+    Attributes:
+        args (tuple): Standard exception arguments.
+
+    Examples:
+        ```python
+        error = JudgevetError("local failure")
+        assert error.args == ("local failure",)
+        ```
+    """
+
+
+class JevError(JudgevetError):
     """Base exception for all Jev-related errors.
+
+    The neutral JudgevetError base also catches this service hierarchy.
 
     This is the parent of the service-error hierarchy, not local policy errors
     or every HTTPX exception. The one local error under it is

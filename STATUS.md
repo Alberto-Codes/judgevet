@@ -448,10 +448,21 @@ installed artifact proofs. Each requires its own red test, independent review
 and delivery evidence. None is implemented by this design record.
 #204 remains deferred. No live call, release or model configuration changed.
 
+## Neutral error base
+
+#78 adds `JudgevetError` without renaming a published exception.
+Jev errors inherit the neutral base. Policy errors also inherit it and retain
+their `ValueError` catches. Root, domain and original imports share one class.
+Ordinary Python validation errors keep their original types.
+The [error issue](https://github.com/Alberto-Codes/judgevet/issues/78) records
+the missing-import red test and independent public HTTP and policy probes.
+Removing neutral inheritance in an isolated copy makes the HTTP probe fail.
+This is a local compatibility contract, not new live-service evidence.
+
 ## Gates
 
-**2211 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.29%** (2154/2237 statements).
+**2224 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.29%** (2156/2239 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

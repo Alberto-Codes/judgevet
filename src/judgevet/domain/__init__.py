@@ -37,6 +37,7 @@ See Also:
     - [judgevet.domain.usage][]: Usage tracking
 
 Attributes:
+    JudgevetError (type): Neutral base for declared library errors.
     Answer (type): Union type of all answer types.
     Choice (type): Question type for multiple choice.
     ChoiceAnswer (type): Answer type for multiple choice.
@@ -74,6 +75,7 @@ from judgevet.domain.errors import (
     JevRequestError,
     JevResponseError,
     JevServiceError,
+    JudgevetError,
 )
 from judgevet.domain.questions import Choice, Noul, Question, Score
 from judgevet.domain.response import SystemOneResponse
@@ -91,6 +93,7 @@ __all__ = [
     "JevRequestError",
     "JevResponseError",
     "JevServiceError",
+    "JudgevetError",
     "JudgmentRecord",
     "Noul",
     "NoulAnswer",

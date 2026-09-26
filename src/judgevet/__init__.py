@@ -48,6 +48,7 @@ Existing deep imports retain object identity. Callers own adapter construction
 and cleanup; importing a port does not create a client.
 
 Attributes:
+    JudgevetError (type): Neutral base for declared library errors.
     bind_request_id (Callable): Context manager for local caller correlation.
     Answer (type): Union of the three typed answers.
     Question (type): Union of the three typed questions.
@@ -117,6 +118,7 @@ from judgevet.domain.errors import (
     JevRequestError,
     JevResponseError,
     JevServiceError,
+    JudgevetError,
 )
 from judgevet.domain.questions import Choice, Noul, Question, Score
 from judgevet.domain.response import SystemOneResponse
@@ -150,6 +152,7 @@ __all__ = [
     "JevRequestError",
     "JevResponseError",
     "JevServiceError",
+    "JudgevetError",
     "JudgmentRecord",
     "NetworkConfig",
     "Noul",

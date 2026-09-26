@@ -8,10 +8,21 @@ Status: **draft**. Local error mapping is separate from live-service evidence.
 Only the recorded calls establish what the service returned; see the
 [evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not).
 
+## Common error base
+
+`JudgevetError` is the neutral base for declared library errors.
+Import it from `judgevet`, `judgevet.domain` or `judgevet.domain.errors`.
+All three paths expose the same class. It inherits from `Exception` and uses
+ordinary exception arguments. It adds no status or retry metadata.
+`except JudgevetError` catches both Jev errors and local policy errors.
+Ordinary Python validation errors and arbitrary provider exceptions keep their
+existing types and do not become `JudgevetError` instances.
+Source: https://github.com/Alberto-Codes/judgevet/issues/78#issuecomment-5850346340.
+
 ## Service and transport errors
 
 The supported names are exported from `judgevet`. Each concrete error below
-inherits directly from `JevError`, which inherits from `Exception`. The one
+inherits directly from `JevError`, which inherits from `JudgevetError`. The one
 exception is `JevMaxTokensExceededError`, which inherits from `JevRequestError`.
 `JevBudgetExceededError` is a local refusal, not a service outcome.
 `JevRateLimitError` is not a subclass of `JevRequestError` or `JevServiceError`.
@@ -63,7 +74,7 @@ before an attempt when a limit is already reached. No request is sent, so
 any other limit name. It is not retryable, because the cap never resets.
 See [spend cap](configuration.md#spend-cap).
 
-All errors expose `status_code` and the `retryable` property. The message is in
+All Jev errors expose `status_code` and the `retryable` property. The message is in
 standard exception `args`, not a `.message` attribute. `str(error)` appends
 `(status N)` when a status is present. Messages can include remote content;
 do not assume they are safe to publish.
@@ -119,7 +130,7 @@ Import these from `judgevet.policy`, not the package root:
 
 | Type | Parent | Meaning |
 |---|---|---|
-| `PolicyError` | `ValueError` | Base for local policy failures. |
+| `PolicyError` | `JudgevetError`, `ValueError` | Base for local policy failures. |
 | `PolicyDefinitionError` | `PolicyError` | Invalid rule, policy JSON or question binding. |
 | `PolicyAnswerError` | `PolicyError` | A selected answer is missing, has the wrong type or violates required answer constraints. |
 

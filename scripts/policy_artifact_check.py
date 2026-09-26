@@ -29,6 +29,7 @@ _EXPORTS = {
     "judgevet.domain.response": ("SystemOneResponse",),
     "judgevet.domain.usage": ("Usage",),
     "judgevet.domain.errors": (
+        "JudgevetError",
         "JevError",
         "JevAuthError",
         "JevBudgetExceededError",

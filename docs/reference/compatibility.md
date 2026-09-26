@@ -27,6 +27,7 @@ The root `__all__` declares these supported names:
 | Structural ports | `SystemOnePort`, `AsyncSystemOnePort` |
 | Questions | `Question`, `Noul`, `Choice`, `Score` |
 | Answers and metadata | `Answer`, `NoulAnswer`, `ChoiceAnswer`, `ScoreAnswer`, `SystemOneResponse`, `Usage` |
+| Common error base | `JudgevetError` |
 | Service errors | `JevError`, `JevAuthError`, `JevRequestError`, `JevMaxTokensExceededError`, `JevResponseError`, `JevServiceError`, `JevRateLimitError`, `JevBudgetExceededError` |
 | Version | `__version__` |
 | Verified model | `VERIFIED_MODEL` |
@@ -49,6 +50,20 @@ The [typed policy guide](../how-to/use-policy-library.md) gives runnable example
 constructor invariants, strict answer checks, immutable snapshots, error handling
 and explicit sync/async lifecycle ownership. Public policy errors are local
 `ValueError` subclasses, separate from the Jev service-error hierarchy.
+
+## Neutral error base
+
+`JudgevetError` adds a common catch for declared library errors. The root,
+`judgevet.domain` and `judgevet.domain.errors` exports share one class.
+`JevError` now inherits from it. `PolicyError` inherits from it and `ValueError`.
+Existing Jev and policy imports retain identity, constructors and catch behavior.
+Jev status and retry metadata remain unchanged. Policy errors remain separate
+from `JevError` and retain ordinary exception arguments.
+
+The neutral base adds no status or retry metadata. Existing Python validation
+errors and arbitrary provider exceptions keep their original types.
+No caller migration is required for existing exception catches.
+Source: https://github.com/Alberto-Codes/judgevet/issues/78#issuecomment-5850346340.
 
 ## 0.7.0 compatibility assessment
 
