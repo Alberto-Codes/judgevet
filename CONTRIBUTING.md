@@ -30,7 +30,10 @@ Install all three hook stages first: `pre-commit`, `pre-push` and `commit-msg`.
 Ordinary setup and the default tests need no live API credentials.
 
 Run the [complete gate stages](docs/maintainers/contributor-setup.md#run-the-gates)
-before declaring work ready. Fix the cause of a failure. Never silence a gate,
+before declaring work ready. Assign one mechanical validation owner under the
+[delegation procedure](docs/maintainers/delegate-work.md#validation-ownership).
+Reuse evidence only while its relevant inputs remain unchanged. Required hooks
+still run at actual commit and push. Fix the cause of a failure. Never silence a gate,
 weaken an architecture contract, lower coverage or skip a hook. A focused check
 cannot replace the complete stages. Fixing one gate must not break another.
 
@@ -42,7 +45,10 @@ it fails for the missing behavior rather than a broken fixture. Keep the test
 and implementation in the same round. Preserve existing tests and provide
 an independent failure proof before claiming success.
 
-Finish one deliverable per round. Update [STATUS.md](STATUS.md) in the commit
+Workers finish their assigned deliverable and stop. Supervisors continue each
+authorized slice until the goal reaches its agreed outcome. Require fresh
+independent acceptance of supervisor contributions as well as worker changes.
+Update [STATUS.md](STATUS.md) in the commit
 that changes its claims, using measured tests, coverage, gate state and service
 evidence. Synthetic tests do not verify live service behavior. Keep unseen
 responses and untested models explicitly unverified.

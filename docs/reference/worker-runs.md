@@ -20,7 +20,8 @@ The [delegation procedure](../maintainers/delegate-work.md) holds the task seque
 
 Roles need not use different model families. A model name alone does not establish independent review.
 The reviewer uses production evidence and independent probes, not the worker's completion claim.
-The supervisor never spawns a sub agent to verify its own work.
+Every change needs a fresh reviewer who authored none of it, including supervisor contributions.
+No author accepts their own work. Follow the shared [acceptance rules](../maintainers/delegate-work.md#4-accept-behaviour-and-finish).
 Changing models never expands permissions or authorizes a live API call.
 
 ## Harness boundary
@@ -40,7 +41,9 @@ Choose the worker independently from the supervisor.
 
 Read installed help and configuration before constructing a pi launch command.
 Do not copy flags, approval modes or token limits between harnesses.
-Keep planning and review read-only.
+Keep planning read-only and the reviewed checkout unchanged.
+A review brief may assign an isolated scratch directory for failure proofs.
+Follow the shared [scratch rules](../maintainers/delegate-work.md#isolated-failure-proof).
 Implementation needs only the permissions its assigned edits and checks require.
 
 Launch a Cursor worker from the checkout root with the brief as the prompt:
@@ -59,6 +62,28 @@ A `resource_exhausted` error before any edit is a service failure. Retry once.
 A requested alias such as `opus` is not a resolved model identity.
 Record both the requested alias and the resolved identity the agent reports.
 If the harness does not expose the identity, record `unknown` rather than guessing.
+
+## Restricted-worker evidence
+
+Cursor cannot run `git` or `gh` under the repository deny list.
+The supervisor supplies this packet before dispatch:
+
+- The exact accepted issue comment URL and full contract text, plus the parent consumer outcome.
+- The baseline commit and staged, unstaged and relevant untracked state.
+- The relevant source and diff artifacts, with paths and content hashes for the tested snapshot.
+- The validation owner, existing command outputs and their input snapshot.
+
+Keep the issue comment authoritative. The embedded copy is a transport for that contract.
+Record when the supervisor captured the packet and which revision it describes.
+The worker compares available file contents with the packet before relying on it.
+Missing or stale inputs mean an incomplete return naming the required evidence.
+The supervisor refreshes the packet before work resumes.
+Do not broaden permissions, remove deny rules or change user configuration to obtain evidence.
+If a denied action is necessary, the supervisor performs it within the authorized scope.
+
+All harnesses must report actual instruction loading and effective tool permissions.
+A role prompt is not a sandbox. Do not claim isolation the harness does not enforce.
+Record the harness actually used, even when a role definition came from another harness.
 
 ## Commit trailers
 
@@ -79,11 +104,16 @@ Do not introduce a second ledger that duplicates it.
 | Field | Meaning |
 |---|---|
 | Assignment | Issue, slice, accepted comment, supervisor, worker role and allowed paths |
-| Baseline | Base revision, existing modifications and acceptance-test revision |
-| Configuration | Harness and version, requested and resolved model, effort or reasoning setting, tool permissions |
+| Baseline | Base revision, staged and unstaged diff, relevant untracked inputs and acceptance-test revision |
+| Configuration | Harness and version, requested and resolved model, effort or reasoning setting, loaded instructions and effective tool permissions |
 | Observation | Session or agent identifier, start and end times, output location and final exit state |
-| Outcome | Acceptance disposition, tested revision, independent evidence, repairs and remaining blockers |
+| Outcome | Accepted, rejected or incomplete; reviewed and accepted snapshots, reviewer identity, public probe and import origin, negative or mutation evidence, repairs and gaps |
+| Validation | Assigned owner, commands and outputs, relevant source, tests, configuration and environment inputs, freshness and invalidated evidence |
 | Cost | Elapsed time, supervisor repair time, and reported tokens with their source |
+
+Use the shared [validation and disposition rules](../maintainers/delegate-work.md#validation-ownership).
+Report each unavailable usage counter as `unknown`, separately from available counters.
+Never combine unlike token counters.
 
 Record factual contributions separately when different models specify and implement a change.
 Do not attribute supervisor corrections to the worker.

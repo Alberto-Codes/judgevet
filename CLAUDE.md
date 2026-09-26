@@ -57,7 +57,8 @@ repeated context. Explicit user scope and required gates still govern.
   dispatch could resolve it.
 - **Use one validation path.** The gate table and the hooks are that path. Do
   not add a second review pipeline. Reuse passing checks for unchanged
-  revisions. Do not duplicate by hand what the commit or push hook runs.
+  inputs under the [validation ownership rules](docs/maintainers/delegate-work.md#validation-ownership).
+  Assign one mechanical validation owner. Do not duplicate hook commands by hand.
 - **Keep delivery small.** Use the existing issue and one commit. Create no
   extra report or dashboard unless the deliverable requires it.
 - **Stop at the agreed outcome.** Report the result and remaining evidence
@@ -109,8 +110,9 @@ code proving it.
   `# noqa`, `# type: ignore`, `--no-verify`, or a narrowed scope. If a type
   checker rejects a test double, the fix is a better double — a small class
   that satisfies the protocol — not a cast to `Any`.
-- **Fixing one gate must not break another.** Run the whole table before you
-  report. Adding a docstring to satisfy ruff `D` earns a docvet `enrichment`
+- **Fixing one gate must not break another.** The assigned validation owner
+  covers the whole inventory through the complete hook stages before acceptance.
+  Adding a docstring to satisfy ruff `D` earns a docvet `enrichment`
   finding unless it carries the `Args:`, `Returns:`, `Raises:` and
   `Attributes:` sections the case needs.
 - **Every new module needs its docstring sections on the first pass.** docvet
@@ -154,6 +156,12 @@ uv run judgevet --help
 | docs | `uv run docvet check` |
 | tests | `uv run pytest -q --cov` |
 | hooks | `uv run pre-commit run --files <changed files>` then `uv run pre-commit run --hook-stage pre-push --files <changed files>` |
+
+The table names gates, not a second sequence to run beside the hooks.
+The assigned owner runs the complete commit and push stages once per relevant
+input snapshot. Required hooks still run at actual commit and push.
+See [validation ownership](docs/maintainers/delegate-work.md#validation-ownership)
+for reuse, freshness and repair rules.
 
 `.pre-commit-config.yaml` is the complete gate inventory. The hooks row runs
 the checks the other rows omit: plain-english, terminology, docs-build and
@@ -240,7 +248,9 @@ messages.
   behavior, not a broken fixture. Give the coder that exact test contract,
   then require green gates and an independent failure proof. Do not split a
   production-only change from tests promised in a later round.
-- **One deliverable per round.** Land one thing, run the gates, stop.
+- **One deliverable per round.** Workers return their assigned deliverable and
+  stop. The supervisor lands each accepted slice and continues the authorized
+  multi-slice goal until its agreed stopping condition.
 - **`STATUS.md` is rewritten in the commit that changes what it says.** It names
   the test count, the coverage figure, the gate state and what is verified
   against the live service. A commit that moves any of those and leaves STATUS
@@ -303,8 +313,9 @@ report it, record `unknown`. The supervisor's own commits carry no
 **The specification lives on the issue, not on disk.** A reasoning pass posts
 its definition of ready and done as an issue comment, bylined with the model
 that wrote it, before any coder sees it. The coder then reads it with
-`gh issue view <N> --comments`. This is not bookkeeping: a local scratch file
-is invisible to review, dies with the machine, and has already been deleted
+`gh issue view <N> --comments`, or receives the exact issue-hosted contract
+through the [restricted-worker evidence packet](docs/reference/worker-runs.md#restricted-worker-evidence).
+This is not bookkeeping: a local scratch file is invisible to review, dies with the machine, and has already been deleted
 twice — once by a crashing session and once by the coder itself. Keeping the
 original issue body intact beside the comment also shows what the reasoning
 pass added, which is the comparison being measured.

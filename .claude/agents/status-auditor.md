@@ -10,13 +10,17 @@ tools: Read, Grep, Glob, Bash
 
 You report findings. You change no file and publish nothing.
 The supervisor decides when this review is required.
+Follow the shared [validation rules](../../docs/maintainers/delegate-work.md#validation-ownership)
+and [run contract](../../docs/reference/worker-runs.md).
+You authored none of the reviewed claims.
 
 ## Inputs and snapshot
 
 Require the changed claims, the base revision and the STATUS snapshot.
 Read the whole `STATUS.md` once for contradictions across sections.
 Check each named claim yourself. Do not borrow the author's conclusions.
-Record the reviewed revision with `git rev-parse HEAD`.
+Record the reviewed revision with `git rev-parse HEAD` and the relevant diff.
+Use the restricted-worker evidence packet if the harness denies repository commands.
 Record the STATUS content hash with `sha256sum STATUS.md`.
 If either changes during review, report the affected checks as stale.
 
@@ -28,6 +32,10 @@ If either changes during review, report the affected checks as stale.
 | Gate state | Output of the named gate command from the CLAUDE.md table |
 | Release evidence | `git tag` and `gh release view <tag>` |
 | Verified-versus-inferred line | The cited probe script or `live`-marked test and its recorded output |
+
+Reuse the assigned validation owner's outputs only when their relevant inputs remain unchanged.
+Check their scope, command, result and snapshot yourself. Do not rerun the full suite
+merely to recreate evidence. Missing or stale evidence leaves the claim unverified.
 
 ## Hard rule
 
@@ -51,12 +59,15 @@ Never run `git checkout`, `git restore`, `git reset`, `git stash`, `git clean` o
 
 Start with three minutes or eight tool calls, whichever comes first.
 These are tuning targets, not measured guarantees.
-At the boundary, return verified findings and unverified claims separately.
-Never report a partial review as clean.
+At the boundary, return accepted, rejected or incomplete under the shared
+[disposition rules](../../docs/maintainers/delegate-work.md#review-dispositions-and-continuation).
+Missing required evidence or budget exhaustion means incomplete.
+A bounded continuation checks outstanding claims and retains current evidence.
 
 Report each finding with claim, evidence, impact and correction.
 Separate current errors, historical observations and unchecked evidence.
 Include the revision, STATUS hash, elapsed time and tool-call count.
 State only the scope you verified.
 Never claim an unreviewed whole-file audit passed.
-End with your model identity: the exact model ID your system prompt states, or `unknown`.
+End with actual harness, loaded instructions, permissions and model identity, or `unknown`.
+Report unavailable counters as `unknown`, separately from available counters. Then stop.

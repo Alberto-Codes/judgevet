@@ -1,6 +1,6 @@
 # STATUS
 
-Last written: 2026-09-25. Current evidence ledger. Detailed implementation,
+Last written: 2026-09-26. Current evidence ledger. Detailed implementation,
 release and credential history remains in Git and the linked issues.
 
 ## Published release
@@ -437,6 +437,19 @@ This is a local correction. No release or live-service evidence is promoted.
 
 **2211 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.29%** (2154/2237 statements).
+
+#206 assigns one mechanical validation owner and preserves independent review.
+The complete commit and push stages passed on 2026-09-26. The bounded trial
+replayed #195's original fixture against its historical baseline and current
+source. A fresh reviewer passed 16 public-interface cases and made an isolated
+fake-validation mutation fail. The reviewer returned incomplete while final
+gate evidence and this STATUS update were pending. The
+[workflow issue](https://github.com/Alberto-Codes/judgevet/issues/206) records
+the continuation, input snapshots and acceptance disposition.
+Required delivery hooks remain enabled. No product code, model configuration
+or live-service evidence changed. Worker and supervisor token counters are
+unknown; the initial reviewer recorded eight shell calls and unknown tokens.
+
 #191 adds an optional keyed `state_fingerprint` to `JudgmentRecord`, `None`
 unless `fingerprint_key=` is set on an HTTP adapter or a fake. The value is
 HMAC-SHA-256 over a versioned label and compact sorted-key JSON of the raw
