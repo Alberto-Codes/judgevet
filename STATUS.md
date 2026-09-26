@@ -433,6 +433,21 @@ The [compatibility assessment](docs/reference/compatibility.md#finite-answer-val
 records stricter invalid-input handling relative to published 0.10.1.
 This is a local correction. No release or live-service evidence is promoted.
 
+## Provider extension design
+
+#200 accepts the generic provider extension design under #199.
+The [accepted contract](https://github.com/Alberto-Codes/judgevet/issues/200#issuecomment-5850346214)
+links the detailed decisions and independent review amendments.
+Offline public-interface probes show that library injection already works.
+CLI and MCP composition still require explicit provider selection.
+Applications own translation, dependencies, inference and confidence semantics.
+The design preserves hosted defaults and existing Jev error imports.
+
+The remaining slices cover ownership, CLI, MCP, ordered image evidence and
+installed artifact proofs. Each requires its own red test, independent review
+and delivery evidence. None is implemented by this design record.
+#204 remains deferred. No live call, release or model configuration changed.
+
 ## Gates
 
 **2211 tests pass, 7 live tests deselected.** The last measured coverage is
