@@ -3,6 +3,9 @@
 SDK fields follow the tagged
 [SDK definitions](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp-types/mcp_types/_types.py).
 The factory supplies SDK types so importing this module needs no MCP runtime.
+Handlers pass the host-selected model to the asynchronous dispatcher and await
+the synchronous provider outside the event loop. Answer formatting retains
+the existing text and structured content shapes.
 
 Examples:
     ```python
@@ -20,18 +23,21 @@ from __future__ import annotations
 
 from typing import Any
 
+from judgevet.adapters.inbound.mcp_dispatch import ProviderDispatch
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.response import SystemOneResponse
-from judgevet.ports import SystemOnePort
 
 
-async def handle_ask_noul(port: SystemOnePort, mcp_types: Any, params: Any) -> Any:
+async def handle_ask_noul(
+    port: ProviderDispatch, mcp_types: Any, params: Any, *, model: str = "jev-latest"
+) -> Any:
     """Handle the ask_noul tool.
 
     Args:
         port: Judgment port.
         mcp_types: SDK type constructors.
         params: Tool call parameters.
+        model: Host-selected model.
 
     Returns:
         CallToolResult with structured content containing noul, model, usage.
@@ -58,10 +64,10 @@ async def handle_ask_noul(port: SystemOnePort, mcp_types: Any, params: Any) -> A
     }
 
     # Call the port
-    response = port.system_one(
+    response = await port.system_one(
         state=state,
         questions=questions,
-        model="jev-latest",
+        model=model,
     )
 
     # Extract the NoulAnswer
@@ -113,13 +119,16 @@ def _noul_result(
     )
 
 
-async def handle_ask_choice(port: SystemOnePort, mcp_types: Any, params: Any) -> Any:
+async def handle_ask_choice(
+    port: ProviderDispatch, mcp_types: Any, params: Any, *, model: str = "jev-latest"
+) -> Any:
     """Handle the ask_choice tool.
 
     Args:
         port: Judgment port.
         mcp_types: SDK type constructors.
         params: Tool call parameters.
+        model: Host-selected model.
 
     Returns:
         CallToolResult with structured content containing choice, probabilities,
@@ -155,10 +164,10 @@ async def handle_ask_choice(port: SystemOnePort, mcp_types: Any, params: Any) ->
     }
 
     # Call the port
-    response = port.system_one(
+    response = await port.system_one(
         state=state,
         questions=questions,
-        model="jev-latest",
+        model=model,
     )
 
     # Extract the ChoiceAnswer
@@ -213,13 +222,16 @@ def _choice_result(
     )
 
 
-async def handle_ask_score(port: SystemOnePort, mcp_types: Any, params: Any) -> Any:
+async def handle_ask_score(
+    port: ProviderDispatch, mcp_types: Any, params: Any, *, model: str = "jev-latest"
+) -> Any:
     """Handle the ask_score tool.
 
     Args:
         port: Judgment port.
         mcp_types: SDK type constructors.
         params: Tool call parameters.
+        model: Host-selected model.
 
     Returns:
         CallToolResult with structured content containing score, legend,
@@ -255,10 +267,10 @@ async def handle_ask_score(port: SystemOnePort, mcp_types: Any, params: Any) -> 
     }
 
     # Call the port
-    response = port.system_one(
+    response = await port.system_one(
         state=state,
         questions=questions,
-        model="jev-latest",
+        model=model,
     )
 
     # Extract the ScoreAnswer

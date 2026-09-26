@@ -489,10 +489,28 @@ Replacing forwarded state in the copy makes the same probe fail. The complete
 commit and push stages pass for this CLI slice. MCP, media and installed
 extension proofs remain separate work.
 
+## MCP provider dispatch and lifetime
+
+#202 adds explicit borrowed/factory selection to the MCP entrypoint and
+host-selected models to the server and runner. Explicit providers bypass hosted
+settings. Existing tool schemas and result shapes remain supported.
+Synchronous calls run serially outside the event loop. Queued cancellation
+prevents dispatch. Running and acquisition cancellation drain before propagating,
+including repeated cancellation. Factory setup, calls and cleanup share one
+worker thread. Applications own provider deadlines and optional audit/spend.
+
+Independent actual stdio probes preserve selected model, state, instructions
+and usage. They prove borrowed lifetime, owned EOF cleanup, safe setup failure
+and no remaining provider worker. Barrier probes prove cancellation ordering.
+An isolated mutation that skips draining fails the independent probe.
+The [MCP evidence](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850970581)
+records the scope and review. MCP policy, media and installed extension proofs
+remain separate work. No inference implementation or live call is added.
+
 ## Gates
 
-**2253 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.43%** (2244/2327 statements).
+**2262 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.37%** (2339/2427 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

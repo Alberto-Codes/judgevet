@@ -190,3 +190,18 @@ models other than `jev-1.13.0` remain untested. Intermittent MCP
 initialization failures have no established cause or remedy. Follow the
 [connection checks](../how-to/install.md#when-mcp-does-not-connect). A successful
 fresh launcher does not prove that an existing agent session reloaded its tools.
+
+
+## Application-selected MCP providers
+
+The optional MCP adapter adds keyword-only `model` to `create_mcp_server` and
+`run_stdio`. Its composition root adds keyword-only `port`, `provider_factory`
+and `model`. Existing calls retain their defaults. Tool schemas, answer shapes
+and the three existing tool names remain unchanged. The application selects
+the model; tool arguments cannot override it.
+
+Synchronous provider calls now run serially outside the event loop.
+Cancellation waits for running work before owned cleanup. Queued canceled calls
+do not start. Borrowed ports remain open. Applications retain responsibility
+for provider deadlines, audit, spend accounting and state redaction.
+Source: [MCP provider contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850906357).

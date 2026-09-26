@@ -28,7 +28,8 @@ specify item/value schemas for criteria or `additionalProperties: false`.
 Handlers are not a substitute for full schema validation.
 
 Each tool constructs one named question and calls the sync port with
-`model="jev-latest"`. Tool arguments cannot select a model or acceptance policy.
+the host-selected model, which defaults to `"jev-latest"`. Tool arguments
+cannot select a model or acceptance policy.
 The internal question names are `noul_question`, `choice_question` and
 `score_question`. Host argument `instruction` becomes wire `instructions`.
 See [configuration overrides](configuration.md#entry-point-overrides).
@@ -71,3 +72,26 @@ have no established remedy; use [connection checks](../how-to/troubleshoot.md#wh
 For embedding, `create_mcp_server(port)` accepts a `SystemOnePort`. The factory
 does not construct or close the caller's port. This entry point stays in the
 optional inbound adapter; importing the base library does not require MCP.
+
+
+## Application-selected providers
+
+`create_mcp_server(port, *, model="jev-latest")` borrows a provider and accepts
+an explicit host-selected model. `run_stdio` accepts the same arguments.
+`mcp_entrypoint.main` accepts keyword-only `port`, `provider_factory` and `model`.
+Supply either a borrowed port or an owning factory. Supplying both raises
+`ValueError` before acquisition. Explicit selection skips hosted settings and
+credentials. Omission retains the hosted command and its configuration.
+
+The server serializes synchronous calls on a worker thread. The event loop
+remains available while a provider runs. Cancellation removes queued calls
+before dispatch. A running call finishes before cancellation propagates, even
+when cancellation repeats. Factory acquisition, calls and cleanup share one
+worker thread. Session exit shuts down that worker. Borrowed ports remain open.
+Direct registered-handler calls outside a server lifespan use temporary workers.
+Applications own provider deadlines; cancellation cannot kill synchronous work.
+
+Declared provider failures cross the entrypoint's existing safe diagnostic
+boundary. Provider selection adds no audit sink, spend cap or redaction.
+Applications configure those controls on their providers.
+Source: [MCP provider contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850906357).

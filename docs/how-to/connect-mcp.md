@@ -370,3 +370,18 @@ direnv exec /absolute/path/to/judgevet uv run --directory /absolute/path/to/judg
 You can instead supply credentials explicitly and run
 `uv run --locked --extra mcp judgevet-mcp` from the checkout. Consumer host
 setup uses the published package and needs neither this checkout nor direnv.
+
+
+## Run an application provider
+
+An application launcher can import `main` from
+`judgevet.adapters.inbound.mcp_entrypoint` and call
+`main(provider_factory=application_factory, model="application-model")`.
+The factory returns a context manager yielding a `SystemOnePort`.
+Configure the MCP host to execute that application launcher.
+The application owns its provider dependencies and configuration.
+
+For an already acquired provider, call `main(port=provider, model="application-model")`
+and close it in the application after serving ends. Explicit selection bypasses
+hosted credentials and settings. The existing `judgevet-mcp` command retains
+its hosted defaults. See [provider lifetime and cancellation](../reference/mcp.md#application-selected-providers).

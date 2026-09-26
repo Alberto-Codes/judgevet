@@ -4,7 +4,9 @@ This module provides an MCP server with three tools: ``ask_noul``,
 ``ask_choice``, and ``ask_score``. Each takes a state and an instruction,
 then returns the corresponding answer as MCP structured content.
 The factory wires module-level schemas and handlers and resolves the optional
-SDK only when a caller constructs a server.
+SDK only when a caller constructs a server. It passes the host-selected model
+to a serialized worker dispatcher. The server lifespan owns the worker while
+the application retains ownership of its borrowed provider.
 
 The server was tested with MCP Python SDK v2.2.0. Its
 [Server.run](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp/server/lowlevel/server.py)
@@ -65,11 +67,14 @@ Note:
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from functools import partial
 from importlib import import_module
 from importlib.metadata import version
 from typing import Any
 
+from judgevet.adapters.inbound.mcp_dispatch import ProviderDispatch, dispatch_for
 from judgevet.adapters.inbound.mcp_handlers import (
     handle_ask_choice,
     handle_ask_noul,
@@ -111,12 +116,15 @@ async def _list_tools(mcp_types: Any, ctx: Any, params: Any | None) -> Any:
     )
 
 
-async def _call_tool(port: SystemOnePort, mcp_types: Any, ctx: Any, params: Any) -> Any:
+async def _call_tool(
+    port: ProviderDispatch, mcp_types: Any, model: str, ctx: Any, params: Any
+) -> Any:
     """Dispatch one tool call through the injected judgment port.
 
     Args:
         port: Judgment port.
         mcp_types: SDK type constructors.
+        model: Host-selected model.
         ctx: Server request context.
         params: Tool call parameters.
 
@@ -129,20 +137,21 @@ async def _call_tool(port: SystemOnePort, mcp_types: Any, ctx: Any, params: Any)
     """
     match params.name:
         case "ask_noul":
-            return await handle_ask_noul(port, mcp_types, params)
+            return await handle_ask_noul(port, mcp_types, params, model=model)
         case "ask_choice":
-            return await handle_ask_choice(port, mcp_types, params)
+            return await handle_ask_choice(port, mcp_types, params, model=model)
         case "ask_score":
-            return await handle_ask_score(port, mcp_types, params)
+            return await handle_ask_score(port, mcp_types, params, model=model)
         case _:
             raise ValueError(f"Unknown tool: {params.name}")
 
 
-def create_mcp_server(port: SystemOnePort) -> Any:
+def create_mcp_server(port: SystemOnePort, *, model: str = "jev-latest") -> Any:
     """Create an MCP stdio server exposing the three judgment tools.
 
     Args:
-        port: Judgment port used for API calls.
+        port: Borrowed judgment port used for API calls.
+        model: Host-selected model passed unchanged to the provider.
 
     Returns:
         An SDK server with discovery and tool handlers.
@@ -157,9 +166,28 @@ def create_mcp_server(port: SystemOnePort) -> Any:
     """
     mcp_types = import_module("mcp.types")
     server_type = import_module("mcp.server").Server
+    dispatch = dispatch_for(port)
     return server_type(
         name=SERVER_NAME,
         version=SERVER_VERSION,
         on_list_tools=partial(_list_tools, mcp_types),
-        on_call_tool=partial(_call_tool, port, mcp_types),
+        on_call_tool=partial(_call_tool, dispatch, mcp_types, model),
+        lifespan=partial(_lifespan, dispatch),
     )
+
+
+@asynccontextmanager
+async def _lifespan(
+    dispatch: ProviderDispatch, server: Any
+) -> AsyncIterator[dict[str, Any]]:
+    """Own the worker for the SDK session without closing a borrowed provider.
+
+    Args:
+        dispatch: Serialized provider dispatcher.
+        server: SDK server entering its lifetime.
+
+    Yields:
+        Empty SDK lifespan state.
+    """
+    async with dispatch.session():
+        yield {}
