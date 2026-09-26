@@ -65,6 +65,29 @@ errors and arbitrary provider exceptions keep their original types.
 No caller migration is required for existing exception catches.
 Source: https://github.com/Alberto-Codes/judgevet/issues/78#issuecomment-5850346340.
 
+## Provider imports and errors
+
+`judgevet.providers` supports `ProviderFactory`, `provider_scope`, `ProviderError`,
+`ProviderUnavailableError`, `ProviderRequestError`, `ProviderCapabilityError`,
+`ProviderTransportError` and `ProviderResponseError`. These are module exports;
+they add no root imports. The error classes retain identity with their definitions
+in `judgevet.domain.provider_errors`.
+
+`ProviderError` derives from `JudgevetError`. The five specific provider errors
+derive from `ProviderError`: unavailable support or setup, rejected requests,
+unsupported capabilities, transport failures and invalid typed responses.
+They accept ordinary exception arguments and add no HTTP status or retry
+metadata. Applications supply safe messages and map known backend failures at
+their provider boundary. Unexpected exceptions keep their original types.
+Existing `JevError` imports, constructors and catch behavior remain unchanged.
+
+The [ownership helper](configuration.md#application-owned-providers) requires an
+explicit borrowed port or factory. It does not change the `SystemOnePort`
+contract or install an inference dependency. Existing callers can continue to
+pass their ports directly. Unknown usage remains `None`; provider confidence
+semantics and policy thresholds remain application-owned.
+Source: [accepted provider contract](https://github.com/Alberto-Codes/judgevet/issues/200#issuecomment-5850335591).
+
 ## 0.7.0 compatibility assessment
 
 | Surface | Assessment | Migration |

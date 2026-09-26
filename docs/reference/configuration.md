@@ -46,6 +46,43 @@ Use [sync](../how-to/use-library.md) or [async](../how-to/use-async-library.md)
 context managers to release the client. Changing the process environment does
 not reconfigure an existing adapter.
 
+## Application-owned providers
+
+Import `ProviderFactory` and `provider_scope` from `judgevet.providers`.
+Use `provider_scope(port=application_port)` to borrow an existing `SystemOnePort`.
+Use `provider_scope(factory=application_factory)` to acquire a port through a
+synchronous context manager. The factory takes no arguments and returns an
+`AbstractContextManager[SystemOnePort]`. Applications bind their configuration
+when they construct that factory.
+
+Exactly one selection is required. Missing or conflicting selections raise
+`ValueError` on scope entry, before acquisition. The helper has no hosted
+default, discovery or fallback. It checks that the selected port exposes a
+callable `system_one` without calling it. Invalid ports raise
+`ProviderUnavailableError`.
+
+Borrowed ports remain open after success or failure. Once factory entry returns,
+the helper calls its exit method exactly once after success, invalid-port
+validation, call or rendering failure, or `BaseException` interruption. The
+factory receives the escaping exception for cleanup. Its suppression return
+value cannot swallow that exception. If cleanup raises, the cleanup exception
+propagates with the original failure as its exception context. The factory owns
+rollback of resources allocated before failed entry; the helper cannot clean
+resources it never acquired.
+
+Applications own provider dependencies, inference, typed translation and safe
+error messages. Missing optional support should raise an actionable
+`ProviderUnavailableError`, such as an instruction to install the application's
+provider extra. Known provider failures use the
+[neutral provider errors](compatibility.md#provider-imports-and-errors).
+Unexpected errors propagate unchanged. Structural port conformance does not
+install audit records, state redaction or spend caps; applications must apply
+the existing mechanisms where their provider can honor them.
+
+This library boundary adds no environment settings or provider discovery.
+Existing hosted entry points retain their configuration.
+Source: [accepted ownership contract](https://github.com/Alberto-Codes/judgevet/issues/201#issuecomment-5850529268).
+
 ## CLI and MCP settings
 
 The composition roots read [Settings](../../src/judgevet/adapters/inbound/settings.py)

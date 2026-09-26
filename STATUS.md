@@ -459,10 +459,24 @@ the missing-import red test and independent public HTTP and policy probes.
 Removing neutral inheritance in an isolated copy makes the HTTP probe fail.
 This is a local compatibility contract, not new live-service evidence.
 
+## Provider ownership boundary
+
+#201 adds `judgevet.providers` for explicit borrowed ports and owned factories.
+Borrowed resources stay open. Entered factory contexts close after success,
+failure, invalid yielded ports and interruption. Factories own failed-setup
+rollback. The helper has no hosted default or fallback.
+Neutral provider errors add no HTTP status or retry guarantee.
+
+Independent public policy and lifetime probes pass. Isolated mutations that
+skip owned cleanup or close a borrowed resource each fail the ownership probe.
+The [ownership issue](https://github.com/Alberto-Codes/judgevet/issues/201)
+records the acceptance and gate evidence. CLI, MCP, media and installed
+extension proofs remain separate work. No inference implementation is added.
+
 ## Gates
 
-**2224 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.29%** (2156/2239 statements).
+**2241 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.35%** (2193/2276 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial
