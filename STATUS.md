@@ -634,7 +634,7 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2527 tests pass, 7 live tests deselected.** The last measured coverage is
+**2531 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.50%** (2898/3003 statements).
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,

@@ -111,13 +111,18 @@ def create_score_tool(mcp_types: Any) -> Any:
 
     Returns:
         Tool definition for ask_score; `state` accepts a string or an object.
+        The descriptions ask for criteria that fit the question and call the
+        default a generic quality rubric.
     """
     return mcp_types.Tool(
         name="ask_score",
         description=(
             "Ask a scored question. Takes a state (text or JSON) "
             "and an instruction, returns the ScoreAnswer with score, "
-            "confidence, legend, and probabilities."
+            "confidence, legend, and probabilities. Pass criteria that "
+            "match the question, for example urgency levels ending in "
+            '"Critical". The default ["Poor", "Fair", "Good", '
+            '"Excellent"] is a generic quality rubric.'
         ),
         input_schema={
             "type": "object",
@@ -137,9 +142,12 @@ def create_score_tool(mcp_types: Any) -> Any:
                 "criteria": {
                     "type": "array",
                     "description": (
-                        "Ordered list of rubric level descriptions. "
-                        'If omitted, defaults to ["Poor", "Fair", '
-                        '"Good", "Excellent"].'
+                        "Ordered levels, lowest first, of the property "
+                        "the question asks about. For urgency: "
+                        '["Not urgent", "Low", "Medium", "High", '
+                        '"Critical"]. If omitted, defaults to the generic '
+                        'quality rubric ["Poor", "Fair", "Good", '
+                        '"Excellent"].'
                     ),
                 },
             },

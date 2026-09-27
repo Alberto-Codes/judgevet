@@ -18,7 +18,7 @@ allows a string or object for `state`.
 |---|---|---|
 | `ask_noul` | None | No criteria argument is exposed. |
 | `ask_choice` | `criteria`: object mapping labels to descriptions | `{"yes":"Yes","no":"No"}` |
-| `ask_score` | `criteria`: array of ordered rubric descriptions | `["Poor","Fair","Good","Excellent"]` |
+| `ask_score` | `criteria`: ordered levels, lowest first, of the property the question asks about, such as `["Not urgent","Low","Medium","High","Critical"]` for urgency | `["Poor","Fair","Good","Excellent"]`, a generic quality rubric |
 
 The [tool definitions](../../src/judgevet/adapters/inbound/mcp.py) are the source
 for these local schemas. `ask_noul`, `ask_choice` and `ask_score` accept a

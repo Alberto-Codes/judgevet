@@ -72,7 +72,7 @@
       {
         "name": "ask_score",
         "title": null,
-        "description": "Ask a scored question. Takes a state (text or JSON) and an instruction, returns the ScoreAnswer with score, confidence, legend, and probabilities.",
+        "description": "Ask a scored question. Takes a state (text or JSON) and an instruction, returns the ScoreAnswer with score, confidence, legend, and probabilities. Pass criteria that match the question, for example urgency levels ending in \"Critical\". The default [\"Poor\", \"Fair\", \"Good\", \"Excellent\"] is a generic quality rubric.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -89,7 +89,7 @@
             },
             "criteria": {
               "type": "array",
-              "description": "Ordered list of rubric level descriptions. If omitted, defaults to [\"Poor\", \"Fair\", \"Good\", \"Excellent\"]."
+              "description": "Ordered levels, lowest first, of the property the question asks about. For urgency: [\"Not urgent\", \"Low\", \"Medium\", \"High\", \"Critical\"]. If omitted, defaults to the generic quality rubric [\"Poor\", \"Fair\", \"Good\", \"Excellent\"]."
             }
           },
           "required": [
