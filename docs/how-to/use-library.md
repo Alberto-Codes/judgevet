@@ -67,3 +67,47 @@ For service failures, use [error handling](handle-errors.md). To produce a
 local acceptance decision, follow the [policy workflow](use-policy-library.md).
 Use the [async recipe](use-async-library.md) when your caller already uses async
 I/O; see [supported imports](../reference/compatibility.md) for the contract.
+
+## Supply ordered image evidence
+
+Use `judgevet.media` with an application-owned `MediaSystemOnePort`. The
+provider declares static capabilities for the selected model and implements
+`system_one_media`. Judgevet supplies no image inference implementation.
+The HTTP adapter has no media capability. CLI and MCP image exposure are
+separate work.
+
+This offline example constructs evidence without decoding its bytes:
+
+```python
+from judgevet.media import ImageAttachment, ImageEvidence, MediaCapabilities
+
+image = ImageAttachment("scan", b"opaque-encoded-image", "image/png")
+evidence = ImageEvidence([image], {"claim": ["scan"]}, required={"claim"})
+capabilities = MediaCapabilities({"image/png"})
+assert evidence.images[0].data == b"opaque-encoded-image"
+assert evidence.by_question["claim"] == ("scan",)
+assert capabilities.max_images == 16
+```
+
+Call `judge_with_images(port, state, questions, model, evidence=evidence)` with
+your selected provider. Image IDs bind evidence to question IDs. The helper
+preserves exact bytes, global image order and each question's reference order.
+Sharing an image across questions is allowed. Constructors snapshot collections
+and reject malformed associations with `ValueError`.
+
+Unknown question references raise `ProviderRequestError`. Required questions
+without attachments raise `MissingEvidenceError`, its subclass. Unsupported
+formats or limits raise `ProviderCapabilityError` before inference. Allowed
+formats are PNG, JPEG and WebP. Local ceilings are 16 images, 8 MiB per image
+and 32 MiB total; a provider can lower these ceilings. Nonempty media never
+falls back to text. Valid empty optional evidence calls the original text
+operation without capability lookup or new answer checks.
+
+The helper checks media answer IDs, variants and Choice labels, then returns
+the provider's original response. Contract failures raise `ProviderResponseError`.
+Declared transport failures retain their error class. An insufficient-evidence
+answer is an ordinary Choice only when you declare that criterion yourself.
+Existing policy rules determine its result. Provider numbers imply no measured
+calibration; unknown usage remains `None` and zero remains zero. These are local
+offline contracts, not evidence of a live model's image support or quality.
+Source: [accepted media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851219798).

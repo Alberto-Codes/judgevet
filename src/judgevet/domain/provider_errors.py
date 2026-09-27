@@ -2,7 +2,7 @@
 
 Applications map known backend failures to these classes using safe messages.
 Unexpected exceptions retain their original types. These errors add no HTTP
-status or retry guarantees.
+status or retry guarantees. MissingEvidenceError distinguishes absent required images.
 Source: https://github.com/Alberto-Codes/judgevet/issues/200#issuecomment-5850335591.
 
 Examples:
@@ -113,5 +113,23 @@ class ProviderResponseError(ProviderError):
 
         error = ProviderResponseError("Synthetic provider failure")
         assert str(error) == "Synthetic provider failure"
+        ```
+    """
+
+
+class MissingEvidenceError(ProviderRequestError):
+    """A required question has no associated image evidence.
+
+    Source: https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851219798.
+
+    Attributes:
+        args (tuple): Standard exception arguments containing a safe message.
+
+    Examples:
+        ```python
+        from judgevet.media import MissingEvidenceError
+
+        error = MissingEvidenceError("Required question has no evidence")
+        assert isinstance(error, ProviderRequestError)
         ```
     """

@@ -525,10 +525,31 @@ unsupported-field failure found beyond green gates. Provider-owned audit and
 spend controls remain opt-in. Media and installed extension proofs remain
 separate work. No live inference or published-release capability is added.
 
+## Image evidence library contract
+
+#203 adds `judgevet.media` with immutable attachments, ordered question bindings,
+static model capabilities and validated dispatch through an application provider.
+Exact bytes, global order and per-question order remain intact. Empty optional
+evidence keeps the original text route. Required missing evidence, unsupported
+capabilities, transport failure and an explicitly declared insufficient-evidence
+Choice remain distinct. Local ceilings are 16 images, 8 MiB per image and
+32 MiB total; providers can lower them. Media results retain model and usage
+metadata and must match caller question IDs, answer variants and Choice labels.
+
+The [core contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851219798)
+and [review repair](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851310878)
+record exact types, red tests and the removal of unrequested criteria restrictions.
+Independent consumer mutations detect dropped or swapped attachments, changed
+bindings and text conversion. Repository-owned fake and translating-provider
+fixtures exercise all three answer variants. These are offline boundary proofs.
+CLI/MCP image exposure, media provenance and installed extension proofs remain
+separate work. No HTTP media support, inference implementation, live verification
+or confidence calibration is claimed.
+
 ## Gates
 
-**2277 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.25%** (2388/2481 statements).
+**2346 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.39%** (2562/2658 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

@@ -249,6 +249,11 @@
       "language": "python",
       "kind": "runnable",
       "reason": "Complete Python program; execute exactly against an isolated wheel with offline HTTP fixtures when it calls the service."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Offline construction of immutable image evidence and static capability declarations."
     }
   ],
   "docs/how-to/use-policy-library.md": [

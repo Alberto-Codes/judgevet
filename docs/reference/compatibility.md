@@ -216,3 +216,23 @@ policy JSON. It uses strict public evaluation without changing CLI behavior.
 The application selects the model; the tool cannot override it. This is source
 acceptance evidence, not a claim about the published 0.13.0 release.
 Source: [keyed policy contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5851056470).
+
+## Image evidence library extension
+
+`judgevet.media` supports `ImageAttachment`, `ImageEvidence`, `MediaCapabilities`,
+`MediaSystemOnePort`, `MissingEvidenceError` and `judge_with_images`. These are
+module exports; existing root exports, `SystemOnePort` and `SystemOneResponse`
+remain unchanged. The pure values live in `judgevet.domain.media`; the protocol
+lives in `judgevet.ports.media`. Re-exports retain object identity.
+
+`MissingEvidenceError` derives from `ProviderRequestError`. Constructor shape
+errors are `ValueError`. Media dispatch distinguishes missing required evidence,
+unsupported capabilities, transport failure and an explicitly declared Choice
+answer for insufficient evidence. Existing text requests retain their original
+route and result. The [library guide](../how-to/use-library.md#supply-ordered-image-evidence)
+documents immutable snapshots, local ceilings and response checks.
+
+This extension adds no inference dependency, HTTP media implementation or live
+verification claim. Applications own provider selection, model declarations,
+number semantics and policy thresholds.
+Source: [accepted media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851219798).
