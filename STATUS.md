@@ -639,7 +639,8 @@ Applications still own provider translation, inference and quality validation.
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,
 pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,
-with the same tests and coverage (#208).
+with the same tests and coverage (#208). CI push run 36337960770 finished its
+`test` job in 82 s (pytest 69.4 s), down from 233 s before #208.
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial
