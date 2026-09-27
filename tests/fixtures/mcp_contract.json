@@ -30,7 +30,54 @@
           ]
         },
         "execution": null,
-        "outputSchema": null,
+        "outputSchema": {
+          "type": "object",
+          "required": [
+            "noul",
+            "model",
+            "usage"
+          ],
+          "properties": {
+            "noul": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Probability that the statement is true, from 0 to 1."
+            },
+            "model": {
+              "type": "string",
+              "description": "Model identifier the service resolved."
+            },
+            "usage": {
+              "type": "object",
+              "description": "Token counts the service reported. An unknown count is null.",
+              "required": [
+                "input_tokens",
+                "output_tokens"
+              ],
+              "properties": {
+                "input_tokens": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Input tokens used."
+                },
+                "output_tokens": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Output tokens used."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
         "icons": null,
         "annotations": null,
         "_meta": null
@@ -64,7 +111,69 @@
           ]
         },
         "execution": null,
-        "outputSchema": null,
+        "outputSchema": {
+          "type": "object",
+          "required": [
+            "choice",
+            "confidence",
+            "probabilities",
+            "model",
+            "usage"
+          ],
+          "properties": {
+            "choice": {
+              "type": "string",
+              "description": "Selected choice label."
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Confidence in the choice."
+            },
+            "probabilities": {
+              "type": "object",
+              "description": "Probability of each choice, keyed by choice label.",
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "model": {
+              "type": "string",
+              "description": "Model identifier the service resolved."
+            },
+            "usage": {
+              "type": "object",
+              "description": "Token counts the service reported. An unknown count is null.",
+              "required": [
+                "input_tokens",
+                "output_tokens"
+              ],
+              "properties": {
+                "input_tokens": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Input tokens used."
+                },
+                "output_tokens": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Output tokens used."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
         "icons": null,
         "annotations": null,
         "_meta": null
@@ -98,7 +207,77 @@
           ]
         },
         "execution": null,
-        "outputSchema": null,
+        "outputSchema": {
+          "type": "object",
+          "required": [
+            "score",
+            "confidence",
+            "legend",
+            "probabilities",
+            "model",
+            "usage"
+          ],
+          "properties": {
+            "score": {
+              "type": "number",
+              "description": "Expected level index, weighted by probability, against legend."
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Confidence in the score."
+            },
+            "legend": {
+              "type": "object",
+              "description": "Level label keyed by level index, as a string key.",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "probabilities": {
+              "type": "object",
+              "description": "Probability of each level, keyed by level index.",
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "model": {
+              "type": "string",
+              "description": "Model identifier the service resolved."
+            },
+            "usage": {
+              "type": "object",
+              "description": "Token counts the service reported. An unknown count is null.",
+              "required": [
+                "input_tokens",
+                "output_tokens"
+              ],
+              "properties": {
+                "input_tokens": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Input tokens used."
+                },
+                "output_tokens": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Output tokens used."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
         "icons": null,
         "annotations": null,
         "_meta": null

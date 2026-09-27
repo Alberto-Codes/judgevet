@@ -2,6 +2,7 @@
 
 SDK fields follow the tagged
 [SDK definitions](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp-types/mcp_types/_types.py).
+Each tool also declares an `output_schema` for its structured content.
 The factory supplies SDK types so importing this module needs no MCP runtime.
 The evaluate_policy `policy` argument carries a closed JSON Schema 2020-12 for
 the policy grammar, from [policy_schema][judgevet.adapters.inbound.mcp_schemas.policy_schema].
@@ -16,11 +17,19 @@ Examples:
 See Also:
     - [judgevet.adapters.inbound.mcp][]: Server factory.
     - [judgevet.ports][]: Judgment port.
+    - [judgevet.adapters.inbound.mcp_output_schemas][]: Output schemas.
 """
 
 from __future__ import annotations
 
 from typing import Any
+
+from judgevet.adapters.inbound.mcp_output_schemas import (
+    choice_output_schema,
+    noul_output_schema,
+    policy_output_schema,
+    score_output_schema,
+)
 
 
 def create_noul_tool(mcp_types: Any) -> Any:
@@ -31,6 +40,7 @@ def create_noul_tool(mcp_types: Any) -> Any:
 
     Returns:
         Tool definition for ask_noul; `state` accepts a string or an object.
+        The output schema describes the structured content.
     """
     return mcp_types.Tool(
         name="ask_noul",
@@ -57,6 +67,7 @@ def create_noul_tool(mcp_types: Any) -> Any:
             },
             "required": ["state", "instruction"],
         },
+        output_schema=noul_output_schema(),
     )
 
 
@@ -68,6 +79,7 @@ def create_choice_tool(mcp_types: Any) -> Any:
 
     Returns:
         Tool definition for ask_choice; `state` accepts a string or an object.
+        The output schema describes the structured content.
     """
     return mcp_types.Tool(
         name="ask_choice",
@@ -102,6 +114,7 @@ def create_choice_tool(mcp_types: Any) -> Any:
             },
             "required": ["state", "instruction"],
         },
+        output_schema=choice_output_schema(),
     )
 
 
@@ -114,7 +127,8 @@ def create_score_tool(mcp_types: Any) -> Any:
     Returns:
         Tool definition for ask_score; `state` accepts a string or an object.
         The descriptions ask for criteria that fit the question and call the
-        default a generic quality rubric.
+        default a generic quality rubric. The output schema describes the
+        structured content.
     """
     return mcp_types.Tool(
         name="ask_score",
@@ -155,6 +169,7 @@ def create_score_tool(mcp_types: Any) -> Any:
             },
             "required": ["state", "instruction"],
         },
+        output_schema=score_output_schema(),
     )
 
 
@@ -254,7 +269,8 @@ def create_policy_tool(mcp_types: Any) -> Any:
 
     Returns:
         Tool definition accepting state, questions and policy. The policy
-        schema comes from `policy_schema`.
+        schema comes from `policy_schema`. The output schema describes the
+        structured content.
     """
     return mcp_types.Tool(
         name="evaluate_policy",
@@ -294,4 +310,5 @@ def create_policy_tool(mcp_types: Any) -> Any:
             "required": ["state", "questions", "policy"],
             "additionalProperties": False,
         },
+        output_schema=policy_output_schema(),
     )

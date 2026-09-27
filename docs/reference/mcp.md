@@ -56,10 +56,19 @@ citations are in the [Python API reference](api.md#answer-and-container-types).
 Text content formats the answer for reading; use structured values for programmatic
 access. A successful call is a judgment, not evidence of its correctness.
 
+On main, each of the four tools declares an `outputSchema` in discovery. Each
+schema is a closed JSON Schema 2020-12 object that matches the fields in the
+table above and, for `evaluate_policy`, the result described below. Every
+field carries a description. A token count in `usage` is an integer or null.
+Error results carry no structured content, and the schemas do not cover them.
+The [output schemas](../../src/judgevet/adapters/inbound/mcp_output_schemas.py)
+are the source. The published 0.13.0 release declares no output schemas.
+Source: [output schema rules](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#output-schema).
+
 ## Keyed policy tool on main
 
 The source tree adds `evaluate_policy` to discovery. The original three tool
-schemas and results remain unchanged. This addition is not an observation about
+input schemas and results remain unchanged. This addition is not an observation about
 the published 0.13.0 package.
 
 Pass required `state`, `questions` and `policy`, with optional `evidence`.
