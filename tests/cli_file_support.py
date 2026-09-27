@@ -40,6 +40,8 @@ def invoke_files(url: str, args: list[str], stdin: bytes = b"") -> tuple[int, st
 async def _invoke(url: str, args: list[str], stdin: bytes) -> tuple[int, str, str]:
     """Run one child and reap it on timeout or cancellation.
 
+    The child keeps every retry attempt but waits no backoff between them.
+
     Args:
         url: Local peer URL.
         args: Exact console arguments.
@@ -54,7 +56,14 @@ async def _invoke(url: str, args: list[str], stdin: bytes) -> tuple[int, str, st
     executable = Path(sys.executable).parent / "judgevet"
     assert executable.is_file()
     env = {name: os.environ[name] for name in ("PATH", "LANG") if name in os.environ}
-    env.update({"JEV_API__KEY": CANARY, "JEV_API__BASE_URL": url})
+    # Keep every retry attempt; skip the default backoff wait between them.
+    env.update(
+        {
+            "JEV_API__KEY": CANARY,
+            "JEV_API__BASE_URL": url,
+            "JEV_API__RETRY_BASE_DELAY": "0",
+        }
+    )
     process = await asyncio.create_subprocess_exec(
         str(executable),
         *args,

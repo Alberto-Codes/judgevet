@@ -129,6 +129,8 @@ async def invoke(
 ) -> tuple[int, str, str]:
     """Run the real console with isolated canary configuration and bounded cleanup.
 
+    The child keeps every retry attempt but waits no backoff between them.
+
     Args:
         url: Local peer URL.
         state: CLI state argument.
@@ -142,7 +144,14 @@ async def invoke(
     executable = command or Path(sys.executable).parent / "judgevet"
     assert executable.is_file()
     env = {name: os.environ[name] for name in ("PATH", "LANG") if name in os.environ}
-    env.update({"JEV_API__KEY": CANARY, "JEV_API__BASE_URL": url})
+    # Keep every retry attempt; skip the default backoff wait between them.
+    env.update(
+        {
+            "JEV_API__KEY": CANARY,
+            "JEV_API__BASE_URL": url,
+            "JEV_API__RETRY_BASE_DELAY": "0",
+        }
+    )
     args = [str(executable), state, questions, "--model", "jev-1.13.0"]
     if as_json:
         args.append("--json")

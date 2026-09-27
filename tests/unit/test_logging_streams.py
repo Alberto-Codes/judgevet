@@ -157,7 +157,10 @@ def test_library_import_preserves_configuration() -> None:
 @pytest.mark.parametrize("policy", [False, True])
 @pytest.mark.parametrize("status", [200, 429])
 def test_installed_cli_debug(tmp_path: Path, policy: bool, status: int) -> None:
-    """Both real CLI paths keep JSON stdout valid when debug logging is enabled."""
+    """Both real CLI paths keep JSON stdout valid when debug logging is enabled.
+
+    The child keeps all three attempts but waits no backoff between them.
+    """
     args = [
         str(Path(sys.executable).parent / "judgevet"),
         "private-state-canary",
@@ -174,6 +177,7 @@ def test_installed_cli_debug(tmp_path: Path, policy: bool, status: int) -> None:
         env.update(
             JEV_API__KEY=CANARY,
             JEV_API__BASE_URL=peer.url,
+            JEV_API__RETRY_BASE_DELAY="0",
             JEV_LOG__LEVEL="debug",
             JEV_LOG__FORMAT="json",
         )

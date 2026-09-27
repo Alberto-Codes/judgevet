@@ -44,14 +44,24 @@ capturing the output. The conftest guard in `tests/conftest.py` redacts the
 configured key from report output as a backstop; it cannot reach `-s`/`--capture=no`
 output, so the rule is the primary defence.
 
+## Retry backoff
+
+The autouse `_instant_retry_backoff` fixture keeps every retry attempt the
+default policy makes but skips the wall-clock backoff between attempts. Each
+retried 429 or 5xx otherwise waited about one second. Tests that assert the
+computed delays still patch `retries.time.sleep` or `retries.asyncio.sleep`
+themselves, and they observe the same values.
+
 See Also:
     - [pytest_runtest_makereport][]: The hook that implements the guard.
     - [tests.unit.test_secret_guard][]: The proof test that verifies the guard.
     - [tests.unit.leak_probe][]: The probe test that deliberately leaks a key.
+    - [judgevet.adapters.outbound.retries][]: The policy whose backoff is skipped.
 """
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -196,3 +206,48 @@ def pytest_runtest_makereport(item: Any, call: Any) -> Iterator[None]:
 
     # Put the scrubbed report back
     outcome.force_result(scrubbed_report)
+
+
+class _InstantClock:
+    """Stand in for the `time` module inside the retry policy."""
+
+    @staticmethod
+    def sleep(delay: float) -> None:
+        """Return at once instead of waiting.
+
+        Args:
+            delay: Seconds the policy computed for this backoff.
+        """
+
+
+class _InstantLoop:
+    """Stand in for the `asyncio` module inside the retry policy."""
+
+    @staticmethod
+    async def sleep(delay: float) -> None:
+        """Yield to the event loop once instead of waiting.
+
+        Args:
+            delay: Seconds the policy computed for this backoff.
+        """
+        await asyncio.sleep(0)
+
+
+@pytest.fixture(autouse=True)
+def _instant_retry_backoff(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep every retry attempt but skip its wall-clock backoff.
+
+    A `live` test keeps the real backoff, because the real service sees it.
+
+    Args:
+        request: Supplies the test's markers.
+        monkeypatch: Restores the retry module after each test.
+    """
+    if request.node.get_closest_marker("live"):
+        return
+    from judgevet.adapters.outbound import retries
+
+    monkeypatch.setattr(retries, "time", _InstantClock)
+    monkeypatch.setattr(retries, "asyncio", _InstantLoop)

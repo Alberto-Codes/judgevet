@@ -32,6 +32,8 @@ pytestmark = [
 async def session(url: str, success: bool) -> str:
     """Exercise real frames while draining and retaining only test stderr.
 
+    The server keeps every retry attempt but waits no backoff between them.
+
     Args:
         url: Offline API peer.
         success: Select all success calls or one error call.
@@ -43,6 +45,7 @@ async def session(url: str, success: bool) -> str:
     env.update(
         JEV_API__KEY="private-key-canary",
         JEV_API__BASE_URL=url,
+        JEV_API__RETRY_BASE_DELAY="0",
         JEV_LOG__LEVEL="debug",
         JEV_LOG__FORMAT="json",
     )

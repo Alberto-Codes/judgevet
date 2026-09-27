@@ -19,10 +19,13 @@ from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
     HTTPSystemOneAdapter,
 )
+from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.domain.errors import JevError
 from tests.cli_process_support import SUCCESS
 
 CANARY = "private-logging-canary"
+# Every default attempt runs; only the backoff wait between them is skipped.
+RETRY = RetryPolicy(retry_base_delay=0)
 
 
 def main() -> None:
@@ -45,7 +48,7 @@ def main() -> None:
 
     async def call() -> None:
         async with AsyncHTTPSystemOneAdapter(
-            api_key=CANARY, transport=transport
+            api_key=CANARY, transport=transport, retry=RETRY
         ) as port:
             await port.system_one(CANARY, questions, "jev-latest")
 
@@ -53,7 +56,9 @@ def main() -> None:
         if mode == "async":
             asyncio.run(call())
         else:
-            with HTTPSystemOneAdapter(api_key=CANARY, transport=transport) as port:
+            with HTTPSystemOneAdapter(
+                api_key=CANARY, transport=transport, retry=RETRY
+            ) as port:
                 port.system_one(CANARY, questions, "jev-latest")
     except JevError:
         pass
