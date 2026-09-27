@@ -5,6 +5,7 @@ state, no instructions, no headers and no exception text. Those exclusions
 follow the OWASP list of data a log must never hold.
 Source: https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html.
 An opt-in keyed fingerprint links records of equal state without holding it.
+Optional media provenance holds keyed digests and opaque caller declarations.
 
 The typed answers stay in the record. They are labels, booleans and
 probabilities, not generated prose, and the record never carries the state
@@ -49,6 +50,7 @@ from datetime import datetime, timedelta
 from types import MappingProxyType
 
 from judgevet.domain.answers import Answer
+from judgevet.domain.media_audit import MediaProvenance
 from judgevet.domain.usage import Usage
 
 OUTCOMES = frozenset({"success", "error", "cancelled"})
@@ -57,7 +59,7 @@ OUTCOMES = frozenset({"success", "error", "cancelled"})
 
 @dataclass(frozen=True)
 class JudgmentRecord:
-    """Frozen record of one logical call, with no state and no exception text.
+    """Frozen terminal record with optional provenance, no state or exception text.
 
     The timestamp comes from the client clock at the end of the call, in UTC.
     Source: https://github.com/OWASP/ASVS/blob/master/5.0/en/0x25-V16-Security-Logging-and-Error-Handling.md.
@@ -86,6 +88,8 @@ class JudgmentRecord:
             `bind_request_id` (#63), or None outside a binding. No service
             response identifier is read, because none has been observed.
         schema_version (int): Record layout version, starting at 1.
+        media_provenance (MediaProvenance | None): Optional caller-built media
+            fingerprints and declared revision identifiers. None by default.
         state_fingerprint (str | None): Lowercase hex HMAC-SHA-256, under the
             caller's `fingerprint_key`, of `b"judgevet-state-v1"`, a zero byte
             and the pre-redaction state as compact sorted-key UTF-8 JSON; None
@@ -124,6 +128,7 @@ class JudgmentRecord:
     request_id: str | None = None
     schema_version: int = 1
     state_fingerprint: str | None = None
+    media_provenance: MediaProvenance | None = None
 
     def __post_init__(self) -> None:
         """Validate the outcome and timestamp and freeze both mappings.

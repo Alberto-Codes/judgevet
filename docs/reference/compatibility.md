@@ -264,3 +264,15 @@ a neutral error class and safe category without payload content. Work uses the
 existing serialized worker and cancellation cleanup. This adds no transport or
 inference dependency and makes no live provider compatibility claim.
 Source: [MCP media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851508259).
+
+### Optional media provenance
+
+`judgevet.media_audit` exports `MediaProvenance` and `media_provenance`.
+`JudgmentRecord` adds optional `media_provenance` as its last field, defaulting
+to `None`; schema version 1 and root exports remain unchanged. The pure value
+lives in `judgevet.domain.media_audit`. Hashing stays outside the domain.
+Applications explicitly supply a key and attach provenance to existing records.
+No new audit wrapper, retry accounting or usage estimation is introduced.
+Typed and equivalent raw question definitions share a request fingerprint.
+Image order, exact bytes and bindings remain distinct evidence inputs.
+Source: [media provenance contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851443210).

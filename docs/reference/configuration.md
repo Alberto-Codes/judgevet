@@ -614,3 +614,33 @@ CLI and MCP command entry points retain the default. There is no environment
 setting, command option or MCP tool argument that loads Python redactor code.
 An application can construct a redaction-enabled HTTP adapter and pass it to
 `run_cli` or `create_mcp_server` through the existing judgment port.
+
+## Optional media provenance
+
+`JudgmentRecord.media_provenance` defaults to `None`. Applications can call
+`judgevet.media_audit.media_provenance` with an explicit nonempty bytes
+`fingerprint_key` and attach the returned `MediaProvenance` to their existing
+terminal record. Record schema version 1 remains unchanged. The helper emits
+no audit events, observes no provider retries and estimates no usage.
+
+The value contains ordered attachment IDs and keyed fingerprints, immutable
+question associations, a complete evidence fingerprint and a separate question
+snapshot fingerprint. It contains no image bytes or question text. Existing
+state fingerprints remain separate. Use opaque attachment IDs and revision
+identifiers; caller-supplied identifiers must not contain customer content.
+
+Fingerprints use HMAC-SHA-256 with separate versioned labels for attachments,
+evidence and questions. Variable parts have eight-byte big-endian length
+prefixes. Evidence fingerprints cover exact bytes, MIME declarations, global
+image order, association order and required question IDs. Request fingerprints
+cover normalized question types, instructions and criteria. Invalid JSON
+snapshots fail without echoing their content.
+
+Callers own key storage and rotation. Equal inputs under one key expose equality;
+changing the key breaks that linkage. Optional `prompt_revision`,
+`provider_identity` and `preprocessing_revision` are caller declarations and
+default to `None`. They do not prove internal preprocessing. The existing
+`resolved_model` field retains the provider-reported identity. Existing sink
+failure containment, attempt claims and known-only usage settlement still apply.
+
+Source: [media provenance contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851443210).

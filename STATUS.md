@@ -542,7 +542,7 @@ record exact types, red tests and the removal of unrequested criteria restrictio
 Independent consumer mutations detect dropped or swapped attachments, changed
 bindings and text conversion. Repository-owned fake and translating-provider
 fixtures exercise all three answer variants. These are offline boundary proofs.
-Media provenance and installed extension proofs remain separate work. No HTTP
+Installed extension proofs remain separate work. No HTTP
 media support, inference implementation, live verification or confidence
 calibration is claimed.
 
@@ -562,7 +562,7 @@ rejects nonempty media before settings or credentials. Independent consumer
 mutations detect dropped or swapped images and changed bindings. The
 [CLI contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851367000)
 and [diagnostic repair](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851476145)
-record scope and evidence. Media provenance and installed proofs remain separate work.
+record scope and evidence. Installed proofs remain separate work.
 
 ## MCP image evidence
 
@@ -579,13 +579,33 @@ unsupported capabilities and transport failures produce safe neutral errors.
 Insufficient-evidence Choice remains an ordinary unmet policy. The original
 three tool schemas remain unchanged.
 The [MCP media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851508259)
-records scope and limits. This is offline source evidence. Provenance and
-installed proofs remain separate work; no live provider support is claimed.
+records scope and limits. This is offline source evidence. Installed proofs
+remain separate work; no live provider support is claimed.
+
+## Optional media provenance
+
+#203 adds `judgevet.media_audit` with immutable `MediaProvenance` and an explicit
+keyed fingerprint helper. `JudgmentRecord.media_provenance` is its final optional
+field and defaults to `None`. Schema version 1 and existing state fingerprints
+remain unchanged. The pure domain holds metadata; hashing stays outside it.
+
+Independent HMAC oracles verify versioned labels and length framing over exact
+bytes, MIME, attachment order, question bindings and normalized question content.
+Isolated unkeyed, omitted-content, order, binding and framing mutations fail.
+Records retain opaque IDs, digests and caller-declared revisions without image
+bytes, prompts or keys. Equal inputs under one key expose equality; callers own
+key custody and rotation. Existing sink containment, terminal records, retry
+attempt claims and known-only usage settlement remain intact.
+
+The [provenance contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851443210)
+and [test repair](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851753625)
+record scope and evidence. The helper emits no records and cannot observe opaque
+provider attempts or preprocessing. Installed extension proofs remain pending.
 
 ## Gates
 
-**2416 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.47%** (2786/2888 statements).
+**2455 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.46%** (2891/2997 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

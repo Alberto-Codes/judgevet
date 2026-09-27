@@ -111,3 +111,13 @@ Existing policy rules determine its result. Provider numbers imply no measured
 calibration; unknown usage remains `None` and zero remains zero. These are local
 offline contracts, not evidence of a live model's image support or quality.
 Source: [accepted media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851219798).
+
+To attach media provenance to your existing audit record, import
+`media_provenance` from `judgevet.media_audit`. Call it with your `ImageEvidence`,
+question mapping and explicit nonempty bytes `fingerprint_key`. Pass the result
+as `JudgmentRecord.media_provenance`, or add it through your existing audit sink.
+Use opaque IDs and keep the key in application-owned secret storage. The helper
+retains fingerprints and declared metadata, not image bytes or question text.
+It does not write another record or account for provider attempts. See
+[optional media provenance](../reference/configuration.md#optional-media-provenance)
+for key rotation, equality leakage and metadata limits.
