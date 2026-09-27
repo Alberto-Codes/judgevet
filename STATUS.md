@@ -634,8 +634,8 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2512 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.50%** (2892/2997 statements).
+**2522 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.50%** (2897/3002 statements).
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,
 pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,

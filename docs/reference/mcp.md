@@ -84,9 +84,17 @@ Source: [keyed policy contract](https://github.com/Alberto-Codes/judgevet/issues
 
 ## Failure and lifecycle behavior
 
-Missing state/instruction, unknown tools and missing expected answers raise
-`ValueError` in the handlers. A wrong answer variant raises `TypeError`. Service
-errors propagate to the MCP runtime, which presents protocol failures. A tool
+The ask tools check their arguments before any provider call. A missing
+`state` or `instruction` returns a tool result with `isError` true and the text
+`Missing required argument: <name>`. `ask_choice` criteria must be a non-empty
+object, and `ask_score` criteria must be a non-empty array, when given. Wrong
+criteria return the same kind of tool result. The MCP tools specification
+classes input validation errors as tool execution errors; see
+[error handling](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling).
+
+An unknown tool and a missing expected answer raise `ValueError` in the
+handlers. A wrong answer variant raises `TypeError`. Service errors from the
+ask tools propagate to the MCP runtime, which presents protocol failures. A tool
 failure is not a negative Noul answer or an unmet policy. Do not assume protocol
 error text has been scrubbed; see [diagnostic limits](../../SECURITY.md#diagnostics-and-error-content).
 

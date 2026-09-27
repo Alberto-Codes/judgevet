@@ -203,8 +203,8 @@ class TestAskChoiceTool:
             "b": "Option B",
         }
 
-    def test_ask_choice_missing_state_raises(self) -> None:
-        """Test that ask_choice raises ValueError if state is missing."""
+    def test_ask_choice_missing_state_is_tool_error(self) -> None:
+        """Test that ask_choice returns a tool error if state is missing."""
         port = FakeSystemOnePort()
         server = create_mcp_server(port)
 
@@ -219,11 +219,13 @@ class TestAskChoiceTool:
         async def run_test() -> Any:
             return await call_tool_handler.handler(MockContext(), params)
 
-        with pytest.raises(ValueError, match="Missing required argument: state"):
-            anyio.run(run_test)
+        result = anyio.run(run_test)
+        assert result.is_error is True
+        assert result.content[0].text == "Missing required argument: state"
+        assert port.calls == []
 
-    def test_ask_choice_missing_instruction_raises(self) -> None:
-        """Test that ask_choice raises ValueError if instruction is missing."""
+    def test_ask_choice_missing_instruction_is_tool_error(self) -> None:
+        """Test that ask_choice returns a tool error if instruction is missing."""
         port = FakeSystemOnePort()
         server = create_mcp_server(port)
 
@@ -238,8 +240,10 @@ class TestAskChoiceTool:
         async def run_test() -> Any:
             return await call_tool_handler.handler(MockContext(), params)
 
-        with pytest.raises(ValueError, match="Missing required argument: instruction"):
-            anyio.run(run_test)
+        result = anyio.run(run_test)
+        assert result.is_error is True
+        assert result.content[0].text == "Missing required argument: instruction"
+        assert port.calls == []
 
 
 @pytest.mark.skipif(not HAS_MCP, reason="mcp not installed")
@@ -349,8 +353,8 @@ class TestAskScoreTool:
             "Good",
         ]
 
-    def test_ask_score_missing_state_raises(self) -> None:
-        """Test that ask_score raises ValueError if state is missing."""
+    def test_ask_score_missing_state_is_tool_error(self) -> None:
+        """Test that ask_score returns a tool error if state is missing."""
         port = FakeSystemOnePort()
         server = create_mcp_server(port)
 
@@ -365,11 +369,13 @@ class TestAskScoreTool:
         async def run_test() -> Any:
             return await call_tool_handler.handler(MockContext(), params)
 
-        with pytest.raises(ValueError, match="Missing required argument: state"):
-            anyio.run(run_test)
+        result = anyio.run(run_test)
+        assert result.is_error is True
+        assert result.content[0].text == "Missing required argument: state"
+        assert port.calls == []
 
-    def test_ask_score_missing_instruction_raises(self) -> None:
-        """Test that ask_score raises ValueError if instruction is missing."""
+    def test_ask_score_missing_instruction_is_tool_error(self) -> None:
+        """Test that ask_score returns a tool error if instruction is missing."""
         port = FakeSystemOnePort()
         server = create_mcp_server(port)
 
@@ -384,8 +390,10 @@ class TestAskScoreTool:
         async def run_test() -> Any:
             return await call_tool_handler.handler(MockContext(), params)
 
-        with pytest.raises(ValueError, match="Missing required argument: instruction"):
-            anyio.run(run_test)
+        result = anyio.run(run_test)
+        assert result.is_error is True
+        assert result.content[0].text == "Missing required argument: instruction"
+        assert port.calls == []
 
 
 class OversizedPort(SystemOnePort):

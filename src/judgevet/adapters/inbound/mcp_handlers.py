@@ -4,8 +4,9 @@ SDK fields follow the tagged
 [SDK definitions](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp-types/mcp_types/_types.py).
 The factory supplies SDK types so importing this module needs no MCP runtime.
 Handlers pass the host-selected model to the asynchronous dispatcher and await
-the synchronous provider outside the event loop. Answer formatting retains
-the existing text and structured content shapes.
+the synchronous provider outside the event loop. Invalid arguments return a
+tool error result before any provider call. Answer formatting retains the
+existing text and structured content shapes.
 
 Examples:
     ```python
@@ -17,12 +18,14 @@ Examples:
 See Also:
     - [judgevet.adapters.inbound.mcp][]: Server factory.
     - [judgevet.ports][]: Judgment port.
+    - [judgevet.adapters.inbound.mcp_arguments][]: Argument validation.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
+from judgevet.adapters.inbound.mcp_arguments import ask_arguments, tool_error
 from judgevet.adapters.inbound.mcp_dispatch import ProviderDispatch
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.response import SystemOneResponse
@@ -40,20 +43,17 @@ async def handle_ask_noul(
         model: Host-selected model.
 
     Returns:
-        CallToolResult with structured content containing noul, model, usage.
+        CallToolResult with structured content containing noul, model, usage,
+        or a tool error result for invalid arguments.
 
     Raises:
-        ValueError: If arguments are missing or answer is invalid.
+        ValueError: If the answer is missing.
         TypeError: If the answer has the wrong type.
     """
-    arguments = params.arguments or {}
-    state = arguments.get("state")
-    instruction = arguments.get("instruction")
-
-    if state is None:
-        raise ValueError("Missing required argument: state")
-    if instruction is None:
-        raise ValueError("Missing required argument: instruction")
+    try:
+        state, instruction, _ = ask_arguments(params.arguments, "noul")
+    except ValueError as exc:
+        return tool_error(mcp_types, str(exc))
 
     # Build the questions payload for the Jev API
     questions = {
@@ -132,21 +132,16 @@ async def handle_ask_choice(
 
     Returns:
         CallToolResult with structured content containing choice, probabilities,
-        confidence, model, usage.
+        confidence, model, usage, or a tool error result for invalid arguments.
 
     Raises:
-        ValueError: If arguments are missing or answer is invalid.
+        ValueError: If the answer is missing.
         TypeError: If the answer has the wrong type.
     """
-    arguments = params.arguments or {}
-    state = arguments.get("state")
-    instruction = arguments.get("instruction")
-    criteria = arguments.get("criteria")
-
-    if state is None:
-        raise ValueError("Missing required argument: state")
-    if instruction is None:
-        raise ValueError("Missing required argument: instruction")
+    try:
+        state, instruction, criteria = ask_arguments(params.arguments, "choice")
+    except ValueError as exc:
+        return tool_error(mcp_types, str(exc))
 
     # Build the questions payload for the Jev API
     question_data: dict[str, Any] = {
@@ -235,21 +230,17 @@ async def handle_ask_score(
 
     Returns:
         CallToolResult with structured content containing score, legend,
-        probabilities, confidence, model, usage.
+        probabilities, confidence, model, usage, or a tool error result for
+        invalid arguments.
 
     Raises:
-        ValueError: If arguments are missing or answer is invalid.
+        ValueError: If the answer is missing.
         TypeError: If the answer has the wrong type.
     """
-    arguments = params.arguments or {}
-    state = arguments.get("state")
-    instruction = arguments.get("instruction")
-    criteria = arguments.get("criteria")
-
-    if state is None:
-        raise ValueError("Missing required argument: state")
-    if instruction is None:
-        raise ValueError("Missing required argument: instruction")
+    try:
+        state, instruction, criteria = ask_arguments(params.arguments, "score")
+    except ValueError as exc:
+        return tool_error(mcp_types, str(exc))
 
     # Build the questions payload for the Jev API
     question_data: dict[str, Any] = {

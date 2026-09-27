@@ -196,8 +196,8 @@ class TestAskNoulTool:
         assert structured["usage"]["input_tokens"] == 100
         assert structured["usage"]["output_tokens"] == 10
 
-    def test_ask_noul_missing_state_raises(self) -> None:
-        """Test that ask_noul raises ValueError if state is missing."""
+    def test_ask_noul_missing_state_is_tool_error(self) -> None:
+        """Test that ask_noul returns a tool error if state is missing."""
         port = FakeSystemOnePort()
         server = create_mcp_server(port)
 
@@ -212,11 +212,13 @@ class TestAskNoulTool:
         async def run_test() -> Any:
             return await call_tool_handler.handler(MockContext(), params)
 
-        with pytest.raises(ValueError, match="Missing required argument: state"):
-            anyio.run(run_test)
+        result = anyio.run(run_test)
+        assert result.is_error is True
+        assert result.content[0].text == "Missing required argument: state"
+        assert port.calls == []
 
-    def test_ask_noul_missing_instruction_raises(self) -> None:
-        """Test that ask_noul raises ValueError if instruction is missing."""
+    def test_ask_noul_missing_instruction_is_tool_error(self) -> None:
+        """Test that ask_noul returns a tool error if instruction is missing."""
         port = FakeSystemOnePort()
         server = create_mcp_server(port)
 
@@ -231,8 +233,10 @@ class TestAskNoulTool:
         async def run_test() -> Any:
             return await call_tool_handler.handler(MockContext(), params)
 
-        with pytest.raises(ValueError, match="Missing required argument: instruction"):
-            anyio.run(run_test)
+        result = anyio.run(run_test)
+        assert result.is_error is True
+        assert result.content[0].text == "Missing required argument: instruction"
+        assert port.calls == []
 
     def test_ask_noul_unknown_tool_raises(self) -> None:
         """Test that ask_noul raises ValueError for unknown tool name."""

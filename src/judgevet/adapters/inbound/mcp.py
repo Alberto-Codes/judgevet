@@ -134,10 +134,10 @@ async def _call_tool(
 
     Returns:
         SDK tool result, including policy failures as ordinary judgments and
-        invalid policy requests as error results.
+        invalid arguments or policy requests as error results.
 
     Raises:
-        ValueError: If the tool is unknown, arguments are missing or an answer is absent.
+        ValueError: If the tool is unknown or an answer is absent.
         TypeError: If the answer has the wrong type.
     """
     match params.name:

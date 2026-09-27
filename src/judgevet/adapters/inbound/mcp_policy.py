@@ -13,6 +13,7 @@ See Also:
     - [judgevet.policy][]: Strict typed policy evaluation.
     - [judgevet.policy_json][]: Policy JSON grammar.
     - [judgevet.adapters.inbound.mcp_dispatch][]: Serialized provider calls.
+    - [judgevet.adapters.inbound.mcp_arguments][]: Shared tool error results.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from typing import Any
 
 from judgevet import JudgevetError
 from judgevet.adapters.inbound.cli import build_response_data, parse_questions
+from judgevet.adapters.inbound.mcp_arguments import tool_error
 from judgevet.adapters.inbound.mcp_dispatch import ProviderDispatch
 from judgevet.domain.questions import Question
 from judgevet.policy import ValidatedPolicy, evaluate_policy
@@ -71,21 +73,6 @@ def _parse(arguments: Any) -> tuple[Any, dict[str, Question], ValidatedPolicy]:
     return state, questions, parse_policy(json.dumps(arguments["policy"]), questions)
 
 
-def _error(mcp_types: Any, message: str) -> Any:
-    """Return a tool error without answers or a policy verdict.
-
-    Args:
-        mcp_types: SDK type constructors.
-        message: Declared diagnostic.
-
-    Returns:
-        Error tool result.
-    """
-    return mcp_types.CallToolResult(
-        content=[mcp_types.TextContent(type="text", text=message)], is_error=True
-    )
-
-
 async def handle_evaluate_policy(
     port: ProviderDispatch, mcp_types: Any, params: Any, *, model: str
 ) -> Any:
@@ -98,7 +85,8 @@ async def handle_evaluate_policy(
         model: Host-selected model.
 
     Returns:
-        Matching text and structured envelopes, or a declared tool error.
+        Matching text and structured envelopes, or a declared tool error
+        from the shared tool error helper.
 
     Raises:
         Exception: Unexpected implementation failures retain SDK handling.
@@ -106,7 +94,7 @@ async def handle_evaluate_policy(
     try:
         state, questions, policy = _parse(params.arguments)
     except (ValueError, TypeError, JudgevetError) as exc:
-        return _error(mcp_types, str(exc))
+        return tool_error(mcp_types, str(exc))
     try:
         if "evidence" in params.arguments:
             response = await port.system_one_media(
@@ -121,7 +109,7 @@ async def handle_evaluate_policy(
             if "evidence" in params.arguments
             else str(exc)
         )
-        return _error(mcp_types, message)
+        return tool_error(mcp_types, message)
     data = build_response_data(response)
     data["policy"] = {
         "result": "pass" if report.passed else "fail",
