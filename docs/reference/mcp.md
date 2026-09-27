@@ -28,8 +28,10 @@ specify item/value schemas for criteria or `additionalProperties: false`.
 Handlers are not a substitute for full schema validation.
 
 Each tool constructs one named question and calls the sync port with
-the host-selected model, which defaults to `"jev-latest"`. Tool arguments
-cannot select a model or acceptance policy.
+the host-selected model, which defaults to `"jev-latest"`.
+The installed `judgevet-mcp` command takes the host-selected model from
+`JEV_API__DEFAULT_MODEL`.
+Tool arguments cannot select a model or acceptance policy.
 The internal question names are `noul_question`, `choice_question` and
 `score_question`. Host argument `instruction` becomes wire `instructions`.
 See [configuration overrides](configuration.md#entry-point-overrides).

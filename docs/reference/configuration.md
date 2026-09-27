@@ -130,10 +130,11 @@ startup even when an option supplies another value.
 
 The CLI always passes its `--model` value, whose default is `jev-latest`.
 Consequently, `JEV_API__DEFAULT_MODEL` does not select the CLI's requested model.
-The MCP tools also explicitly request `jev-latest`; they have no model argument.
-Although MCP constructs an adapter with the settings default, that default does
-not override the model passed by its tools. For a pinned model, use the CLI
-`--model` option or a direct library call.
+
+The installed `judgevet-mcp` command sends `JEV_API__DEFAULT_MODEL` on every
+tool call. The setting defaults to `jev-latest`. An application that passes a
+`model` other than `jev-latest` to the MCP `main` function overrides the
+setting. For a pinned CLI model, use the `--model` option.
 
 This behavior comes from the [CLI](../../src/judgevet/adapters/inbound/cli.py),
 [policy invocation](../../src/judgevet/adapters/inbound/cli_policy_run.py),

@@ -111,7 +111,8 @@ def main(
     Args:
         port: Borrowed application provider.
         provider_factory: Owning application factory.
-        model: Host-selected model.
+        model: Host-selected model. On the hosted path, the default
+            ``jev-latest`` defers to ``settings.api.default_model``.
 
     Returns:
         Exit code: 0 for success, 2 for configuration failures.
@@ -211,7 +212,8 @@ def _run_hosted(model: str, stage: _Stage) -> int:
     """Preserve hosted settings and existing composition seams.
 
     Args:
-        model: Host-selected model.
+        model: Explicit host-selected model. The default ``jev-latest``
+            defers to ``settings.api.default_model``.
         stage: Stage record advanced to serving after credential resolution.
 
     Returns:
@@ -232,11 +234,12 @@ def _run_hosted(model: str, stage: _Stage) -> int:
         return 2
     adapter = build_adapter(settings)
     stage.name = "serving"
+    chosen = settings.api.default_model if model == "jev-latest" else model
     try:
-        if model == "jev-latest":
+        if chosen == "jev-latest":
             asyncio.run(run_stdio(adapter))
         else:
-            asyncio.run(run_stdio(adapter, model=model))
+            asyncio.run(run_stdio(adapter, model=chosen))
     finally:
         adapter.close()
     return 0

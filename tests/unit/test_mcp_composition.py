@@ -97,7 +97,8 @@ def test_settings_once_and_constructor_propagation(
         )
         return port
 
-    async def serve(acquired: RecordingPort) -> None:
+    async def serve(acquired: RecordingPort, *, model: str = "jev-latest") -> None:
+        assert model == "test-model"
         seen.append(acquired)
 
     monkeypatch.setattr(entry, "Settings", settings)
