@@ -393,3 +393,12 @@ its ordered policy report. A valid unmet policy is a successful tool response;
 validation and declared provider failures are tool errors. The application
 launcher selects the model. See the [policy tool contract](../reference/mcp.md#keyed-policy-tool-on-main).
 This addition does not change the published 0.13.0 host observations above.
+
+For an application provider that supports images, add `evidence` to
+`evaluate_policy` as JSON text. Encode image bytes as standard base64 and use
+ordered attachment IDs to bind images to questions. Keep state and image bytes
+separate. A minimal empty value is `{"images":[],"by_question":{}}`; this retains
+text routing. Nonempty images require the media provider extension. See the
+[image evidence contract](../reference/mcp.md#image-evidence-on-main) for fields,
+limits and error behavior. This source addition does not claim live provider
+compatibility or change the published host observations above.

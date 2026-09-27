@@ -1,4 +1,4 @@
-"""Serialize synchronous MCP providers outside the event loop.
+"""Serialize synchronous MCP text and media work outside the event loop.
 
 Source: https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850906357.
 
@@ -27,8 +27,10 @@ from contextvars import ContextVar
 from functools import partial
 from typing import Any
 
+from judgevet.adapters.inbound.mcp_media import decode_evidence
 from judgevet.domain.questions import Question
 from judgevet.domain.response import SystemOneResponse
+from judgevet.media import judge_with_images
 from judgevet.ports import SystemOnePort
 from judgevet.providers import ProviderFactory, provider_scope
 
@@ -192,6 +194,38 @@ class ProviderDispatch:
                     state=state,
                     questions=questions,
                     model=model,
+                )
+            )
+
+    async def system_one_media(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        evidence: Any,
+    ) -> SystemOneResponse:
+        """Decode and validate media on the same cancellation-safe worker.
+
+        Args:
+            state: Original caller state.
+            questions: Parsed question definitions.
+            model: Host-selected model.
+            evidence: Embedded JSON text, validated on the worker.
+
+        Returns:
+            The unchanged validated answer envelope.
+
+        Raises:
+            RuntimeError: Acquisition yielded no provider.
+            BaseException: Media validation, provider failure or drained cancellation.
+        """
+        async with self._lock, self.session():
+            port = self.port
+            if port is None:
+                raise RuntimeError("Provider acquisition did not return a port")
+            return await self._run(
+                lambda: judge_with_images(
+                    port, state, questions, model, evidence=decode_evidence(evidence)
                 )
             )
 

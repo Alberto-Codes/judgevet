@@ -60,7 +60,8 @@ The source tree adds `evaluate_policy` to discovery. The original three tool
 schemas and results remain unchanged. This addition is not an observation about
 the published 0.13.0 package.
 
-Pass exactly `state`, `questions` and `policy`. State accepts a string, object
+Pass required `state`, `questions` and `policy`, with optional `evidence`.
+State accepts a string, object
 or array. Questions use the CLI JSON grammar, keyed by caller IDs. Each question
 accepts only `type`, `instructions` and `criteria`; unknown fields produce an
 error before dispatch. Optional Noul criteria pass through unchanged. Policy uses
@@ -122,3 +123,30 @@ Declared provider failures cross the entrypoint's existing safe diagnostic
 boundary. Provider selection adds no audit sink, spend cap or redaction.
 Applications configure those controls on their providers.
 Source: [MCP provider contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850906357).
+
+## Image evidence on main
+
+`evaluate_policy` accepts optional `evidence` as a JSON text string. The embedded
+object contains `images`, `by_question` and optional `required`. Each image
+contains exactly `id`, `data_base64` and `media_type`. `data_base64` carries
+standard ASCII base64 of the original encoded image bytes. `by_question` maps
+question IDs to ordered image IDs. `required` lists questions that must have
+images. The provider receives original byte order and per-question associations.
+
+The adapter rejects duplicate embedded keys, non-finite constants, unknown
+fields, invalid base64 and invalid associations. Already-decoded objects are
+invalid. The JSON text ceiling is 48 MiB UTF-8. Limits are 16 images, 8 MiB per
+image and 32 MiB decoded bytes in total. Provider capabilities can reduce these
+limits. The adapter reads no paths or URLs and does not decode image formats.
+Omitting evidence or supplying valid empty optional evidence retains text routing.
+The hosted provider does not implement image evidence.
+
+Decoding, validation and inference share the existing serialized worker.
+Canceled queued calls submit no work. Canceled running calls drain before owned
+cleanup. Acquisition can precede request validation because it belongs to the
+serving session. Media failures return `isError: true` with a neutral error class
+and safe category, without answers, policy verdicts or payload diagnostics.
+An explicitly declared insufficient-evidence Choice remains an ordinary answer
+and can produce an unmet policy. Success preserves model and usage metadata.
+
+Source: [MCP media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851508259).

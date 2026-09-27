@@ -252,3 +252,15 @@ insufficient-evidence Choice answers retain ordinary success and policy semantic
 This is offline source acceptance evidence, not a published release or a new live
 service verification claim.
 Source: [CLI media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851367000).
+
+### MCP image evidence
+
+The source `evaluate_policy` schema adds optional `evidence` JSON text.
+The original three tool schemas remain unchanged. Embedded images use base64
+bytes and explicit ordered question associations. Valid empty optional evidence
+retains text routing. Nonempty evidence requires a selected media provider.
+Success retains the existing answer and policy envelope. Media failures expose
+a neutral error class and safe category without payload content. Work uses the
+existing serialized worker and cancellation cleanup. This adds no transport or
+inference dependency and makes no live provider compatibility claim.
+Source: [MCP media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851508259).

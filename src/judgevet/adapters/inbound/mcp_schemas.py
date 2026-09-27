@@ -152,7 +152,7 @@ def create_score_tool(mcp_types: Any) -> Any:
 
 
 def create_policy_tool(mcp_types: Any) -> Any:
-    """Create the keyed policy tool with explicit supported question fields.
+    """Create the keyed policy tool with optional embedded evidence JSON text.
 
     Args:
         mcp_types: SDK type constructors.
@@ -182,6 +182,10 @@ def create_policy_tool(mcp_types: Any) -> Any:
                     },
                 },
                 "policy": {"type": "object"},
+                "evidence": {
+                    "type": "string",
+                    "description": "Strict JSON image evidence with base64 attachments.",
+                },
             },
             "required": ["state", "questions", "policy"],
             "additionalProperties": False,

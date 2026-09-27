@@ -562,12 +562,30 @@ rejects nonempty media before settings or credentials. Independent consumer
 mutations detect dropped or swapped images and changed bindings. The
 [CLI contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851367000)
 and [diagnostic repair](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851476145)
-record scope and evidence. MCP media exposure remains separate work.
+record scope and evidence. Media provenance and installed proofs remain separate work.
+
+## MCP image evidence
+
+#203 adds optional JSON-text `evidence` to `evaluate_policy`. Strict bounded
+base64 decoding preserves exact bytes, attachment order and question bindings.
+Decoding, capability validation and provider calls use the existing serialized
+worker. Canceled queued requests submit no work. Running calls drain before
+owned cleanup on that worker. Optional empty evidence retains text routing.
+
+Independent SDK and actual stdio probes preserve instructions, all three answer
+variants, model identity and known or unknown usage. Isolated dropped, swapped
+and rebound image mutations fail the consumer oracle. Missing evidence,
+unsupported capabilities and transport failures produce safe neutral errors.
+Insufficient-evidence Choice remains an ordinary unmet policy. The original
+three tool schemas remain unchanged.
+The [MCP media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851508259)
+records scope and limits. This is offline source evidence. Provenance and
+installed proofs remain separate work; no live provider support is claimed.
 
 ## Gates
 
-**2392 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.48%** (2716/2815 statements).
+**2416 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.47%** (2786/2888 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

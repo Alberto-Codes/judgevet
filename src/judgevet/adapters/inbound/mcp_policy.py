@@ -29,7 +29,7 @@ from judgevet.policy_json import parse_policy
 
 
 def _parse(arguments: Any) -> tuple[Any, dict[str, Question], ValidatedPolicy]:
-    """Validate tool inputs and reject unsupported question fields before dispatch.
+    """Validate required fields and optional evidence before provider dispatch.
 
     Args:
         arguments: Decoded MCP argument object.
@@ -42,11 +42,11 @@ def _parse(arguments: Any) -> tuple[Any, dict[str, Question], ValidatedPolicy]:
         TypeError: If state has an unsupported type.
         PolicyDefinitionError: If policy definitions are invalid.
     """
-    if not isinstance(arguments, dict) or set(arguments) != {
-        "state",
-        "questions",
-        "policy",
-    }:
+    if (
+        not isinstance(arguments, dict)
+        or not {"state", "questions", "policy"} <= set(arguments)
+        or set(arguments) - {"state", "questions", "policy", "evidence"}
+    ):
         raise ValueError("Expected exactly state, questions and policy")
     state = arguments["state"]
     if not isinstance(state, (str, dict, list)):
@@ -89,7 +89,7 @@ def _error(mcp_types: Any, message: str) -> Any:
 async def handle_evaluate_policy(
     port: ProviderDispatch, mcp_types: Any, params: Any, *, model: str
 ) -> Any:
-    """Evaluate a complete request with host-selected model and strict policy rules.
+    """Evaluate text or media with host-selected model and strict policy rules.
 
     Args:
         port: Existing serialized dispatcher.
@@ -108,10 +108,20 @@ async def handle_evaluate_policy(
     except (ValueError, TypeError, JudgevetError) as exc:
         return _error(mcp_types, str(exc))
     try:
-        response = await port.system_one(state, questions, model)
+        if "evidence" in params.arguments:
+            response = await port.system_one_media(
+                state, questions, model, params.arguments["evidence"]
+            )
+        else:
+            response = await port.system_one(state, questions, model)
         report = evaluate_policy(policy, response.answers)
     except JudgevetError as exc:
-        return _error(mcp_types, str(exc))
+        message = (
+            f"{type(exc).__name__}: media evaluation failed"
+            if "evidence" in params.arguments
+            else str(exc)
+        )
+        return _error(mcp_types, message)
     data = build_response_data(response)
     data["policy"] = {
         "result": "pass" if report.passed else "fail",
