@@ -6,6 +6,8 @@ error. Source: https://modelcontextprotocol.io/specification/2025-11-25/server/t
 SDK field names follow the tagged
 [SDK definitions](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp-types/mcp_types/_types.py).
 The caller supplies SDK types, so importing this module needs no MCP runtime.
+`AskKind` names the three ask question types, so a misspelt kind fails the
+type check.
 
 Examples:
     ```python
@@ -24,7 +26,9 @@ See Also:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
+
+AskKind = Literal["noul", "choice", "score"]
 
 
 def tool_error(mcp_types: Any, message: str) -> Any:
@@ -42,7 +46,7 @@ def tool_error(mcp_types: Any, message: str) -> Any:
     )
 
 
-def ask_arguments(arguments: Any, kind: str) -> tuple[Any, Any, Any]:
+def ask_arguments(arguments: Any, kind: AskKind) -> tuple[Any, Any, Any]:
     """Validate ask tool arguments before any provider call.
 
     Choice criteria must be a non-empty object and score criteria a
@@ -50,7 +54,8 @@ def ask_arguments(arguments: Any, kind: str) -> tuple[Any, Any, Any]:
 
     Args:
         arguments: Decoded MCP argument object, or None.
-        kind: Question type: `noul`, `choice` or `score`.
+        kind: Question type, one of the `AskKind` literals `noul`,
+            `choice` or `score`.
 
     Returns:
         State, instruction and criteria; criteria is None when absent.

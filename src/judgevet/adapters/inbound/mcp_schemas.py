@@ -28,7 +28,7 @@ def create_noul_tool(mcp_types: Any) -> Any:
         mcp_types: SDK type constructors.
 
     Returns:
-        Tool definition for ask_noul.
+        Tool definition for ask_noul; `state` accepts a string or an object.
     """
     return mcp_types.Tool(
         name="ask_noul",
@@ -43,8 +43,7 @@ def create_noul_tool(mcp_types: Any) -> Any:
                 "state": {
                     "type": ["string", "object"],
                     "description": (
-                        "The content to evaluate. Can be plain text "
-                        "or a JSON object/array."
+                        "The content to evaluate. Can be plain text or a JSON object."
                     ),
                 },
                 "instruction": {
@@ -66,7 +65,7 @@ def create_choice_tool(mcp_types: Any) -> Any:
         mcp_types: SDK type constructors.
 
     Returns:
-        Tool definition for ask_choice.
+        Tool definition for ask_choice; `state` accepts a string or an object.
     """
     return mcp_types.Tool(
         name="ask_choice",
@@ -81,8 +80,7 @@ def create_choice_tool(mcp_types: Any) -> Any:
                 "state": {
                     "type": ["string", "object"],
                     "description": (
-                        "The content to evaluate. Can be plain text "
-                        "or a JSON object/array."
+                        "The content to evaluate. Can be plain text or a JSON object."
                     ),
                 },
                 "instruction": {
@@ -112,7 +110,7 @@ def create_score_tool(mcp_types: Any) -> Any:
         mcp_types: SDK type constructors.
 
     Returns:
-        Tool definition for ask_score.
+        Tool definition for ask_score; `state` accepts a string or an object.
     """
     return mcp_types.Tool(
         name="ask_score",
@@ -127,8 +125,7 @@ def create_score_tool(mcp_types: Any) -> Any:
                 "state": {
                     "type": ["string", "object"],
                     "description": (
-                        "The content to evaluate. Can be plain text "
-                        "or a JSON object/array."
+                        "The content to evaluate. Can be plain text or a JSON object."
                     ),
                 },
                 "instruction": {

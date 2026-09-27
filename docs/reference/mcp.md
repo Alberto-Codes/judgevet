@@ -21,9 +21,9 @@ allows a string or object for `state`.
 | `ask_score` | `criteria`: array of ordered rubric descriptions | `["Poor","Fair","Good","Excellent"]` |
 
 The [tool definitions](../../src/judgevet/adapters/inbound/mcp.py) are the source
-for these local schemas. Their prose currently mentions arrays for state, but
-the actual `state` schema excludes arrays. Use string/object state for host
-calls; do not infer array support from that description. The schemas do not
+for these local schemas. `ask_noul`, `ask_choice` and `ask_score` accept a
+string or an object for `state`. They do not accept an array. `evaluate_policy`
+accepts a string, an object or an array for `state`. The schemas do not
 specify item/value schemas for criteria or `additionalProperties: false`.
 Handlers are not a substitute for full schema validation.
 
@@ -89,7 +89,7 @@ The ask tools check their arguments before any provider call. A missing
 `Missing required argument: <name>`. `ask_choice` criteria must be a non-empty
 object, and `ask_score` criteria must be a non-empty array, when given. Wrong
 criteria return the same kind of tool result. The MCP tools specification
-classes input validation errors as tool execution errors; see
+classifies input validation errors as tool execution errors; see
 [error handling](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling).
 
 An unknown tool and a missing expected answer raise `ValueError` in the
