@@ -27,10 +27,12 @@ for environment setup, checkpoints and recovery steps.
 
 Use Python 3.12 or newer. In a virtual environment:
 
+<!-- x-release-please-start-version -->
 ```bash
-python -m pip install 'judgevet==0.7.0'
+python -m pip install 'judgevet==0.13.0'
 judgevet --help
 ```
+<!-- x-release-please-end -->
 
 Supply a TypeSafe API key through your process environment or secret provider.
 This example reads `JEV_API__KEY` and passes it explicitly to the library.

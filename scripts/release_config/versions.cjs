@@ -40,16 +40,18 @@ for (const target of ['0.10.1', '0.11.0', '1.2.3', '2.0.0-rc.1']) {
       github: {}, targetBranch: 'main', path: '.', extraFiles: config['extra-files'],
     });
     const updates = await strategy.extraFileUpdates(Version.parse(target), new Map());
-    const page = 'docs/how-to/connect-mcp.md';
-    const original = fs.readFileSync(path.join(root, page), 'utf8');
-    const pin = /\b(judgevet(?:\[mcp\])?==)\d+\.\d+\.\d+(?:-[\w.]+)?/g;
-    const pins = [...original.matchAll(pin)];
-    assert.ok(pins.length > 0, 'host recipes must retain explicit package pins');
-    const expected = original.replace(pin, (_, requirement) => requirement + target);
-    let content = original;
-    for (const update of updates.filter(u => u.path === page)) {
-      content = update.updater.updateContent(content);
+    const pages = ['docs/how-to/connect-mcp.md', 'README.md'];
+    for (const page of pages) {
+      const original = fs.readFileSync(path.join(root, page), 'utf8');
+      const pin = /\b(judgevet(?:\[mcp\])?==)\d+\.\d+\.\d+(?:-[\w.]+)?/g;
+      const pins = [...original.matchAll(pin)];
+      assert.ok(pins.length > 0, `${page}: must retain explicit package pins`);
+      const expected = original.replace(pin, (_, requirement) => requirement + target);
+      let content = original;
+      for (const update of updates.filter(u => u.path === page)) {
+        content = update.updater.updateContent(content);
+      }
+      assert.equal(content, expected, `${page}: all pins change; every other byte survives`);
     }
-    assert.equal(content, expected, 'all pins change; every other byte survives');
   });
 }
