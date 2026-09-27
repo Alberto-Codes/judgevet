@@ -23,7 +23,7 @@ allows a string or object for `state`.
 The [tool definitions](../../src/judgevet/adapters/inbound/mcp.py) are the source
 for these local schemas. `ask_noul`, `ask_choice` and `ask_score` accept a
 string or an object for `state`. They do not accept an array. `evaluate_policy`
-accepts a string, an object or an array for `state`. The schemas do not
+accepts a string, an object or an array for `state`. The ask tool schemas do not
 specify item/value schemas for criteria or `additionalProperties: false`.
 Handlers are not a substitute for full schema validation.
 
@@ -67,7 +67,12 @@ State accepts a string, object
 or array. Questions use the CLI JSON grammar, keyed by caller IDs. Each question
 accepts only `type`, `instructions` and `criteria`; unknown fields produce an
 error before dispatch. Optional Noul criteria pass through unchanged. Policy uses
-the public [policy JSON grammar](policy.md). The application selects the model;
+the public [policy JSON grammar](policy.md#json-grammar). The `policy` schema
+declares that grammar as closed JSON Schema 2020-12 objects, with a nested
+`anyOf` for `pass` and one example in its description. The handler still checks
+bound order, question-relative ranges, boolean bounds and duplicate keys. An
+unknown-field error names the first unknown key in sorted order, shortened to 64
+characters, and the allowed keys. The application selects the model;
 a `model` argument is rejected before dispatch. Invalid definitions also fail
 before dispatch.
 

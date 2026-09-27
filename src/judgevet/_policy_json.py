@@ -1,5 +1,8 @@
 """Decode policy JSON outside the pure domain.
 
+Unknown-field diagnostics name the first unknown key in sorted order,
+shortened to 64 characters, and the allowed keys. They carry no values.
+
 Examples:
     ```python
     from judgevet import Noul
@@ -21,7 +24,7 @@ from __future__ import annotations
 
 import json
 import math
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from judgevet.domain.questions import Choice, Noul, Question, Score
@@ -55,6 +58,27 @@ def _check_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
             raise PolicyDefinitionError("duplicate key in JSON object")
         seen.add(key)
     return dict(pairs)
+
+
+def _unknown_field(
+    subject: str, keys: Iterable[str], allowed: tuple[str, ...]
+) -> str | None:
+    """Describe the first unknown key in sorted order, or return None.
+
+    Args:
+        subject: Diagnostic subject, such as "rule".
+        keys: Keys of the decoded JSON object.
+        allowed: Allowed keys, in diagnostic order.
+
+    Returns:
+        A diagnostic naming the key, shortened to 64 characters, and the
+        allowed keys; None when every key is allowed.
+    """
+    unknown = sorted(key for key in keys if key not in allowed)
+    if not unknown:
+        return None
+    expected = " and ".join(repr(key) for key in allowed)
+    return f"{subject} has unknown field {unknown[0][:64]!r}; expected {expected}"
 
 
 def _is_finite_number(value: object) -> bool:
@@ -95,18 +119,14 @@ def _validate_range_object(
         Tuple of (minimum, maximum) values.
 
     Raises:
-        PolicyDefinitionError: If validation fails.
+        PolicyDefinitionError: If validation fails; an unknown key is named.
     """
-    allowed_keys = set()
-    if allow_min:
-        allowed_keys.add("min")
-    if allow_max:
-        allowed_keys.add("max")
-
-    # Check for unknown keys
-    for key in obj:
-        if key not in allowed_keys:
-            raise PolicyDefinitionError(f"{kind} predicate has unknown field")
+    allowed_keys = tuple(
+        name for name, allow in (("min", allow_min), ("max", allow_max)) if allow
+    )
+    unknown = _unknown_field(f"{kind} predicate", obj, allowed_keys)
+    if unknown is not None:
+        raise PolicyDefinitionError(unknown)
 
     # Must have at least one bound
     if len(obj) == 0:
@@ -261,15 +281,14 @@ def _parse_choice_predicate(
         Tuple of (choice, min_confidence) values.
 
     Raises:
-        PolicyDefinitionError: If validation fails.
+        PolicyDefinitionError: If validation fails; an unknown key is named.
     """
     if not isinstance(question, Choice):
         raise PolicyDefinitionError("question is not a choice type")
 
-    known_keys = {"choice", "confidence"}
-    for key in obj:
-        if key not in known_keys:
-            raise PolicyDefinitionError("choice predicate has unknown field")
+    unknown = _unknown_field("choice predicate", obj, ("choice", "confidence"))
+    if unknown is not None:
+        raise PolicyDefinitionError(unknown)
 
     # Must have choice
     if "choice" not in obj:
@@ -349,12 +368,11 @@ def _validate_rule_structure(rule: dict[str, Any]) -> None:
         rule: The rule object to validate.
 
     Raises:
-        PolicyDefinitionError: If validation fails.
+        PolicyDefinitionError: If validation fails; an unknown key is named.
     """
-    allowed_rule_keys = {"question", "pass"}
-    for key in rule:
-        if key not in allowed_rule_keys:
-            raise PolicyDefinitionError("rule has unknown field")
+    unknown = _unknown_field("rule", rule, ("question", "pass"))
+    if unknown is not None:
+        raise PolicyDefinitionError(unknown)
 
     if "question" not in rule:
         raise PolicyDefinitionError("rule requires 'question' field")
