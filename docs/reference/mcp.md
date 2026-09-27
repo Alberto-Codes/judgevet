@@ -10,7 +10,7 @@ installation, host configuration and discovery, use [Connect MCP](../how-to/conn
 
 ## Tool arguments
 
-Discovery exposes exactly these three tools. All require `state` and
+The published 0.13.0 release exposes these three tools. All require `state` and
 `instruction` (singular). `instruction` is a string. The published schema
 allows a string or object for `state`.
 
@@ -53,6 +53,33 @@ object keys for Score levels are strings on the wire. Field semantics and vendor
 citations are in the [Python API reference](api.md#answer-and-container-types).
 Text content formats the answer for reading; use structured values for programmatic
 access. A successful call is a judgment, not evidence of its correctness.
+
+## Keyed policy tool on main
+
+The source tree adds `evaluate_policy` to discovery. The original three tool
+schemas and results remain unchanged. This addition is not an observation about
+the published 0.13.0 package.
+
+Pass exactly `state`, `questions` and `policy`. State accepts a string, object
+or array. Questions use the CLI JSON grammar, keyed by caller IDs. Each question
+accepts only `type`, `instructions` and `criteria`; unknown fields produce an
+error before dispatch. Optional Noul criteria pass through unchanged. Policy uses
+the public [policy JSON grammar](policy.md). The application selects the model;
+a `model` argument is rejected before dispatch. Invalid definitions also fail
+before dispatch.
+
+Success returns matching JSON text and structured content with `model`, `usage`,
+`answers` and `policy`. The policy object contains `result` (`pass` or `fail`)
+and ordered `rules` with `question`, `pass` and `detail`. An unmet policy has
+`isError: false`. Invalid input, invalid policy answers and declared provider
+failures have `isError: true`, without fabricated answers or a verdict. Unexpected
+implementation errors retain SDK handling. Provider error messages must be safe
+for the application to disclose. Unknown usage stays null.
+
+The tool uses strict public policy evaluation. Existing CLI semantics remain
+unchanged. Provider selection does not install audit or spend controls. Providers
+that opt into those controls retain their own accounting and records.
+Source: [keyed policy contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5851056470).
 
 ## Failure and lifecycle behavior
 

@@ -504,13 +504,31 @@ and usage. They prove borrowed lifetime, owned EOF cleanup, safe setup failure
 and no remaining provider worker. Barrier probes prove cancellation ordering.
 An isolated mutation that skips draining fails the independent probe.
 The [MCP evidence](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850970581)
-records the scope and review. MCP policy, media and installed extension proofs
-remain separate work. No inference implementation or live call is added.
+records the scope and review. Media and installed extension proofs remain
+separate work. No inference implementation or live call is added.
+
+## MCP policy tool
+
+#202 adds `evaluate_policy` alongside the three original tools. It accepts
+caller-keyed questions, state and the existing policy JSON grammar. The host
+selects the model. Strict public policy parsing and evaluation produce the
+ordinary answer envelope and ordered pass/unmet reports. Unmet policy remains
+a successful tool response; declared failures return tool errors.
+Unsupported tool and question fields fail before provider dispatch. Optional
+Noul criteria and supported question values remain intact. Legacy CLI policy
+behavior and the original three MCP schemas/results remain supported.
+
+The [policy contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5851056470)
+and [review repair](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5851113893)
+record the missing-tool regression, independent consumer evidence and the
+unsupported-field failure found beyond green gates. Provider-owned audit and
+spend controls remain opt-in. Media and installed extension proofs remain
+separate work. No live inference or published-release capability is added.
 
 ## Gates
 
-**2262 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.37%** (2339/2427 statements).
+**2277 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.25%** (2388/2481 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

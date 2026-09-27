@@ -1,4 +1,4 @@
-"""Unchanged MCP discovery schemas.
+"""MCP discovery schemas with explicit supported fields for keyed policy questions.
 
 SDK fields follow the tagged
 [SDK definitions](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp-types/mcp_types/_types.py).
@@ -147,5 +147,43 @@ def create_score_tool(mcp_types: Any) -> Any:
                 },
             },
             "required": ["state", "instruction"],
+        },
+    )
+
+
+def create_policy_tool(mcp_types: Any) -> Any:
+    """Create the keyed policy tool with explicit supported question fields.
+
+    Args:
+        mcp_types: SDK type constructors.
+
+    Returns:
+        Tool definition accepting state, questions and policy.
+    """
+    return mcp_types.Tool(
+        name="evaluate_policy",
+        description="Evaluate keyed judgment questions against an acceptance policy.",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "state": {"type": ["string", "object", "array"]},
+                "questions": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "type": {"enum": ["noul", "choice", "score"]},
+                            "instructions": {},
+                            "criteria": {},
+                        },
+                        "required": ["type"],
+                        "additionalProperties": False,
+                    },
+                },
+                "policy": {"type": "object"},
+            },
+            "required": ["state", "questions", "policy"],
+            "additionalProperties": False,
         },
     )

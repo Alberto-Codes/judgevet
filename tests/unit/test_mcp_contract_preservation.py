@@ -22,7 +22,10 @@ def test_existing_discovery_and_results() -> None:
 
     async def exercise() -> None:
         tools = await server._request_handlers["tools/list"].handler(None, None)
-        assert tools.model_dump(mode="json", by_alias=True) == expected["tools"]
+        serialized = tools.model_dump(mode="json", by_alias=True)
+        assert [tool["name"] for tool in serialized["tools"]][-1] == "evaluate_policy"
+        serialized["tools"] = serialized["tools"][:3]
+        assert serialized == expected["tools"]
         for kind in ("noul", "choice", "score"):
             result = await server._request_handlers["tools/call"].handler(
                 None,

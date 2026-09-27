@@ -1,5 +1,7 @@
 """Controlled stdio peer used only by the transport checker's subprocess tests.
 
+Discovery includes evaluate_policy; smoke calls retain the three judgment tools.
+
 Examples:
     ```python
     from tests.unit.mcp_smoke_peer import tool_answer
@@ -19,7 +21,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-NAMES = ["ask_noul", "ask_choice", "ask_score"]
+NAMES = ["ask_noul", "ask_choice", "ask_score", "evaluate_policy"]
 
 
 def tool_answer(name: str) -> dict[str, Any]:

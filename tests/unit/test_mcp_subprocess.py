@@ -167,6 +167,7 @@ async def exercise(process: asyncio.subprocess.Process) -> None:
         "ask_noul",
         "ask_choice",
         "ask_score",
+        "evaluate_policy",
     }
     server = create_mcp_server(RecordingPort())
     expected = await server._request_handlers["tools/list"].handler(None, None)

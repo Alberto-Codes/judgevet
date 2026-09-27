@@ -307,7 +307,7 @@ can point to these commands, but no skill installation is required.
 
 ## Verify the connection
 
-In each MCP host, discover exactly `ask_noul`, `ask_choice`, and `ask_score`.
+For the published 0.13.0 recipes above, discover exactly `ask_noul`, `ask_choice`, and `ask_score`.
 Send these complete argument objects to the corresponding tools:
 
 `ask_noul`:
@@ -385,3 +385,11 @@ For an already acquired provider, call `main(port=provider, model="application-m
 and close it in the application after serving ends. Explicit selection bypasses
 hosted credentials and settings. The existing `judgevet-mcp` command retains
 its hosted defaults. See [provider lifetime and cancellation](../reference/mcp.md#application-selected-providers).
+
+
+The source tree also exposes `evaluate_policy`. Supply `state`, keyed `questions`
+and the existing JSON `policy` object. Use the structured answer envelope and
+its ordered policy report. A valid unmet policy is a successful tool response;
+validation and declared provider failures are tool errors. The application
+launcher selects the model. See the [policy tool contract](../reference/mcp.md#keyed-policy-tool-on-main).
+This addition does not change the published 0.13.0 host observations above.

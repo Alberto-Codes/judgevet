@@ -205,3 +205,14 @@ Cancellation waits for running work before owned cleanup. Queued canceled calls
 do not start. Borrowed ports remain open. Applications retain responsibility
 for provider deadlines, audit, spend accounting and state redaction.
 Source: [MCP provider contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850906357).
+
+
+## Additive MCP policy tool
+
+The source tree adds `evaluate_policy` to tool discovery. Consumers that assert
+exactly three tools must allow the new name. The original three schemas and
+results remain unchanged. The new tool accepts caller question IDs and public
+policy JSON. It uses strict public evaluation without changing CLI behavior.
+The application selects the model; the tool cannot override it. This is source
+acceptance evidence, not a claim about the published 0.13.0 release.
+Source: [keyed policy contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5851056470).

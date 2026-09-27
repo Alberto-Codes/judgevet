@@ -1,8 +1,9 @@
 """Inbound MCP stdio server.
 
-This module provides an MCP server with three tools: ``ask_noul``,
+This module provides the original judgment tools: ``ask_noul``,
 ``ask_choice``, and ``ask_score``. Each takes a state and an instruction,
 then returns the corresponding answer as MCP structured content.
+The evaluate_policy tool preserves keyed questions and returns a strict policy report.
 The factory wires module-level schemas and handlers and resolves the optional
 SDK only when a caller constructs a server. It passes the host-selected model
 to a serialized worker dispatcher. The server lifespan owns the worker while
@@ -80,9 +81,11 @@ from judgevet.adapters.inbound.mcp_handlers import (
     handle_ask_noul,
     handle_ask_score,
 )
+from judgevet.adapters.inbound.mcp_policy import handle_evaluate_policy
 from judgevet.adapters.inbound.mcp_schemas import (
     create_choice_tool,
     create_noul_tool,
+    create_policy_tool,
     create_score_tool,
 )
 from judgevet.ports import SystemOnePort
@@ -97,7 +100,7 @@ __all__ = ["SERVER_NAME", "SERVER_VERSION", "create_mcp_server"]
 
 
 async def _list_tools(mcp_types: Any, ctx: Any, params: Any | None) -> Any:
-    """Return the existing discovery schema for all three tools.
+    """Return the original judgment schemas plus the keyed policy tool.
 
     Args:
         mcp_types: SDK type constructors.
@@ -112,6 +115,7 @@ async def _list_tools(mcp_types: Any, ctx: Any, params: Any | None) -> Any:
             create_noul_tool(mcp_types),
             create_choice_tool(mcp_types),
             create_score_tool(mcp_types),
+            create_policy_tool(mcp_types),
         ],
     )
 
@@ -119,7 +123,7 @@ async def _list_tools(mcp_types: Any, ctx: Any, params: Any | None) -> Any:
 async def _call_tool(
     port: ProviderDispatch, mcp_types: Any, model: str, ctx: Any, params: Any
 ) -> Any:
-    """Dispatch one tool call through the injected judgment port.
+    """Dispatch a single judgment or policy tool through the selected provider.
 
     Args:
         port: Judgment port.
@@ -129,7 +133,8 @@ async def _call_tool(
         params: Tool call parameters.
 
     Returns:
-        SDK tool result.
+        SDK tool result, including policy failures as ordinary judgments and
+        invalid policy requests as error results.
 
     Raises:
         ValueError: If the tool is unknown, arguments are missing or an answer is absent.
@@ -142,12 +147,14 @@ async def _call_tool(
             return await handle_ask_choice(port, mcp_types, params, model=model)
         case "ask_score":
             return await handle_ask_score(port, mcp_types, params, model=model)
+        case "evaluate_policy":
+            return await handle_evaluate_policy(port, mcp_types, params, model=model)
         case _:
             raise ValueError(f"Unknown tool: {params.name}")
 
 
 def create_mcp_server(port: SystemOnePort, *, model: str = "jev-latest") -> Any:
-    """Create an MCP stdio server exposing the three judgment tools.
+    """Create an MCP stdio server exposing judgment tools and keyed policy evaluation.
 
     Args:
         port: Borrowed judgment port used for API calls.

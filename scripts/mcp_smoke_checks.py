@@ -1,5 +1,7 @@
 """Validation helpers for JSON-RPC2.0 frames and tool results.
 
+Discovery includes evaluate_policy; smoke calls retain the three judgment tools.
+
 Examples:
     ```python
     from scripts.mcp_smoke_checks import validate_server_info, validate_tool_call
@@ -72,7 +74,7 @@ def validate_server_info(server_info: dict[str, Any], expected_version: str) -> 
 
 
 def validate_tool_list(tools: list[dict[str, Any]]) -> None:
-    """Require exactly ask_noul, ask_choice, ask_score without duplicates.
+    """Require the three judgment tools and evaluate_policy without duplicates.
 
     Args:
         tools: List from tools/list response.
@@ -81,7 +83,7 @@ def validate_tool_list(tools: list[dict[str, Any]]) -> None:
         RuntimeError: Tools missing, duplicate, or extra names.
     """
     names = [t.get("name") for t in tools]
-    expected = {"ask_noul", "ask_choice", "ask_score"}
+    expected = {"ask_noul", "ask_choice", "ask_score", "evaluate_policy"}
     if set(names) != expected:
         raise RuntimeError("mcp_smoke: missing or extra tools")
     if len(names) != len(expected):
