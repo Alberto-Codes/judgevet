@@ -149,3 +149,18 @@ The existing policy comparisons, answer output and exit meanings remain.
 Applications own provider installation, state transformation, audit and spend
 accounting. Selection does not add those mechanisms to an arbitrary provider.
 Source: [accepted CLI provider contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850672112).
+
+## Apply policy to image answers
+
+Application-selected media providers accept `--evidence-file` together with
+`--policy`. Use the [local manifest format](use-cli-files.md#supply-local-image-evidence).
+Input and policy validation precede provider acquisition. Owned providers close
+after success, unmet policy or transport failure; borrowed providers stay open.
+The CLI retains state, instructions, typed answers, model identifiers and usage.
+
+An explicitly declared Choice label such as `insufficient_evidence` is a
+successful judgment. Without policy it exits 0. A policy requiring a different
+label produces an unmet verdict and exits 3. Missing required evidence,
+unsupported media and declared transport failures exit 1 without an answer or
+policy envelope. Media never falls back to text when evidence is nonempty.
+Source: [CLI media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851367000).

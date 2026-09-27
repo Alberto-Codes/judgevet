@@ -63,3 +63,32 @@ That guide shows how automation handles exits 0, 1, 2 and 3. If the command
 fails, use [troubleshooting](troubleshoot.md); do not publish unreviewed stderr.
 
 For the full contract, see the [CLI reference](../reference/cli.md).
+
+## Supply local image evidence
+
+An application that selects a media provider with `create_cli_app` can accept
+`--evidence-file PATH` before or after the positional inputs. Specify it once.
+The installed hosted command rejects nonempty image evidence before reading
+credentials or constructing HTTP. It does not send images to Jev.
+
+The manifest is a UTF-8 JSON object with exactly `images`, `by_question` and
+optional `required`. For example, its contents may be
+`{"images":[{"id":"scan","path":"scan.png","media_type":"image/png"}],"by_question":{"clear":["scan"]},"required":["clear"]}`.
+Each image declares nonempty `id`, `path` and `media_type` strings.
+`by_question` maps existing question IDs to ordered image ID lists.
+`required` lists questions that must have evidence and defaults to empty.
+Every image must be referenced. IDs and references cannot repeat within their lists.
+
+Relative image paths resolve against the manifest directory. Absolute local
+paths are accepted; network URLs are rejected. The CLI preserves exact bytes,
+attachment order and per-question order. It never decodes images or embeds them
+in state. MIME is a declaration, not a guarantee about decoded content.
+
+The manifest limit is 1 MiB. Evidence allows at most 16 images, 8 MiB per image
+and 32 MiB total. Duplicate JSON keys, unknown fields, non-finite constants,
+invalid UTF-8, malformed structures and missing references fail before provider
+acquisition. Diagnostics identify `--evidence-file` and the failure category
+without printing paths or contents. These failures and repeated evidence flags
+exit 1. A valid empty optional manifest uses the existing text path.
+Provider capability declarations apply additional model-specific limits.
+Source: [CLI media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851367000).

@@ -7,6 +7,7 @@ policies use a separate composition path and distinguish unmet policy from error
 Hosted paths resolve credential sources once before adapter construction.
 Application-selected providers use their own ownership and configuration.
 They render rate limits as handled failures and configure stderr logging.
+Explicit image manifests use selected media providers; hosted media is rejected.
 
 Examples:
     ```python
@@ -40,6 +41,8 @@ from judgevet.adapters.inbound.cli_composition import (
     run_selected,
 )
 from judgevet.adapters.inbound.cli_inputs import InputFailure, resolve_inputs
+from judgevet.adapters.inbound.cli_media import validate_hosted_evidence
+from judgevet.adapters.inbound.cli_options import FileCommand, FileInputs
 from judgevet.adapters.inbound.cli_policy_run import CliCallbacks, run_policy
 from judgevet.adapters.inbound.logs import configure
 from judgevet.adapters.inbound.settings import Settings
@@ -276,7 +279,7 @@ def _dispatch(
     model: str,
     api_key: str | None,
     json_output: bool,
-    policy_files: list[str] | None,
+    files: FileInputs,
     selection: object = None,
 ) -> int:
     """Select the composition path after command input validation.
@@ -287,7 +290,7 @@ def _dispatch(
         model: Requested model.
         api_key: Optional explicit literal key.
         json_output: Select JSON rendering.
-        policy_files: Optional validated policy file selection.
+        files: Optional validated policy and evidence selection.
         selection: Application provider selection, if present.
 
     Returns:
@@ -300,17 +303,31 @@ def _dispatch(
             questions,
             model,
             json_output,
-            policy_files[0] if policy_files else None,
+            files,
             CliCallbacks(parse_questions, build_response_data, output_response),
         )
-    if policy_files:
+    if files.evidence is not None:
+        try:
+            validate_hosted_evidence(files.evidence, parse_questions(questions))
+        except (InputFailure, ValueError, TypeError, KeyError, AttributeError) as error:
+            message = (
+                str(error)
+                if isinstance(error, InputFailure)
+                else "--evidence-file: invalid questions"
+            )
+            print(
+                json.dumps({"error": message}) if json_output else f"Error: {message}",
+                file=sys.stderr,
+            )
+            return 1
+    if files.policy is not None:
         return run_policy(
             state,
             questions,
             model,
             api_key,
             json_output,
-            policy_files[0],
+            files.policy,
             CliCallbacks(parse_questions, build_response_data, output_response),
         )
     else:
@@ -332,6 +349,7 @@ def create_cli_app(
 
     Borrowed ports stay open. A factory owns each invocation's provider lifetime.
     Explicit selection bypasses hosted credentials and HTTP settings.
+    File options include ordered local image evidence.
 
     Args:
         port: Borrowed judgment provider.
@@ -363,7 +381,9 @@ def create_cli_app(
         help="Call the Jev System One API", context_settings={"obj": selection}
     )
     command = CliCommand(partial(_dispatch, selection=selection), _command_inputs)
-    application.command(help="Call the Jev System One API.")(command.run)
+    application.command(cls=FileCommand, help="Call the Jev System One API.")(
+        command.run
+    )
     return application
 
 
@@ -463,7 +483,7 @@ def parse_args() -> Any:
     return parser.parse_args()
 
 
-app.command(help="Call the Jev System One API.")(
+app.command(cls=FileCommand, help="Call the Jev System One API.")(
     CliCommand(_dispatch, _command_inputs).run
 )
 

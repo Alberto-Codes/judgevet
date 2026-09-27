@@ -236,3 +236,19 @@ This extension adds no inference dependency, HTTP media implementation or live
 verification claim. Applications own provider selection, model declarations,
 number semantics and policy thresholds.
 Source: [accepted media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851219798).
+
+## CLI image manifests
+
+The source tree adds optional `--evidence-file` through public Typer command and
+option classes. Existing positional and file grammar, stdin state, policy
+rendering and public `main` signature remain unchanged. Each invocation keeps
+its own file option metadata and each application keeps its provider selection.
+
+Image evidence requires an application-selected media provider. The hosted
+adapter remains text-only. Valid empty optional evidence retains the previous
+text route. Required missing evidence fails before acquisition. Local manifest
+errors, unsupported capabilities and declared transport failures exit 1; explicit
+insufficient-evidence Choice answers retain ordinary success and policy semantics.
+This is offline source acceptance evidence, not a published release or a new live
+service verification claim.
+Source: [CLI media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851367000).

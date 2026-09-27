@@ -542,14 +542,32 @@ record exact types, red tests and the removal of unrequested criteria restrictio
 Independent consumer mutations detect dropped or swapped attachments, changed
 bindings and text conversion. Repository-owned fake and translating-provider
 fixtures exercise all three answer variants. These are offline boundary proofs.
-CLI/MCP image exposure, media provenance and installed extension proofs remain
-separate work. No HTTP media support, inference implementation, live verification
-or confidence calibration is claimed.
+Media provenance and installed extension proofs remain separate work. No HTTP
+media support, inference implementation, live verification or confidence
+calibration is claimed.
+
+## CLI image evidence
+
+#203 adds optional `--evidence-file` for ordinary and policy commands. Strict
+local manifests preserve image bytes, attachment order and question bindings.
+Relative paths resolve against the manifest directory. Bounded reads and local
+validation finish before provider acquisition. Missing required evidence has an
+explicit diagnostic; malformed input, unsupported media and transport failures
+produce no answer or policy envelope. Explicit insufficient-evidence Choice
+answers retain ordinary success and policy-unmet behavior.
+
+Public Typer command and option classes preserve legacy grammar, hosted empty
+text calls, provider selection and per-invocation file state. The hosted adapter
+rejects nonempty media before settings or credentials. Independent consumer
+mutations detect dropped or swapped images and changed bindings. The
+[CLI contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851367000)
+and [diagnostic repair](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851476145)
+record scope and evidence. MCP media exposure remains separate work.
 
 ## Gates
 
-**2346 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.39%** (2562/2658 statements).
+**2392 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.48%** (2716/2815 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial
