@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import shutil
 import tempfile
+from contextlib import chdir
 from pathlib import Path
 
 import pytest
@@ -149,7 +149,11 @@ class TestCountPerFileIgnores:
         assert total_after > total_before
 
     def test_main_fails_when_budget_exceeded(self) -> None:
-        """Test that main() returns 1 when per-file-ignores exceeds the budget."""
+        """Test that main() returns 1 when per-file-ignores exceeds the budget.
+
+        main() runs from the fixture directory and never touches the
+        repository's own pyproject.toml.
+        """
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
             pyproject = tmpdir_path / "pyproject.toml"
@@ -172,19 +176,11 @@ class TestCountPerFileIgnores:
             assert total == ALLOWED_PER_FILE_IGNORE_CODES + 1
             assert total > ALLOWED_PER_FILE_IGNORE_CODES
 
-            # Copy this pyproject.toml to the project root temporarily and test main()
-            original_pyproject = Path("pyproject.toml")
-            backup = tmpdir_path / "pyproject.toml.bak"
-            if original_pyproject.exists():
-                shutil.move(str(original_pyproject), str(backup))
-
-            try:
-                shutil.copy(pyproject, "pyproject.toml")
+            # Run main() from the fixture directory. Swapping the repository's
+            # own pyproject.toml would race any parallel test that reads it.
+            with chdir(tmpdir_path):
                 result = main([])
-                assert result == 1
-            finally:
-                if backup.exists():
-                    shutil.move(str(backup), str(original_pyproject))
+            assert result == 1
 
 
 class TestScan:

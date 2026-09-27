@@ -82,7 +82,7 @@ For focused diagnosis, the core commands are:
 | Architecture | `uv run lint-imports` |
 | Changed docstrings | `uv run docvet check` |
 | All docstrings | `uv run docvet check --all` |
-| Tests and coverage | `uv run pytest -q --cov` |
+| Tests and coverage | `uv run pytest -q -n auto --cov` |
 | Suppressions | `uv run python scripts/check_suppressions.py` |
 | Documentation | `uv run mkdocs build --strict` |
 

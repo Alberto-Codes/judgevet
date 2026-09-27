@@ -637,6 +637,10 @@ Applications still own provider translation, inference and quality validation.
 **2512 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.50%** (2892/2997 statements).
 
+CI and both pytest hooks run the suite on parallel workers (`-n auto`,
+pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,
+with the same tests and coverage (#208).
+
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial
 replayed #195's original fixture against its historical baseline and current

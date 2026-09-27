@@ -154,7 +154,7 @@ uv run judgevet --help
 | layers | `uv run lint-imports` |
 | size | `uv run python scripts/check_loc.py src` |
 | docs | `uv run docvet check` |
-| tests | `uv run pytest -q --cov` |
+| tests | `uv run pytest -q -n auto --cov` |
 | hooks | `uv run pre-commit run --files <changed files>` then `uv run pre-commit run --hook-stage pre-push --files <changed files>` |
 
 The table names gates, not a second sequence to run beside the hooks.
