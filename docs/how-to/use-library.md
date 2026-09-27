@@ -110,6 +110,8 @@ answer is an ordinary Choice only when you declare that criterion yourself.
 Existing policy rules determine its result. Provider numbers imply no measured
 calibration; unknown usage remains `None` and zero remains zero. These are local
 offline contracts, not evidence of a live model's image support or quality.
+The [installed provider proof](../reference/compatibility.md#installed-provider-extension-proof)
+repeats them offline against installed wheels.
 Source: [accepted media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851219798).
 
 To attach media provenance to your existing audit record, import

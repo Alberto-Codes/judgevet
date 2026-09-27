@@ -154,6 +154,15 @@ repos:
         always_run: true
         stages: [pre-push]
 
+      # Exercise both artifact paths in fresh base and MCP environments.
+      - id: provider-artifacts
+        name: installed provider extension artifacts
+        entry: uv run python scripts/smoke_provider_release.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
       - id: doc-example-inventory
         name: documentation example inventory
         entry: uv run python -m scripts.doc_example_inventory

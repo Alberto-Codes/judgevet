@@ -276,3 +276,38 @@ No new audit wrapper, retry accounting or usage estimation is introduced.
 Typed and equivalent raw question definitions share a request fingerprint.
 Image order, exact bytes and bindings remain distinct evidence inputs.
 Source: [media provenance contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851443210).
+
+## Installed provider extension proof
+
+The `provider-artifacts` pre-push hook runs `scripts/smoke_provider_release.py`.
+It builds the wheel and source archive, then builds a second wheel from that
+archive. Each wheel is installed into a fresh base environment and a fresh
+`mcp` extra environment outside the checkout. The hook records the SHA-256 of
+the archive and both wheels, the installed version, the dependency inventory and
+the file of every loaded judgevet module. The identity process, the library
+consumer and each CLI and MCP child report their module files, and every file
+must come from that environment's site-packages. The runner evaluates each
+installed distribution's PEP 508 markers for the tested interpreter. The base
+inventory must equal the declared dependency closure without MCP, with no
+missing applicable dependency. The extra inventory adds only the `mcp` closure.
+
+A repository fixture translates application questions into public judgevet types
+and translates typed responses back into application findings. It exercises direct library text, media and policy calls,
+the CLI factory with borrowed and owned providers, and the MCP policy tool over
+real stdio. MCP calls use both raw JSON-RPC lines and the SDK's `stdio_client`
+with `ClientSession`. The checks compare exact state, question definitions,
+requested and resolved models, known and unknown usage, image bytes, image
+order and bindings. They also cover insufficient-evidence outcomes, unsupported media and
+the absence of fallback. Entered provider contexts close once after success,
+call failure or an invalid port. Factories roll back failed setup.
+An offline mock transport checks the hosted request shape. Optional
+media provenance is fingerprinted without raw content. Every runtime child
+starts through a bootstrap that refuses network connections and name lookups
+before the package is imported. Children receive no inherited import path,
+credential or configuration variable. Package build and installation may still
+download declared public dependencies.
+
+This proof is offline. It makes no live service, model quality, server or
+private integration claim.
+Source: [installed provider proof contract](https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851596904)
+and [repair](https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851983135).

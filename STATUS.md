@@ -470,8 +470,8 @@ Neutral provider errors add no HTTP status or retry guarantee.
 Independent public policy and lifetime probes pass. Isolated mutations that
 skip owned cleanup or close a borrowed resource each fail the ownership probe.
 The [ownership issue](https://github.com/Alberto-Codes/judgevet/issues/201)
-records the acceptance and gate evidence. CLI, MCP, media and installed
-extension proofs remain separate work. No inference implementation is added.
+records the acceptance and gate evidence. The later sections record CLI, MCP,
+media and installed proofs. No inference implementation is added.
 
 ## Application-selected CLI providers
 
@@ -486,8 +486,8 @@ The [CLI contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecom
 records the missing-import regression and exact acceptance boundary.
 Independent generated-app probes pass against the checkout and isolated copy.
 Replacing forwarded state in the copy makes the same probe fail. The complete
-commit and push stages pass for this CLI slice. MCP, media and installed
-extension proofs remain separate work.
+commit and push stages pass for this CLI slice. The later sections record MCP,
+media and installed proofs.
 
 ## MCP provider dispatch and lifetime
 
@@ -504,8 +504,8 @@ and usage. They prove borrowed lifetime, owned EOF cleanup, safe setup failure
 and no remaining provider worker. Barrier probes prove cancellation ordering.
 An isolated mutation that skips draining fails the independent probe.
 The [MCP evidence](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850970581)
-records the scope and review. Media and installed extension proofs remain
-separate work. No inference implementation or live call is added.
+records the scope and review. The later sections record media and installed
+proofs. No inference implementation or live call is added.
 
 ## MCP policy tool
 
@@ -522,8 +522,8 @@ The [policy contract](https://github.com/Alberto-Codes/judgevet/issues/202#issue
 and [review repair](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5851113893)
 record the missing-tool regression, independent consumer evidence and the
 unsupported-field failure found beyond green gates. Provider-owned audit and
-spend controls remain opt-in. Media and installed extension proofs remain
-separate work. No live inference or published-release capability is added.
+spend controls remain opt-in. The later sections record media and installed
+proofs. No live inference or published-release capability is added.
 
 ## Image evidence library contract
 
@@ -542,7 +542,7 @@ record exact types, red tests and the removal of unrequested criteria restrictio
 Independent consumer mutations detect dropped or swapped attachments, changed
 bindings and text conversion. Repository-owned fake and translating-provider
 fixtures exercise all three answer variants. These are offline boundary proofs.
-Installed extension proofs remain separate work. No HTTP
+Installed proofs appear below. No HTTP
 media support, inference implementation, live verification or confidence
 calibration is claimed.
 
@@ -562,7 +562,7 @@ rejects nonempty media before settings or credentials. Independent consumer
 mutations detect dropped or swapped images and changed bindings. The
 [CLI contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851367000)
 and [diagnostic repair](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851476145)
-record scope and evidence. Installed proofs remain separate work.
+record scope and evidence. Installed proofs appear below.
 
 ## MCP image evidence
 
@@ -580,7 +580,7 @@ Insufficient-evidence Choice remains an ordinary unmet policy. The original
 three tool schemas remain unchanged.
 The [MCP media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851508259)
 records scope and limits. This is offline source evidence. Installed proofs
-remain separate work; no live provider support is claimed.
+appear below; no live provider support is claimed.
 
 ## Optional media provenance
 
@@ -600,12 +600,42 @@ attempt claims and known-only usage settlement remain intact.
 The [provenance contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851443210)
 and [test repair](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851753625)
 record scope and evidence. The helper emits no records and cannot observe opaque
-provider attempts or preprocessing. Installed extension proofs remain pending.
+provider attempts or preprocessing. Installed proofs appear below.
+
+## Installed provider extension proofs
+
+#205 adds the offline `provider-artifacts` pre-push hook. CI runs the same hook.
+It builds a source wheel and a second wheel from the source archive. Each wheel
+passes in fresh base and MCP-extra environments outside the checkout. Receipts
+record artifact hashes, version, dependency inventories and loaded module paths.
+All judgevet imports resolve inside each environment's site-packages. Dependency
+checks apply interpreter markers and reject missing or unexpected packages.
+
+Repository-owned fixtures exercise library, CLI and MCP policy calls, selected
+models, known and unknown usage, exact image bytes, order and question bindings.
+Borrowed resources stay open. Entered provider contexts close after success,
+call failure or an invalid port. Factories roll back failed setup.
+Unsupported media and insufficient evidence retain distinct outcomes. MCP runs
+through both raw stdio and the installed SDK client. An offline HTTP transport
+checks hosted compatibility. Runtime bootstraps block network use before imports
+and clear inherited credential, configuration and import-path variables.
+
+Independent installed-artifact review passed all four environments. Bypassing
+media dispatch in an isolated installed package made nine consumer checks fail.
+The reviewer also rejected missing import receipts and checkout module paths.
+The [accepted contract](https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851596797),
+[repair](https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851983135)
+and [receipt correction](https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5852064351)
+record scope and evidence. Complete local hook stages pass, with affected checks
+refreshed after repairs. Actual commit, push and exact-commit CI remain delivery
+checks. No package was published and no live provider was called. #199 and #205
+retain deferred scope; #204 and live confidence research remain outside this work.
+Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2455 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.46%** (2891/2997 statements).
+**2512 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.50%** (2892/2997 statements).
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

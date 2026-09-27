@@ -25,6 +25,8 @@ uv add judgevet
 
 The package includes `judgevet/py.typed` for type checkers. The base installation
 does not install the MCP runtime. See [supported imports](../reference/compatibility.md).
+The [installed provider proof](../reference/compatibility.md#installed-provider-extension-proof)
+checks both facts against fresh installations of the built wheels.
 
 ## Run the CLI
 

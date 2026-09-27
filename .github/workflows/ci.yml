@@ -99,6 +99,23 @@ jobs:
         if: always()
         continue-on-error: true
 
+  provider-artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --locked --dev
+      - run: >-
+          uv run pre-commit run provider-artifacts
+          --hook-stage pre-push --all-files
+      - run: uv cache prune --ci
+        if: always()
+        continue-on-error: true
+
   docvet:
     runs-on: ubuntu-latest
     timeout-minutes: 10
