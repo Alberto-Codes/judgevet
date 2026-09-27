@@ -4,7 +4,8 @@ This module provides the composition root for the MCP stdio server.
 The hosted path reads Settings once, configures stderr logging, builds the HTTP
 adapter and serves stdio. Explicit provider selection bypasses hosted settings.
 An application factory acquires and closes its provider on the dispatch worker.
-Borrowed providers remain open when serving ends.
+Borrowed providers remain open when serving ends. A fatal failure names its
+stage and exception type names and omits exception text.
 
 Examples:
     ```python
@@ -118,8 +119,11 @@ def main(
     Raises:
         ValueError: Both provider selection arguments are supplied.
         SystemExit: If startup or serving raises a declared library error or an
-            IO, runtime, value, type or grouped exception. Its details are omitted
-            from the diagnostic.
+            IO, runtime, value, type or grouped exception. The exit code is 1.
+            The diagnostic reads ``judgevet-mcp: <stage> failed (<TypeName>)``.
+            The stage is credential resolution, provider acquisition or
+            serving. A group lists its distinct leaf type names. Exception
+            text and the cause chain are omitted.
     """
     if port is not None and provider_factory is not None:
         raise ValueError("Supply at most one of port or provider_factory")
@@ -130,12 +134,14 @@ def main(
         )
         return 2
 
+    selected = port is not None or provider_factory is not None
+    stage = _Stage("provider acquisition" if selected else "credential resolution")
     try:
-        if port is not None or provider_factory is not None:
+        if selected:
             configure_mcp_logging()
-            asyncio.run(_run_selected(port, provider_factory, model))
+            asyncio.run(_run_selected(port, provider_factory, model, stage))
             return 0
-        return _run_hosted(model)
+        return _run_hosted(model, stage)
     except KeyboardInterrupt:
         return 130
     except (
@@ -145,15 +151,68 @@ def main(
         ValueError,
         TypeError,
         ExceptionGroup,
-    ):
-        raise SystemExit("judgevet-mcp: startup or runtime failure") from None
+    ) as exc:
+        raise SystemExit(_diagnostic(stage.name, exc)) from None
 
 
-def _run_hosted(model: str) -> int:
+class _Stage:
+    """Record the stage a fatal diagnostic names.
+
+    Attributes:
+        name (str): Stage in progress: credential resolution, provider
+            acquisition or serving.
+
+    Examples:
+        ```python
+        from judgevet.adapters.inbound.mcp_entrypoint import _Stage
+
+        assert _Stage("serving").name == "serving"
+        ```
+    """
+
+    def __init__(self, name: str) -> None:
+        """Start at the first stage of the selected path.
+
+        Args:
+            name: Initial stage name.
+        """
+        self.name = name
+
+
+def _leaf_names(exc: BaseException) -> list[str]:
+    """List distinct leaf exception type names in order of first appearance.
+
+    Args:
+        exc: Caught exception, possibly a nested group.
+
+    Returns:
+        Type names without module paths or exception text.
+    """
+    if not isinstance(exc, BaseExceptionGroup):
+        return [type(exc).__name__]
+    names = (name for inner in exc.exceptions for name in _leaf_names(inner))
+    return list(dict.fromkeys(names))
+
+
+def _diagnostic(stage: str, exc: BaseException) -> str:
+    """Build the fixed fatal diagnostic from a stage and the exception types.
+
+    Args:
+        stage: Failed stage name.
+        exc: Caught exception; only its type names are used.
+
+    Returns:
+        The message ``judgevet-mcp: <stage> failed (<TypeName>, ...)``.
+    """
+    return f"judgevet-mcp: {stage} failed ({', '.join(_leaf_names(exc))})"
+
+
+def _run_hosted(model: str, stage: _Stage) -> int:
     """Preserve hosted settings and existing composition seams.
 
     Args:
         model: Host-selected model.
+        stage: Stage record advanced to serving after credential resolution.
 
     Returns:
         Zero on success or two on configuration failure.
@@ -172,6 +231,7 @@ def _run_hosted(model: str) -> int:
         )
         return 2
     adapter = build_adapter(settings)
+    stage.name = "serving"
     try:
         if model == "jev-latest":
             asyncio.run(run_stdio(adapter))
@@ -186,6 +246,7 @@ async def _run_selected(
     port: SystemOnePort | None,
     factory: ProviderFactory | None,
     model: str,
+    stage: _Stage,
 ) -> None:
     """Serve an explicit provider inside its worker-owned context.
 
@@ -193,6 +254,7 @@ async def _run_selected(
         port: Borrowed provider.
         factory: Owning application factory.
         model: Host-selected model.
+        stage: Stage record advanced to serving after provider acquisition.
 
     Raises:
         RuntimeError: Provider acquisition yielded no port.
@@ -201,4 +263,5 @@ async def _run_selected(
     async with dispatch.session():
         if dispatch.port is None:
             raise RuntimeError("Provider acquisition did not return a port")
+        stage.name = "serving"
         await run_stdio(dispatch.port, model=model)

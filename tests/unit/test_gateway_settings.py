@@ -52,7 +52,9 @@ def test_roots_use_gateway_config(root, invalid, tmp_path, monkeypatch) -> None:
         if root == "mcp":
             monkeypatch.setattr(mcp_entrypoint, "run_stdio", run_stdio)
             if invalid:
-                with pytest.raises(SystemExit, match="startup or runtime failure"):
+                with pytest.raises(
+                    SystemExit, match="judgevet-mcp: credential resolution failed"
+                ):
                     mcp_entrypoint.main()
             else:
                 assert mcp_entrypoint.main() == 0

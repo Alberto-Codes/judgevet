@@ -111,7 +111,9 @@ def test_mcp_source_failure_is_private(tmp_path: Path, monkeypatch, capsys) -> N
         "import sys; print('output-canary'); sys.stderr.write('error-canary'); sys.exit(7)",
     )
     monkeypatch.setenv("JEV_API__KEY", source)
-    with pytest.raises(SystemExit, match="startup or runtime failure") as caught:
+    with pytest.raises(
+        SystemExit, match="judgevet-mcp: credential resolution failed"
+    ) as caught:
         mcp_entrypoint.main()
     assert capsys.readouterr() == ("", "")
     assert "canary" not in str(caught.value)

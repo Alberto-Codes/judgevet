@@ -70,7 +70,8 @@ def test_constructor_failure(
 
     monkeypatch.setattr(entry, "build_adapter", fail)
     with pytest.raises(
-        SystemExit, match="judgevet-mcp: startup or runtime failure"
+        SystemExit,
+        match=r"^judgevet-mcp: credential resolution failed \(RuntimeError\)$",
     ) as exc:
         entry.main()
     output = capsys.readouterr()
@@ -121,7 +122,7 @@ def test_serving_failure_closes(
     monkeypatch.setattr(entry, "build_adapter", build)
     monkeypatch.setattr(entry, "create_mcp_server", factory)
     monkeypatch.setattr(entry, "stdio_server", streams)
-    with pytest.raises(SystemExit, match="startup or runtime failure") as exc:
+    with pytest.raises(SystemExit, match="judgevet-mcp: serving failed") as exc:
         entry.main()
     assert events == (["factory"] if stage == "factory" else ["factory", "stdio"])
     assert port.close_count == 1

@@ -156,7 +156,7 @@ def test_entrypoint_selection_and_thread_affinity(
     monkeypatch.setattr(entry, "run_stdio", serve)
     monkeypatch.setattr(entry, "build_adapter", forbidden)
     if fail:
-        with pytest.raises(SystemExit, match="startup or runtime failure"):
+        with pytest.raises(SystemExit, match="judgevet-mcp: serving failed"):
             if owned:
                 entry.main(provider_factory=factory, model="fixture-selected")
             else:
@@ -190,7 +190,10 @@ def test_unavailable_factory_never_falls_back(monkeypatch: pytest.MonkeyPatch) -
         pytest.fail("unavailable provider fell back to hosted construction")
 
     monkeypatch.setattr(entry, "build_adapter", forbidden)
-    with pytest.raises(SystemExit, match="startup or runtime failure"):
+    with pytest.raises(
+        SystemExit,
+        match=r"^judgevet-mcp: provider acquisition failed \(ProviderUnavailableError\)$",
+    ):
         entry.main(provider_factory=unavailable, model="fixture-selected")
     assert events == ["setup", "rollback"]
 
@@ -262,7 +265,10 @@ def test_canceled_acquisition_unwinds_on_worker(
         pytest.fail("canceled acquisition proceeded to serving")
 
     async def exercise() -> None:
-        acquiring = asyncio.create_task(entry._run_selected(None, factory, "fixture"))
+        stage = entry._Stage("provider acquisition")
+        acquiring = asyncio.create_task(
+            entry._run_selected(None, factory, "fixture", stage)
+        )
         try:
             assert await asyncio.to_thread(started.wait, 2)
             acquiring.cancel()
@@ -275,6 +281,7 @@ def test_canceled_acquisition_unwinds_on_worker(
             release.set()
         with pytest.raises(asyncio.CancelledError):
             await acquiring
+        assert stage.name == "provider acquisition"
 
     monkeypatch.setattr(entry, "run_stdio", forbidden)
     asyncio.run(exercise())

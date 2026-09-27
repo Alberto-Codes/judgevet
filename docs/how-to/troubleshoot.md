@@ -40,6 +40,19 @@ only the token. Check file access under the host's user account. An inherited
 literal key can override a key file; consult precedence before changing it.
 Read [credential handling](../../SECURITY.md#credentials) before changing it.
 
+A fatal `judgevet-mcp` failure exits 1 and names the failed stage and the
+exception type. It never prints exception text.
+
+| stderr message | Failed stage | Next action |
+|---|---|---|
+| `judgevet-mcp: credential resolution failed (<TypeName>)` | Building the hosted adapter from the key source and connection settings. | Check the key source, key file access and gateway settings without printing them. |
+| `judgevet-mcp: provider acquisition failed (<TypeName>)` | Entering the application's provider factory, or receiving no provider from it. | Check the application's provider setup. |
+| `judgevet-mcp: serving failed (<TypeName>)` | The stdio run and the tool calls inside it. | Check the host connection and the provider named by the type. |
+
+A grouped failure lists each distinct leaf type once, in order of first
+appearance, for example `(JevAuthError, OSError)`. The messages
+`judgevet-mcp: invalid settings` and the missing key source message exit 2.
+
 If the process starts but tools are missing, inspect the host's saved server
 configuration. Start a fresh host session and repeat discovery. A saved entry
 is not proof of a connection. A standalone SDK check is not proof that the
