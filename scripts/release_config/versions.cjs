@@ -55,3 +55,24 @@ for (const target of ['0.10.1', '0.11.0', '1.2.3', '2.0.0-rc.1']) {
     }
   });
 }
+
+// https://github.com/googleapis/release-please/blob/v17.3.0/src/updaters/generic-toml.ts
+for (const target of ['0.10.1', '1.2.3', '2.0.0-rc.1']) {
+  test(`configured updater bumps only the judgevet entry in uv.lock to ${target}`, async () => {
+    const strategy = new Python({
+      github: {}, targetBranch: 'main', path: '.', extraFiles: config['extra-files'],
+    });
+    const updates = await strategy.extraFileUpdates(Version.parse(target), new Map());
+    const original = fs.readFileSync(path.join(root, 'uv.lock'), 'utf8');
+    const lockUpdates = updates.filter(u => u.path === 'uv.lock');
+    assert.ok(lockUpdates.length > 0, 'uv.lock: must have an extra-files updater');
+    let content = original;
+    for (const update of lockUpdates) {
+      content = update.updater.updateContent(content);
+    }
+    const regex = new RegExp('(\\[\\[package\\]\\]\\nname = "judgevet"\\nversion = ")[^"]*(\\")');
+    assert.match(original, regex, 'uv.lock: must contain judgevet package with version line');
+    const expected = original.replace(regex, function(_, a, b) { return a + target + b; });
+    assert.equal(content, expected, 'uv.lock: only the judgevet version changes; every other byte survives');
+  });
+}
