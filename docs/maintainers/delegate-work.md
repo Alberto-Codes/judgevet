@@ -132,6 +132,7 @@ Check each rule below before you dispatch a brief.
 - A new docs page needs an entry in `scripts/doc_examples.json`, or the doc-example-inventory commit hook and the doc-python-examples push hook fail.
 - A new root export needs an entry in `EXPECTED_EXPORTS` in `tests/unit/test_public_surface.py` and in the allowed-name set in `scripts/policy_artifact_check.py`.
 - A call-site sweep covers `scripts/` as well as `src`, `tests`, `docs` and README. `ty` checks scripts too.
+- A change to a message or behaviour needs a grep of `tests/` for the old message. Also grep for each assertion on the changed error, including `not in` checks. Name every file that pins the old behaviour in the allowed edits. See #223.
 - Name one mechanical validation owner. The owner runs both complete hook stages under the validation rules below.
 - Write each URL citation as its own short sentence in the form "Source: <url>." A parenthesised URL merges two sentences for the plain-English checker.
 - A verified-table row in STATUS.md cites a recorded run, not a test name.
