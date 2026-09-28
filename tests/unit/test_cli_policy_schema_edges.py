@@ -50,7 +50,6 @@ QUESTIONS = {
         ("s", {"score": {"max": 2.1}}),
         ("s", {"score": {"min": 0}, "confidence": {"min": True}}),
         ("s", {"score": {"min": 0}, "confidence": {"min": -0.1}}),
-        ("s", {"score": {"min": 0}, "private": 1}),
     ],
 )
 def test_reject_predicate(name: str, predicate: object) -> None:
@@ -61,6 +60,18 @@ def test_reject_predicate(name: str, predicate: object) -> None:
     assert caught.value.code == 1
     assert "--policy" in str(caught.value)
     assert "private" not in str(caught.value)
+
+
+def test_reject_unknown_pass_field_names_it() -> None:
+    """An unknown pass key is named; #214 ruled key names are not caller data."""
+    predicate = {"score": {"min": 0}, "private": 1}
+    text = json.dumps({"rules": [{"question": "s", "pass": predicate}]})
+    with pytest.raises(InputFailure) as caught:
+        parse_policy(text, QUESTIONS)
+    assert caught.value.code == 1
+    assert str(caught.value) == (
+        "--policy: pass has unknown field 'private'; expected 'score' and 'confidence'"
+    )
 
 
 @pytest.mark.parametrize("name", [None, True, 3, [], {}, "", "private"])

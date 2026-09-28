@@ -281,14 +281,10 @@ def _parse_choice_predicate(
         Tuple of (choice, min_confidence) values.
 
     Raises:
-        PolicyDefinitionError: If validation fails; an unknown key is named.
+        PolicyDefinitionError: If validation fails.
     """
     if not isinstance(question, Choice):
         raise PolicyDefinitionError("question is not a choice type")
-
-    unknown = _unknown_field("choice predicate", obj, ("choice", "confidence"))
-    if unknown is not None:
-        raise PolicyDefinitionError(unknown)
 
     # Must have choice
     if "choice" not in obj:
@@ -413,7 +409,7 @@ def _validate_pass_object(pass_obj: dict[str, Any]) -> str:
         The selected predicate kind ('noul', 'choice', or 'score').
 
     Raises:
-        PolicyDefinitionError: If validation fails.
+        PolicyDefinitionError: If validation fails; an unknown key is named.
     """
     if not isinstance(pass_obj, dict):
         raise PolicyDefinitionError("pass must be an object")
@@ -422,9 +418,10 @@ def _validate_pass_object(pass_obj: dict[str, Any]) -> str:
     if len(kinds) != 1:
         raise PolicyDefinitionError("pass must have exactly one predicate type")
     kind = kinds[0]
-    allowed = {kind} if kind == "noul" else {kind, "confidence"}
-    if set(pass_obj) - allowed:
-        raise PolicyDefinitionError("pass has unknown or misplaced fields")
+    allowed = ("noul",) if kind == "noul" else (kind, "confidence")
+    unknown = _unknown_field("pass", pass_obj, allowed)
+    if unknown is not None:
+        raise PolicyDefinitionError(unknown)
     return kind
 
 
