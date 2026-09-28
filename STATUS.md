@@ -634,7 +634,7 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2606 tests pass, 7 live tests deselected.** The last measured coverage is
+**2609 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.67%** (2963/3065 statements).
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,
@@ -712,9 +712,10 @@ Hooks remain enabled. The file-size gate `scripts/check_loc.py` is new at
 commit and in CI; all 44 modules under `src` measure at or under 300 code
 lines. Slice A of #8 adds nine boundary tests for the module cap and a
 report-only function counter: the gate prints every function over 50 code
-lines and still exits 0. No function under `src` is over 50; enforcement is
-slice B. Slice A2 makes the module cap a single hard limit: 300 passes, 301
-fails, and the 320 tier is gone.
+lines and still exits 0. Slice A2 makes the module cap a single hard limit:
+300 passes, 301 fails, and the 320 tier is gone. Slice B enforces the function
+cap: a body of 50 code lines passes and 51 fails the gate. No function under
+`src` is over 50; the largest measured 42 before slice B landed.
 `[tool.ty.src] include` pins ty to `src`, `tests` and `scripts` (#49). A
 probe file with one type error in each root yields 3 diagnostics.
 Ordinary tests exclude live service calls. The coverage floor is 90%.

@@ -1,4 +1,4 @@
-"""File-size gate: fail when a module exceeds the decomposition limit.
+"""Size gate: fail when a module or a function exceeds its limit.
 
 Counts *code* lines — lines carrying at least one real token, excluding
 comments and docstrings — so docvet-mandated documentation never pushes a
@@ -8,8 +8,8 @@ decomposed, not excused.
 
 Functions are measured the same way, over the body only: decorators and
 the signature do not count, and a nested function counts toward its
-parent. A function past 50 code lines is reported but does not fail the
-gate yet.
+parent and is also checked on its own. The function limit is 50 code
+lines: a function at 50 passes, and one at 51 or more fails the gate.
 
 Examples:
     Run against the source tree:
@@ -155,33 +155,38 @@ def count_function_lines(path: Path) -> list[tuple[str, int]]:
     return results
 
 
-def _report_functions(path: Path) -> None:
-    """Print every function in `path` past the function limit.
-
-    Report only: the function cap is not enforced yet.
+def _check_functions(path: Path) -> int:
+    """Print a ``FAIL`` line for every function in `path` past the limit.
 
     Args:
         path: The Python file to measure.
+
+    Returns:
+        The number of functions past the function limit.
     """
+    failures = 0
     for qualname, n in count_function_lines(path):
         if n > FUNCTION_LIMIT:
             print(
-                f"LONG {path}:{qualname}: {n} code lines "
-                f"(function limit {FUNCTION_LIMIT}, report only)"
+                f"FAIL {path}:{qualname}: {n} code lines "
+                f"(function limit {FUNCTION_LIMIT})"
             )
+            failures += 1
+    return failures
 
 
 def main(roots: list[str]) -> int:
     """Check every Python file under the given roots.
 
-    Prints each function past the function limit as a ``LONG`` line. The
-    function report never changes the exit code.
+    Prints a ``FAIL`` line for each module past the module limit and for
+    each function past the function limit.
 
     Args:
         roots: Directories to scan (defaults to ``src`` when empty).
 
     Returns:
-        Process exit code: 1 if any file exceeds the limit, else 0.
+        Process exit code: 1 if any module or function exceeds its limit,
+        else 0.
     """
     failures = 0
     checked = 0
@@ -196,7 +201,7 @@ def main(roots: list[str]) -> int:
         for path in paths:
             checked += 1
             n = count_code_lines(path)
-            _report_functions(path)
+            failures += _check_functions(path)
             if n > LIMIT:
                 print(f"FAIL {path}: {n} code lines (limit {LIMIT})")
                 failures += 1

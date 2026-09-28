@@ -2,7 +2,7 @@
 
 Every fixture module is generated into `tmp_path`, so each case pins one
 boundary of the real counter and the real `main`: the single 300-line
-module limit, and the 50-line function report.
+module limit and the 50-line function limit.
 
 Examples:
     ```python
@@ -137,15 +137,71 @@ def test_nested_function_counts_toward_parent(tmp_path: Path) -> None:
     assert counts["Box.outer.inner"] == 1
 
 
-@pytest.mark.parametrize(("lines", "reported"), [(50, False), (51, True)])
-def test_function_report_boundary(
+def _fail_line(pkg: Path, qualname: str, lines: int) -> str:
+    """Build the exact FAIL line `main` prints for a long function.
+
+    Args:
+        pkg: Package directory holding `mod.py`.
+        qualname: Qualified name of the function.
+        lines: Body code lines of the function.
+
+    Returns:
+        The expected output line.
+    """
+    return f"FAIL {pkg / 'mod.py'}:{qualname}: {lines} code lines (function limit 50)"
+
+
+@pytest.mark.parametrize(("lines", "exit_code"), [(50, 0), (51, 1)])
+def test_function_limit_boundary(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     lines: int,
-    reported: bool,
+    exit_code: int,
 ) -> None:
-    """Report a function past 50 code lines and still exit 0."""
+    """Pass a 50-line function and fail a 51-line one with its FAIL line."""
     pkg = _write_pkg(tmp_path, _function_source(lines))
     assert count_function_lines(pkg / "mod.py") == [("long_one", lines)]
-    assert main([str(pkg)]) == 0
-    assert ("long_one" in capsys.readouterr().out) is reported
+    assert main([str(pkg)]) == exit_code
+    out = capsys.readouterr().out.splitlines()
+    assert (_fail_line(pkg, "long_one", lines) in out) is (exit_code == 1)
+    assert any(line.startswith("FAIL") for line in out) is (exit_code == 1)
+    assert not any(line.startswith("LONG") for line in out)
+
+
+def test_long_nested_function_fails_by_qualname(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Fail a long nested function by its own qualname and its parent too."""
+    body = "".join(f"        b{i} = {i}\n" for i in range(51))
+    pkg = _write_pkg(
+        tmp_path,
+        f"def outer() -> None:\n    def inner() -> None:\n{body}    inner()\n",
+    )
+    assert main([str(pkg)]) == 1
+    out = capsys.readouterr().out.splitlines()
+    assert _fail_line(pkg, "outer.inner", 51) in out
+    assert _fail_line(pkg, "outer", 53) in out
+
+
+def test_long_method_fails_by_class_qualname(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Name a long method as Class.method in its FAIL line."""
+    body = "".join(f"        c{i} = {i}\n" for i in range(51))
+    pkg = _write_pkg(tmp_path, f"class Box:\n    def run(self) -> None:\n{body}")
+    assert main([str(pkg)]) == 1
+    assert _fail_line(pkg, "Box.run", 51) in capsys.readouterr().out.splitlines()
+
+
+def test_module_and_function_limits_both_report(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Report a long module and a long function from the same file."""
+    source = _module_source(260) + _function_source(51)
+    pkg = _write_pkg(tmp_path, source)
+    total = count_code_lines(pkg / "mod.py")
+    assert total > 300
+    assert main([str(pkg)]) == 1
+    out = capsys.readouterr().out.splitlines()
+    assert f"FAIL {pkg / 'mod.py'}: {total} code lines (limit 300)" in out
+    assert _fail_line(pkg, "long_one", 51) in out
