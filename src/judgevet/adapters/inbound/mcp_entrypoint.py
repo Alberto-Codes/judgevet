@@ -5,7 +5,8 @@ The hosted path reads Settings once, configures stderr logging, builds the HTTP
 adapter and serves stdio. Explicit provider selection bypasses hosted settings.
 An application factory acquires and closes its provider on the dispatch worker.
 Borrowed providers remain open when serving ends. A fatal failure names its
-stage and exception type names and omits exception text.
+stage and exception type names and omits exception text. A cleanup failure
+after serving returns names the shutdown stage.
 
 Examples:
     ```python
@@ -122,8 +123,8 @@ def main(
         SystemExit: If startup or serving raises a declared library error or an
             IO, runtime, value, type or grouped exception. The exit code is 1.
             The diagnostic reads ``judgevet-mcp: <stage> failed (<TypeName>)``.
-            The stage is credential resolution, provider acquisition or
-            serving. A group lists its distinct leaf type names. Exception
+            The stage is credential resolution, provider acquisition,
+            serving or shutdown. A group lists its distinct leaf type names. Exception
             text and the cause chain are omitted.
     """
     if port is not None and provider_factory is not None:
@@ -161,7 +162,7 @@ class _Stage:
 
     Attributes:
         name (str): Stage in progress: credential resolution, provider
-            acquisition or serving.
+            acquisition, serving or shutdown.
 
     Examples:
         ```python
@@ -214,7 +215,8 @@ def _run_hosted(model: str, stage: _Stage) -> int:
     Args:
         model: Explicit host-selected model. The default ``jev-latest``
             defers to ``settings.api.default_model``.
-        stage: Stage record advanced to serving after credential resolution.
+        stage: Stage record advanced to serving after credential resolution
+            and to shutdown after serving returns.
 
     Returns:
         Zero on success or two on configuration failure.
@@ -240,6 +242,7 @@ def _run_hosted(model: str, stage: _Stage) -> int:
             asyncio.run(run_stdio(adapter))
         else:
             asyncio.run(run_stdio(adapter, model=chosen))
+        stage.name = "shutdown"
     finally:
         adapter.close()
     return 0
@@ -257,7 +260,8 @@ async def _run_selected(
         port: Borrowed provider.
         factory: Owning application factory.
         model: Host-selected model.
-        stage: Stage record advanced to serving after provider acquisition.
+        stage: Stage record advanced to serving after provider acquisition
+            and to shutdown after serving returns.
 
     Raises:
         RuntimeError: Provider acquisition yielded no port.
@@ -268,3 +272,4 @@ async def _run_selected(
             raise RuntimeError("Provider acquisition did not return a port")
         stage.name = "serving"
         await run_stdio(dispatch.port, model=model)
+        stage.name = "shutdown"

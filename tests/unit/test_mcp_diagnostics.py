@@ -121,3 +121,44 @@ def test_grouped_leaves(
     monkeypatch.setattr(entry, "run_stdio", serve)
     message = fatal(capsys, lambda: entry.main(port=FakeSystemOnePort()))
     assert message == "judgevet-mcp: serving failed (JevAuthError, OSError)"
+
+
+class FailingClosePort(FakeSystemOnePort):
+    """Offline hosted adapter double whose close fails after serving ends."""
+
+    def close(self) -> None:
+        """Fail cleanup with canary text.
+
+        Raises:
+            OSError: Always, carrying the canary.
+        """
+        raise OSError(CANARY)
+
+
+async def serve_cleanly(port: SystemOnePort, *, model: str = "jev-latest") -> None:
+    """Return at once, as a stdio run that ends without error."""
+
+
+def test_hosted_shutdown(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Name shutdown when the hosted adapter's close fails after clean serving."""
+    monkeypatch.setenv("JEV_API__KEY", CANARY)
+    monkeypatch.setattr(entry, "build_adapter", lambda settings: FailingClosePort())
+    monkeypatch.setattr(entry, "run_stdio", serve_cleanly)
+    assert fatal(capsys, entry.main) == "judgevet-mcp: shutdown failed (OSError)"
+
+
+def test_selected_shutdown(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Name shutdown when the provider factory's exit fails after clean serving."""
+
+    @contextmanager
+    def failing_exit() -> Iterator[FakeSystemOnePort]:
+        yield FakeSystemOnePort()
+        raise RuntimeError(CANARY)
+
+    monkeypatch.setattr(entry, "run_stdio", serve_cleanly)
+    message = fatal(capsys, lambda: entry.main(provider_factory=failing_exit))
+    assert message == "judgevet-mcp: shutdown failed (RuntimeError)"
