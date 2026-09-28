@@ -29,6 +29,13 @@ jobs:
       - run: uv sync --locked --dev
       - uses: actions/configure-pages@v6.0.0
       - run: uv run mkdocs build --strict
+      # Coverage badge endpoint (#50): https://shields.io/badges/endpoint-badge
+      - run: uv sync --locked --dev --extra mcp
+      - run: uv run pytest -q -n auto --cov -m "not live"
+      - run: uv run coverage json -o coverage.json
+      - run: >-
+          uv run python scripts/coverage_badge.py
+          coverage.json site/badges/coverage.json
       - uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: site

@@ -634,8 +634,12 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2609 tests pass, 7 live tests deselected.** The last measured coverage is
+**2637 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.67%** (2963/3065 statements).
+
+The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
+Pages build measures coverage again and publishes the README badge endpoint at
+`badges/coverage.json` (#50). The local pre-push floor stays at 90.
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,
 pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,

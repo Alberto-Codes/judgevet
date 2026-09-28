@@ -185,7 +185,9 @@ commands allocate fresh temporary directories automatically.
 ## Deploy through GitHub Pages
 
 The [documentation workflow](../../.github/workflows/docs.yml) builds main with
-locked development dependencies and `mkdocs build --strict`. Its deployment job
+locked development dependencies and `mkdocs build --strict`. The build then
+runs the suite without live tests and writes the coverage badge endpoint to
+`site/badges/coverage.json` with `scripts/coverage_badge.py`. Its deployment job
 requires the successful build artifact and uses the `github-pages` environment.
 An explicit workflow dispatch also builds; only main may deploy.
 
