@@ -1,0 +1,11 @@
+---
+name: Broken
+
+"on":
+  workflow_dispatch:
+
+jobs:
+  broken:
+    runs-onn: ubuntu-latest
+    steps:
+      - run: echo broken
