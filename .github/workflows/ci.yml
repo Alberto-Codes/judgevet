@@ -26,6 +26,77 @@ jobs:
       # Native uv audit is experimental; verify flags when upgrading uv.
       - run: uv audit --locked --preview-features audit-command
 
+  # Supply-chain evidence for procurement (#59): CycloneDX SBOMs per scope,
+  # a licence table read from installed metadata, and the audit as JSON.
+  # SBOM export and JSON audit output are uv previews; verify on upgrade.
+  sbom:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      OUT: supply-chain
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "0.11.20"
+      - run: uv python install 3.12
+      - run: uv sync --locked --dev --extra mcp
+      - run: mkdir -p "$OUT"
+      # --format cyclonedx1.5 needs --preview-features sbom-export:
+      # https://docs.astral.sh/uv/reference/cli/#uv-export
+      - name: Export CycloneDX 1.5 SBOMs
+        id: export
+        run: |
+          export_sbom() {
+            uv export --format cyclonedx1.5 --preview-features sbom-export \
+              --locked "$@"
+          }
+          export_sbom --no-dev -o "$OUT/sbom-runtime.cdx.json"
+          export_sbom --no-dev --extra mcp -o "$OUT/sbom-runtime-mcp.cdx.json"
+          export_sbom --only-dev -o "$OUT/sbom-dev.cdx.json"
+      # --no-sync: a plain uv run would re-sync without the mcp extra and
+      # drop the mcp packages before the licence lookup.
+      - name: Write licence tables
+        id: licence
+        run: |
+          for scope in runtime runtime-mcp dev; do
+            uv run --no-sync python scripts/licence_report.py \
+              "$OUT/sbom-$scope.cdx.json" \
+              --markdown "$OUT/licences-$scope.md" \
+              --json "$OUT/licences-$scope.json"
+          done
+      # --output-format json and the json-output preview feature:
+      # https://docs.astral.sh/uv/reference/cli/#uv-audit
+      # https://docs.astral.sh/uv/concepts/preview/
+      - name: Audit the lockfile as JSON
+        id: audit
+        run: >-
+          uv audit --locked --preview-features audit-command,json-output
+          --output-format json > "$OUT/audit.json"
+      # A failed or skipped step marks the artifact incomplete.
+      - name: Record provenance
+        if: always()
+        env:
+          EXPORT: ${{ steps.export.outcome }}
+          LICENCE: ${{ steps.licence.outcome }}
+          AUDIT: ${{ steps.audit.outcome }}
+        run: |
+          {
+            echo "generated_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "commit: $(git rev-parse HEAD)"
+            echo "uv: $(uv --version)"
+            echo "uv_lock_sha256: $(sha256sum uv.lock | cut -d' ' -f1)"
+            echo "sbom_export: $EXPORT"
+            echo "licence_report: $LICENCE"
+            echo "audit_json: $AUDIT"
+          } > "$OUT/provenance.txt"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: supply-chain
+          path: supply-chain/
+          if-no-files-found: error
+
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
