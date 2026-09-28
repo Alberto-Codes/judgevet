@@ -20,7 +20,7 @@ import pytest
 from tests.cli_file_support import invoke_files
 from tests.cli_process_support import QUESTIONS, SUCCESS, serve
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.e2e]
 RULES: list[dict[str, Any]] = [
     {"question": "noul", "pass": {"noul": {"min": 0.42, "max": 0.42}}},
     {"question": "choice", "pass": {"choice": "yes", "confidence": {"min": 0.8}}},

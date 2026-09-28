@@ -111,6 +111,7 @@ async def _installed_help() -> str:
     return stdout.decode()
 
 
+@pytest.mark.e2e
 def test_installed_command_help() -> None:
     """Exercise the actual console entry point with no credential."""
     _assert_help(asyncio.run(_installed_help()))

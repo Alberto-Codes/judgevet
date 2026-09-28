@@ -154,6 +154,7 @@ def test_library_import_preserves_configuration() -> None:
     assert result.returncode == 0
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize("policy", [False, True])
 @pytest.mark.parametrize("status", [200, 429])
 def test_installed_cli_debug(tmp_path: Path, policy: bool, status: int) -> None:

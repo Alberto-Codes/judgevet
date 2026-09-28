@@ -102,6 +102,9 @@ It includes unmarked tests as well as the marked unit and contract tests.
 
 - `uv run pytest -q -m unit` selects isolated unit tests.
 - `uv run pytest -q -m contract` selects shared adapter contract tests.
+- `uv run pytest -q -m e2e` selects tests that drive a real entry point: the
+  installed console script or the MCP server over stdio. Offline `e2e` tests
+  also run in the default suite. A test can carry both `e2e` and `live`.
 - `uv run pytest -q -m live` explicitly selects service calls and can incur cost.
 
 A contract test exercises a fake port and the real adapter against the same

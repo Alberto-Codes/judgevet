@@ -35,6 +35,7 @@ def candidate(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return build_wheel(tmp_path_factory.mktemp("registry-wheel"))
 
 
+@pytest.mark.e2e
 def test_manifest_installed_launcher(
     candidate: Path,
     api_server: tuple[str, list[dict[str, Any]]],
@@ -60,6 +61,7 @@ def test_wrong_wheel_version_rejected(candidate: Path) -> None:
         check_wheel(candidate, "0.0.0", "io.github.Alberto-Codes/judgevet")
 
 
+@pytest.mark.e2e
 def test_wrong_launcher_fails(candidate: Path, tmp_path: Path) -> None:
     """Prove the transport check fails when the manifest selects the CLI instead."""
     manifest = json.loads((ROOT / "server.json").read_text())
@@ -70,6 +72,7 @@ def test_wrong_launcher_fails(candidate: Path, tmp_path: Path) -> None:
         asyncio.run(check(path, candidate))
 
 
+@pytest.mark.e2e
 def test_missing_extra_fails(candidate: Path, tmp_path: Path) -> None:
     """Prove the candidate override cannot hide a missing MCP extra in the manifest."""
     manifest = json.loads((ROOT / "server.json").read_text())
@@ -80,6 +83,7 @@ def test_missing_extra_fails(candidate: Path, tmp_path: Path) -> None:
         asyncio.run(check(path, candidate))
 
 
+@pytest.mark.e2e
 def test_broken_candidate_cannot_fall_back_to_pypi(
     candidate: Path, tmp_path: Path
 ) -> None:

@@ -33,6 +33,7 @@ def candidate(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return build_wheel(tmp_path_factory.mktemp("host-recipes-wheel"))
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize("host", HOSTS)
 def test_exact_host_launcher(
     host: str,
@@ -53,6 +54,7 @@ def test_exact_host_launcher(
     }
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize("defect", ["wrong-command", "missing-extra", "missing-key"])
 def test_exact_launcher_rejects_broken_route(
     defect: str,
@@ -75,6 +77,7 @@ def test_exact_launcher_rejects_broken_route(
     assert requests == []
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize(
     ("number", "kind"), [(12, "noul"), (13, "choice"), (14, "score")]
 )
@@ -99,6 +102,7 @@ def test_exact_pi_cli_command(
     assert requests[0]["auth"] == "Bearer host-canary"
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize("number", [1, 2])
 def test_documented_persistent_install(
     number: int,

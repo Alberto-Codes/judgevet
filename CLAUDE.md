@@ -174,8 +174,10 @@ touches (`uv run docvet check`, diff mode), and the pre-push hook vets the
 whole repo (`uv run docvet check --all`), so commits never fail on doc debt
 they did not introduce and no stale docstring can leave the branch.
 
-Coverage floor is 90. Test markers are `unit`, `contract` and `live`; `live`
-touches the real API and is excluded from the default run.
+Coverage floor is 90. Test markers are `unit`, `contract`, `e2e` and `live`.
+`live` touches the real API and is excluded from the default run. `e2e` drives
+a real entry point: the installed console script or the MCP server over stdio.
+It is orthogonal to `live`. The default run includes offline `e2e` tests.
 
 A `contract` test proves a fake port and the real adapter agree on the same
 fixtures. When the outbound adapter changes, that test is the one that must

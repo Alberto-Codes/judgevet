@@ -167,6 +167,7 @@ markers = [
     "unit: fast, isolated",
     "contract: fixture suites pinning adapter behaviour — fake/real contract and sync/async equivalence",
     "live: touches the live Jev API; needs TYPESAFE_API_KEY; never in CI",
+    "e2e: drives a real entry point (installed console script or MCP stdio subprocess)",
 ]
 addopts = [
     "-ra",

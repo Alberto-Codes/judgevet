@@ -140,6 +140,7 @@ async def run_capped(
     return (proc.returncode, stdout, stderr)
 
 
+@pytest.mark.e2e
 @pytest.mark.live
 def test_installed_cli_mixed_live() -> None:
     """Test the installed CLI with mixed questions using live API.

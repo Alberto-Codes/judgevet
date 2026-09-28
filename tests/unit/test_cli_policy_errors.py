@@ -17,7 +17,7 @@ import pytest
 from tests.cli_file_support import invoke_files
 from tests.cli_process_support import QUESTIONS, SUCCESS, serve
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.e2e]
 PRIVATE = "private-policy-input-128"
 
 

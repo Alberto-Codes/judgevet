@@ -25,6 +25,7 @@ from tests.unit.test_mcp_subprocess import environment, exercise, start, stop
 pytest_plugins = ["tests.unit.test_mcp_subprocess"]
 pytestmark = [
     pytest.mark.unit,
+    pytest.mark.e2e,
     pytest.mark.skipif(find_spec("mcp") is None, reason="requires MCP extra"),
 ]
 

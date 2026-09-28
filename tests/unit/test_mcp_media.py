@@ -335,6 +335,7 @@ def test_unsupported_media_provider_is_tool_error() -> None:
     asyncio.run(exercise())
 
 
+@pytest.mark.e2e
 def test_media_policy_over_actual_stdio() -> None:
     """Carry exact bytes through actual newline JSON-RPC and owned cleanup."""
     program = """

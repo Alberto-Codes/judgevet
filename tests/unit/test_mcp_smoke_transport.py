@@ -36,6 +36,7 @@ def require_reaped(pid_path: Path) -> None:
         os.kill(pid, 0)
 
 
+@pytest.mark.e2e
 @pytest.mark.skipif(find_spec("mcp") is None, reason="requires optional MCP runtime")
 def test_real_command_calls_all_tools(
     api_server: tuple[str, list[dict[str, Any]]],

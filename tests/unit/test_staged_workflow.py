@@ -13,7 +13,7 @@ import pytest
 
 from tests.cli_process_support import CANARY, SUCCESS, Peer, serve
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.e2e]
 EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "staged-review"
 
 

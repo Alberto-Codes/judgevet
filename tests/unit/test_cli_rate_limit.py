@@ -73,6 +73,7 @@ def assert_error(code: int, stdout: str, stderr: str, as_json: bool) -> None:
     assert "(status 429)" in message
 
 
+@pytest.mark.e2e
 @pytest.mark.parametrize("policy", [False, True])
 @pytest.mark.parametrize("as_json", [False, True])
 def test_installed_rate_limit(tmp_path: Path, policy: bool, as_json: bool) -> None:

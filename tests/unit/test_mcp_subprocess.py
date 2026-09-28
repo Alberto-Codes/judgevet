@@ -41,6 +41,7 @@ ANSWERS: dict[str, dict[str, Any]] = {
 USAGE = {"input_tokens": 3, "output_tokens": 2}
 pytestmark = [
     pytest.mark.unit,
+    pytest.mark.e2e,
     pytest.mark.skipif(find_spec("mcp") is None, reason="requires MCP extra"),
 ]
 

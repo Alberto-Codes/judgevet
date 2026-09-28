@@ -18,7 +18,7 @@ import pytest
 
 from tests.cli_process_support import CANARY, QUESTIONS, SUCCESS, invoke, serve
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.e2e]
 
 
 @pytest.mark.parametrize("as_json", [False, True])

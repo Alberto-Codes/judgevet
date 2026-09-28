@@ -188,6 +188,7 @@ def test_owned_policy_cleanup(fail: bool) -> None:
     assert len(provider.calls) == 1
 
 
+@pytest.mark.e2e
 def test_policy_over_actual_stdio() -> None:
     """Exercise an application-owned provider through real offline protocol frames."""
     program = """
