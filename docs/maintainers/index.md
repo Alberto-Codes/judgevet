@@ -45,6 +45,19 @@ is experimental. Recheck supported flags and failure behavior when upgrading
 uv. Commit-stage checks do not contact the audit service; the network audit
 runs at push and in its own CI job.
 
+The CI `sbom` job uploads a `supply-chain` artifact for dependency reviews. It
+exports CycloneDX 1.5 SBOMs for runtime, runtime with MCP and development
+dependencies with the `sbom-export` preview of
+[uv export](https://docs.astral.sh/uv/reference/cli/#uv-export).
+`scripts/licence_report.py` builds a licence table per scope from installed
+package metadata. A package without licence metadata reads `UNKNOWN`. A
+package absent from the runner's environment reads `NOT INSTALLED`. The
+`marker` column shows the environment marker uv records for a package, which
+gives the reason for an absence when there is one. The job also saves the
+audit as JSON. Its provenance file records the commit, uv version, `uv.lock`
+SHA-256 and the outcome of each step. An artifact from a failed run therefore
+shows that it is incomplete. Release attachment is not part of this job.
+
 ## Check configuration and workflows
 
 The first commit and push hook runs `uv lock --check` when project or lockfile

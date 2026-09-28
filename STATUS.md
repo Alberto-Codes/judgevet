@@ -634,12 +634,16 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2637 tests pass, 7 live tests deselected.** The last measured coverage is
+**2656 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.67%** (2963/3065 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at
 `badges/coverage.json` (#50). The local pre-push floor stays at 90.
+
+The CI `sbom` job uploads the `supply-chain` artifact (#59). It holds CycloneDX
+1.5 SBOMs for runtime, runtime with MCP and development dependencies, a licence
+table per scope, the JSON audit and a provenance file with the `uv.lock` SHA-256.
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,
 pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,
