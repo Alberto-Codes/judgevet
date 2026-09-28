@@ -39,6 +39,12 @@ jobs:
       - run: uv python install 3.12
       - run: uv lock --check
       - run: uv sync --locked --dev
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: >-
+            pre-commit-${{ runner.os }}-py3.12-${{
+            hashFiles('.pre-commit-config.yaml') }}
       - run: uv run pre-commit run yamllint --all-files
       - run: uv run pre-commit run actionlint --all-files
       - run: uv run python -m scripts.registry_manifest
