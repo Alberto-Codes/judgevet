@@ -649,7 +649,10 @@ Each SBOM is a source SBOM labelled with CycloneDX lifecycle `pre-build`.
 attests the wheel and sdist (build provenance) and the wheel's runtime SBOM,
 and attaches the files to the GitHub release (#231). A scratch prerelease proved
 it: run 36523121805 attached 11 files, and `gh attestation verify` passed for
-the wheel and sdist. No real release has run it yet.
+the wheel and sdist. Since #237 the release also carries the wheel, the sdist
+and both attestation bundles. Scratch run 36570472000 attached 15 files, and
+`gh attestation verify --bundle` passed for each against the release bundles.
+No real release has run it yet.
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,
 pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,
