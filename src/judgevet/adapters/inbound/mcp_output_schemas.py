@@ -7,6 +7,9 @@ The shapes follow the structured content that
 [judgevet.adapters.inbound.mcp_policy][] build. Error results carry no
 structured content and fall outside these schemas. Source:
 https://github.com/Alberto-Codes/judgevet/issues/211#issuecomment-5860666386.
+The ask_score schema alone carries `default_criteria`, which says whether
+the server applied the default rubric; `evaluate_policy` score answers omit it.
+Source: https://github.com/Alberto-Codes/judgevet/issues/228#issuecomment-5882662573.
 
 Examples:
     ```python
@@ -129,6 +132,25 @@ def _score_fields() -> dict[str, Any]:
     }
 
 
+def _default_criteria() -> dict[str, Any]:
+    """Return the ask_score default rubric flag schema.
+
+    Source: https://github.com/Alberto-Codes/judgevet/issues/228#issuecomment-5882662573
+    and https://google.aip.dev/129.
+
+    Returns:
+        Schema for whether the server applied the default criteria.
+    """
+    return {
+        "type": "boolean",
+        "description": (
+            "True when the call omitted criteria and the server applied the "
+            'default ["Poor", "Fair", "Good", "Excellent"]. False when the '
+            "caller supplied criteria."
+        ),
+    }
+
+
 def noul_output_schema() -> dict[str, Any]:
     """Return the ask_noul output schema.
 
@@ -153,9 +175,10 @@ def score_output_schema() -> dict[str, Any]:
 
     Returns:
         Closed object schema for `score`, `confidence`, `legend`,
-        `probabilities`, `model` and `usage`.
+        `probabilities`, `default_criteria`, `model` and `usage`.
     """
-    return _root({**_score_fields(), "model": _model(), "usage": _usage()})
+    fields = {**_score_fields(), "default_criteria": _default_criteria()}
+    return _root({**fields, "model": _model(), "usage": _usage()})
 
 
 def _answer(kind: str, fields: dict[str, Any]) -> dict[str, Any]:

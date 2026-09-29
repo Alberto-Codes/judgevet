@@ -214,6 +214,7 @@
             "confidence",
             "legend",
             "probabilities",
+            "default_criteria",
             "model",
             "usage"
           ],
@@ -243,6 +244,10 @@
                 "minimum": 0,
                 "maximum": 1
               }
+            },
+            "default_criteria": {
+              "type": "boolean",
+              "description": "True when the call omitted criteria and the server applied the default [\"Poor\", \"Fair\", \"Good\", \"Excellent\"]. False when the caller supplied criteria."
             },
             "model": {
               "type": "string",
@@ -338,7 +343,7 @@
       "content": [
         {
           "type": "text",
-          "text": "{\"score\": 3.5, \"legend\": {\"1\": \"poor\", \"2\": \"fair\", \"3\": \"good\", \"4\": \"excellent\"}, \"probabilities\": {\"1\": 0.1, \"2\": 0.2, \"3\": 0.3, \"4\": 0.4}, \"confidence\": 0.9, \"model\": \"jev-latest\", \"usage\": {\"input_tokens\": 100, \"output_tokens\": 10}}",
+          "text": "{\"score\": 3.5, \"legend\": {\"1\": \"poor\", \"2\": \"fair\", \"3\": \"good\", \"4\": \"excellent\"}, \"probabilities\": {\"1\": 0.1, \"2\": 0.2, \"3\": 0.3, \"4\": 0.4}, \"confidence\": 0.9, \"default_criteria\": true, \"model\": \"jev-latest\", \"usage\": {\"input_tokens\": 100, \"output_tokens\": 10}}",
           "annotations": null,
           "_meta": null
         }
@@ -358,6 +363,7 @@
           "4": 0.4
         },
         "confidence": 0.9,
+        "default_criteria": true,
         "model": "jev-latest",
         "usage": {
           "input_tokens": 100,

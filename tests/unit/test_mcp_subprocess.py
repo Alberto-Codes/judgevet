@@ -190,6 +190,8 @@ async def exercise(process: asyncio.subprocess.Process) -> None:
         )
         assert not result.get("isError", False)
         content = {key: value for key, value in answer.items() if key != "type"}
+        if kind == "score":
+            content["default_criteria"] = True
         assert result["structuredContent"] == {
             **content,
             "model": "jev-1.13.0",

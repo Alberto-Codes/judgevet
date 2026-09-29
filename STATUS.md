@@ -634,8 +634,8 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2684 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.70%** (2991/3093 statements).
+**2689 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.71%** (2994/3096 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at
@@ -706,7 +706,9 @@ lifetime. A tripped cap exits the CLI with 1. Each MCP tool returns it as an
 `isError` tool result that says a restart is required. The `ask_*` tools now
 return every service error as a tool result, as `evaluate_policy` already did.
 No live call has run the cap. #225 replaces the `ask_*` summary text from #211
-with the serialized JSON of each result's `structuredContent`.
+with the serialized JSON of each result's `structuredContent`. #228 adds a
+required `default_criteria` boolean to the `ask_score` result. It is true when
+the server applied the default rubric because the call omitted `criteria`.
 Local commit and push gates pass for #172. The issue holds delivery evidence.
 #172 makes `Noul`, `Choice` and `Score` construction keyword-only with no
 deprecation cycle; positional construction raises `TypeError`. The commit

@@ -319,6 +319,7 @@ class TestAskScoreTool:
         assert structured["confidence"] == 0.9
         assert structured["legend"] == {1: "poor", 2: "fair", 3: "good", 4: "excellent"}
         assert structured["probabilities"] == {1: 0.1, 2: 0.2, 3: 0.3, 4: 0.4}
+        assert structured["default_criteria"] is True
         assert structured["model"] == "jev-latest"
         assert structured["usage"]["input_tokens"] == 100
         assert structured["usage"]["output_tokens"] == 10

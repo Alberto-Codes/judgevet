@@ -50,9 +50,14 @@ use `structuredContent` and `isError`. This distinction is recorded in the
 |---|---|
 | `ask_noul` | `noul`, `model`, `usage` |
 | `ask_choice` | `choice`, `confidence`, `probabilities`, `model`, `usage` |
-| `ask_score` | `score`, `confidence`, `probabilities`, `legend`, `model`, `usage` |
+| `ask_score` | `score`, `confidence`, `probabilities`, `legend`, `default_criteria`, `model`, `usage` |
 
-`usage` contains `input_tokens` and `output_tokens`. Structured content contains
+`usage` contains `input_tokens` and `output_tokens`. `default_criteria` is a
+boolean. It is `true` when the call omitted `criteria` and the server applied
+the default `["Poor", "Fair", "Good", "Excellent"]`. It is `false` when the
+caller supplied `criteria`, including a list equal to the default. Sources:
+[issue #228 decision](https://github.com/Alberto-Codes/judgevet/issues/228#issuecomment-5882662573)
+and [AIP-129](https://google.aip.dev/129). Structured content contains
 the single answer's fields directly, not the CLI's `answers` envelope. JSON
 object keys for Score levels are strings on the wire. Field semantics and vendor
 citations are in the [Python API reference](api.md#answer-and-container-types).

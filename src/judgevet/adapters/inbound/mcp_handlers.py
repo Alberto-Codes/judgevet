@@ -227,9 +227,10 @@ async def handle_ask_score(
 
     Returns:
         CallToolResult with structured content containing score, legend,
-        probabilities, confidence, model and usage, and the same content as
-        JSON text. Invalid arguments and service errors return a tool error
-        result.
+        probabilities, confidence, default_criteria, model and usage, and the
+        same content as JSON text. `default_criteria` is true only when the
+        call omitted `criteria` and the server applied the default rubric.
+        Invalid arguments and service errors return a tool error result.
 
     Raises:
         ValueError: If the answer is missing.
@@ -277,5 +278,6 @@ async def handle_ask_score(
         "legend": score_answer.legend,
         "probabilities": score_answer.probabilities,
         "confidence": score_answer.confidence,
+        "default_criteria": criteria is None,
     }
     return answer_result(mcp_types, fields, response)
