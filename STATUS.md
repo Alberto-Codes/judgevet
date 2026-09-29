@@ -634,7 +634,7 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2689 tests pass, 7 live tests deselected.** The last measured coverage is
+**2697 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.71%** (2994/3096 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
@@ -644,6 +644,12 @@ Pages build measures coverage again and publishes the README badge endpoint at
 The CI `sbom` job uploads the `supply-chain` artifact (#59). It holds CycloneDX
 1.5 SBOMs for runtime, runtime with MCP and development dependencies, a licence
 table per scope, the JSON audit and a provenance file with the `uv.lock` SHA-256.
+Each SBOM is a source SBOM labelled with CycloneDX lifecycle `pre-build`.
+`publish.yml` generates the same files through one shared composite action,
+attests the wheel and sdist (build provenance) and the wheel's runtime SBOM,
+and attaches the files to the GitHub release (#231). A scratch prerelease proved
+it: run 36523121805 attached 11 files, and `gh attestation verify` passed for
+the wheel and sdist. No real release has run it yet.
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,
 pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,

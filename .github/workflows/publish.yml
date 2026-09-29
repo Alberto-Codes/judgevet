@@ -5,9 +5,9 @@ name: Publish to PyPI
   release:
     types: [published]
 
+# Read-only by default. Each job below that needs more asks for it (#231).
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,10 +37,83 @@ jobs:
           path: dist/
           if-no-files-found: error
 
-  publish:
+  # Supply-chain files from the released commit and the same wheel and sdist
+  # that go to PyPI, with signed attestations over the wheel and sdist.
+  # https://docs.github.com/en/actions/concepts/security/artifact-attestations
+  attest:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist
+          merge-multiple: false
+
+      - uses: ./.github/actions/supply-chain
+        with:
+          out: supply-chain
+          dist: dist
+
+      # v4 wraps actions/attest; latest release tags checked 2026-09-28:
+      # https://github.com/actions/attest-build-provenance/releases
+      - uses: actions/attest-build-provenance@v4.2.2
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
+
+      # The runtime SBOM lists what installing the wheel pulls in. The mcp
+      # and dev SBOMs stay release files without an attestation.
+      # https://github.com/actions/attest-sbom/releases
+      - uses: actions/attest-sbom@v4.1.0
+        with:
+          subject-path: dist/*.whl
+          sbom-path: supply-chain/sbom-runtime.cdx.json
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: supply-chain
+          path: supply-chain/
+          if-no-files-found: error
+
+  # The only job that writes to the repository: it attaches the files to
+  # the release that triggered this run.
+  release-files:
+    needs: attest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: supply-chain
+          path: supply-chain
+
+      - name: Attach supply-chain files to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: >-
+          gh release upload "$TAG" supply-chain/* --clobber
+          --repo "$GITHUB_REPOSITORY"
+
+  # Publishes only attested files. Nothing depends on this job.
+  publish:
+    needs: [build, attest]
+    runs-on: ubuntu-latest
     environment: pypi
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
