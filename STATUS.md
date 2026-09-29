@@ -1,42 +1,44 @@
 # STATUS
 
-Last written: 2026-09-28. Current evidence ledger. Detailed implementation,
+Last written: 2026-09-29. Current evidence ledger. Detailed implementation,
 release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.13.0 is published. Library, CLI and optional MCP share one version.
-This release gives both offline fakes scripted usage and errors plus the
-`spend_cap=` and `audit=` options, turns retries on by default with three
-attempts on 429 and 5xx, rejects a Choice answer whose option is outside the
-question's criteria, and adds a keyed `state_fingerprint` to `JudgmentRecord`.
-The retry default is a behaviour change for callers that relied on one
-attempt; `docs/reference/compatibility.md` records the opt-out. Runtime
-requirements and the `mcp` extra are unchanged. The documentation site is
+judgevet 0.14.0 is published. Library, CLI and optional MCP share one version.
+This release changes what MCP hosts see. The `ask_*` text block is the
+serialized JSON of `structuredContent`, and service errors return as `isError`
+tool results. `ask_score` results add `default_criteria`, and discovery adds
+`evaluate_policy`. It also adds opt-in spend cap settings, application-selected
+providers, bounded image evidence and an output schema per tool. The release
+notes lead with the MCP host changes. Runtime requirements and the `mcp` extra
+are unchanged. The documentation site is
 [live](https://alberto-codes.github.io/judgevet/).
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.13.0`, commit `fa45a72fa57dd676a42bddde07f55269ff114c0f` |
-| Accepted candidate | none; the maintainer merged and published without a TestPyPI round, as for 0.10.2, 0.11.0 and 0.12.0 |
-| Wheel SHA-256 | `a7c33956af20575ad7f06a5af8cdf023fb9a99dc5ac5a5374d8abdf310b128ce` |
-| Source distribution SHA-256 | `01ca2f46e9706677285cf0189bf061d66d3f8160c4c9133d1dc1ec09cd92b9cd` |
-| Actual PyPI download | Index wheel is byte-identical to the workflow artifact; JSON digests agree |
-| Library | Isolated base import, typing marker and the two live examples passed on the index wheel; the policy guide blocks executed and type-checked on the same wheel |
-| CLI | Installed-wheel live test passed once in a separate venv: one mixed request, typed output, clean streams |
-| MCP | `[mcp]` install, launcher start, three tools discovered and called against the live service on the index wheel |
-| Published launcher | Registry launcher argv resolved the wheel and then the actual PyPI package; not rechecked through a fresh uvx cache |
-| Registry | Manifest validated and submitted after a fresh publisher login; independent query lists `io.github.Alberto-Codes/judgevet` 0.13.0 active and latest, published `2026-09-25T22:35:28.671878Z`, package and launcher fields match |
+| Release/tag | `v0.14.0`, commit `bf5d15dcb5f5284ad4fa024d172f5197c40d0cab` |
+| Accepted candidate | none; the maintainer merged and published without a TestPyPI round, as for 0.10.2 through 0.13.0 |
+| Wheel SHA-256 | `f7d1b08135e77928302a93602b4e083070d06c8fe8e4c2b7efa0ecb8fc7d394a` |
+| Source distribution SHA-256 | `54daf8785978f01195bd42181b1c0e81fc822036ced4e3cb51452da6c35f5d49` |
+| Actual PyPI download | PyPI JSON digests equal the SHA-256 of the wheel and sdist attached to the GitHub release |
+| Release files | 15 assets: wheel, sdist, two Sigstore bundles and 11 supply-chain files; `provenance.txt` names the tag commit and `complete: yes` |
+| Attestations | `gh attestation verify --bundle` exits 0 for the wheel and sdist (build provenance) and the wheel (CycloneDX SBOM) |
+| Library and CLI | The publish workflow's isolated wheel smoke passed before upload; no separate index-wheel check ran |
+| MCP | The publish workflow's MCP smoke passed before upload; the registry smoke resolved the PyPI package and discovered and called the three `ask_*` tools |
+| Registry | Manifest validated and submitted after a fresh publisher login; independent query lists `io.github.Alberto-Codes/judgevet` 0.14.0 active and latest, published `2026-09-29T14:24:44.289862Z`, package fields match |
 
-[Release tracker](https://github.com/Alberto-Codes/judgevet/issues/198) records the
-freeze, merge, publication, smoke and registry evidence separately.
-[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36155669952)
-passed its wheel and MCP smoke checks before upload. The live footprint of the
-release verification was six calls: two library examples, three MCP tool calls
-and one CLI request. No source-archive rebuild outside the checkout was done
-for this release. No unseen API body, other model, modern protocol path or
+The [release evidence](https://github.com/Alberto-Codes/judgevet/pull/207#issuecomment-5892265433)
+records publication, hashes, attestations and registry separately.
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36581978491)
+ran build, attest, release-files and publish. The live footprint was the
+publish workflow's smoke calls and the registry smoke's three tool calls;
+the exact call count was not recorded. No source-archive rebuild outside the
+checkout was done. No unseen API body, other model, modern protocol path or
 gateway became verified.
 
+Prior [0.13.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/198)
+retains its index-wheel library, CLI and MCP checks with six live calls.
 Prior [0.12.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/194)
 retains its byte-identity and registry checks with a smaller live footprint.
 Prior [0.11.0 evidence](https://github.com/Alberto-Codes/judgevet/issues/186)
@@ -69,8 +71,8 @@ records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
 The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.13.0`, published at
-`2026-09-25T22:35:28.671878Z`; 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
+reports `io.github.Alberto-Codes/judgevet` version `0.14.0`, published at
+`2026-09-29T14:24:44.289862Z`; 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
 manifest. Registry acceptance does not verify a host installation or reload.
 No unseen API body, other model, modern protocol path or gateway became verified.
 
@@ -652,7 +654,8 @@ it: run 36523121805 attached 11 files, and `gh attestation verify` passed for
 the wheel and sdist. Since #237 the release also carries the wheel, the sdist
 and both attestation bundles. Scratch run 36570472000 attached 15 files, and
 `gh attestation verify --bundle` passed for each against the release bundles.
-No real release has run it yet.
+Release 0.14.0 ran it: run 36581978491 attached 15 files, and the
+attestations verify.
 
 CI and both pytest hooks run the suite on parallel workers (`-n auto`,
 pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,
