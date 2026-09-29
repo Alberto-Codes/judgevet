@@ -9,7 +9,7 @@ from judgevet.adapters.inbound import mcp_entrypoint as entry
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.domain.errors import JevAuthError
 from judgevet.ports import SystemOnePort
-from judgevet.providers import ProviderUnavailableError
+from judgevet.providers import ProviderFactory, ProviderUnavailableError
 from judgevet.testing import FakeSystemOnePort
 
 pytestmark = [
@@ -162,3 +162,70 @@ def test_selected_shutdown(
     monkeypatch.setattr(entry, "run_stdio", serve_cleanly)
     message = fatal(capsys, lambda: entry.main(provider_factory=failing_exit))
     assert message == "judgevet-mcp: shutdown failed (RuntimeError)"
+
+
+async def serve_failing(port: SystemOnePort, *, model: str = "jev-latest") -> None:
+    """Fail the stdio run with canary text.
+
+    Raises:
+        RuntimeError: Always, carrying the canary.
+    """
+    raise RuntimeError(CANARY)
+
+
+def failing_teardown(error: type[Exception]) -> ProviderFactory:
+    """Build a provider factory whose exit raises over any body failure.
+
+    Args:
+        error: Exception type the factory's exit raises.
+
+    Returns:
+        A context manager factory that yields a fake provider.
+    """
+
+    @contextmanager
+    def factory() -> Iterator[SystemOnePort]:
+        """Yield a fake provider, then fail on exit.
+
+        Yields:
+            A fake provider.
+
+        Raises:
+            Exception: The chosen type, on every exit.
+        """
+        try:
+            yield FakeSystemOnePort()
+        finally:
+            raise error(CANARY)
+
+    return factory
+
+
+def test_hosted_serving_and_teardown(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Name the serving type, then the close type, when both fail."""
+    monkeypatch.setenv("JEV_API__KEY", CANARY)
+    monkeypatch.setattr(entry, "build_adapter", lambda settings: FailingClosePort())
+    monkeypatch.setattr(entry, "run_stdio", serve_failing)
+    assert (
+        fatal(capsys, entry.main)
+        == "judgevet-mcp: serving failed (RuntimeError, OSError)"
+    )
+
+
+@pytest.mark.parametrize(
+    ("teardown", "names"),
+    [(OSError, "RuntimeError, OSError"), (RuntimeError, "RuntimeError")],
+)
+def test_selected_serving_and_teardown(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    teardown: type[Exception],
+    names: str,
+) -> None:
+    """Name the serving type, then a distinct factory exit type, when both fail."""
+    monkeypatch.setattr(entry, "run_stdio", serve_failing)
+    factory = failing_teardown(teardown)
+    message = fatal(capsys, lambda: entry.main(provider_factory=factory))
+    assert message == f"judgevet-mcp: serving failed ({names})"

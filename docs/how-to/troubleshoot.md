@@ -51,7 +51,11 @@ exception type. It never prints exception text.
 | `judgevet-mcp: shutdown failed (<TypeName>)` | Closing the hosted adapter, or exiting the application's provider factory, after serving returns. | Check the provider's cleanup named by the type. |
 
 A grouped failure lists each distinct leaf type once, in order of first
-appearance, for example `(JevAuthError, OSError)`. The messages
+appearance, for example `(JevAuthError, OSError)`. When cleanup fails after
+serving fails, the message still names the serving stage. It lists the serving
+types first, then the cleanup types, for example
+`judgevet-mcp: serving failed (RuntimeError, OSError)`. A type both raise
+appears once. The messages
 `judgevet-mcp: invalid settings` and the missing key source message exit 2.
 
 If the process starts but tools are missing, inspect the host's saved server

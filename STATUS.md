@@ -634,8 +634,8 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2697 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.71%** (2994/3096 statements).
+**2700 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.72%** (3004/3106 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at

@@ -6,7 +6,8 @@ adapter and serves stdio. Explicit provider selection bypasses hosted settings.
 An application factory acquires and closes its provider on the dispatch worker.
 Borrowed providers remain open when serving ends. A fatal failure names its
 stage and exception type names and omits exception text. A cleanup failure
-after serving returns names the shutdown stage.
+after serving returns names the shutdown stage. When serving and cleanup both
+fail, the serving stage names the serving types first, then the cleanup types.
 
 Examples:
     ```python
@@ -29,6 +30,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+from collections.abc import Iterable
 
 from pydantic import ValidationError
 
@@ -128,7 +130,9 @@ def main(
             IO, runtime, value, type or grouped exception. The exit code is 1.
             The diagnostic reads ``judgevet-mcp: <stage> failed (<TypeName>)``.
             The stage is credential resolution, provider acquisition,
-            serving or shutdown. A group lists its distinct leaf type names. Exception
+            serving or shutdown. A group lists its distinct leaf type names.
+            When cleanup fails after serving fails, the serving types come
+            first, then the cleanup types, each distinct name once. Exception
             text and the cause chain are omitted.
     """
     if port is not None and provider_factory is not None:
@@ -158,7 +162,7 @@ def main(
         TypeError,
         ExceptionGroup,
     ) as exc:
-        raise SystemExit(_diagnostic(stage.name, exc)) from None
+        raise SystemExit(_diagnostic(stage.name, (stage.error, exc))) from None
 
 
 class _Stage:
@@ -167,6 +171,8 @@ class _Stage:
     Attributes:
         name (str): Stage in progress: credential resolution, provider
             acquisition, serving or shutdown.
+        error (Exception | None): Serving failure captured before cleanup
+            runs, so a cleanup failure cannot replace it in the diagnostic.
 
     Examples:
         ```python
@@ -177,12 +183,13 @@ class _Stage:
     """
 
     def __init__(self, name: str) -> None:
-        """Start at the first stage of the selected path.
+        """Start at the first stage of the selected path with no serving error.
 
         Args:
             name: Initial stage name.
         """
         self.name = name
+        self.error: Exception | None = None
 
 
 def _leaf_names(exc: BaseException) -> list[str]:
@@ -200,17 +207,19 @@ def _leaf_names(exc: BaseException) -> list[str]:
     return list(dict.fromkeys(names))
 
 
-def _diagnostic(stage: str, exc: BaseException) -> str:
+def _diagnostic(stage: str, errors: Iterable[BaseException | None]) -> str:
     """Build the fixed fatal diagnostic from a stage and the exception types.
 
     Args:
         stage: Failed stage name.
-        exc: Caught exception; only its type names are used.
+        errors: Exceptions in reporting order; ``None`` entries are skipped.
+            Only their type names are used, each distinct name once.
 
     Returns:
         The message ``judgevet-mcp: <stage> failed (<TypeName>, ...)``.
     """
-    return f"judgevet-mcp: {stage} failed ({', '.join(_leaf_names(exc))})"
+    names = (name for exc in errors if exc is not None for name in _leaf_names(exc))
+    return f"judgevet-mcp: {stage} failed ({', '.join(dict.fromkeys(names))})"
 
 
 def _run_hosted(model: str, stage: _Stage) -> int:
@@ -220,10 +229,14 @@ def _run_hosted(model: str, stage: _Stage) -> int:
         model: Explicit host-selected model. The default ``jev-latest``
             defers to ``settings.api.default_model``.
         stage: Stage record advanced to serving after credential resolution
-            and to shutdown after serving returns.
+            and to shutdown after serving returns. It records a serving
+            failure before the adapter closes.
 
     Returns:
         Zero on success or two on configuration failure.
+
+    Raises:
+        Exception: Serving failed, or the adapter's close failed.
     """
     try:
         settings = Settings()
@@ -247,6 +260,9 @@ def _run_hosted(model: str, stage: _Stage) -> int:
         else:
             asyncio.run(run_stdio(adapter, model=chosen))
         stage.name = "shutdown"
+    except Exception as exc:
+        stage.error = exc
+        raise
     finally:
         adapter.close()
     return 0
@@ -265,15 +281,21 @@ async def _run_selected(
         factory: Owning application factory.
         model: Host-selected model.
         stage: Stage record advanced to serving after provider acquisition
-            and to shutdown after serving returns.
+            and to shutdown after serving returns. It records a serving
+            failure before the provider context exits.
 
     Raises:
         RuntimeError: Provider acquisition yielded no port.
+        Exception: Serving failed, or the provider context's exit failed.
     """
     dispatch = ProviderDispatch(port=port, factory=factory)
     async with dispatch.session():
         if dispatch.port is None:
             raise RuntimeError("Provider acquisition did not return a port")
         stage.name = "serving"
-        await run_stdio(dispatch.port, model=model)
+        try:
+            await run_stdio(dispatch.port, model=model)
+        except Exception as exc:
+            stage.error = exc
+            raise
         stage.name = "shutdown"
