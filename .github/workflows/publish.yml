@@ -5,9 +5,9 @@ name: Publish to PyPI
   release:
     types: [published]
 
+# Read-only by default. Each job below that needs more asks for it (#231).
 permissions:
   contents: read
-  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,10 +37,16 @@ jobs:
           path: dist/
           if-no-files-found: error
 
-  publish:
+  # Supply-chain files from the released commit and the same wheel and sdist
+  # that go to PyPI, with signed attestations over the wheel and sdist.
+  # https://docs.github.com/en/actions/concepts/security/artifact-attestations
+  attest:
     needs: build
     runs-on: ubuntu-latest
-    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -52,37 +58,50 @@ jobs:
           path: dist
           merge-multiple: false
 
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: ./.github/actions/supply-chain
         with:
-          enable-cache: true
+          out: supply-chain
+          dist: dist
 
-      - run: uv python install 3.12
+      # v4 wraps actions/attest; latest release tags checked 2026-09-28:
+      # https://github.com/actions/attest-build-provenance/releases
+      - uses: actions/attest-build-provenance@v4.2.2
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
 
-      - name: Verify exactly one wheel
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          wheels=(dist/*.whl)
-          count=${#wheels[@]}
-          if (( count != 1 )); then
-            echo "::error::expected exactly one wheel in dist/, found ${count}"
-            ls -la dist/
-            exit 1
-          fi
-          printf 'WHEEL=%s\n' "${wheels[0]}" >> "$GITHUB_ENV"
+      # The runtime SBOM lists what installing the wheel pulls in. The mcp
+      # and dev SBOMs stay release files without an attestation.
+      # https://github.com/actions/attest-sbom/releases
+      - uses: actions/attest-sbom@v4.1.0
+        with:
+          subject-path: dist/*.whl
+          sbom-path: supply-chain/sbom-runtime.cdx.json
 
-      - name: Smoke test the wheel
+      - uses: actions/upload-artifact@v7
+        with:
+          name: supply-chain
+          path: supply-chain/
+          if-no-files-found: error
+
+  # The only job that writes to the repository: it attaches the files to
+  # the release that triggered this run.
+  release-files:
+    needs: attest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: supply-chain
+          path: supply-chain
+
+      - name: Attach supply-chain files to the release
         env:
-          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-        run: |
-          "$(uv python find 3.12)" scripts/smoke_release.py --wheel "$WHEEL"
-
-      - name: Smoke test installed MCP tools
-        env:
-          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-        run: |
-          "$(uv python find 3.12)" -m scripts.smoke_mcp_release --wheel "$WHEEL"
-
-      - run: >-
-          uv publish --trusted-publishing always
-          --check-url https://pypi.org/simple/
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: >-
+          gh release upload "$TAG" supply-chain/* --clobber
+          --repo "$GITHUB_REPOSITORY"

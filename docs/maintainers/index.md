@@ -45,18 +45,41 @@ is experimental. Recheck supported flags and failure behavior when upgrading
 uv. Commit-stage checks do not contact the audit service; the network audit
 runs at push and in its own CI job.
 
-The CI `sbom` job uploads a `supply-chain` artifact for dependency reviews. It
-exports CycloneDX 1.5 SBOMs for runtime, runtime with MCP and development
-dependencies with the `sbom-export` preview of
+The CI `sbom` job uploads a `supply-chain` artifact for dependency reviews. The
+job and the release workflow share one composite action,
+`.github/actions/supply-chain`. It exports CycloneDX 1.5 SBOMs for runtime,
+runtime with MCP and development dependencies with the `sbom-export` preview of
 [uv export](https://docs.astral.sh/uv/reference/cli/#uv-export).
+The export reads the dependency graph that `uv.lock` declares. Each SBOM is
+therefore a *source* SBOM, not a *build* SBOM of the wheel, in the
+[CISA SBOM types](https://www.cisa.gov/sites/default/files/2024-10/SBOM%20Framing%20Software%20Component%20Transparency%202024.pdf).
+`scripts/sbom_lifecycle.py` records that scope in each file as the CycloneDX
+[lifecycle phase](https://cyclonedx.org/docs/1.5/json/#metadata_lifecycles)
+`pre-build`.
 `scripts/licence_report.py` builds a licence table per scope from installed
 package metadata. A package without licence metadata reads `UNKNOWN`. A
 package absent from the runner's environment reads `NOT INSTALLED`. The
 `marker` column shows the environment marker uv records for a package, which
-gives the reason for an absence when there is one. The job also saves the
+gives the reason for an absence when there is one. The action also saves the
 audit as JSON. Its provenance file records the commit, uv version, `uv.lock`
-SHA-256 and the outcome of each step. An artifact from a failed run therefore
-shows that it is incomplete. Release attachment is not part of this job.
+SHA-256, the SBOM scope and the outcome of each step. A failed or skipped step
+sets `complete: no`, so an artifact from a failed run shows that it is
+incomplete.
+
+Publishing a release runs `publish.yml`. Its `attest` job runs the same action
+on the released commit, with the wheel and sdist that go to PyPI. It adds their
+SHA-256 to the provenance file. It signs a build provenance attestation for the
+wheel and sdist, and an SBOM attestation that binds the runtime SBOM to the
+wheel. The runtime SBOM lists what installing the wheel pulls in. See
+[artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations).
+The `release-files` job then attaches every supply-chain file to the GitHub
+release. The PyPI `publish` job runs only after the attestations succeed.
+
+To verify a downloaded wheel, run
+`gh attestation verify <wheel> --repo Alberto-Codes/judgevet`. Add
+`--predicate-type https://cyclonedx.org/bom` to verify the SBOM attestation.
+The same command verifies the sdist's build provenance. See
+[gh attestation verify](https://cli.github.com/manual/gh_attestation_verify).
 
 ## Check configuration and workflows
 
