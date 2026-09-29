@@ -30,7 +30,7 @@ Use Python 3.12 or newer. In a virtual environment:
 
 <!-- x-release-please-start-version -->
 ```bash
-python -m pip install 'judgevet==0.13.0'
+python -m pip install 'judgevet==0.14.0'
 judgevet --help
 ```
 <!-- x-release-please-end -->

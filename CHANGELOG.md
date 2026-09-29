@@ -3,6 +3,48 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.14.0](https://github.com/Alberto-Codes/judgevet/compare/v0.13.0...v0.14.0) (2026-09-29)
+
+
+### Features
+
+* **api:** add a neutral error base ([0a71411](https://github.com/Alberto-Codes/judgevet/commit/0a7141119d47b5b2549d9277644a7a6359183495)), references [#78](https://github.com/Alberto-Codes/judgevet/issues/78) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **audit:** add optional keyed media provenance ([eee524f](https://github.com/Alberto-Codes/judgevet/commit/eee524f6fe70554d9599d38c507325285a916590)), references [#203](https://github.com/Alberto-Codes/judgevet/issues/203) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **cli:** accept bounded local image evidence ([a2c9feb](https://github.com/Alberto-Codes/judgevet/commit/a2c9feb985af45e02e0304694349a9bb4c03c857)), references [#203](https://github.com/Alberto-Codes/judgevet/issues/203) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **cli:** support application-selected providers ([ea88816](https://github.com/Alberto-Codes/judgevet/commit/ea8881673cd773e917425fa25cfcb496d1019dde)), references [#202](https://github.com/Alberto-Codes/judgevet/issues/202) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **mcp:** accept bounded image evidence in policy calls ([ad0fc01](https://github.com/Alberto-Codes/judgevet/commit/ad0fc0178e3305cae1285b7e046a8c60da086133)), references [#203](https://github.com/Alberto-Codes/judgevet/issues/203) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **mcp:** declare an outputSchema for each tool's structured content ([6724ebd](https://github.com/Alberto-Codes/judgevet/commit/6724ebd4ddc3f4688677d19f405f6fe4045890ed)), references [#211](https://github.com/Alberto-Codes/judgevet/issues/211)
+* **mcp:** evaluate policies through selected providers ([eeab8a8](https://github.com/Alberto-Codes/judgevet/commit/eeab8a8fa4065b4a0e1d07e5a66993e239e6ebac)), references [#202](https://github.com/Alberto-Codes/judgevet/issues/202) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **mcp:** give evaluate_policy's policy argument a schema ([601e23e](https://github.com/Alberto-Codes/judgevet/commit/601e23ed1d66fc14a92a82f2c8fd2d4d6d5075ae)), references [#214](https://github.com/Alberto-Codes/judgevet/issues/214)
+* **mcp:** let JEV_API__DEFAULT_MODEL select the judgevet-mcp model ([75936cc](https://github.com/Alberto-Codes/judgevet/commit/75936ccd73663d84e7f17d6c6e5f629c79ff42d0)), references [#216](https://github.com/Alberto-Codes/judgevet/issues/216)
+* **mcp:** own selected providers through serialized dispatch ([686d175](https://github.com/Alberto-Codes/judgevet/commit/686d1755d40cfc861cc54fc93dc70f980ff6a39b)), references [#202](https://github.com/Alberto-Codes/judgevet/issues/202) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **mcp:** report when ask_score applies the default rubric ([09d3dcb](https://github.com/Alberto-Codes/judgevet/commit/09d3dcbc07c1c4ac17b595d0d7c473dee79c2f37)), references [#228](https://github.com/Alberto-Codes/judgevet/issues/228)
+* **mcp:** send ask_* results as serialized JSON text ([8eb8961](https://github.com/Alberto-Codes/judgevet/commit/8eb896160ad16fc07d8d68067199f57498ea8a6f)), references [#225](https://github.com/Alberto-Codes/judgevet/issues/225)
+* **media:** preserve ordered image evidence through providers ([ef10b6c](https://github.com/Alberto-Codes/judgevet/commit/ef10b6ce4c910b49a72f7923b4112832908077ef)), references [#203](https://github.com/Alberto-Codes/judgevet/issues/203) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **providers:** add explicit provider ownership scopes ([c1bfaec](https://github.com/Alberto-Codes/judgevet/commit/c1bfaecd04a995ec545febb557d371036232a237)), references [#201](https://github.com/Alberto-Codes/judgevet/issues/201) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* read spend cap settings in the CLI and MCP roots ([66d9c3a](https://github.com/Alberto-Codes/judgevet/commit/66d9c3ad992820ae60f0e853a976e9c1642be125)), references [#56](https://github.com/Alberto-Codes/judgevet/issues/56)
+
+
+### Fixes
+
+* **mcp:** make ask_* state descriptions match their type ([299e29a](https://github.com/Alberto-Codes/judgevet/commit/299e29a3dd22638698367a606c0e238ddebc92bf)), references [#210](https://github.com/Alberto-Codes/judgevet/issues/210)
+* **mcp:** name both types when serving and teardown fail ([63f64c5](https://github.com/Alberto-Codes/judgevet/commit/63f64c540a4bebabbdd2f062828ec5440ac62436)), references [#227](https://github.com/Alberto-Codes/judgevet/issues/227)
+* **mcp:** name the failed stage and exception type in judgevet-mcp errors ([95a59bb](https://github.com/Alberto-Codes/judgevet/commit/95a59bb2f6d7c54a0c7bb310d10e6dc3bc73ab9e)), references [#215](https://github.com/Alberto-Codes/judgevet/issues/215)
+* **mcp:** name the shutdown stage when judgevet-mcp teardown fails ([8b49f2d](https://github.com/Alberto-Codes/judgevet/commit/8b49f2d332f4562464c01078f2d2f6bed1a43c24)), references [#222](https://github.com/Alberto-Codes/judgevet/issues/222)
+* **mcp:** return isError results for bad ask_* arguments ([e7f7bd6](https://github.com/Alberto-Codes/judgevet/commit/e7f7bd6e0f2160845d14a0d3a705f3b02cbd9125)), references [#209](https://github.com/Alberto-Codes/judgevet/issues/209)
+* **mcp:** tell ask_score callers to supply levels that fit the question ([89166f7](https://github.com/Alberto-Codes/judgevet/commit/89166f7cf37215d08cd38b2ee4011f9441fd1abd)), references [#212](https://github.com/Alberto-Codes/judgevet/issues/212)
+* **policy:** name the extra key beside a pass predicate ([84620a5](https://github.com/Alberto-Codes/judgevet/commit/84620a50676409f70a6b0fb42287d7b794c15ca2)), references [#223](https://github.com/Alberto-Codes/judgevet/issues/223)
+
+
+### Documentation
+
+* **maintainers:** grep tests for assertions a message change breaks ([b9cbbda](https://github.com/Alberto-Codes/judgevet/commit/b9cbbdaf7066abd0ab248c9b11aeb085f31187ad)), references [#223](https://github.com/Alberto-Codes/judgevet/issues/223)
+* **mcp:** describe the 0.14.0 server before the release cut ([a48642a](https://github.com/Alberto-Codes/judgevet/commit/a48642a21f332678e4792bcf73ee070f1fb69160)), references [#236](https://github.com/Alberto-Codes/judgevet/issues/236)
+* **providers:** record accepted extension design ([268796a](https://github.com/Alberto-Codes/judgevet/commit/268796a855723d0236a99143d97c69641d0f00c7)), references [#200](https://github.com/Alberto-Codes/judgevet/issues/200) [#199](https://github.com/Alberto-Codes/judgevet/issues/199)
+* **readme:** pin the current release and let release-please bump it ([fe35ae8](https://github.com/Alberto-Codes/judgevet/commit/fe35ae8e775a2c591d6506650a64601ef047b569)), references [#213](https://github.com/Alberto-Codes/judgevet/issues/213)
+* **status:** record the CI test job time after parallel workers ([09d33a1](https://github.com/Alberto-Codes/judgevet/commit/09d33a190a77532df3b327e0077a8d53a2bef9fc)), references [#208](https://github.com/Alberto-Codes/judgevet/issues/208)
+* **workflow:** assign validation ownership and bounded review ([183cdf0](https://github.com/Alberto-Codes/judgevet/commit/183cdf01aa726a293f6852c3a487684f8dcec291)), references [#206](https://github.com/Alberto-Codes/judgevet/issues/206)
+
 ## [0.13.0](https://github.com/Alberto-Codes/judgevet/compare/v0.12.0...v0.13.0) (2026-09-25)
 
 
