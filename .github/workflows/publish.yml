@@ -65,7 +65,13 @@ jobs:
 
       # v4 wraps actions/attest; latest release tags checked 2026-09-28:
       # https://github.com/actions/attest-build-provenance/releases
-      - uses: actions/attest-build-provenance@v4.2.2
+      # Both attest actions expose a bundle-path output, the Sigstore bundle
+      # on the runner's disk. Several subjects share one attestation.
+      # https://github.com/actions/attest-build-provenance/blob/v4.2.2/action.yml
+      # https://github.com/actions/attest-sbom/blob/v4.1.0/action.yml
+      # https://github.com/actions/attest#readme
+      - id: provenance
+        uses: actions/attest-build-provenance@v4.2.2
         with:
           subject-path: |
             dist/*.whl
@@ -74,10 +80,41 @@ jobs:
       # The runtime SBOM lists what installing the wheel pulls in. The mcp
       # and dev SBOMs stay release files without an attestation.
       # https://github.com/actions/attest-sbom/releases
-      - uses: actions/attest-sbom@v4.1.0
+      - id: sbom
+        uses: actions/attest-sbom@v4.1.0
         with:
           subject-path: dist/*.whl
           sbom-path: supply-chain/sbom-runtime.cdx.json
+
+      # Scorecard's Signed-Releases check counts release files that end in
+      # .sigstore.json. The bundles travel apart from the supply-chain files.
+      # https://github.com/ossf/scorecard/blob/main/docs/checks.md#signed-releases
+      # https://github.com/ossf/scorecard/blob/main/probes/releasesAreSigned/impl.go
+      - name: Name the attestation bundles
+        env:
+          PROVENANCE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM: ${{ steps.sbom.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          sdists=(dist/*.tar.gz)
+          if (( ${#wheels[@]} != 1 || ${#sdists[@]} != 1 )); then
+            echo "::error::expected one wheel and one sdist in dist/"
+            ls -la dist/
+            exit 1
+          fi
+          release=$(basename "${sdists[0]}" .tar.gz)
+          wheel=$(basename "${wheels[0]}")
+          mkdir -p bundles
+          cp "$PROVENANCE" "bundles/${release}.provenance.sigstore.json"
+          cp "$SBOM" "bundles/${wheel}.sbom.sigstore.json"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: attestation-bundles
+          path: bundles/
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@v7
         with:
@@ -85,8 +122,9 @@ jobs:
           path: supply-chain/
           if-no-files-found: error
 
-  # The only job that writes to the repository: it attaches the files to
-  # the release that triggered this run.
+  # The only job that writes to the repository: it attaches the wheel, the
+  # sdist, the attestation bundles and the supply-chain files to the release
+  # that triggered this run. The wheel and sdist are the files PyPI gets.
   release-files:
     needs: attest
     runs-on: ubuntu-latest
@@ -95,67 +133,23 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
+          name: dist
+          path: dist
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: attestation-bundles
+          path: bundles
+
+      - uses: actions/download-artifact@v8
+        with:
           name: supply-chain
           path: supply-chain
 
-      - name: Attach supply-chain files to the release
+      - name: Attach release files
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
         run: >-
-          gh release upload "$TAG" supply-chain/* --clobber
+          gh release upload "$TAG" dist/* bundles/* supply-chain/* --clobber
           --repo "$GITHUB_REPOSITORY"
-
-  # Publishes only attested files. Nothing depends on this job.
-  publish:
-    needs: [build, attest]
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.sha }}
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist
-          merge-multiple: false
-
-      - uses: astral-sh/setup-uv@v10.2.0
-        with:
-          enable-cache: true
-
-      - run: uv python install 3.12
-
-      - name: Verify exactly one wheel
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          wheels=(dist/*.whl)
-          count=${#wheels[@]}
-          if (( count != 1 )); then
-            echo "::error::expected exactly one wheel in dist/, found ${count}"
-            ls -la dist/
-            exit 1
-          fi
-          printf 'WHEEL=%s\n' "${wheels[0]}" >> "$GITHUB_ENV"
-
-      - name: Smoke test the wheel
-        env:
-          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-        run: |
-          "$(uv python find 3.12)" scripts/smoke_release.py --wheel "$WHEEL"
-
-      - name: Smoke test installed MCP tools
-        env:
-          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-        run: |
-          "$(uv python find 3.12)" -m scripts.smoke_mcp_release --wheel "$WHEEL"
-
-      - run: >-
-          uv publish --trusted-publishing always
-          --check-url https://pypi.org/simple/

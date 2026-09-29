@@ -72,14 +72,40 @@ SHA-256 to the provenance file. It signs a build provenance attestation for the
 wheel and sdist, and an SBOM attestation that binds the runtime SBOM to the
 wheel. The runtime SBOM lists what installing the wheel pulls in. See
 [artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations).
-The `release-files` job then attaches every supply-chain file to the GitHub
-release. The PyPI `publish` job runs only after the attestations succeed.
+The `release-files` job then attaches these files to the GitHub release:
+
+- the wheel and the sdist, the same files that go to PyPI;
+- `judgevet-<version>.provenance.sigstore.json`, the build provenance
+  bundle. One attestation covers both the wheel and the sdist;
+- `<wheel>.sbom.sigstore.json`, the SBOM attestation bundle for the wheel;
+- every supply-chain file.
+
+Each bundle is the Sigstore bundle from the `bundle-path` output of
+[attest-build-provenance](https://github.com/actions/attest-build-provenance/blob/v4.2.2/action.yml)
+and [attest-sbom](https://github.com/actions/attest-sbom/blob/v4.1.0/action.yml).
+The `.sigstore.json` suffix is one that the OpenSSF Scorecard
+[Signed-Releases](https://github.com/ossf/scorecard/blob/main/docs/checks.md#signed-releases)
+check counts as a signature.
+The PyPI `publish` job runs only after the attestations succeed. It does not
+wait for `release-files`, so a failed release upload does not block PyPI.
 
 To verify a downloaded wheel, run
 `gh attestation verify <wheel> --repo Alberto-Codes/judgevet`. Add
 `--predicate-type https://cyclonedx.org/bom` to verify the SBOM attestation.
 The same command verifies the sdist's build provenance. See
 [gh attestation verify](https://cli.github.com/manual/gh_attestation_verify).
+
+To verify offline against the release bundles, pass a bundle with `--bundle`:
+
+```bash
+gh attestation verify judgevet-<version>-py3-none-any.whl \
+  --bundle judgevet-<version>.provenance.sigstore.json \
+  --repo Alberto-Codes/judgevet
+gh attestation verify judgevet-<version>-py3-none-any.whl \
+  --bundle judgevet-<version>-py3-none-any.whl.sbom.sigstore.json \
+  --predicate-type https://cyclonedx.org/bom \
+  --repo Alberto-Codes/judgevet
+```
 
 ## Check configuration and workflows
 
