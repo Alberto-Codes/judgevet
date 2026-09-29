@@ -10,8 +10,10 @@ spend cap trip included, also returns a tool error result, as the MCP tools
 specification classifies it. Source:
 https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling.
 The cap spans the server's lifetime, so its message says a restart is
-required. Answer formatting retains the existing text and structured content
-shapes.
+required. A success result carries structured content and one text block
+whose text is that structured content serialized as JSON, as the MCP tools
+specification recommends. Source:
+https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content.
 
 Examples:
     ```python
@@ -28,6 +30,7 @@ See Also:
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from judgevet.adapters.inbound.mcp_arguments import ask_arguments, tool_error
@@ -60,6 +63,39 @@ def service_error(mcp_types: Any, error: JudgevetError, *, media: bool = False) 
     return tool_error(mcp_types, str(error))
 
 
+def answer_result(
+    mcp_types: Any, fields: dict[str, Any], response: SystemOneResponse
+) -> Any:
+    """Return answer fields with model and usage as JSON text and structured content.
+
+    The text is `json.dumps` with default settings, the same serialization
+    `evaluate_policy` uses. Its ASCII escapes keep the text transport-safe, and
+    `json.loads` of the text equals the structured content.
+
+    Args:
+        mcp_types: SDK type constructors.
+        fields: Answer fields that lead the structured content.
+        response: Port response with model and usage.
+
+    Returns:
+        SDK tool result whose one text block is the serialized structured content.
+    """
+    structured_content = {
+        **fields,
+        "model": response.model,
+        "usage": {
+            "input_tokens": response.usage.input_tokens,
+            "output_tokens": response.usage.output_tokens,
+        },
+    }
+    return mcp_types.CallToolResult(
+        content=[
+            mcp_types.TextContent(type="text", text=json.dumps(structured_content))
+        ],
+        structured_content=structured_content,
+    )
+
+
 async def handle_ask_noul(
     port: ProviderDispatch, mcp_types: Any, params: Any, *, model: str = "jev-latest"
 ) -> Any:
@@ -72,8 +108,9 @@ async def handle_ask_noul(
         model: Host-selected model.
 
     Returns:
-        CallToolResult with structured content containing noul, model, usage,
-        or a tool error result for invalid arguments or a service error.
+        CallToolResult with structured content containing noul, model and
+        usage, and the same content as JSON text. Invalid arguments and service
+        errors return a tool error result.
 
     Raises:
         ValueError: If the answer is missing.
@@ -109,45 +146,7 @@ async def handle_ask_noul(
     if not isinstance(noul_answer, NoulAnswer):
         raise TypeError(f"Expected NoulAnswer, got {type(noul_answer).__name__}")
 
-    return _noul_result(mcp_types, noul_answer, response)
-
-
-def _noul_result(
-    mcp_types: Any, noul_answer: NoulAnswer, response: SystemOneResponse
-) -> Any:
-    """Format the existing noul answer as text and structured content.
-
-    Args:
-        mcp_types: SDK type constructors.
-        noul_answer: Typed answer.
-        response: Port response with model and usage.
-
-    Returns:
-        SDK tool result preserving both representations.
-    """
-    structured_content = {
-        "noul": noul_answer.noul,
-        "model": response.model,
-        "usage": {
-            "input_tokens": response.usage.input_tokens,
-            "output_tokens": response.usage.output_tokens,
-        },
-    }
-
-    return mcp_types.CallToolResult(
-        content=[
-            mcp_types.TextContent(
-                type="text",
-                text=(
-                    f"Probability of true: {noul_answer.noul:.4f}\n"
-                    f"Model: {response.model}\n"
-                    f"Usage: {response.usage.input_tokens} input tokens, "
-                    f"{response.usage.output_tokens} output tokens"
-                ),
-            )
-        ],
-        structured_content=structured_content,
-    )
+    return answer_result(mcp_types, {"noul": noul_answer.noul}, response)
 
 
 async def handle_ask_choice(
@@ -163,8 +162,8 @@ async def handle_ask_choice(
 
     Returns:
         CallToolResult with structured content containing choice, probabilities,
-        confidence, model, usage, or a tool error result for invalid arguments
-        or a service error.
+        confidence, model and usage, and the same content as JSON text. Invalid
+        arguments and service errors return a tool error result.
 
     Raises:
         ValueError: If the answer is missing.
@@ -207,48 +206,12 @@ async def handle_ask_choice(
     if not isinstance(choice_answer, ChoiceAnswer):
         raise TypeError(f"Expected ChoiceAnswer, got {type(choice_answer).__name__}")
 
-    return _choice_result(mcp_types, choice_answer, response)
-
-
-def _choice_result(
-    mcp_types: Any, choice_answer: ChoiceAnswer, response: SystemOneResponse
-) -> Any:
-    """Format the existing choice answer as text and structured content.
-
-    Args:
-        mcp_types: SDK type constructors.
-        choice_answer: Typed answer.
-        response: Port response with model and usage.
-
-    Returns:
-        SDK tool result preserving both representations.
-    """
-    structured_content = {
+    fields = {
         "choice": choice_answer.choice,
         "confidence": choice_answer.confidence,
         "probabilities": choice_answer.probabilities,
-        "model": response.model,
-        "usage": {
-            "input_tokens": response.usage.input_tokens,
-            "output_tokens": response.usage.output_tokens,
-        },
     }
-
-    return mcp_types.CallToolResult(
-        content=[
-            mcp_types.TextContent(
-                type="text",
-                text=(
-                    f"Choice: {choice_answer.choice}\n"
-                    f"Confidence: {choice_answer.confidence:.4f}\n"
-                    f"Model: {response.model}\n"
-                    f"Usage: {response.usage.input_tokens} input tokens, "
-                    f"{response.usage.output_tokens} output tokens"
-                ),
-            )
-        ],
-        structured_content=structured_content,
-    )
+    return answer_result(mcp_types, fields, response)
 
 
 async def handle_ask_score(
@@ -264,8 +227,9 @@ async def handle_ask_score(
 
     Returns:
         CallToolResult with structured content containing score, legend,
-        probabilities, confidence, model, usage, or a tool error result for
-        invalid arguments or a service error.
+        probabilities, confidence, model and usage, and the same content as
+        JSON text. Invalid arguments and service errors return a tool error
+        result.
 
     Raises:
         ValueError: If the answer is missing.
@@ -308,46 +272,10 @@ async def handle_ask_score(
     if not isinstance(score_answer, ScoreAnswer):
         raise TypeError(f"Expected ScoreAnswer, got {type(score_answer).__name__}")
 
-    return _score_result(mcp_types, score_answer, response)
-
-
-def _score_result(
-    mcp_types: Any, score_answer: ScoreAnswer, response: SystemOneResponse
-) -> Any:
-    """Format the existing score answer as text and structured content.
-
-    Args:
-        mcp_types: SDK type constructors.
-        score_answer: Typed answer.
-        response: Port response with model and usage.
-
-    Returns:
-        SDK tool result preserving both representations.
-    """
-    structured_content = {
+    fields = {
         "score": score_answer.score,
         "legend": score_answer.legend,
         "probabilities": score_answer.probabilities,
         "confidence": score_answer.confidence,
-        "model": response.model,
-        "usage": {
-            "input_tokens": response.usage.input_tokens,
-            "output_tokens": response.usage.output_tokens,
-        },
     }
-
-    return mcp_types.CallToolResult(
-        content=[
-            mcp_types.TextContent(
-                type="text",
-                text=(
-                    f"Score: {score_answer.score:.4f}\n"
-                    f"Confidence: {score_answer.confidence:.4f}\n"
-                    f"Model: {response.model}\n"
-                    f"Usage: {response.usage.input_tokens} input tokens, "
-                    f"{response.usage.output_tokens} output tokens"
-                ),
-            )
-        ],
-        structured_content=structured_content,
-    )
+    return answer_result(mcp_types, fields, response)

@@ -38,9 +38,12 @@ See [configuration overrides](configuration.md#entry-point-overrides).
 
 ## Successful answers
 
-A successful call returns a text content item and structured content. Python
-SDK attributes use `structured_content` and `is_error`; wire JSON fields use
-`structuredContent` and `isError`. This distinction is recorded in the
+A successful call returns structured content and one text content item. The
+text is that structured content serialized as JSON, so parsing the text gives
+the same object. Source:
+[structured content](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content).
+Python SDK attributes use `structured_content` and `is_error`; wire JSON fields
+use `structuredContent` and `isError`. This distinction is recorded in the
 [adapter's SDK citations](../../src/judgevet/adapters/inbound/mcp.py).
 
 | Tool | Structured fields |
@@ -53,8 +56,8 @@ SDK attributes use `structured_content` and `is_error`; wire JSON fields use
 the single answer's fields directly, not the CLI's `answers` envelope. JSON
 object keys for Score levels are strings on the wire. Field semantics and vendor
 citations are in the [Python API reference](api.md#answer-and-container-types).
-Text content formats the answer for reading; use structured values for programmatic
-access. A successful call is a judgment, not evidence of its correctness.
+A host that shows only text shows this JSON. A successful call is a judgment,
+not evidence of its correctness.
 
 On main, each of the four tools declares an `outputSchema` in discovery. Each
 schema is a closed JSON Schema 2020-12 object that matches the fields in the
