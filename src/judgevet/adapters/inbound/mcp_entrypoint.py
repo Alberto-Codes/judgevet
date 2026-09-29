@@ -55,6 +55,9 @@ __all__ = ["main"]
 def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
     """Resolve one wrapped credential and apply host-selected gateway configuration.
 
+    The spend cap is read once here, so it spans the server's lifetime and a
+    tripped cap needs a restart.
+
     Args:
         settings: The Settings instance.
 
@@ -73,6 +76,7 @@ def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
         retry=settings.api.retry_policy,
         network=settings.api.network_config,
         gateway=settings.api.gateway_config,
+        spend_cap=settings.api.spend_cap,
     )
 
 

@@ -78,7 +78,7 @@ async def session(url: str, success: bool) -> str:
                 assert process.stdout is not None
                 answer = json.loads(await process.stdout.readline())
                 assert answer["jsonrpc"] == "2.0" and answer["id"] == 3
-                assert "error" in answer and "result" not in answer
+                assert "error" not in answer and answer["result"]["isError"] is True
             assert process.stdin is not None and process.stdout is not None
             process.stdin.close()
             await process.wait()
@@ -99,13 +99,7 @@ def assert_diagnostics(stderr: str, status: int, count: int) -> None:
         count: Number of calls made.
     """
     events = [json.loads(line) for line in stderr.splitlines()]
-    assert len(events) == count + int(status != 200)
-    if status != 200:
-        runtime = events.pop()
-        assert set(runtime) == {"event", "level", "timestamp", "request_id"}
-        assert runtime["request_id"] is None
-        assert runtime["event"] == "mcp.runtime"
-        assert runtime["level"] == "error"
+    assert len(events) == count
     for event in events:
         event_fields(event, status, 1, "success" if status == 200 else "error")
     for secret in (

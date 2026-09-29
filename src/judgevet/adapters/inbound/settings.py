@@ -9,6 +9,10 @@ configuration as arguments; only a composition root reads the environment.
 That is what keeps the outbound adapter testable without touching
 ``os.environ``.
 
+``JEV_API__SPEND_MAX_ATTEMPTS`` and ``JEV_API__SPEND_MAX_INPUT_TOKENS`` set an
+opt-in spend cap. Each root reads ``spend_cap`` once, so one cap spans a CLI
+process or an MCP server's lifetime and never resets.
+
 The configured key or command is a ``SecretStr``. File and command sources
 resolve only when ``resolve_key`` is called, not during Settings construction.
 Its ``repr`` renders as ``**********``, so a
@@ -51,6 +55,7 @@ from judgevet.adapters.inbound.logs import LogSettings as LogsLogSettings
 from judgevet.adapters.outbound.gateway import GatewayConfig
 from judgevet.adapters.outbound.network import NetworkConfig
 from judgevet.adapters.outbound.retries import RetryPolicy
+from judgevet.domain.spend import SpendCap
 
 DEFAULT_BASE_URL = "https://api.typesafe.ai"
 DEFAULT_MODEL = "jev-latest"
@@ -77,6 +82,11 @@ class ApiSettings(BaseSettings):
         retry_max_delay (float): Maximum delay ceiling in seconds.
         retry_transport (bool): Permit retries of transport errors.
         retry_policy (RetryPolicy): Validated policy passed to the adapter.
+        spend_max_attempts (int | None): Physical attempts one process or
+            MCP server may send, retries included. None leaves it unbounded.
+        spend_max_input_tokens (int | None): Settled input tokens after which
+            the cap refuses further attempts. None leaves it unbounded.
+        spend_cap (SpendCap | None): New cap from both limits, or None.
         proxy (SecretStr | None): Explicit proxy URL; masks optional credentials.
         ca_bundle (str | None): Explicit PEM trust bundle path.
         verify (bool): Enable certificate and hostname verification.
@@ -254,6 +264,40 @@ class ApiSettings(BaseSettings):
             self.retry_max_delay,
             self.retry_transport,
         )
+
+    spend_max_attempts: int | None = Field(default=None, ge=1)
+    spend_max_input_tokens: int | None = Field(default=None, ge=1)
+
+    @field_validator("spend_max_attempts", "spend_max_input_tokens", mode="before")
+    @classmethod
+    def _validate_spend_limit(cls, value: object) -> object:
+        """Reject booleans before numeric spend limit validation.
+
+        Args:
+            value: Explicit or environment-supplied limit.
+
+        Returns:
+            Input for normal integer validation.
+
+        Raises:
+            ValueError: If an explicit boolean is supplied.
+        """
+        if value is True or value is False:
+            raise ValueError("spend limits must be positive integers")
+        return value
+
+    @property
+    def spend_cap(self) -> SpendCap | None:
+        """Build a new spend cap from the configured limits.
+
+        Each access returns a new cap, so a composition root reads it once.
+
+        Returns:
+            None when both limits are unset, otherwise a cap with zero spent.
+        """
+        if self.spend_max_attempts is None and self.spend_max_input_tokens is None:
+            return None
+        return SpendCap(self.spend_max_attempts, self.spend_max_input_tokens)
 
     timeout_seconds: float = Field(default=30.0)
 

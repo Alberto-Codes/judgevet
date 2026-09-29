@@ -1,6 +1,6 @@
 # STATUS
 
-Last written: 2026-09-26. Current evidence ledger. Detailed implementation,
+Last written: 2026-09-28. Current evidence ledger. Detailed implementation,
 release and credential history remains in Git and the linked issues.
 
 ## Published release
@@ -634,8 +634,8 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2656 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.67%** (2963/3065 statements).
+**2679 tests pass, 7 live tests deselected.** The last measured coverage is
+**96.71%** (2994/3096 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at
@@ -700,8 +700,12 @@ Both HTTP adapters write one record per logical call. A sink failure is
 reported on `http.call` as `audit_error` and never changes the result. The
 JSONL sink and the CLI and MCP settings wait for slices 2 and 3.
 #56 slice A adds an opt-in library `SpendCap` for both HTTP adapters and
-`JevBudgetExceededError`. CLI and MCP settings wait for slice B. No live call
-has run the cap.
+`JevBudgetExceededError`. Slice B reads `JEV_API__SPEND_MAX_ATTEMPTS` and
+`JEV_API__SPEND_MAX_INPUT_TOKENS` into one cap per CLI process or MCP server
+lifetime. A tripped cap exits the CLI with 1. Each MCP tool returns it as an
+`isError` tool result that says a restart is required. The `ask_*` tools now
+return every service error as a tool result, as `evaluate_policy` already did.
+No live call has run the cap.
 Local commit and push gates pass for #172. The issue holds delivery evidence.
 #172 makes `Noul`, `Choice` and `Score` construction keyword-only with no
 deprecation cycle; positional construction raises `TypeError`. The commit
@@ -889,8 +893,9 @@ Published README links retain offline source and fragment validation.
 - Intermittent MCP initialization failures, including `invalid_data`, have no
   established cause or remedy. A successful fresh launcher does not prove an
   existing host session loaded its tools. See [connection checks](docs/how-to/install.md#when-mcp-does-not-connect).
-- Diagnostic redaction is bounded. Protocol errors, CLI error envelopes and
-  arbitrary tracebacks can disclose service-supplied content. See [SECURITY](SECURITY.md).
+- Diagnostic redaction is bounded. Protocol errors, MCP tool error results,
+  CLI error envelopes and arbitrary tracebacks can disclose service-supplied
+  content. See [SECURITY](SECURITY.md).
 - Release automation uses release-environment credentials without a
   `GITHUB_TOKEN` fallback. [Credential-scope evidence](https://github.com/Alberto-Codes/judgevet/issues/102)
   preserves the migration record. That record does not establish compromise.

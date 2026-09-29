@@ -122,12 +122,13 @@ own their logging configuration.
 
 MCP SDK warning/error diagnostics become a fixed `mcp.runtime` event with
 severity and dedicated request correlation, without the SDK's message or traceback. This protects **diagnostic
-stderr**, not MCP JSON-RPC error content on stdout. CLI error envelopes and
-library exceptions are also separate from these diagnostic events. They can
-contain service-supplied message text. The adapter discards validation `input`
+stderr**, not MCP JSON-RPC errors or tool error results on stdout. CLI error
+envelopes, MCP tool error results and library exceptions are also separate from
+these diagnostic events. They can contain service-supplied message text. The adapter discards validation `input`
 fields and malformed detail structures; it does not scrub arbitrary strings
 returned by a service. Exception chains can retain HTTP requests and answers.
-Review protocol errors, CLI errors and tracebacks before sharing them.
+Review protocol errors, tool error results, CLI errors and tracebacks before
+sharing them.
 
 The [logging adapter](src/judgevet/adapters/inbound/logs.py) masks configured
 secret field names and PEM-looking strings and omits traceback frame locals.

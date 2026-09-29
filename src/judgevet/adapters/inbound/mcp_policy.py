@@ -1,6 +1,8 @@
 """Keyed policy evaluation with strict question fields before provider dispatch.
 
 Source: https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5851056470.
+Service errors return tool error results through the shared ask handler
+helper. A tripped spend cap says a restart is required on every path.
 
 Examples:
     ```python
@@ -14,6 +16,7 @@ See Also:
     - [judgevet.policy_json][]: Policy JSON grammar.
     - [judgevet.adapters.inbound.mcp_dispatch][]: Serialized provider calls.
     - [judgevet.adapters.inbound.mcp_arguments][]: Shared tool error results.
+    - [judgevet.adapters.inbound.mcp_handlers][]: Shared service error results.
 """
 
 from __future__ import annotations
@@ -25,6 +28,7 @@ from judgevet import JudgevetError
 from judgevet.adapters.inbound.cli import build_response_data, parse_questions
 from judgevet.adapters.inbound.mcp_arguments import tool_error
 from judgevet.adapters.inbound.mcp_dispatch import ProviderDispatch
+from judgevet.adapters.inbound.mcp_handlers import service_error
 from judgevet.domain.questions import Question
 from judgevet.policy import ValidatedPolicy, evaluate_policy
 from judgevet.policy_json import parse_policy
@@ -86,7 +90,8 @@ async def handle_evaluate_policy(
 
     Returns:
         Matching text and structured envelopes, or a declared tool error
-        from the shared tool error helper.
+        from the shared tool error helper. A tripped spend cap says a restart
+        is required, on the media path too.
 
     Raises:
         Exception: Unexpected implementation failures retain SDK handling.
@@ -104,12 +109,7 @@ async def handle_evaluate_policy(
             response = await port.system_one(state, questions, model)
         report = evaluate_policy(policy, response.answers)
     except JudgevetError as exc:
-        message = (
-            f"{type(exc).__name__}: media evaluation failed"
-            if "evidence" in params.arguments
-            else str(exc)
-        )
-        return tool_error(mcp_types, message)
+        return service_error(mcp_types, exc, media="evidence" in params.arguments)
     data = build_response_data(response)
     data["policy"] = {
         "result": "pass" if report.passed else "fail",

@@ -5,8 +5,13 @@ SDK fields follow the tagged
 The factory supplies SDK types so importing this module needs no MCP runtime.
 Handlers pass the host-selected model to the asynchronous dispatcher and await
 the synchronous provider outside the event loop. Invalid arguments return a
-tool error result before any provider call. Answer formatting retains the
-existing text and structured content shapes.
+tool error result before any provider call. A declared service error, a
+spend cap trip included, also returns a tool error result, as the MCP tools
+specification classifies it. Source:
+https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling.
+The cap spans the server's lifetime, so its message says a restart is
+required. Answer formatting retains the existing text and structured content
+shapes.
 
 Examples:
     ```python
@@ -28,7 +33,31 @@ from typing import Any
 from judgevet.adapters.inbound.mcp_arguments import ask_arguments, tool_error
 from judgevet.adapters.inbound.mcp_dispatch import ProviderDispatch
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.errors import JevBudgetExceededError, JudgevetError
 from judgevet.domain.response import SystemOneResponse
+
+RESTART = "restart the server to continue."
+
+
+def service_error(mcp_types: Any, error: JudgevetError, *, media: bool = False) -> Any:
+    """Return a declared service error as a tool error result.
+
+    A tripped spend cap names the limit and says a restart is required,
+    because the cap never resets. Other media errors keep only the type name.
+
+    Args:
+        mcp_types: SDK type constructors.
+        error: Declared library error raised by the provider call.
+        media: Whether the call carried embedded evidence.
+
+    Returns:
+        SDK tool result with `is_error` true.
+    """
+    if isinstance(error, JevBudgetExceededError):
+        return tool_error(mcp_types, f"{error}; {RESTART}")
+    if media:
+        return tool_error(mcp_types, f"{type(error).__name__}: media evaluation failed")
+    return tool_error(mcp_types, str(error))
 
 
 async def handle_ask_noul(
@@ -44,7 +73,7 @@ async def handle_ask_noul(
 
     Returns:
         CallToolResult with structured content containing noul, model, usage,
-        or a tool error result for invalid arguments.
+        or a tool error result for invalid arguments or a service error.
 
     Raises:
         ValueError: If the answer is missing.
@@ -63,12 +92,14 @@ async def handle_ask_noul(
         }
     }
 
-    # Call the port
-    response = await port.system_one(
-        state=state,
-        questions=questions,
-        model=model,
-    )
+    try:
+        response = await port.system_one(
+            state=state,
+            questions=questions,
+            model=model,
+        )
+    except JudgevetError as exc:
+        return service_error(mcp_types, exc)
 
     # Extract the NoulAnswer
     noul_answer = response.answers.get("noul_question")
@@ -132,7 +163,8 @@ async def handle_ask_choice(
 
     Returns:
         CallToolResult with structured content containing choice, probabilities,
-        confidence, model, usage, or a tool error result for invalid arguments.
+        confidence, model, usage, or a tool error result for invalid arguments
+        or a service error.
 
     Raises:
         ValueError: If the answer is missing.
@@ -158,12 +190,14 @@ async def handle_ask_choice(
         "choice_question": question_data,
     }
 
-    # Call the port
-    response = await port.system_one(
-        state=state,
-        questions=questions,
-        model=model,
-    )
+    try:
+        response = await port.system_one(
+            state=state,
+            questions=questions,
+            model=model,
+        )
+    except JudgevetError as exc:
+        return service_error(mcp_types, exc)
 
     # Extract the ChoiceAnswer
     choice_answer = response.answers.get("choice_question")
@@ -231,7 +265,7 @@ async def handle_ask_score(
     Returns:
         CallToolResult with structured content containing score, legend,
         probabilities, confidence, model, usage, or a tool error result for
-        invalid arguments.
+        invalid arguments or a service error.
 
     Raises:
         ValueError: If the answer is missing.
@@ -257,12 +291,14 @@ async def handle_ask_score(
         "score_question": question_data,
     }
 
-    # Call the port
-    response = await port.system_one(
-        state=state,
-        questions=questions,
-        model=model,
-    )
+    try:
+        response = await port.system_one(
+            state=state,
+            questions=questions,
+            model=model,
+        )
+    except JudgevetError as exc:
+        return service_error(mcp_types, exc)
 
     # Extract the ScoreAnswer
     score_answer = response.answers.get("score_question")

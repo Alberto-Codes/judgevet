@@ -109,6 +109,8 @@ The nested settings use the `JEV_` prefix and `__` separator.
 | `JEV_API__RETRY_BASE_DELAY` | None | `0.5` | Initial backoff ceiling in seconds. |
 | `JEV_API__RETRY_MAX_DELAY` | None | `5.0` | Maximum backoff ceiling in seconds. |
 | `JEV_API__RETRY_TRANSPORT` | None | `false` | Permit retries after transport failures. |
+| `JEV_API__SPEND_MAX_ATTEMPTS` | None | Unset | Physical attempts one CLI process or MCP server may send, retries included; must be a positive integer. See [spend cap](#spend-cap). |
+| `JEV_API__SPEND_MAX_INPUT_TOKENS` | None | Unset | Settled input tokens after which the cap refuses further attempts; must be a positive integer. See [spend cap](#spend-cap). |
 | `JEV_LOG__FORMAT` | None | `auto` | `auto`, `json` or `console` logging format. |
 | `JEV_LOG__LEVEL` | None | `info` | `debug`, `info`, `warning`, `error` or `critical`, in lowercase. |
 
@@ -250,11 +252,22 @@ flight when the bound is reached can therefore settle past it. Set
 `max_attempts` as well when a hard ceiling matters. The cap has no currency
 and no preflight size estimate.
 
-CLI and MCP entry points do not set a spend cap. An application can construct
-a capped HTTP adapter and pass it to `run_cli` or `create_mcp_server` through
-the existing judgment port. The offline fakes in `judgevet.testing` accept the
-same `spend_cap=` option and claim, refuse and settle one attempt per call the
-same way; see [offline tests](../how-to/test-offline.md).
+The CLI and MCP entry points read `JEV_API__SPEND_MAX_ATTEMPTS` and
+`JEV_API__SPEND_MAX_INPUT_TOKENS`. Both are unset by default, which sets no
+cap. A value that is not a positive integer, including `true`, fails settings
+validation. Each entry point builds one cap for its adapter. The cap spans one
+CLI process, or the whole lifetime of one MCP server, and never resets. A
+tripped cap makes the CLI exit 1 with `Error: Spend cap reached: …`. Every MCP
+tool returns a tool result with `isError` true and text such as
+`Spend cap reached: attempts spent 2 of 2; restart the server to continue.`
+Every later call fails the same way until the server restarts. An explicit
+provider selection bypasses these settings and sets no cap.
+
+An application can also construct a capped HTTP adapter and pass it to
+`run_cli` or `create_mcp_server` through the existing judgment port. The
+offline fakes in `judgevet.testing` accept the same `spend_cap=` option and
+claim, refuse and settle one attempt per call the same way; see
+[offline tests](../how-to/test-offline.md).
 
 ## Audit records
 

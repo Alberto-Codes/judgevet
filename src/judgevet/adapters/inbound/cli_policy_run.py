@@ -121,8 +121,10 @@ def _build_adapter(
 ) -> HTTPSystemOneAdapter:
     """Resolve the policy credential and construct its gateway-aware HTTP adapter.
 
+    The adapter reads the spend cap once, so the cap spans this invocation.
+
     Args:
-        settings: Validated connection, retry and network settings.
+        settings: Validated connection, retry, spend and network settings.
         api_key: Optional explicit key override.
         model: Requested model.
 
@@ -141,6 +143,7 @@ def _build_adapter(
         retry=settings.api.retry_policy,
         network=settings.api.network_config,
         gateway=settings.api.gateway_config,
+        spend_cap=settings.api.spend_cap,
     )
 
 

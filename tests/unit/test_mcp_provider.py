@@ -131,9 +131,13 @@ def test_entrypoint_selection_and_thread_affinity(
     owned: bool,
     fail: bool,
 ) -> None:
-    """Run the command root with explicit selection and observed cleanup."""
+    """Run the command root with explicit selection and observed cleanup.
+
+    A declared provider failure is a tool error result, so serving continues.
+    """
     provider = RecordingProvider(fail=fail)
     lifecycle: list[tuple[str, int]] = []
+    results: list[Any] = []
     monkeypatch.setenv("JEV_API__TIMEOUT_SECONDS", "invalid-hosted-value")
 
     @contextmanager
@@ -148,23 +152,19 @@ def test_entrypoint_selection_and_thread_affinity(
     async def serve(port: SystemOnePort, *, model: str = "jev-latest") -> None:
         server = create_mcp_server(port, model=model)
         async with server.lifespan(server):
-            await server._request_handlers["tools/call"].handler(None, params())
+            handler = server._request_handlers["tools/call"].handler
+            results.append(await handler(None, params()))
 
     def forbidden(*args: object, **kwargs: object) -> None:
         pytest.fail("selected provider fell back to hosted construction")
 
     monkeypatch.setattr(entry, "run_stdio", serve)
     monkeypatch.setattr(entry, "build_adapter", forbidden)
-    if fail:
-        with pytest.raises(SystemExit, match="judgevet-mcp: serving failed"):
-            if owned:
-                entry.main(provider_factory=factory, model="fixture-selected")
-            else:
-                entry.main(port=provider, model="fixture-selected")
-    elif owned:
+    if owned:
         assert entry.main(provider_factory=factory, model="fixture-selected") == 0
     else:
         assert entry.main(port=provider, model="fixture-selected") == 0
+    assert [result.is_error for result in results] == [fail]
     assert provider.calls[0][2] == "fixture-selected"
     assert provider.closed == int(owned)
     if owned:

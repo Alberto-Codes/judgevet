@@ -109,10 +109,19 @@ classifies input validation errors as tool execution errors; see
 [error handling](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling).
 
 An unknown tool and a missing expected answer raise `ValueError` in the
-handlers. A wrong answer variant raises `TypeError`. Service errors from the
-ask tools propagate to the MCP runtime, which presents protocol failures. A tool
-failure is not a negative Noul answer or an unmet policy. Do not assume protocol
-error text has been scrubbed; see [diagnostic limits](../../SECURITY.md#diagnostics-and-error-content).
+handlers. A wrong answer variant raises `TypeError`. A declared service error
+from any tool returns a tool result with `isError` true and the error text.
+With `evidence`, `evaluate_policy` reports only the error type, as
+`<Type>: media evaluation failed`. A tool failure is not a negative Noul answer
+or an unmet policy.
+
+A tripped [spend cap](configuration.md#spend-cap) returns a tool result with
+`isError` true on every tool, the media path included. Its text names the limit
+and says a restart is required. An example is
+`Spend cap reached: attempts spent 2 of 2; restart the server to continue.`.
+The cap lasts for the server's lifetime and never resets, so a retry cannot
+succeed until the host restarts the server. Do not assume error text has been
+scrubbed; see [diagnostic limits](../../SECURITY.md#diagnostics-and-error-content).
 
 The entry point constructs and closes the adapter around serving. It returns 2
 for missing runtime, invalid settings or missing key, and 130 for keyboard

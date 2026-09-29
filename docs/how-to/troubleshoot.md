@@ -47,7 +47,7 @@ exception type. It never prints exception text.
 |---|---|---|
 | `judgevet-mcp: credential resolution failed (<TypeName>)` | Building the hosted adapter from the key source and connection settings. | Check the key source, key file access and gateway settings without printing them. |
 | `judgevet-mcp: provider acquisition failed (<TypeName>)` | Entering the application's provider factory, or receiving no provider from it. | Check the application's provider setup. |
-| `judgevet-mcp: serving failed (<TypeName>)` | The stdio run and the tool calls inside it. | Check the host connection and the provider named by the type. |
+| `judgevet-mcp: serving failed (<TypeName>)` | The stdio run. A tool call's service error returns as a tool result instead. | Check the host connection and the provider named by the type. |
 | `judgevet-mcp: shutdown failed (<TypeName>)` | Closing the hosted adapter, or exiting the application's provider factory, after serving returns. | Check the provider's cleanup named by the type. |
 
 A grouped failure lists each distinct leaf type once, in order of first

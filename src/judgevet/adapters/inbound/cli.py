@@ -399,7 +399,8 @@ def main(
     Reads Settings and configures stderr logging. An explicit --api-key overrides
     the selected credential source. Resolves it once as a wrapped key.
     Constructs HTTPSystemOneAdapter once with the settings
-    timeout, gateway fields, network options and retry limits, then calls run_cli.
+    timeout, gateway fields, network options, retry limits and spend cap, then
+    calls run_cli. A tripped spend cap exits 1 with ``Error: Spend cap reached``.
     Configuration failures produce a generic handled diagnostic.
     Closes the adapter in finally.
     The command wrapper supplies separate help and propagates failure status.
@@ -426,6 +427,7 @@ def main(
             retry=settings.api.retry_policy,
             network=settings.api.network_config,
             gateway=settings.api.gateway_config,
+            spend_cap=settings.api.spend_cap,
         )
     except ValueError:
         message = "Invalid API configuration or credential source"

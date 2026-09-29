@@ -10,6 +10,7 @@ import pytest
 from judgevet import GatewayConfig, NetworkConfig, RetryPolicy
 from judgevet.adapters.inbound import mcp_entrypoint as entry
 from judgevet.adapters.inbound.settings import Settings
+from judgevet.domain.spend import SpendCap
 from tests.unit.test_mcp_entrypoint import RecordingPort
 
 try:
@@ -71,10 +72,12 @@ def test_settings_once_and_constructor_propagation(
     monkeypatch.setenv("JEV_API__BASE_URL", "http://127.0.0.1:9")
     monkeypatch.setenv("JEV_API__DEFAULT_MODEL", "test-model")
     monkeypatch.setenv("JEV_API__TIMEOUT_SECONDS", "7.5")
+    monkeypatch.setenv("JEV_API__SPEND_MAX_ATTEMPTS", "5")
     settings_calls: list[Settings] = []
     constructor_calls: list[
         tuple[str | None, str, str, float, RetryPolicy, NetworkConfig, GatewayConfig]
     ] = []
+    caps: list[SpendCap | None] = []
     seen: list[RecordingPort] = []
     port = RecordingPort()
 
@@ -91,10 +94,12 @@ def test_settings_once_and_constructor_propagation(
         retry: RetryPolicy,
         network: NetworkConfig,
         gateway: GatewayConfig,
+        **options: SpendCap | None,
     ) -> RecordingPort:
         constructor_calls.append(
             (api_key, base_url, default_model, timeout_seconds, retry, network, gateway)
         )
+        caps.append(options.get("spend_cap"))
         return port
 
     async def serve(acquired: RecordingPort, *, model: str = "jev-latest") -> None:
@@ -116,6 +121,9 @@ def test_settings_once_and_constructor_propagation(
             NetworkConfig(),
             GatewayConfig(),
         )
+    ]
+    assert [(cap.max_attempts, cap.max_input_tokens) for cap in caps if cap] == [
+        (5, None)
     ]
     assert seen == [port]
     assert port.close_count == 1
@@ -142,6 +150,7 @@ def test_real_eof(monkeypatch: pytest.MonkeyPatch) -> None:
         retry: RetryPolicy,
         network: NetworkConfig,
         gateway: GatewayConfig,
+        **options: SpendCap | None,
     ) -> RecordingPort:
         return port
 

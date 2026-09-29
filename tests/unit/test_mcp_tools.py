@@ -421,7 +421,7 @@ class OversizedPort(SystemOnePort):
 @pytest.mark.skipif(not HAS_MCP, reason="mcp not installed")
 @pytest.mark.parametrize("tool", ["ask_noul", "ask_choice", "ask_score"])
 def test_tool_error_text_names_max_tokens_exceeded(tool: str) -> None:
-    """Each tool call surfaces the wire marker in its error text."""
+    """Each tool call returns the wire marker in its tool error text."""
     server = create_mcp_server(OversizedPort())
     call_tool_handler = server._request_handlers.get("tools/call")
     assert call_tool_handler is not None
@@ -433,9 +433,10 @@ def test_tool_error_text_names_max_tokens_exceeded(tool: str) -> None:
         """Dispatch the tool call.
 
         Returns:
-            The tool result; the port raises first.
+            The tool error result for the port's service error.
         """
         return await call_tool_handler.handler(MockContext(), params)
 
-    with pytest.raises(JevMaxTokensExceededError, match="max_tokens_exceeded"):
-        anyio.run(run_test)
+    result = anyio.run(run_test)
+    assert result.is_error is True
+    assert result.content[0].text == "Client error; max_tokens_exceeded (status 400)"
