@@ -56,7 +56,7 @@ with the approved environment. The runner checks wheel metadata and ownership. I
 outside the checkout. A uv dependency override maps the requested package to
 that exact wheel. The override preserves only the
 extras requested by the manifest. It does not add MCP when the manifest omits it.
-The resulting argv discovers and calls all three tools. This candidate mapping
+The resulting argv discovers all four tools and calls the three `ask_*` tools. This candidate mapping
 is not evidence of index publication.
 
 After publication, omit `--wheel` to resolve the actual PyPI package through the

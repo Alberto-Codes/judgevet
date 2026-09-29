@@ -10,7 +10,7 @@ installation, host configuration and discovery, use [Connect MCP](../how-to/conn
 
 ## Tool arguments
 
-The published 0.13.0 release exposes these three tools. All require `state` and
+The three `ask_*` tools take these arguments. All require `state` and
 `instruction` (singular). `instruction` is a string. The published schema
 allows a string or object for `state`.
 
@@ -64,20 +64,18 @@ citations are in the [Python API reference](api.md#answer-and-container-types).
 A host that shows only text shows this JSON. A successful call is a judgment,
 not evidence of its correctness.
 
-On main, each of the four tools declares an `outputSchema` in discovery. Each
+Release 0.14.0 and later declare an `outputSchema` for each of the four tools. Each
 schema is a closed JSON Schema 2020-12 object that matches the fields in the
 table above and, for `evaluate_policy`, the result described below. Every
 field carries a description. A token count in `usage` is an integer or null.
 Error results carry no structured content, and the schemas do not cover them.
 The [output schemas](../../src/judgevet/adapters/inbound/mcp_output_schemas.py)
-are the source. The published 0.13.0 release declares no output schemas.
+are the source. Releases before 0.14.0 declare no output schemas.
 Source: [output schema rules](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#output-schema).
 
-## Keyed policy tool on main
+## Keyed policy tool
 
-The source tree adds `evaluate_policy` to discovery. The original three tool
-input schemas and results remain unchanged. This addition is not an observation about
-the published 0.13.0 package.
+Release 0.14.0 adds `evaluate_policy` to discovery.
 
 Pass required `state`, `questions` and `policy`, with optional `evidence`.
 State accepts a string, object
@@ -165,7 +163,7 @@ boundary. Provider selection adds no audit sink, spend cap or redaction.
 Applications configure those controls on their providers.
 Source: [MCP provider contract](https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850906357).
 
-## Image evidence on main
+## Image evidence
 
 `evaluate_policy` accepts optional `evidence` as a JSON text string. The embedded
 object contains `images`, `by_question` and optional `required`. Each image

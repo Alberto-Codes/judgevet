@@ -115,7 +115,7 @@ with synthetic answers; it requires no key or network.
 | Choose an entry point and own its lifecycle | [Library-first architecture](https://alberto-codes.github.io/judgevet/explanation/architecture/) |
 
 The CLI uses the same library and can return JSON or a policy exit status.
-The optional MCP server exposes `ask_noul`, `ask_choice` and `ask_score` over
+The optional MCP server exposes `ask_noul`, `ask_choice`, `ask_score` and `evaluate_policy` over
 stdio. Follow the connection guide to install the extra and configure a host.
 These are alternative entry points; you do not need MCP to use Python or the CLI.
 

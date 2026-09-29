@@ -166,7 +166,7 @@ the policy guide. It requires the development `ty` executable on PATH.
 The runners create separate virtual environments outside the checkout and
 install the exact wheel. The base check executes library examples and CLI
 help. The MCP check installs `[mcp]`, checks installed path and metadata,
-launches `judgevet-mcp`, discovers exactly three tools, and calls all three
+launches `judgevet-mcp`, discovers exactly four tools, and calls the three `ask_*` tools
 against the live service. A local source build is not index verification.
 
 Verify live judgment through the installed CLI as well. Define this helper

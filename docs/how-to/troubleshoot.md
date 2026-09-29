@@ -61,7 +61,7 @@ appears once. The messages
 If the process starts but tools are missing, inspect the host's saved server
 configuration. Start a fresh host session and repeat discovery. A saved entry
 is not proof of a connection. A standalone SDK check is not proof that the
-host loaded the tools. Confirm all three tools in the session you intend to use.
+host loaded the tools. Confirm all four tools in the session you intend to use.
 
 | Host | Inspect and recover |
 |---|---|

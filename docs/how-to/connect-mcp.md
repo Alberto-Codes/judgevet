@@ -116,7 +116,7 @@ provides a guided flow. Merge the entry with existing servers.
 
 Trust the workspace when prompted. Use **MCP: List Servers** to start the
 server and review its trust prompt.
-Open Chat's tool picker and enable judgevet's three tools. Ask the agent to
+Open Chat's tool picker and enable judgevet's four tools. Ask the agent to
 [call each tool](#verify-the-connection). Restart the server from its controls
 after editing configuration; inspect its output if startup fails. If the
 server still uses old settings, reload the window and start it again.
@@ -259,14 +259,14 @@ codex mcp get judgevet
 ```
 
 This is not live discovery. In the fresh CLI session, use `/mcp`, confirm the
-three tools, and request the calls below. Restart the configured client after
+four tools, and request the calls below. Restart the configured client after
 changes. Accept project trust through Codex before loading project settings.
 A command-line trust override alone did not load this recipe in CLI 0.156.1.
 Check trust, executable path and startup diagnostics if tools are absent.
 
 Approve the requested tool calls in the host. Headless execution with approval
 policy `never` can discover tools while rejecting every call. For authorized
-automation, configure approval for the three named tools explicitly; consult
+automation, configure approval for each named tool explicitly; consult
 [tool approval settings](https://learn.chatgpt.com/docs/config-file/config-reference).
 Discovery alone does not establish that a call was approved or completed.
 See [MCP setup](https://learn.chatgpt.com/docs/extend/mcp?surface=cli) and
@@ -307,7 +307,8 @@ can point to these commands, but no skill installation is required.
 
 ## Verify the connection
 
-For the published 0.13.0 recipes above, discover exactly `ask_noul`, `ask_choice`, and `ask_score`.
+For the recipes above, discover exactly `ask_noul`, `ask_choice`, `ask_score`
+and `evaluate_policy`. Call the three `ask_*` tools to verify the connection.
 Send these complete argument objects to the corresponding tools:
 
 `ask_noul`:
@@ -330,12 +331,20 @@ Send these complete argument objects to the corresponding tools:
 
 | Tool | Expected structured answer |
 |---|---|
-| `ask_noul` | `noul` probability between 0 and 1, model, usage |
-| `ask_choice` | `choice`, `confidence`, `probabilities`, model, usage |
-| `ask_score` | numeric `score`, `confidence`, `probabilities`, `legend`, model, usage |
+| `ask_noul` | `noul` probability between 0 and 1, `model`, `usage` |
+| `ask_choice` | `choice`, `confidence`, `probabilities`, `model`, `usage` |
+| `ask_score` | numeric `score`, `confidence`, `probabilities`, `legend`, `default_criteria`, `model`, `usage` |
+| `evaluate_policy` | `model`, `usage`, `answers`, `policy` |
 
-Require a successful tool answer, not a tool error. Values vary. This checks
-integration, not judgment accuracy. See the [MCP reference](../reference/mcp.md)
+The text block carries the same JSON as the structured content. A host that
+shows only text shows this JSON. `default_criteria` is `false` here because
+the call supplies `criteria`.
+
+Require a successful tool answer, not a tool error. A service error returns a
+tool result with `isError` true and the error text. A tripped spend cap also
+returns `isError` true and says the server must restart. Restart the server
+from the host before you retry. Values vary. This checks integration, not
+judgment accuracy. See the [MCP reference](../reference/mcp.md)
 and [adapter contract](../../src/judgevet/adapters/inbound/mcp.py).
 For failures, use [host-specific diagnosis](troubleshoot.md#when-mcp-does-not-connect).
 
@@ -387,18 +396,17 @@ hosted credentials and settings. The existing `judgevet-mcp` command retains
 its hosted defaults. See [provider lifetime and cancellation](../reference/mcp.md#application-selected-providers).
 
 
-The source tree also exposes `evaluate_policy`. Supply `state`, keyed `questions`
+The server also exposes `evaluate_policy`. Supply `state`, keyed `questions`
 and the existing JSON `policy` object. Use the structured answer envelope and
 its ordered policy report. A valid unmet policy is a successful tool response;
 validation and declared provider failures are tool errors. The application
-launcher selects the model. See the [policy tool contract](../reference/mcp.md#keyed-policy-tool-on-main).
-This addition does not change the published 0.13.0 host observations above.
+launcher selects the model. See the [policy tool contract](../reference/mcp.md#keyed-policy-tool).
 
 For an application provider that supports images, add `evidence` to
 `evaluate_policy` as JSON text. Encode image bytes as standard base64 and use
 ordered attachment IDs to bind images to questions. Keep state and image bytes
 separate. A minimal empty value is `{"images":[],"by_question":{}}`; this retains
 text routing. Nonempty images require the media provider extension. See the
-[image evidence contract](../reference/mcp.md#image-evidence-on-main) for fields,
-limits and error behavior. This source addition does not claim live provider
-compatibility or change the published host observations above.
+[image evidence contract](../reference/mcp.md#image-evidence) for fields,
+limits and error behavior. This addition does not claim live provider
+compatibility.
