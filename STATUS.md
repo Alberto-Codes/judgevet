@@ -677,8 +677,10 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2813 tests pass, 1 test skips, 7 live tests deselected.** The last measured
-coverage is **95.85%** (3259/3400 statements).
+**2818 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+coverage is **95.85%** (3260/3401 statements).
+`JevError` now derives from `ProviderError`, so hosted Jev failures pass the
+conformance kit's provider error check (#259).
 The async conformance kit also passes under pytest-asyncio `asyncio_mode = "auto"`,
 and each broken async fake still fails only its own rule there (#257).
 The `conformance` extra now declares `anyio>=4.15.1`, which the async kit

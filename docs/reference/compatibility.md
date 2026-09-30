@@ -70,10 +70,20 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/78#issuecomment-5850346
 `judgevet.providers` supports `ProviderFactory`, `provider_scope`, `ProviderError`,
 `ProviderUnavailableError`, `ProviderRequestError`, `ProviderCapabilityError`,
 `ProviderTransportError` and `ProviderResponseError`. These are module exports;
-they add no root imports. The error classes retain identity with their definitions
-in `judgevet.domain.provider_errors`.
+they add no root imports. The error classes retain identity with the classes
+`judgevet.domain.provider_errors` exports. `ProviderError` is defined in
+`judgevet.domain.errors`, and `judgevet.domain.provider_errors` re-exports it.
 
-`ProviderError` derives from `JudgevetError`. The five specific provider errors
+`ProviderError` derives from `JudgevetError`. `JevError` derives from
+`ProviderError`, so the hierarchy is
+`JudgevetError` → `ProviderError` → `JevError` → each `Jev*` error.
+Hosted Jev failures now satisfy `ProviderError`, and the conformance kit accepts
+them. The change is additive: existing `except JevError` and
+`except JudgevetError` catches behave as before, and a `ProviderError` is still
+not a `JevError`. Code that catches `ProviderError` now also catches Jev errors.
+Source: https://github.com/Alberto-Codes/judgevet/issues/259#issuecomment-5910551186.
+
+The five specific provider errors
 derive from `ProviderError`: unavailable support or setup, rejected requests,
 unsupported capabilities, transport failures and invalid typed responses.
 They accept ordinary exception arguments and add no HTTP status or retry

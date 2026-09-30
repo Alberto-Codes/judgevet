@@ -1,5 +1,10 @@
 """Neutral error base and Jev System One error types.
 
+The hierarchy is one spine: `JudgevetError`, then `ProviderError`, then
+`JevError` and its subclasses. A `ProviderError` that is not a Jev error
+stays outside `JevError`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/259#issuecomment-5910551186.
+
 Examples:
     ```python
     from judgevet.domain.errors import (
@@ -40,11 +45,13 @@ Examples:
     ```
 
 See Also:
+    - [judgevet.domain.provider_errors][]: Neutral provider failure classes
     - [judgevet.ports.SystemOnePort][]: Protocol definition
     - [judgevet.adapters.outbound.http][]: HTTP adapter
 
 Attributes:
     JudgevetError (type): Neutral base for declared library errors.
+    ProviderError (type): Base for declared provider failures, Jev included.
     JevError (type): Base exception for all Jev errors.
     JevAuthError (type): 401/403 authentication errors.
     JevBudgetExceededError (type): Local spend cap refused an attempt.
@@ -76,10 +83,32 @@ class JudgevetError(Exception):
     """
 
 
-class JevError(JudgevetError):
+class ProviderError(JudgevetError):
+    """Base for declared application provider failures.
+
+    The hosted Jev hierarchy derives from this class, so the conformance kit
+    accepts a hosted failure as a provider failure. The public import path is
+    `judgevet.providers`; `judgevet.domain.provider_errors` re-exports it.
+    Source: https://github.com/Alberto-Codes/judgevet/issues/259#issuecomment-5910551186.
+
+    Attributes:
+        args (tuple): Standard exception arguments containing a safe message.
+
+    Examples:
+        ```python
+        from judgevet.providers import ProviderError
+
+        error = ProviderError("Synthetic provider failure")
+        assert str(error) == "Synthetic provider failure"
+        ```
+    """
+
+
+class JevError(ProviderError):
     """Base exception for all Jev-related errors.
 
-    The neutral JudgevetError base also catches this service hierarchy.
+    The ProviderError and JudgevetError bases also catch this service
+    hierarchy. A ProviderError is not a JevError.
 
     This is the parent of the service-error hierarchy, not local policy errors
     or every HTTPX exception. The one local error under it is

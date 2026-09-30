@@ -19,10 +19,21 @@ Ordinary Python validation errors and arbitrary provider exceptions keep their
 existing types and do not become `JudgevetError` instances.
 Source: https://github.com/Alberto-Codes/judgevet/issues/78#issuecomment-5850346340.
 
+## Error hierarchy
+
+Declared provider failures share one spine:
+`JudgevetError` → `ProviderError` → `JevError` → each `Jev*` error.
+`ProviderError` is the base the [conformance kit](../how-to/use-a-self-hosted-provider.md#check-the-provider-with-the-conformance-kit)
+requires from a failing port. A hosted Jev failure is a `JevError`, so it also
+satisfies `ProviderError`. `except ProviderError` catches Jev errors and the
+five neutral provider errors. A neutral provider error is not a `JevError`.
+Local policy errors derive from `JudgevetError`, not from `ProviderError`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/259#issuecomment-5910551186.
+
 ## Service and transport errors
 
 The supported names are exported from `judgevet`. Each concrete error below
-inherits directly from `JevError`, which inherits from `JudgevetError`. The one
+inherits directly from `JevError`, which inherits from `ProviderError`. The one
 exception is `JevMaxTokensExceededError`, which inherits from `JevRequestError`.
 `JevBudgetExceededError` is a local refusal, not a service outcome.
 `JevRateLimitError` is not a subclass of `JevRequestError` or `JevServiceError`.

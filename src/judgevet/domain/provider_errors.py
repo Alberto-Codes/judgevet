@@ -5,6 +5,10 @@ Unexpected exceptions retain their original types. These errors add no HTTP
 status or retry guarantees. MissingEvidenceError distinguishes absent required images.
 Source: https://github.com/Alberto-Codes/judgevet/issues/200#issuecomment-5850335591.
 
+`ProviderError` is defined in `judgevet.domain.errors`, because `JevError`
+derives from it, and this module re-exports the same class.
+Source: https://github.com/Alberto-Codes/judgevet/issues/259#issuecomment-5910551186.
+
 Examples:
     ```python
     from judgevet.domain.provider_errors import ProviderUnavailableError
@@ -18,23 +22,17 @@ See Also:
     - [judgevet.providers][]: Provider selection and lifetime ownership.
 """
 
-from judgevet.domain.errors import JudgevetError
+from judgevet.domain.errors import ProviderError
 
-
-class ProviderError(JudgevetError):
-    """Base for declared application provider failures.
-
-    Attributes:
-        args (tuple): Standard exception arguments containing a safe message.
-
-    Examples:
-        ```python
-        from judgevet.providers import ProviderError
-
-        error = ProviderError("Synthetic provider failure")
-        assert str(error) == "Synthetic provider failure"
-        ```
-    """
+__all__ = [
+    "MissingEvidenceError",
+    "ProviderCapabilityError",
+    "ProviderError",
+    "ProviderRequestError",
+    "ProviderResponseError",
+    "ProviderTransportError",
+    "ProviderUnavailableError",
+]
 
 
 class ProviderUnavailableError(ProviderError):
