@@ -68,9 +68,9 @@ incomplete.
 
 Publishing a release runs `publish.yml`. Its `attest` job runs the same action
 on the released commit, with the wheel and sdist that go to PyPI. It adds their
-SHA-256 to the provenance file. It signs a build provenance attestation for the
-wheel and sdist, and an SBOM attestation that binds the runtime SBOM to the
-wheel. The runtime SBOM lists what installing the wheel pulls in. See
+SHA-256 to the provenance file as bare hex, like the `uv.lock` hash. It signs a
+build provenance attestation for the wheel and sdist, and an SBOM attestation
+that binds the runtime SBOM to the wheel. The runtime SBOM lists what installing the wheel pulls in. See
 [artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations).
 The `release-files` job then attaches these files to the GitHub release:
 
@@ -81,8 +81,7 @@ The `release-files` job then attaches these files to the GitHub release:
 - every supply-chain file.
 
 Each bundle is the Sigstore bundle from the `bundle-path` output of
-[attest-build-provenance](https://github.com/actions/attest-build-provenance/blob/v4.2.2/action.yml)
-and [attest-sbom](https://github.com/actions/attest-sbom/blob/v4.1.0/action.yml).
+[actions/attest](https://github.com/actions/attest/blob/v4.2.2/action.yml).
 The `.sigstore.json` suffix is one that the OpenSSF Scorecard
 [Signed-Releases](https://github.com/ossf/scorecard/blob/main/docs/checks.md#signed-releases)
 check counts as a signature.

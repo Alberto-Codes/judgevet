@@ -110,10 +110,10 @@ runs:
             complete=no
           fi
           for file in "${wheels[@]}"; do
-            hashes+=("wheel_sha256: $(sha256sum "$file")")
+            hashes+=("wheel_sha256: $(sha256sum "$file" | cut -d' ' -f1)")
           done
           for file in "${sdists[@]}"; do
-            hashes+=("sdist_sha256: $(sha256sum "$file")")
+            hashes+=("sdist_sha256: $(sha256sum "$file" | cut -d' ' -f1)")
           done
         fi
         {

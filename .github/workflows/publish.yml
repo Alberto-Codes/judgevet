@@ -63,15 +63,18 @@ jobs:
           out: supply-chain
           dist: dist
 
-      # v4 wraps actions/attest; latest release tags checked 2026-09-28:
-      # https://github.com/actions/attest-build-provenance/releases
-      # Both attest actions expose a bundle-path output, the Sigstore bundle
-      # on the runner's disk. Several subjects share one attestation.
-      # https://github.com/actions/attest-build-provenance/blob/v4.2.2/action.yml
-      # https://github.com/actions/attest-sbom/blob/v4.1.0/action.yml
+      # actions/attest makes both attestations. With no predicate input it
+      # makes build provenance; sbom-path makes an SBOM attestation. Its
+      # bundle-path output is the Sigstore bundle on the runner's disk.
+      # Several subjects share one attestation. The job needs no
+      # artifact-metadata permission: the action writes a storage record
+      # only when push-to-registry is true.
+      # Latest release tag checked 2026-09-29:
+      # https://github.com/actions/attest/releases
       # https://github.com/actions/attest#readme
+      # https://github.com/actions/attest/blob/v4.2.2/action.yml
       - id: provenance
-        uses: actions/attest-build-provenance@v4.2.2
+        uses: actions/attest@v4.2.2
         with:
           subject-path: |
             dist/*.whl
@@ -79,9 +82,8 @@ jobs:
 
       # The runtime SBOM lists what installing the wheel pulls in. The mcp
       # and dev SBOMs stay release files without an attestation.
-      # https://github.com/actions/attest-sbom/releases
       - id: sbom
-        uses: actions/attest-sbom@v4.1.0
+        uses: actions/attest@v4.2.2
         with:
           subject-path: dist/*.whl
           sbom-path: supply-chain/sbom-runtime.cdx.json
