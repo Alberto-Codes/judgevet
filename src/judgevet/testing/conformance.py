@@ -19,6 +19,10 @@ method, so a failure names the rule it breaks:
   `judge_with_images` refuses it with `ProviderCapabilityError`.
 - `test_media_port_refuses_undeclared_media`: `judge_with_images` refuses
   media outside the declared capabilities before any media dispatch.
+- `test_media_port_judges_declared_media`: `judge_with_images` sends one
+  kit-owned image of a declared type to the media port and receives a
+  `SystemOneResponse` whose answers pass `evaluate_policy`. Any exception
+  fails the rule.
 
 The kit needs pytest, which the `conformance` extra installs. Importing this
 module without pytest raises `ImportError`. The kit needs no credentials and
@@ -89,6 +93,7 @@ from judgevet.testing._conformance_probes import (
     BodyError,
     MediaProbe,
     ScopeRecorder,
+    declared_evidence,
     image_evidence,
     undeclared_evidence,
 )
@@ -162,6 +167,81 @@ def _media_members(port: object) -> tuple[list[str], bool]:
     return exposed, complete
 
 
+def _require_policy_answers(response: object, source: str) -> None:
+    """Fail unless a response carries typed answers the kit policy accepts.
+
+    Args:
+        response: The value the provider returned.
+        source: The call that produced the response, for failure messages.
+
+    Raises:
+        pytest.fail.Exception: If the response is not a `SystemOneResponse`,
+            names other questions, or carries answers the policy rejects.
+    """
+    if not isinstance(response, SystemOneResponse):
+        pytest.fail(
+            f"{source} returned {type(response).__name__}, not SystemOneResponse."
+        )
+    _require(
+        set(response.answers) == set(CONFORMANCE_QUESTIONS),
+        f"Answer names {sorted(response.answers)} differ from the questions.",
+    )
+    try:
+        evaluate_policy(CONFORMANCE_POLICY, response.answers)
+    except PolicyAnswerError as error:
+        pytest.fail(
+            f"evaluate_policy rejected the answers: {error}."
+            f"{_type_mismatches(response.answers)}"
+        )
+
+
+def _select_media_port(
+    provider_port: SystemOnePort, media_port: MediaSystemOnePort | None
+) -> MediaSystemOnePort:
+    """Choose the media port to check and require its declaration.
+
+    Args:
+        provider_port: The provider port, used when it supports media.
+        media_port: The dedicated media port, or None.
+
+    Returns:
+        The media port whose `capabilities` returned `MediaCapabilities`.
+
+    Raises:
+        pytest.skip.Exception: If the provider supplies no media port.
+        pytest.fail.Exception: If the media port lacks the media methods or
+            its declaration is not `MediaCapabilities`.
+    """
+    port = media_port if media_port is not None else provider_port
+    if media_port is None and not isinstance(port, MediaSystemOnePort):
+        pytest.skip("The provider supplies no media port.")
+    if not isinstance(port, MediaSystemOnePort):
+        pytest.fail(f"media_port {type(port).__name__} lacks MediaSystemOnePort.")
+    return port
+
+
+def _declared_capabilities(port: MediaSystemOnePort, model: str) -> MediaCapabilities:
+    """Return a media port's declaration after checking its type.
+
+    Args:
+        port: The media port.
+        model: The selected model.
+
+    Returns:
+        The declared capabilities for the model.
+
+    Raises:
+        pytest.fail.Exception: If the declaration is not `MediaCapabilities`.
+    """
+    capabilities = port.capabilities(model)
+    if not isinstance(capabilities, MediaCapabilities):
+        pytest.fail(
+            f"capabilities() returned {type(capabilities).__name__}, "
+            "not MediaCapabilities."
+        )
+    return capabilities
+
+
 def _raise_in_scope(factory: ProviderFactory, body: BaseException) -> None:
     """Raise an exception inside one provider scope of a factory.
 
@@ -204,8 +284,10 @@ class BaseProviderConformance:
             default enters `provider_scope(factory=provider_factory)`.
         failing_port (fixture): Required. A port configured so that every
             `system_one` call fails, such as a client of an unreachable server.
-        media_port (fixture): Optional. A `MediaSystemOnePort` to check. The
-            default is None, and then a media-capable `provider_port` is used.
+        media_port (fixture): Optional. A `MediaSystemOnePort` that both media
+            port rules check. It must answer the kit questions with answers
+            the kit policy accepts. The default is None, and then a
+            media-capable `provider_port` is used.
         provider_model (fixture): The model label the kit passes. The default
             is `CONFORMANCE_MODEL`.
 
@@ -299,28 +381,14 @@ class BaseProviderConformance:
 
         `evaluate_policy` is the enforcing check, including the answer type
         each question kind requires. A failure message also names every
-        answer whose type does not match its question kind.
+        answer whose type does not match its question kind. The declared-media
+        rule applies the same check to a media response.
 
         Args:
             provider_port: The provider port.
             provider_model: The selected model.
         """
-        response = _judge(provider_port, provider_model)
-        _require(
-            isinstance(response, SystemOneResponse),
-            f"system_one returned {type(response).__name__}, not SystemOneResponse.",
-        )
-        _require(
-            set(response.answers) == set(CONFORMANCE_QUESTIONS),
-            f"Answer names {sorted(response.answers)} differ from the questions.",
-        )
-        try:
-            evaluate_policy(CONFORMANCE_POLICY, response.answers)
-        except PolicyAnswerError as error:
-            pytest.fail(
-                f"evaluate_policy rejected the answers: {error}."
-                f"{_type_mismatches(response.answers)}"
-            )
+        _require_policy_answers(_judge(provider_port, provider_model), "system_one")
 
     def test_failure_raises_provider_error(
         self, failing_port: SystemOnePort, provider_model: str
@@ -448,22 +516,16 @@ class BaseProviderConformance:
     ) -> None:
         """Rule 5: media outside the declared capabilities is refused first.
 
+        The rule selects the media port and checks its declaration as the
+        declared-media rule does.
+
         Args:
             provider_port: The provider port, used when it supports media.
             media_port: The dedicated media port, or None.
             provider_model: The selected model.
         """
-        port = media_port if media_port is not None else provider_port
-        if media_port is None and not isinstance(port, MediaSystemOnePort):
-            pytest.skip("The provider supplies no media port.")
-        if not isinstance(port, MediaSystemOnePort):
-            pytest.fail(f"media_port {type(port).__name__} lacks MediaSystemOnePort.")
-        capabilities = port.capabilities(provider_model)
-        _require(
-            isinstance(capabilities, MediaCapabilities),
-            f"capabilities() returned {type(capabilities).__name__}, "
-            "not MediaCapabilities.",
-        )
+        port = _select_media_port(provider_port, media_port)
+        capabilities = _declared_capabilities(port, provider_model)
         probe = MediaProbe(port)
         with pytest.raises(ProviderCapabilityError):
             judge_with_images(
@@ -474,3 +536,50 @@ class BaseProviderConformance:
                 evidence=undeclared_evidence(capabilities),
             )
         _require(probe.media_calls == 0, "The media port ran before the refusal.")
+
+    def test_media_port_judges_declared_media(
+        self,
+        provider_port: SystemOnePort,
+        media_port: MediaSystemOnePort | None,
+        provider_model: str,
+    ) -> None:
+        """Rule 6: declared media reaches the port and returns typed answers.
+
+        The kit sends one kit-owned image whose MIME type and size the port
+        declares for the model. The rule skips when the declaration admits no
+        kit image.
+
+        Args:
+            provider_port: The provider port, used when it supports media.
+            media_port: The dedicated media port, or None.
+            provider_model: The selected model.
+
+        Raises:
+            pytest.fail.Exception: If `judge_with_images` raises. A message for
+                an exception outside `ProviderError` names that contract.
+        """
+        port = _select_media_port(provider_port, media_port)
+        evidence = declared_evidence(_declared_capabilities(port, provider_model))
+        if evidence is None:
+            pytest.skip("The media port declares no image type the kit can send.")
+        try:
+            response = judge_with_images(
+                port,
+                CONFORMANCE_STATE,
+                CONFORMANCE_QUESTIONS,
+                provider_model,
+                evidence=evidence,
+            )
+        except ProviderError as error:
+            pytest.fail(
+                f"judge_with_images raised {type(error).__name__} for declared "
+                f"media: {error}"
+            )
+        except Exception as error:
+            message = (
+                f"judge_with_images raised {type(error).__name__} for declared "
+                "media; map backend failures to a judgevet.providers.ProviderError "
+                "subclass."
+            )
+            raise pytest.fail.Exception(message) from error
+        _require_policy_answers(response, "judge_with_images")

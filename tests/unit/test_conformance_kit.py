@@ -12,6 +12,7 @@ import re
 import sys
 from collections.abc import Iterator, Mapping
 from contextlib import nullcontext
+from dataclasses import replace
 from textwrap import dedent, indent
 from typing import Any
 
@@ -21,9 +22,11 @@ from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.media import ImageEvidence, MediaCapabilities
 from judgevet.domain.questions import Choice, Noul, Question, Score
 from judgevet.domain.response import SystemOneResponse
+from judgevet.media import judge_with_images
 from judgevet.policy import PolicyAnswerError, evaluate_policy
 from judgevet.providers import ProviderFactory, ProviderTransportError
 from judgevet.testing import FakeSystemOnePort
+from judgevet.testing._conformance_probes import declared_evidence
 from judgevet.testing.conformance import (
     CONFORMANCE_POLICY,
     CONFORMANCE_QUESTIONS,
@@ -48,7 +51,9 @@ RULE_TESTS = (
     *SCOPE_TESTS,
     "test_media_refused_without_media_support",
     "test_media_port_refuses_undeclared_media",
+    "test_media_port_judges_declared_media",
 )
+MEDIA_PORT_TESTS = RULE_TESTS[-2:]
 
 
 class TestApplicationFixtureConformance(BaseProviderConformance):
@@ -74,16 +79,34 @@ class TestApplicationFixtureConformance(BaseProviderConformance):
     @pytest.fixture
     def media_port(self) -> Iterator[RecordingProvider]:
         """Declare PNG and JPEG support only."""
-        yield RecordingProvider("conformance-media")
+        yield _KitRecordingProvider("conformance-media")
         drain()
 
 
+class _KitRecordingProvider(RecordingProvider):
+    """The recording fixture provider, answering media calls with kit answers."""
+
+    def system_one_media(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        evidence: ImageEvidence,
+    ) -> SystemOneResponse:
+        """Record the media call, then answer the kit questions."""
+        recorded = super().system_one_media(state, questions, model, evidence=evidence)
+        return replace(recorded, answers=dict(VALID_ANSWERS))
+
+
 class _MediaFake(FakeSystemOnePort):
-    """A public fake that also declares PNG support and judges media as text."""
+    """A public fake that also declares image support and judges media as text."""
+
+    declared = MediaCapabilities({"image/png"})
 
     def capabilities(self, model: str) -> MediaCapabilities:
-        """Declare PNG support for every model."""
-        return MediaCapabilities({"image/png"})
+        """Declare the same image support for every model."""
+        return self.declared
 
     def system_one_media(
         self,
@@ -141,6 +164,51 @@ def test_invalid_answers_are_rejected(case: str) -> None:
     assert set(INVALID_ANSWERS[case]) == set(CONFORMANCE_QUESTIONS)
     with pytest.raises(PolicyAnswerError):
         evaluate_policy(CONFORMANCE_POLICY, INVALID_ANSWERS[case])
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("media_type", "signature"),
+    [
+        ("image/png", b"\x89PNG\r\n\x1a\n"),
+        ("image/jpeg", b"\xff\xd8\xff"),
+        ("image/webp", b"RIFF"),
+    ],
+)
+def test_declared_evidence_is_judged_by_the_media_fake(
+    media_type: str, signature: bytes
+) -> None:
+    """Kit evidence for each declared type passes judge_with_images and the policy."""
+    declared = MediaCapabilities({media_type})
+    evidence = declared_evidence(declared)
+    assert evidence is not None
+    (image,) = evidence.images
+    assert image.media_type == media_type
+    assert image.data.startswith(signature)
+    assert set(evidence.by_question) <= set(CONFORMANCE_QUESTIONS)
+    port = _MediaFake(answers=VALID_ANSWERS)
+    port.declared = declared
+    response = judge_with_images(
+        port, CONFORMANCE_STATE, CONFORMANCE_QUESTIONS, "m", evidence=evidence
+    )
+    assert evaluate_policy(CONFORMANCE_POLICY, response.answers).passed
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        MediaCapabilities({"image/gif"}),
+        MediaCapabilities({"image/png", "image/jpeg", "image/webp"}, max_image_bytes=8),
+        MediaCapabilities({"image/png"}, max_total_bytes=8),
+    ],
+    ids=["unsupported-type", "image-ceiling", "total-ceiling"],
+)
+def test_declared_evidence_is_none_when_nothing_fits(
+    capabilities: MediaCapabilities,
+) -> None:
+    """No kit image is built when the declaration admits none of them."""
+    assert declared_evidence(capabilities) is None
 
 
 @pytest.mark.unit
@@ -263,6 +331,11 @@ class CapabilitiesOnlyPort(FakeSystemOnePort):
 
 class NonCallableCapabilitiesPort(MediaFake):
     capabilities = None
+
+
+class RaisingMediaFake(MediaFake):
+    def system_one_media(self, state, questions, model, *, evidence):
+        raise RuntimeError("media backend exploded")
 """
 
 _BROKEN = {
@@ -318,7 +391,7 @@ _BROKEN = {
         "GoodProvider",
         "media_port",
         "FakeSystemOnePort(answers=VALID_ANSWERS)",
-        ("test_media_port_refuses_undeclared_media",),
+        MEDIA_PORT_TESTS,
     ),
     "capabilities_without_media_method": (
         "GoodProvider",
@@ -336,7 +409,19 @@ _BROKEN = {
         "GoodProvider",
         "media_port",
         "SetCapabilitiesFake(answers=VALID_ANSWERS)",
-        ("test_media_port_refuses_undeclared_media",),
+        MEDIA_PORT_TESTS,
+    ),
+    "media_method_raises_runtime_error": (
+        "GoodProvider",
+        "media_port",
+        "RaisingMediaFake(answers=VALID_ANSWERS)",
+        ("test_media_port_judges_declared_media",),
+    ),
+    "media_policy_rejects_score": (
+        "GoodProvider",
+        "media_port",
+        'MediaFake(answers=INVALID_ANSWERS["score_off_scale"])',
+        ("test_media_port_judges_declared_media",),
     ),
 }
 
@@ -360,7 +445,7 @@ def _run(pytester: pytest.Pytester, body: str) -> dict[str, str]:
 
 @pytest.mark.unit
 def test_good_provider_passes_every_rule(pytester: pytest.Pytester) -> None:
-    """A correct provider passes all eight rule tests."""
+    """A correct provider passes all nine rule tests."""
     outcomes = _run(pytester, "class TestGood(GoodProvider):\n    pass\n")
     assert outcomes == dict.fromkeys(RULE_TESTS, "PASSED")
 
@@ -369,7 +454,7 @@ def test_good_provider_passes_every_rule(pytester: pytest.Pytester) -> None:
 def test_provider_without_media_port_skips_only_media_port_rule(
     pytester: pytest.Pytester,
 ) -> None:
-    """A provider with no media port skips the media-port rule and passes the rest."""
+    """A provider with no media port skips the media-port rules and passes the rest."""
     body = dedent(
         """\
         class TestTextOnly(GoodProvider):
@@ -380,7 +465,7 @@ def test_provider_without_media_port_skips_only_media_port_rule(
     )
     outcomes = _run(pytester, body)
     expected = dict.fromkeys(RULE_TESTS, "PASSED")
-    expected["test_media_port_refuses_undeclared_media"] = "SKIPPED"
+    expected.update(dict.fromkeys(MEDIA_PORT_TESTS, "SKIPPED"))
     assert outcomes == expected
 
 
@@ -401,6 +486,83 @@ def test_media_capable_provider_port_skips_text_only_rule(
     expected = dict.fromkeys(RULE_TESTS, "PASSED")
     expected["test_media_refused_without_media_support"] = "SKIPPED"
     assert outcomes == expected
+
+
+@pytest.mark.unit
+def test_media_capable_fake_passes_declared_media_rule(
+    pytester: pytest.Pytester,
+) -> None:
+    """The media-capable judgevet fake runs and passes the declared-media rule."""
+    outcomes = _run(pytester, "class TestMedia(GoodProvider):\n    pass\n")
+    assert outcomes["test_media_port_judges_declared_media"] == "PASSED"
+
+
+@pytest.mark.unit
+def test_media_port_without_kit_image_type_skips_declared_media_rule(
+    pytester: pytest.Pytester,
+) -> None:
+    """A media port declaring no image type the kit can send skips that rule only."""
+    body = dedent(
+        """\
+        class GifFake(MediaFake):
+            def capabilities(self, model):
+                return MediaCapabilities({"image/gif"})
+
+
+        class TestGif(GoodProvider):
+            @pytest.fixture
+            def media_port(self):
+                return GifFake(answers=VALID_ANSWERS)
+        """
+    )
+    outcomes = _run(pytester, body)
+    expected = dict.fromkeys(RULE_TESTS, "PASSED")
+    expected["test_media_port_judges_declared_media"] = "SKIPPED"
+    assert outcomes == expected
+
+
+@pytest.mark.unit
+def test_media_runtime_error_names_the_provider_error_contract(
+    pytester: pytest.Pytester,
+) -> None:
+    """A bare media failure fails the rule with a message naming ProviderError."""
+    body = dedent(
+        """\
+        class TestRaising(GoodProvider):
+            @pytest.fixture
+            def media_port(self):
+                return RaisingMediaFake(answers=VALID_ANSWERS)
+        """
+    )
+    outcomes, output = _run_output(pytester, body)
+    assert outcomes["test_media_port_judges_declared_media"] == "FAILED"
+    assert "judgevet.providers.ProviderError" in output
+    assert "RuntimeError" in output
+
+
+@pytest.mark.unit
+def test_media_provider_error_fails_declared_media_rule(
+    pytester: pytest.Pytester,
+) -> None:
+    """A declared provider failure on declared media still fails the rule."""
+    body = dedent(
+        """\
+        class FailingMediaFake(MediaFake):
+            def system_one_media(self, state, questions, model, *, evidence):
+                raise ProviderTransportError("media offline")
+
+
+        class TestFailingMedia(GoodProvider):
+            @pytest.fixture
+            def media_port(self):
+                return FailingMediaFake(answers=VALID_ANSWERS)
+        """
+    )
+    outcomes, output = _run_output(pytester, body)
+    expected = dict.fromkeys(RULE_TESTS, "PASSED")
+    expected["test_media_port_judges_declared_media"] = "FAILED"
+    assert outcomes == expected
+    assert "ProviderTransportError" in output
 
 
 @pytest.mark.unit

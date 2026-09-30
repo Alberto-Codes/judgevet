@@ -192,7 +192,9 @@ Install `judgevet[conformance]` in the provider's test environment. Subclass
 - `provider_factory` returns the provider's factory.
 - `failing_port` returns a port whose call raises a `ProviderError` subclass.
 
-Override `media_port` when the provider supports images. Override
+Override `media_port` when the provider supports images. The kit then sends
+one kit-owned image of a declared type through `judge_with_images`. The media
+port must return answers that the kit policy accepts. Override
 `provider_model` to test a model label other than the kit default. The
 `provider_port` fixture enters one scope of your factory; override it only for
 a special case. The kit needs no credentials and no inference dependency.

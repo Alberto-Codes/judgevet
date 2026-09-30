@@ -80,7 +80,7 @@ CHILD_TIMEOUT = 600
 CONFORMANCE_EXTRA = "conformance"
 KIT_MODULE = "judgevet.testing.conformance"
 KIT_TESTS = "tests/fixtures/providers/conformance_provider.py"
-KIT_RULES = 8
+KIT_RULES = 9
 EXPECTED_ABSENT = {
     "receipt": "conformance-absent",
     "fakes": "FakeSystemOnePort",

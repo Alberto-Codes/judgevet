@@ -638,22 +638,28 @@ Applications still own provider translation, inference and quality validation.
 behind the `conformance` extra, which adds only pytest. A provider subclasses
 `BaseProviderConformance` and overrides the `provider_factory` and
 `failing_port` fixtures. The fixtures `provider_port`, `provider_model` and
-`media_port` are optional. Eight rule tests check the port signature, typed
+`media_port` are optional. Nine rule tests check the port signature, typed
 answers through `evaluate_policy`, `ProviderError` on failure, the
-`provider_scope` lifecycle and media refusal. judgevet's own fakes pass. Each
-broken fake fails only its own rule in a pytester subprocess. The
-`provider-artifacts` hook now also installs each wheel with `[conformance]` and
+`provider_scope` lifecycle, media refusal and media sending. judgevet's own
+fakes pass. Each broken fake fails only its own rule in a pytester subprocess.
+The `provider-artifacts` hook now also installs each wheel with `[conformance]` and
 runs a provider subclass. The base install imports `judgevet.testing`, and
 importing the kit there raises an `ImportError` that names the extra. No live
 provider was called, and the asynchronous port has no kit yet (#246).
 A unit test pins the sentence in the self-hosted provider guide that a
 conforming provider is compatible in shape, not equivalent in judgment. The
 test fails when that sentence changes (#249).
+#247 adds the media-sending rule. It sends one kit-owned image of a declared
+type through `judge_with_images` and requires answers that `evaluate_policy`
+accepts. A media port whose `system_one_media` raises `RuntimeError` fails
+only that rule, and so does one whose answers the policy rejects. The
+`provider-artifacts` hook requires 9 passed rules in both conformance
+environments.
 
 ## Gates
 
-**2775 tests pass, 1 test skips, 7 live tests deselected.** The last measured
-coverage is **96.25%** (3185/3309 statements).
+**2789 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+coverage is **96.05%** (3207/3339 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at

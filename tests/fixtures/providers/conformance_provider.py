@@ -6,14 +6,46 @@ implementation. The installed-artifact runner runs it with pytest inside the
 ``conformance`` environment and requires every rule test to pass.
 """
 
+from collections.abc import Mapping
 from contextlib import nullcontext
+from dataclasses import replace
+from typing import Any
 
 import pytest
 
+from judgevet.domain.media import ImageEvidence
+from judgevet.domain.questions import Question
+from judgevet.domain.response import SystemOneResponse
 from judgevet.providers import ProviderFactory
 from judgevet.testing import FakeSystemOnePort
 from judgevet.testing.conformance import VALID_ANSWERS, BaseProviderConformance
 from tests.fixtures.providers.provider_fixture import RecordingProvider
+
+
+class KitMediaProvider(RecordingProvider):
+    """The recording provider, answering media calls with the kit's answers."""
+
+    def system_one_media(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        evidence: ImageEvidence,
+    ) -> SystemOneResponse:
+        """Record the media call, then answer the kit questions.
+
+        Args:
+            state: Received state.
+            questions: Received questions.
+            model: Received model.
+            evidence: Received ordered evidence.
+
+        Returns:
+            The recorded response with the kit's valid answers.
+        """
+        recorded = super().system_one_media(state, questions, model, evidence=evidence)
+        return replace(recorded, answers=dict(VALID_ANSWERS))
 
 
 class TestInstalledProvider(BaseProviderConformance):
@@ -38,10 +70,10 @@ class TestInstalledProvider(BaseProviderConformance):
         return RecordingProvider("installed-failing", fail=True)
 
     @pytest.fixture
-    def media_port(self) -> RecordingProvider:
+    def media_port(self) -> KitMediaProvider:
         """Declare PNG and JPEG support only.
 
         Returns:
             A recording provider with media support.
         """
-        return RecordingProvider("installed-media")
+        return KitMediaProvider("installed-media")

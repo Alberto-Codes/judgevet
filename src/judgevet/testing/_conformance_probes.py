@@ -4,8 +4,10 @@
 constructs, so the kit observes entry and exit itself instead of trusting the
 provider. `TextOnlyView` hides every method except `system_one`. `MediaProbe`
 counts media dispatches so the kit can show that a refusal happened before the
-provider ran. `undeclared_evidence` builds one image whose MIME type the
-declared capabilities do not admit. None of these import pytest.
+provider ran. `declared_evidence` builds one image whose MIME type and size
+the declared capabilities admit, and `undeclared_evidence` builds one whose
+MIME type they do not admit. Each kit image is a valid one-pixel PNG, JPEG or
+WebP file. None of these import pytest.
 Source: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
 
 Examples:
@@ -17,6 +19,7 @@ Examples:
     from judgevet.testing import FakeSystemOnePort
     from judgevet.testing._conformance_probes import (
         ScopeRecorder,
+        declared_evidence,
         undeclared_evidence,
     )
 
@@ -27,6 +30,10 @@ Examples:
 
     evidence = undeclared_evidence(MediaCapabilities({"image/png"}))
     assert evidence.images[0].media_type == "image/jpeg"
+
+    declared = declared_evidence(MediaCapabilities({"image/webp"}))
+    assert declared is not None
+    assert declared.images[0].media_type == "image/webp"
     ```
 
 See Also:
@@ -35,6 +42,7 @@ See Also:
     - [judgevet.media][]: `judge_with_images` and its capability checks
 """
 
+from base64 import b64decode
 from collections.abc import Mapping
 from contextlib import AbstractContextManager
 from types import TracebackType
@@ -54,10 +62,23 @@ IMAGE_QUESTION = "conformance_noul"
 """The kit question every kit image is bound to."""
 
 _IMAGE_BYTES = {
-    "image/png": b"\x89PNG\r\n\x1a\nconformance",
-    "image/jpeg": b"\xff\xd8\xffconformance",
-    "image/webp": b"RIFF\x00\x00\x00\x00WEBPconformance",
+    "image/png": b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR42mP4DwABAQEAHLCMmQ"
+        "AAAABJRU5ErkJggg=="
+    ),
+    "image/jpeg": b64decode(
+        "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9"
+        "PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/wAALCAABAAEBAREA/8QAHwAA"
+        "AQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQR"
+        "BRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RF"
+        "RkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ip"
+        "qrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oACAEB"
+        "AAA/APQK/9k="
+    ),
+    "image/webp": b64decode("UklGRhwAAABXRUJQVlA4TA8AAAAvAAAAAAcQ/Y/+ByKi/wEA"),
 }
+"""One valid one-pixel image per MIME type that `judge_with_images` admits."""
+
 _FALLBACK_TYPE = "image/gif"
 
 
@@ -305,6 +326,26 @@ def image_evidence(media_type: str) -> ImageEvidence:
     data = _IMAGE_BYTES.get(media_type, b"GIF89aconformance")
     attachment = ImageAttachment(IMAGE_ID, data, media_type)
     return ImageEvidence([attachment], {IMAGE_QUESTION: [IMAGE_ID]})
+
+
+def declared_evidence(capabilities: MediaCapabilities) -> ImageEvidence | None:
+    """Build one kit image that the declared capabilities admit.
+
+    The first image type judgevet supports that the declaration names, and
+    whose kit image fits the declared byte ceilings, is used.
+
+    Args:
+        capabilities: The provider's declaration for the selected model.
+
+    Returns:
+        Evidence that `judge_with_images` dispatches for this declaration, or
+        None when the declaration admits no kit image.
+    """
+    limit = min(capabilities.max_image_bytes, capabilities.max_total_bytes)
+    for kind, data in _IMAGE_BYTES.items():
+        if kind in capabilities.image_types and len(data) <= limit:
+            return image_evidence(kind)
+    return None
 
 
 def undeclared_evidence(capabilities: MediaCapabilities) -> ImageEvidence:

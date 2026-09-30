@@ -627,7 +627,7 @@ def _kit_side(purelib: Path, **changes: object) -> dict[str, object]:
 
 def test_kit_run_accepts_every_rule_passing(tmp_path: Path) -> None:
     purelib = tmp_path / "venv" / "lib" / "site-packages"
-    completed = _completed(0, "........\n8 passed in 0.05s\n")
+    completed = _completed(0, ".........\n9 passed in 0.05s\n")
     side = _kit_side(purelib)
     assert runner.validate_kit_run(completed, side, purelib, ROOT) is None
 
@@ -635,12 +635,12 @@ def test_kit_run_accepts_every_rule_passing(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("code", "stdout", "change"),
     [
-        (1, "7 passed, 1 failed in 0.05s", {}),
-        (0, "7 passed, 1 skipped in 0.05s", {}),
+        (1, "8 passed, 1 failed in 0.05s", {}),
+        (0, "8 passed, 1 skipped in 0.05s", {}),
         (0, "", {}),
-        (0, "8 passed in 0.05s", {"origins": {"judgevet": "x"}}),
-        (0, "8 passed in 0.05s", {"network": {"errors": [None, None]}}),
-        (0, "8 passed in 0.05s", {"preimport": ["judgevet"]}),
+        (0, "9 passed in 0.05s", {"origins": {"judgevet": "x"}}),
+        (0, "9 passed in 0.05s", {"network": {"errors": [None, None]}}),
+        (0, "9 passed in 0.05s", {"preimport": ["judgevet"]}),
     ],
     ids=["failed", "skipped", "silent", "kit-absent", "unguarded", "preimported"],
 )
@@ -662,7 +662,7 @@ def test_kit_run_rejects_checkout_kit(tmp_path: Path) -> None:
     }
     side = _kit_side(purelib, origins=origins)
     with pytest.raises(RuntimeError):
-        runner.validate_kit_run(_completed(0, "8 passed in 1s"), side, purelib, ROOT)
+        runner.validate_kit_run(_completed(0, "9 passed in 1s"), side, purelib, ROOT)
 
 
 def test_stage_copies_the_conformance_modules(tmp_path: Path) -> None:
