@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
+import inspect
 import os
 import tempfile
 from pathlib import Path
+
+import pytest
 
 from scripts.smoke_release import (
     _CLEAR_VARS,
@@ -33,50 +37,75 @@ class TestClearVars:
 class TestBuildChildEnv:
     """Tests for build_child_env."""
 
-    def test_excludes_pythonpath(self) -> None:
+    def test_excludes_pythonpath(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """PYTHONPATH is excluded."""
-        env = {"PATH": "/some/path", "PYTHONPATH": "/evil/path", "OTHER": "value"}
-        os.environ.update(env)
-        try:
-            result = build_child_env()
-            assert "PYTHONPATH" not in result
-            assert "PATH" in result
-            assert "OTHER" in result
-        finally:
-            # Restore original env
-            for k in env:
-                if k in os.environ:
-                    del os.environ[k]
+        monkeypatch.setenv("PATH", "/some/path")
+        monkeypatch.setenv("PYTHONPATH", "/evil/path")
+        monkeypatch.setenv("OTHER", "value")
+        result = build_child_env()
+        assert "PYTHONPATH" not in result
+        assert "PATH" in result
+        assert "OTHER" in result
 
-    def test_excludes_pythonhome(self) -> None:
+    def test_excludes_pythonhome(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """PYTHONHOME is excluded."""
-        env = {"PATH": "/some/path", "PYTHONHOME": "/evil/home", "OTHER": "value"}
-        os.environ.update(env)
-        try:
-            result = build_child_env()
-            assert "PYTHONHOME" not in result
-            assert "PATH" in result
-            assert "OTHER" in result
-        finally:
-            # Restore original env
-            for k in env:
-                if k in os.environ:
-                    del os.environ[k]
+        monkeypatch.setenv("PATH", "/some/path")
+        monkeypatch.setenv("PYTHONHOME", "/evil/home")
+        monkeypatch.setenv("OTHER", "value")
+        result = build_child_env()
+        assert "PYTHONHOME" not in result
+        assert "PATH" in result
+        assert "OTHER" in result
 
-    def test_preserves_other_vars(self) -> None:
+    def test_preserves_other_vars(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Other environment variables are preserved."""
-        env = {"PATH": "/some/path", "HOME": "/home/user", "CUSTOM": "value"}
-        os.environ.update(env)
-        try:
-            result = build_child_env()
-            assert result.get("PATH") == "/some/path"
-            assert result.get("HOME") == "/home/user"
-            assert result.get("CUSTOM") == "value"
-        finally:
-            # Restore original env
-            for k in env:
-                if k in os.environ:
-                    del os.environ[k]
+        monkeypatch.setenv("PATH", "/some/path")
+        monkeypatch.setenv("HOME", "/home/user")
+        monkeypatch.setenv("CUSTOM", "value")
+        result = build_child_env()
+        assert result.get("PATH") == "/some/path"
+        assert result.get("HOME") == "/home/user"
+        assert result.get("CUSTOM") == "value"
+
+
+def _fingerprint(name: str) -> str:
+    """Hash one environment value so no test local holds it.
+
+    Args:
+        name: The environment variable to fingerprint.
+
+    Returns:
+        A SHA-256 digest of the value, or of the absence marker.
+    """
+    return hashlib.sha256(repr(os.environ.get(name)).encode()).hexdigest()
+
+
+class TestBuildChildEnvIsolation:
+    """Prove TestBuildChildEnv leaves the process environment as it found it."""
+
+    def test_path_and_home_survive(self) -> None:
+        """PATH and HOME keep their values after every TestBuildChildEnv test."""
+        before = {name: _fingerprint(name) for name in ("PATH", "HOME")}
+        suite = TestBuildChildEnv()
+        for name in ("test_excludes_pythonpath", "test_excludes_pythonhome"):
+            _call_with_monkeypatch(getattr(suite, name))
+        _call_with_monkeypatch(suite.test_preserves_other_vars)
+        after = {name: _fingerprint(name) for name in ("PATH", "HOME")}
+        assert after == before
+
+
+def _call_with_monkeypatch(method: object) -> None:
+    """Call one test method, passing a monkeypatch when it takes one.
+
+    Args:
+        method: A bound TestBuildChildEnv test method.
+    """
+    assert callable(method)
+    with pytest.MonkeyPatch.context() as patch:
+        if inspect.signature(method).parameters:
+            method(patch)
+        else:
+            method()
 
 
 class TestParseArgv:

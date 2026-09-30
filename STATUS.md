@@ -652,7 +652,7 @@ test fails when that sentence changes (#249).
 
 ## Gates
 
-**2774 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+**2775 tests pass, 1 test skips, 7 live tests deselected.** The last measured
 coverage is **96.25%** (3185/3309 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
@@ -686,6 +686,11 @@ fix, one full run added 4 editable `judgevet` entries to
 `~/.cache/uv/archive-v0`, from the `uv run yamllint` hook test. After it, two
 consecutive full runs of the pre-repair tree added 0 entries each, and two
 separate full runs of the final tree added 0 entries each.
+
+`TestBuildChildEnv` now sets and removes variables through `monkeypatch`,
+so `PATH` and `HOME` survive it on the same worker (#244). A regression
+compares their fingerprints around the three tests and failed at 23c075c. The
+`_uv` stub that #243 added to survive the lost `PATH` is removed.
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial

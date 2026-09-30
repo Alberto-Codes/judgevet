@@ -64,7 +64,6 @@ HELPERS: dict[str, Callable[[Path], None]] = {"build": _build, "install": _insta
 def _run(helper: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> list[str]:
     recorder = Recorder()
     monkeypatch.setattr(smoke_release.subprocess, "run", recorder)
-    monkeypatch.setattr(smoke_release, "_uv", lambda: "/resolved/uv")
     monkeypatch.setenv("UV_CACHE_DIR", CALLER_CACHE)
     HELPERS[helper](tmp_path)
     assert len(recorder.calls) == 1
