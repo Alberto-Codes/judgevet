@@ -34,6 +34,21 @@ class TestClearVars:
         assert frozenset(["PYTHONPATH", "PYTHONHOME"]) == _CLEAR_VARS
 
 
+def _child_env_subset(names: tuple[str, ...]) -> dict[str, str]:
+    """Build the child environment and keep only the named variables.
+
+    No caller binds the whole environment to a local, so a failure under
+    ``--showlocals`` cannot print a secret the test never checks.
+
+    Args:
+        names: The environment variables a test checks.
+
+    Returns:
+        The child environment entries whose names appear in ``names``.
+    """
+    return {name: value for name, value in build_child_env().items() if name in names}
+
+
 class TestBuildChildEnv:
     """Tests for build_child_env."""
 
@@ -42,7 +57,7 @@ class TestBuildChildEnv:
         monkeypatch.setenv("PATH", "/some/path")
         monkeypatch.setenv("PYTHONPATH", "/evil/path")
         monkeypatch.setenv("OTHER", "value")
-        result = build_child_env()
+        result = _child_env_subset(("PYTHONPATH", "PATH", "OTHER"))
         assert "PYTHONPATH" not in result
         assert "PATH" in result
         assert "OTHER" in result
@@ -52,7 +67,7 @@ class TestBuildChildEnv:
         monkeypatch.setenv("PATH", "/some/path")
         monkeypatch.setenv("PYTHONHOME", "/evil/home")
         monkeypatch.setenv("OTHER", "value")
-        result = build_child_env()
+        result = _child_env_subset(("PYTHONHOME", "PATH", "OTHER"))
         assert "PYTHONHOME" not in result
         assert "PATH" in result
         assert "OTHER" in result
@@ -62,7 +77,7 @@ class TestBuildChildEnv:
         monkeypatch.setenv("PATH", "/some/path")
         monkeypatch.setenv("HOME", "/home/user")
         monkeypatch.setenv("CUSTOM", "value")
-        result = build_child_env()
+        result = _child_env_subset(("PATH", "HOME", "CUSTOM"))
         assert result.get("PATH") == "/some/path"
         assert result.get("HOME") == "/home/user"
         assert result.get("CUSTOM") == "value"
