@@ -451,8 +451,109 @@ def _make_choice_off_list_fixture() -> dict[str, Any]:
     }
 
 
+def _make_ollama_body() -> dict[str, Any]:
+    """Return the body of fixture 16, verbatim from Ollama's blog post.
+
+    Source: https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
+
+    Returns:
+        The documented three-answer response, with string legend keys.
+    """
+    return {
+        "model": "nimble",
+        "answers": {
+            "team": {
+                "type": "choice",
+                "choice": "billing",
+                "probabilities": {"billing": 0.985, "technical": 0.012, "other": 0.003},
+                "confidence": 0.922,
+            },
+            "refund": {"type": "noul", "noul": 0.997},
+            "urgency": {
+                "type": "score",
+                "score": 0.815,
+                "legend": {"0": "Routine", "1": "Soon", "2": "Urgent"},
+                "probabilities": {"0": 0.378, "1": 0.429, "2": 0.193},
+                "confidence": 0.046,
+            },
+        },
+        "usage": {"input_tokens": 841, "output_tokens": 4},
+    }
+
+
+def _make_ollama_fixture() -> dict[str, Any]:
+    """Fixture 16: Ollama's documented `/v1/systemone` response.
+
+    Ollama 0.35 serves `POST /v1/systemone` with the Jev wire shape. The body
+    is copied from the blog post; no call has returned it to judgevet, so it
+    stays inferred. The same shape, `model` echoing `nimble` and string-keyed
+    probabilities, appears on https://docs.ollama.com/api/systemone. The blog
+    request sends `state` as an object and score `criteria` as a list; this
+    request uses judgevet's string state and integer-keyed criteria instead.
+    See: https://ollama.com/blog/ollama-now-supports-jev-style-decision-models
+    See: https://github.com/Alberto-Codes/judgevet/issues/268
+
+    Returns:
+        The fixture mapping.
+    """
+    team = {"billing": 0.985, "technical": 0.012, "other": 0.003}
+    legend = {0: "Routine", 1: "Soon", 2: "Urgent"}
+    return {
+        "name": "ollama_documented_response",
+        "request": {
+            "state": "I was charged twice. Please refund the extra payment.",
+            "questions": {
+                "team": {
+                    "type": "choice",
+                    "instructions": "Which team should handle this ticket?",
+                    "criteria": {
+                        "billing": "Payments and refunds",
+                        "technical": "Bugs and integrations",
+                        "other": "None of the above",
+                    },
+                },
+                "refund": {
+                    "type": "noul",
+                    "instructions": "Does the customer explicitly ask for a refund?",
+                },
+                "urgency": {
+                    "type": "score",
+                    "instructions": "How urgent is this ticket?",
+                    "criteria": legend,
+                },
+            },
+            "model": "nimble",
+        },
+        "status": 200,
+        "body": _make_ollama_body(),
+        "expect": (
+            "response",
+            {
+                "model": "nimble",
+                "usage": {"input_tokens": 841, "output_tokens": 4},
+                "answers": {
+                    "team": {
+                        "answer_type": "choice",
+                        "choice": "billing",
+                        "confidence": 0.922,
+                        "probabilities": team,
+                    },
+                    "refund": {"answer_type": "noul", "noul": 0.997},
+                    "urgency": {
+                        "answer_type": "score",
+                        "score": 0.815,
+                        "confidence": 0.046,
+                        "legend": legend,
+                        "probabilities": {0: 0.378, 1: 0.429, 2: 0.193},
+                    },
+                },
+            },
+        ),
+    }
+
+
 def get_fixtures() -> list[dict[str, Any]]:
-    """Return the list of all 15 fixtures."""
+    """Return the list of all 16 fixtures."""
     return [
         _make_noul_fixture(),
         _make_choice_fixture(),
@@ -469,6 +570,7 @@ def get_fixtures() -> list[dict[str, Any]]:
         _make_non_json_fixture(),
         _make_rounded_score_fixture(),
         _make_choice_off_list_fixture(),
+        _make_ollama_fixture(),
     ]
 
 

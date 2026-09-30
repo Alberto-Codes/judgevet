@@ -213,6 +213,11 @@ def _parse_body(
 def _read_error_detail(exc: httpx.HTTPStatusError) -> tuple[str, str]:
     """Read the error message and the wire error type from an error body.
 
+    Jev bodies carry `detail`. When `detail` is absent, a non-empty string
+    `error` field is appended instead, because Ollama's `/v1/systemone`
+    returns errors as `{"error": "<string>"}`.
+    Source: https://docs.ollama.com/api/systemone.
+
     Args:
         exc: The HTTP status error whose response body is read.
 
@@ -231,6 +236,9 @@ def _read_error_detail(exc: httpx.HTTPStatusError) -> tuple[str, str]:
         extracted = _extract_error_detail(detail)
         if extracted:
             error_message = f"{exc!s}; {extracted}"
+    elif isinstance(body, dict) and isinstance(body.get("error"), str):
+        if body["error"]:
+            error_message = f"{exc!s}; {body['error']}"
     if isinstance(detail, dict) and isinstance(detail.get("error_type"), str):
         error_type = detail["error_type"]
     return error_message, error_type
