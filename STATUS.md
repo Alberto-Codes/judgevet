@@ -1,6 +1,6 @@
 # STATUS
 
-Last written: 2026-09-29. Current evidence ledger. Detailed implementation,
+Last written: 2026-09-30. Current evidence ledger. Detailed implementation,
 release and credential history remains in Git and the linked issues.
 
 ## Published release
@@ -10,8 +10,9 @@ version. This release adds the provider conformance kit behind the
 `conformance` extra, which adds only pytest: `BaseProviderConformance` for
 `SystemOnePort` providers and `BaseAsyncProviderConformance` for
 `AsyncSystemOnePort` providers. Runtime requirements, the CLI and the MCP
-tools are unchanged. The MCP registry does not list 0.15.0 yet: the submission
-returned 401 because the publisher login had expired.
+tools are unchanged. The MCP registry lists 0.15.0 as latest. The third
+submission, on 2026-09-30 UTC, succeeded. The first two returned 401 on an
+expired publisher login (#256).
 
 | Artifact | Evidence |
 |---|---|
@@ -24,7 +25,7 @@ returned 401 because the publisher login had expired.
 | Attestations | `gh attestation verify --bundle` exits 0 for the wheel and sdist (build provenance) and the wheel (CycloneDX SBOM) |
 | Library and CLI | The publish workflow's wheel smoke step passed before upload; no separate index-wheel check ran |
 | MCP | The publish workflow's installed MCP tools smoke step passed before upload |
-| Registry | Manifest validated (`valid: true`) and the PyPI description carries the `mcp-name` marker; submission returned 401 on an expired publisher token, and the registry lists 0.14.0 as latest |
+| Registry | Manifest validated (`valid: true`) and the PyPI description carries the `mcp-name` marker. Two submissions returned 401 on an expired publisher token. The device flow in `mcp-publisher` 1.7.9 and 1.8.1 exited with `incorrect_device_code`, so 1.8.1 logged in with a GitHub token. `mcp-publisher publish server.json` at a6bc134 reported version 0.15.0 published. The listing is recorded below |
 
 [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36665560245)
 ran build, attest, publish and release-files. The live footprint was the
@@ -80,8 +81,8 @@ records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
 The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.14.0`, published at
-`2026-09-29T14:24:44.289862Z`; 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
+reports `io.github.Alberto-Codes/judgevet` version `0.15.0` as active with
+`isLatest: true`, published at `2026-09-30T04:03:00.71939Z`; 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
 manifest. Registry acceptance does not verify a host installation or reload.
 No unseen API body, other model, modern protocol path or gateway became verified.
 
