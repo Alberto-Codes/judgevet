@@ -676,8 +676,10 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2801 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+**2807 tests pass, 1 test skips, 7 live tests deselected.** The last measured
 coverage is **95.85%** (3259/3400 statements).
+The async conformance kit also passes under pytest-asyncio `asyncio_mode = "auto"`,
+and each broken async fake still fails only its own rule there (#257).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at
