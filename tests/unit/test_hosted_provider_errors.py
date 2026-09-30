@@ -60,13 +60,17 @@ def reply(status: int) -> Callable[[httpx.Request], httpx.Response]:
 def test_sync_hosted_failure_passes_kit_error_check(
     status: int, expected: type[JevError]
 ) -> None:
-    """A failing sync hosted adapter raises the mapped error the kit accepts."""
+    """A failing sync hosted adapter raises the mapped error the kit accepts.
+
+    The test pins the HTTP status code too.
+    """
     adapter = HTTPSystemOneAdapter(
         api_key="synthetic", transport=httpx.MockTransport(reply(status))
     )
     with pytest.raises(expected) as caught:
         adapter.system_one(STATE, QUESTIONS, "jev-1.13.0")
     assert provider_error_problem(caught.value) is None
+    assert caught.value.status_code == status
 
 
 @pytest.mark.unit
@@ -74,7 +78,10 @@ def test_sync_hosted_failure_passes_kit_error_check(
 def test_async_hosted_failure_passes_kit_error_check(
     status: int, expected: type[JevError]
 ) -> None:
-    """A failing async hosted adapter raises the mapped error the kit accepts."""
+    """A failing async hosted adapter raises the mapped error the kit accepts.
+
+    The test pins the HTTP status code too.
+    """
 
     async def call() -> None:
         """Run one failing judgment on a scoped async adapter."""
@@ -86,6 +93,7 @@ def test_async_hosted_failure_passes_kit_error_check(
     with pytest.raises(expected) as caught:
         asyncio.run(call())
     assert provider_error_problem(caught.value) is None
+    assert caught.value.status_code == status
 
 
 @pytest.mark.unit
