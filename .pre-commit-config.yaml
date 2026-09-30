@@ -154,7 +154,8 @@ repos:
         always_run: true
         stages: [pre-push]
 
-      # Exercise both artifact paths in fresh base and MCP environments.
+      # Install the source wheel and the wheel rebuilt from the sdist into fresh
+      # base, mcp-extra and conformance-extra environments: six in all.
       - id: provider-artifacts
         name: installed provider extension artifacts
         entry: uv run python scripts/smoke_provider_release.py
