@@ -30,10 +30,17 @@ This page links them and does not repeat them.
 typevet describes its own relationship to judgevet.
 Source: https://alberto-codes.github.io/typevet/explanation/typellm-and-judgevet/.
 
-The bridge that exposes typevet as a judgevet provider is in progress. It has
-not shipped. Until it ships, the examples below use `FakeSystemOnePort` as a
-stand-in provider. Replace it with your provider.
-Source: https://github.com/Alberto-Codes/typevet/issues/284.
+typevet 0.2.0 ships the bridge that exposes typevet as a judgevet provider.
+Install it with `pip install 'typevet[judgevet]'`. The provider class is
+`typevet.adapters.inbound.judgevet.TypevetSystemOnePort`. typevet documents
+its setup.
+Source: https://pypi.org/project/typevet/0.2.0/.
+Source: https://alberto-codes.github.io/typevet/how-to/use-typevet-as-a-judgevet-provider/.
+
+The examples below keep `FakeSystemOnePort` as a stand-in provider. typevet is
+not a judgevet dependency, and the documentation check runs these examples
+offline. Replace `FakeSystemOnePort` with `TypevetSystemOnePort` or your own
+provider.
 
 ## Compatible in shape, not equivalent in judgment
 
