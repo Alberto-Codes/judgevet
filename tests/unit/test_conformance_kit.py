@@ -25,7 +25,7 @@ from judgevet.domain.response import SystemOneResponse
 from judgevet.media import judge_with_images
 from judgevet.policy import PolicyAnswerError, evaluate_policy
 from judgevet.providers import ProviderFactory, ProviderTransportError
-from judgevet.testing import FakeSystemOnePort
+from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
 from judgevet.testing._conformance_probes import declared_evidence
 from judgevet.testing.conformance import (
     CONFORMANCE_POLICY,
@@ -33,6 +33,7 @@ from judgevet.testing.conformance import (
     CONFORMANCE_STATE,
     INVALID_ANSWERS,
     VALID_ANSWERS,
+    BaseAsyncProviderConformance,
     BaseProviderConformance,
 )
 from tests.fixtures.providers.provider_fixture import RecordingProvider, drain, owned
@@ -54,6 +55,7 @@ RULE_TESTS = (
     "test_media_port_judges_declared_media",
 )
 MEDIA_PORT_TESTS = RULE_TESTS[-2:]
+ASYNC_RULE_TESTS = RULE_TESTS[:3]
 
 
 class TestApplicationFixtureConformance(BaseProviderConformance):
@@ -132,6 +134,20 @@ class TestMediaCapableFakeConformance(BaseProviderConformance):
     def failing_port(self) -> FakeSystemOnePort:
         """Raise a declared provider failure from every judgment."""
         return FakeSystemOnePort(error=ProviderTransportError("synthetic failure"))
+
+
+class TestAsyncFakeConformance(BaseAsyncProviderConformance):
+    """The public async fake passes every async rule in process."""
+
+    @pytest.fixture
+    def provider_factory(self) -> Any:
+        """Borrow a scripted async fake per scope."""
+        return lambda: nullcontext(AsyncFakeSystemOnePort(answers=VALID_ANSWERS))
+
+    @pytest.fixture
+    def failing_port(self) -> AsyncFakeSystemOnePort:
+        """Raise a declared provider failure from every judgment."""
+        return AsyncFakeSystemOnePort(error=ProviderTransportError("synthetic"))
 
 
 @pytest.mark.unit
@@ -234,6 +250,24 @@ def test_kit_without_pytest_names_the_extra(pytester: pytest.Pytester) -> None:
         "sys.modules['pytest'] = None\n"
         "try:\n"
         "    import judgevet.testing.conformance\n"
+        "except ImportError as error:\n"
+        "    print(type(error).__name__, error)\n",
+    )
+    assert result.ret == 0, result.stderr.str()
+    assert result.outlines[0].startswith("ImportError ")
+    assert "judgevet[conformance]" in result.outlines[0]
+
+
+@pytest.mark.unit
+def test_async_kit_without_pytest_names_the_extra(pytester: pytest.Pytester) -> None:
+    """Importing the async kit class where pytest is absent names the extra."""
+    result = pytester.run(
+        sys.executable,
+        "-c",
+        "import sys\n"
+        "sys.modules['pytest'] = None\n"
+        "try:\n"
+        "    from judgevet.testing.conformance import BaseAsyncProviderConformance\n"
         "except ImportError as error:\n"
         "    print(type(error).__name__, error)\n",
     )
@@ -598,3 +632,123 @@ def test_broken_fake_fails_only_its_rule(pytester: pytest.Pytester, case: str) -
     expected = dict.fromkeys(RULE_TESTS, "PASSED")
     expected.update(dict.fromkeys(failing, "FAILED"))
     assert outcomes == expected
+
+
+_ASYNC_GOOD = """\
+from contextlib import nullcontext
+
+import pytest
+
+from judgevet.providers import ProviderTransportError
+from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
+from judgevet.testing.conformance import (
+    INVALID_ANSWERS,
+    VALID_ANSWERS,
+    BaseAsyncProviderConformance,
+)
+
+
+class GoodAsyncProvider(BaseAsyncProviderConformance):
+    @pytest.fixture
+    def provider_factory(self):
+        return lambda: nullcontext(AsyncFakeSystemOnePort(answers=VALID_ANSWERS))
+
+    @pytest.fixture
+    def failing_port(self):
+        return AsyncFakeSystemOnePort(error=ProviderTransportError("synthetic"))
+
+
+class KeywordModelAsyncPort:
+    async def system_one(self, state, questions, *, model):
+        return await AsyncFakeSystemOnePort(answers=VALID_ANSWERS).system_one(
+            state, questions, model
+        )
+
+
+class ReturningAsyncPort:
+    async def system_one(self, state, questions, model):
+        return await AsyncFakeSystemOnePort(answers=VALID_ANSWERS).system_one(
+            state, questions, model
+        )
+"""
+
+_ASYNC_BROKEN = {
+    "keyword_only_model": (
+        "provider_factory",
+        "lambda: nullcontext(KeywordModelAsyncPort())",
+        "test_port_shape",
+    ),
+    "wrong_answer_type": (
+        "provider_factory",
+        'lambda: nullcontext(AsyncFakeSystemOnePort(answers=INVALID_ANSWERS["noul_for_choice"]))',
+        "test_typed_answers_pass_policy",
+    ),
+    "sync_port_is_not_awaitable": (
+        "provider_factory",
+        "lambda: nullcontext(FakeSystemOnePort(answers=VALID_ANSWERS))",
+        "test_typed_answers_pass_policy",
+    ),
+    "bare_runtime_error": (
+        "failing_port",
+        'AsyncFakeSystemOnePort(error=RuntimeError("boom"))',
+        "test_failure_raises_provider_error",
+    ),
+    "failing_port_returns": (
+        "failing_port",
+        "ReturningAsyncPort()",
+        "test_failure_raises_provider_error",
+    ),
+}
+
+
+def _run_async(pytester: pytest.Pytester, body: str) -> tuple[dict[str, str], str]:
+    """Run one async provider module in a pytest subprocess."""
+    pytester.makepyfile(test_async_provider=_ASYNC_GOOD + "\n\n" + body)
+    result = pytester.runpytest_subprocess("-v", "-p", "no:cacheprovider")
+    output = result.stdout.str()
+    outcomes = dict(_OUTCOME.findall(output))
+    assert set(outcomes) == set(ASYNC_RULE_TESTS), output
+    return outcomes, output
+
+
+@pytest.mark.unit
+def test_good_async_provider_passes_every_rule(pytester: pytest.Pytester) -> None:
+    """A correct async provider passes all three async rule tests."""
+    body = "class TestGood(GoodAsyncProvider):\n    pass\n"
+    outcomes, _ = _run_async(pytester, body)
+    assert outcomes == dict.fromkeys(ASYNC_RULE_TESTS, "PASSED")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("case", sorted(_ASYNC_BROKEN))
+def test_broken_async_fake_fails_only_its_rule(
+    pytester: pytest.Pytester, case: str
+) -> None:
+    """Each broken async fake fails only its own rule and passes the other two."""
+    fixture, value, failing = _ASYNC_BROKEN[case]
+    method = f"@pytest.fixture\ndef {fixture}(self):\n    return {value}\n"
+    body = f"class TestBroken(GoodAsyncProvider):\n{indent(method, '    ')}"
+    outcomes, _ = _run_async(pytester, body)
+    expected = dict.fromkeys(ASYNC_RULE_TESTS, "PASSED")
+    expected[failing] = "FAILED"
+    assert outcomes == expected
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("case", "message"),
+    [
+        ("sync_port_is_not_awaitable", "not an awaitable"),
+        ("bare_runtime_error", "judgevet.providers.ProviderError subclass"),
+    ],
+)
+def test_async_failure_names_the_contract(
+    pytester: pytest.Pytester, case: str, message: str
+) -> None:
+    """The async rule failures name the contract the port broke."""
+    fixture, value, failing = _ASYNC_BROKEN[case]
+    method = f"@pytest.fixture\ndef {fixture}(self):\n    return {value}\n"
+    body = f"class TestBroken(GoodAsyncProvider):\n{indent(method, '    ')}"
+    outcomes, output = _run_async(pytester, body)
+    assert outcomes[failing] == "FAILED"
+    assert message in output

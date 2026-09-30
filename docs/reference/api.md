@@ -131,6 +131,11 @@ The `conformance` extra adds pytest and the provider conformance kit in
 supports images. Importing the kit without pytest raises `ImportError`. See the
 [kit source](../../src/judgevet/testing/conformance.py).
 Source: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
+An `AsyncSystemOnePort` provider subclasses `BaseAsyncProviderConformance`
+from the same module. It overrides the same two fixtures, and its
+`provider_factory` returns an async context manager. It runs the shape,
+typed-answer and failure rules only.
+Source: https://github.com/Alberto-Codes/judgevet/issues/246.
 
 ## Answer and container types
 

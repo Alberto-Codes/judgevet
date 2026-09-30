@@ -11,11 +11,13 @@ network. Every uv child names the cache that `uv_cache_args` selects.
 The base environment also proves that the fakes import without pytest and that
 the conformance kit refuses to import with an error naming its extra. The
 ``conformance`` environment runs a provider test module against the installed
-kit with pytest and requires every rule test to pass.
+kit with pytest and requires every rule test to pass. The module runs nine
+synchronous rules and three asynchronous rules.
 
 Source: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851596904.
 Repair: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851983135.
 Conformance: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
+Async conformance: https://github.com/Alberto-Codes/judgevet/issues/246.
 
 Usage: ``uv run python scripts/smoke_provider_release.py``. Exit status is 0
 only when all six environments pass.
@@ -80,7 +82,7 @@ CHILD_TIMEOUT = 600
 CONFORMANCE_EXTRA = "conformance"
 KIT_MODULE = "judgevet.testing.conformance"
 KIT_TESTS = "tests/fixtures/providers/conformance_provider.py"
-KIT_RULES = 9
+KIT_RULES = 12
 EXPECTED_ABSENT = {
     "receipt": "conformance-absent",
     "fakes": "FakeSystemOnePort",

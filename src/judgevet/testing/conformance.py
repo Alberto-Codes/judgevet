@@ -24,6 +24,9 @@ method, so a failure names the rule it breaks:
   `SystemOneResponse` whose answers pass `evaluate_policy`. Any exception
   fails the rule.
 
+`BaseAsyncProviderConformance` applies the first three rules to an
+`AsyncSystemOnePort` provider. The scope and media rules are synchronous only.
+
 The kit needs pytest, which the `conformance` extra installs. Importing this
 module without pytest raises `ImportError`. The kit needs no credentials and
 no inference dependency.
@@ -52,13 +55,13 @@ Examples:
 
 See Also:
     - [judgevet.testing][]: The offline fakes a provider can script
+    - [judgevet.testing._conformance_async][]: The asynchronous rules
     - [judgevet.providers][]: `provider_scope` and the provider errors
     - [judgevet.media][]: `judge_with_images` and its capability checks
     - [judgevet.policy][]: The evaluator that accepts typed answers
 """
 
-import inspect
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 
 try:
     import pytest
@@ -71,7 +74,6 @@ except ImportError as error:
 from judgevet.domain.media import MediaCapabilities
 from judgevet.domain.response import SystemOneResponse
 from judgevet.media import judge_with_images
-from judgevet.policy import PolicyAnswerError, evaluate_policy
 from judgevet.ports import SystemOnePort
 from judgevet.ports.media import MediaSystemOnePort
 from judgevet.providers import (
@@ -80,14 +82,15 @@ from judgevet.providers import (
     ProviderFactory,
     provider_scope,
 )
+from judgevet.testing._conformance_async import BaseAsyncProviderConformance
 from judgevet.testing._conformance_cases import (
-    ANSWER_TYPES,
     CONFORMANCE_MODEL,
     CONFORMANCE_POLICY,
     CONFORMANCE_QUESTIONS,
     CONFORMANCE_STATE,
     INVALID_ANSWERS,
     VALID_ANSWERS,
+    policy_problem,
 )
 from judgevet.testing._conformance_probes import (
     BodyError,
@@ -95,6 +98,8 @@ from judgevet.testing._conformance_probes import (
     ScopeRecorder,
     declared_evidence,
     image_evidence,
+    provider_error_problem,
+    signature_problem,
     undeclared_evidence,
 )
 
@@ -105,6 +110,7 @@ __all__ = [
     "CONFORMANCE_STATE",
     "INVALID_ANSWERS",
     "VALID_ANSWERS",
+    "BaseAsyncProviderConformance",
     "BaseProviderConformance",
 ]
 
@@ -130,28 +136,6 @@ def _require(condition: object, message: str) -> None:
         pytest.fail(message)
 
 
-def _type_mismatches(answers: Mapping[str, object]) -> str:
-    """Describe answers whose type does not match their question kind.
-
-    `evaluate_policy` enforces the answer types. This helper only names the
-    mismatched questions in the failure message.
-
-    Args:
-        answers: The answers the provider returned, keyed by question name.
-
-    Returns:
-        One sentence per mismatched answer, or an empty string.
-    """
-    notes = []
-    for name, question in CONFORMANCE_QUESTIONS.items():
-        expected = ANSWER_TYPES[type(question)]
-        answer = answers.get(name)
-        if not isinstance(answer, expected):
-            got = type(answer).__name__
-            notes.append(f" {name} needs {expected.__name__}, got {got}.")
-    return "".join(notes)
-
-
 def _media_members(port: object) -> tuple[list[str], bool]:
     """Report which media methods a port exposes and whether all are callable.
 
@@ -170,6 +154,8 @@ def _media_members(port: object) -> tuple[list[str], bool]:
 def _require_policy_answers(response: object, source: str) -> None:
     """Fail unless a response carries typed answers the kit policy accepts.
 
+    `policy_problem` holds the check, which the asynchronous kit shares.
+
     Args:
         response: The value the provider returned.
         source: The call that produced the response, for failure messages.
@@ -178,21 +164,9 @@ def _require_policy_answers(response: object, source: str) -> None:
         pytest.fail.Exception: If the response is not a `SystemOneResponse`,
             names other questions, or carries answers the policy rejects.
     """
-    if not isinstance(response, SystemOneResponse):
-        pytest.fail(
-            f"{source} returned {type(response).__name__}, not SystemOneResponse."
-        )
-    _require(
-        set(response.answers) == set(CONFORMANCE_QUESTIONS),
-        f"Answer names {sorted(response.answers)} differ from the questions.",
-    )
-    try:
-        evaluate_policy(CONFORMANCE_POLICY, response.answers)
-    except PolicyAnswerError as error:
-        pytest.fail(
-            f"evaluate_policy rejected the answers: {error}."
-            f"{_type_mismatches(response.answers)}"
-        )
+    problem = policy_problem(response, source)
+    if problem is not None:
+        pytest.fail(problem)
 
 
 def _select_media_port(
@@ -351,28 +325,18 @@ class BaseProviderConformance:
         """Rule 1: `system_one` is callable as the port declares it.
 
         `SystemOnePort` is not a runtime-checkable protocol, so the kit checks
-        the method and its signature directly.
+        the method and its signature directly. `signature_problem` holds the
+        check, which the asynchronous kit shares.
 
         Args:
             provider_port: The provider port.
             provider_model: The selected model.
         """
-        method = getattr(provider_port, "system_one", None)
-        if not callable(method):
-            pytest.fail("The port has no callable system_one method.")
-        signature = inspect.signature(method)
-        try:
-            signature.bind(CONFORMANCE_STATE, CONFORMANCE_QUESTIONS, provider_model)
-            signature.bind(
-                state=CONFORMANCE_STATE,
-                questions=CONFORMANCE_QUESTIONS,
-                model=provider_model,
-            )
-        except TypeError as error:
-            pytest.fail(
-                f"system_one{signature} does not accept (state, questions, model) "
-                f"positionally and by keyword: {error}"
-            )
+        problem = signature_problem(
+            getattr(provider_port, "system_one", None), provider_model
+        )
+        if problem is not None:
+            pytest.fail(problem)
 
     def test_typed_answers_pass_policy(
         self, provider_port: SystemOnePort, provider_model: str
@@ -395,17 +359,18 @@ class BaseProviderConformance:
     ) -> None:
         """Rule 3: a failed judgment raises a `ProviderError` subclass.
 
+        `provider_error_problem` holds the message, which the asynchronous kit
+        shares.
+
         Args:
             failing_port: The port configured to fail.
             provider_model: The selected model.
         """
         with pytest.raises(Exception) as caught:
             _judge(failing_port, provider_model)
-        _require(
-            isinstance(caught.value, ProviderError),
-            f"The failing port raised {type(caught.value).__name__}; map backend "
-            "failures to a judgevet.providers.ProviderError subclass.",
-        )
+        problem = provider_error_problem(caught.value)
+        if problem is not None:
+            pytest.fail(problem)
 
     def test_scope_entry_yields_usable_port(
         self, provider_factory: ProviderFactory, provider_model: str

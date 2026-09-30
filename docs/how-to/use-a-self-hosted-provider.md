@@ -199,6 +199,15 @@ port must return answers that the kit policy accepts. Override
 `provider_port` fixture enters one scope of your factory; override it only for
 a special case. The kit needs no credentials and no inference dependency.
 
+Subclass `BaseAsyncProviderConformance` for an `AsyncSystemOnePort` provider.
+It checks the port shape, that awaited answers pass the kit policy, and that
+an awaited failure raises a `ProviderError` subclass. Override two fixtures:
+`provider_factory` returns a callable whose async context manager yields the
+port, and `failing_port` returns a port whose awaited call fails. The scope
+and media rules are synchronous only for now. Each rule runs its coroutine
+with `anyio.run`, so the kit needs no async pytest plugin.
+Source: https://github.com/Alberto-Codes/judgevet/issues/246.
+
 The kit source contains a minimal subclass in its module example. See the
 [conformance kit reference](../reference/api.md#offline-fakes) and the
 [kit source](../../src/judgevet/testing/conformance.py). A passing kit shows

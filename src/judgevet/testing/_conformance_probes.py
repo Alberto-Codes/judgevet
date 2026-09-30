@@ -7,7 +7,9 @@ counts media dispatches so the kit can show that a refusal happened before the
 provider ran. `declared_evidence` builds one image whose MIME type and size
 the declared capabilities admit, and `undeclared_evidence` builds one whose
 MIME type they do not admit. Each kit image is a valid one-pixel PNG, JPEG or
-WebP file. None of these import pytest.
+WebP file. `signature_problem` and `provider_error_problem` describe a broken
+port shape or failure contract, so the synchronous and asynchronous kits share
+one message. None of these import pytest.
 Source: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
 
 Examples:
@@ -34,6 +36,14 @@ Examples:
     declared = declared_evidence(MediaCapabilities({"image/webp"}))
     assert declared is not None
     assert declared.images[0].media_type == "image/webp"
+
+    from judgevet.testing._conformance_probes import (
+        provider_error_problem,
+        signature_problem,
+    )
+
+    assert signature_problem(FakeSystemOnePort().system_one, "m") is None
+    assert provider_error_problem(RuntimeError("boom")) is not None
     ```
 
 See Also:
@@ -42,6 +52,7 @@ See Also:
     - [judgevet.media][]: `judge_with_images` and its capability checks
 """
 
+import inspect
 from base64 import b64decode
 from collections.abc import Mapping
 from contextlib import AbstractContextManager
@@ -53,7 +64,11 @@ from judgevet.domain.questions import Question
 from judgevet.domain.response import SystemOneResponse
 from judgevet.ports import SystemOnePort
 from judgevet.ports.media import MediaSystemOnePort
-from judgevet.providers import ProviderFactory
+from judgevet.providers import ProviderError, ProviderFactory
+from judgevet.testing._conformance_cases import (
+    CONFORMANCE_QUESTIONS,
+    CONFORMANCE_STATE,
+)
 
 IMAGE_ID = "conformance-image"
 """The attachment identity of every kit image."""
@@ -80,6 +95,54 @@ _IMAGE_BYTES = {
 """One valid one-pixel image per MIME type that `judge_with_images` admits."""
 
 _FALLBACK_TYPE = "image/gif"
+
+
+def signature_problem(method: object, model: str) -> str | None:
+    """Describe why a `system_one` method does not take the port's arguments.
+
+    `SystemOnePort` and `AsyncSystemOnePort` are not runtime-checkable
+    protocols, so the kit checks the method and its signature directly.
+
+    Args:
+        method: The port's `system_one` attribute, or None when it is absent.
+        model: The selected model.
+
+    Returns:
+        A failure message when the method is not callable or does not accept
+        (state, questions, model) positionally and by keyword, or None.
+    """
+    if not callable(method):
+        return "The port has no callable system_one method."
+    signature = inspect.signature(method)
+    try:
+        signature.bind(CONFORMANCE_STATE, CONFORMANCE_QUESTIONS, model)
+        signature.bind(
+            state=CONFORMANCE_STATE, questions=CONFORMANCE_QUESTIONS, model=model
+        )
+    except TypeError as error:
+        return (
+            f"system_one{signature} does not accept (state, questions, model) "
+            f"positionally and by keyword: {error}"
+        )
+    return None
+
+
+def provider_error_problem(error: BaseException) -> str | None:
+    """Describe a failing port's exception that is not a `ProviderError`.
+
+    Args:
+        error: The exception the failing port raised.
+
+    Returns:
+        A failure message naming the `ProviderError` contract, or None when
+        the exception is a `ProviderError` subclass.
+    """
+    if isinstance(error, ProviderError):
+        return None
+    return (
+        f"The failing port raised {type(error).__name__}; map backend "
+        "failures to a judgevet.providers.ProviderError subclass."
+    )
 
 
 class BodyError(Exception):

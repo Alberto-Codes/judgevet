@@ -43,6 +43,7 @@ from typing import Any
 
 ORIGINS_VARIABLE = "PROVIDER_FIXTURE_ORIGINS"
 CONFORMANCE_MODULE = "judgevet.testing.conformance"
+KIT_MODULES = frozenset({CONFORMANCE_MODULE, "judgevet.testing._conformance_async"})
 SEED = frozenset({"pip"})
 INFERENCE = frozenset(
     {
@@ -220,9 +221,9 @@ def check_origins(origins: Mapping[str, str], purelib: Path, checkout: Path) -> 
 def _import_all(extra: bool) -> Any:
     """Import every packaged module the selected install supports.
 
-    The conformance kit needs the ``conformance`` extra, which neither the
-    base nor the ``mcp`` environment installs, so it is skipped when pytest
-    is absent.
+    The conformance kit and its asynchronous rules module need the
+    ``conformance`` extra, which neither the base nor the ``mcp`` environment
+    installs, so both are skipped when pytest is absent.
 
     Args:
         extra: Whether MCP adapter modules are importable.
@@ -235,7 +236,7 @@ def _import_all(extra: bool) -> Any:
     for info in pkgutil.walk_packages(package.__path__, "judgevet."):
         if not extra and "mcp" in info.name.rsplit(".", 1)[-1]:
             continue
-        if not kit and info.name == CONFORMANCE_MODULE:
+        if not kit and info.name in KIT_MODULES:
             continue
         importlib.import_module(info.name)
     return package
