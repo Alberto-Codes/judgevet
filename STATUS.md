@@ -677,7 +677,7 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2818 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+**2826 tests pass, 1 test skips, 7 live tests deselected.** The last measured
 coverage is **95.85%** (3260/3401 statements).
 `JevError` now derives from `ProviderError`, so hosted Jev failures pass the
 conformance kit's provider error check (#259).
@@ -688,6 +688,12 @@ imports, and the `provider-artifacts` hook requires the extra to add exactly
 pytest and anyio (#253).
 Each conformance rejection case now names its rejecting check with `match=`,
 and three mutations of those checks now fail a test (#260).
+Every remote GitHub Action is pinned by full commit SHA with its tag as a
+comment, and a test fails on any unpinned remote `uses:` line (#245).
+Dependabot's `directory: /` entry updates the workflow pins. It does not scan
+`.github/actions/supply-chain/action.yml`, so a maintainer updates that pin by hand
+(#266).
+`.yamllint` raises yamllint's line limit to 100 so the pinned lines fit.
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at
