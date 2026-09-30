@@ -1,7 +1,8 @@
-"""Pin the installed provider proof's isolation, receipts and oracles for #205."""
+"""Pin the installed provider proof's isolation, receipts and oracles (#205, #241)."""
 
 import json
 import subprocess
+import sys
 import tarfile
 import zipfile
 from collections.abc import Iterator, Mapping
@@ -15,7 +16,11 @@ from judgevet import Question, SystemOneResponse
 from judgevet.ports import SystemOnePort
 from scripts import smoke_provider_release as runner
 from scripts.smoke_release import SESSION_CACHE_VAR
-from tests.fixtures.providers import consumer_checks, provider_fixture
+from tests.fixtures.providers import (
+    conformance_absent,
+    consumer_checks,
+    provider_fixture,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -97,6 +102,9 @@ def _dists(graph: Mapping[str, list[str]]) -> dict[str, dict[str, object]]:
     }
 
 
+_KIT_REQUIRES = ["httpx", 'pytest>=9.1.1; extra == "conformance"']
+
+
 def _identity(purelib: Path, **changes: object) -> dict[str, object]:
     receipt: dict[str, object] = {
         "receipt": "provider-identity",
@@ -105,7 +113,7 @@ def _identity(purelib: Path, **changes: object) -> dict[str, object]:
         "py_typed": True,
         "purelib": str(purelib),
         "origins": {"judgevet": str(purelib / "judgevet" / "__init__.py")},
-        "distributions": _dists({"judgevet": ["httpx"], "httpx": [], "pip": []}),
+        "distributions": _dists({"judgevet": _KIT_REQUIRES, "httpx": [], "pip": []}),
         "environment": LINUX,
         "mcp_spec": False,
         "network": BLOCKED,
@@ -136,6 +144,11 @@ def test_identity_accepts_isolated_receipt(tmp_path: Path) -> None:
         {"distributions": _dists({"judgevet": ["httpx"]})},
         {"network": {"errors": [None, None]}},
         {"preimport": ["judgevet"]},
+        {
+            "distributions": _dists(
+                {"judgevet": ["httpx", "pytest"], "httpx": [], "pytest": []}
+            )
+        },
     ],
     ids=[
         "version",
@@ -148,6 +161,7 @@ def test_identity_accepts_isolated_receipt(tmp_path: Path) -> None:
         "missing-dependency",
         "unguarded-network",
         "imported-before-guard",
+        "pytest-in-base",
     ],
 )
 def test_identity_rejects_false_positive(
@@ -499,3 +513,160 @@ def test_sdist_rebuild_names_the_session_cache(
         runner.rebuild_from_sdist(tmp_path / "a.tar.gz", tmp_path, tmp_path)
     assert commands[0][1:3] == ["build", "--wheel"]
     assert commands[0][3:5] == ["--cache-dir", str(cache)]
+
+
+_KIT = 'pytest>=9.1.1; extra == "conformance"'
+
+
+@pytest.mark.parametrize(
+    "requires",
+    [
+        ["httpx", "pytest>=9.1.1"],
+        ["httpx"],
+        ["httpx", _KIT, 'torch; extra == "conformance"'],
+        ["httpx", 'pytest; extra == "mcp"'],
+    ],
+    ids=["unconditional", "absent", "engine", "wrong-extra"],
+)
+def test_conformance_metadata_rejects_misplaced_pytest(requires: list[str]) -> None:
+    with pytest.raises(RuntimeError):
+        runner.check_conformance_metadata(requires, LINUX)
+
+
+def test_conformance_metadata_accepts_pytest_behind_extra() -> None:
+    requires = ["httpx", 'mcp>=2.2; extra == "mcp"', _KIT]
+    assert runner.check_conformance_metadata(requires, LINUX) is None
+
+
+_KIT_GRAPH = {
+    "judgevet": ["httpx", 'mcp>=2.2; extra == "mcp"', _KIT],
+    "httpx": [],
+    "pytest": ["iniconfig>=1"],
+    "iniconfig": [],
+    "pip": [],
+}
+
+
+def test_conformance_inventory_accepts_extra_closure() -> None:
+    assert runner.check_conformance_inventory(_KIT_GRAPH, LINUX) is None
+
+
+@pytest.mark.parametrize(
+    "graph",
+    [
+        {k: v for k, v in _KIT_GRAPH.items() if k != "iniconfig"},
+        _KIT_GRAPH | {"torch": []},
+        _KIT_GRAPH | {"mcp": []},
+        {k: v for k, v in _KIT_GRAPH.items() if k not in {"pytest", "iniconfig"}},
+    ],
+    ids=["missing-dependency", "engine", "mcp", "no-pytest"],
+)
+def test_conformance_inventory_rejects_other_installs(
+    graph: dict[str, list[str]],
+) -> None:
+    with pytest.raises(RuntimeError):
+        runner.check_conformance_inventory(graph, LINUX)
+
+
+def _absent_process(receipt: Mapping[str, object]) -> Any:
+    def run(*_: object) -> subprocess.CompletedProcess[str]:
+        return _completed(0, json.dumps(receipt))
+
+    return run
+
+
+def test_absent_receipt_accepts_refusal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    receipt = dict(runner.EXPECTED_ABSENT)
+    monkeypatch.setattr(runner, "run_process", _absent_process(receipt))
+    assert runner.run_absent(tmp_path / "python", tmp_path, {}) == receipt
+
+
+@pytest.mark.parametrize(
+    "change",
+    [{"error": None}, {"extra_named": False}, {"pytest": True}, {"fakes": None}],
+    ids=["imported", "extra-unnamed", "pytest-present", "no-fakes"],
+)
+def test_absent_receipt_rejects_other_observations(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, change: dict[str, object]
+) -> None:
+    receipt = dict(runner.EXPECTED_ABSENT) | change
+    monkeypatch.setattr(runner, "run_process", _absent_process(receipt))
+    with pytest.raises(RuntimeError):
+        runner.run_absent(tmp_path / "python", tmp_path, {})
+
+
+def test_absence_fixture_reports_the_named_extra(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(sys.modules, "pytest", None)
+    monkeypatch.delitem(sys.modules, runner.KIT_MODULE, raising=False)
+    assert conformance_absent.observe() == runner.EXPECTED_ABSENT
+
+
+def test_absence_fixture_detects_an_importable_kit() -> None:
+    observed = conformance_absent.observe()
+    assert (observed["pytest"], observed["error"]) == (True, None)
+    assert observed != runner.EXPECTED_ABSENT
+
+
+def _kit_side(purelib: Path, **changes: object) -> dict[str, object]:
+    origins = {
+        "judgevet": str(purelib / "judgevet" / "__init__.py"),
+        runner.KIT_MODULE: str(purelib / "judgevet" / "testing" / "conformance.py"),
+    }
+    side: dict[str, object] = {
+        "origins": origins,
+        "network": BLOCKED,
+        "preimport": [],
+    }
+    side.update(changes)
+    return side
+
+
+def test_kit_run_accepts_every_rule_passing(tmp_path: Path) -> None:
+    purelib = tmp_path / "venv" / "lib" / "site-packages"
+    completed = _completed(0, "........\n8 passed in 0.05s\n")
+    side = _kit_side(purelib)
+    assert runner.validate_kit_run(completed, side, purelib, ROOT) is None
+
+
+@pytest.mark.parametrize(
+    ("code", "stdout", "change"),
+    [
+        (1, "7 passed, 1 failed in 0.05s", {}),
+        (0, "7 passed, 1 skipped in 0.05s", {}),
+        (0, "", {}),
+        (0, "8 passed in 0.05s", {"origins": {"judgevet": "x"}}),
+        (0, "8 passed in 0.05s", {"network": {"errors": [None, None]}}),
+        (0, "8 passed in 0.05s", {"preimport": ["judgevet"]}),
+    ],
+    ids=["failed", "skipped", "silent", "kit-absent", "unguarded", "preimported"],
+)
+def test_kit_run_rejects_partial_or_unguarded_runs(
+    tmp_path: Path, code: int, stdout: str, change: dict[str, object]
+) -> None:
+    purelib = tmp_path / "venv" / "lib" / "site-packages"
+    side = _kit_side(purelib, **change)
+    with pytest.raises(RuntimeError):
+        runner.validate_kit_run(_completed(code, stdout), side, purelib, ROOT)
+
+
+def test_kit_run_rejects_checkout_kit(tmp_path: Path) -> None:
+    purelib = tmp_path / "venv" / "lib" / "site-packages"
+    checkout_kit = str(ROOT / "src" / "judgevet" / "testing" / "conformance.py")
+    origins = {
+        "judgevet": str(purelib / "judgevet" / "__init__.py"),
+        runner.KIT_MODULE: checkout_kit,
+    }
+    side = _kit_side(purelib, origins=origins)
+    with pytest.raises(RuntimeError):
+        runner.validate_kit_run(_completed(0, "8 passed in 1s"), side, purelib, ROOT)
+
+
+def test_stage_copies_the_conformance_modules(tmp_path: Path) -> None:
+    runner.stage(tmp_path / "work")
+    package = tmp_path / "work" / "tests" / "fixtures" / "providers"
+    assert (package / "conformance_absent.py").is_file()
+    assert (tmp_path / "work" / runner.KIT_TESTS).is_file()

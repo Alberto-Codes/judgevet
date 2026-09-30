@@ -31,6 +31,14 @@ dependencies = [
 # from the first request). See the tested SDK source:
 # https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp/server/runner.py
 mcp = ["mcp>=2.2"]
+# The provider conformance kit (`judgevet.testing.conformance`) is a pytest
+# base class a provider package runs in its own test suite. The base install
+# carries no pytest; this extra adds it.
+#
+# Floor is 9.1.1 because 9.1.1 is the pytest release uv.lock resolves and the
+# kit's own tests run on. No older release has been exercised. Decision:
+# https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909
+conformance = ["pytest>=9.1.1"]
 
 [project.scripts]
 judgevet = "judgevet.adapters.inbound.cli:app"

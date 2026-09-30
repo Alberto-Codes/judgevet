@@ -1,0 +1,438 @@
+"""Acceptance tests for the provider conformance kit in judgevet.testing (#241).
+
+judgevet's own offline fakes must pass every rule. Each deliberately broken
+fake must fail exactly the rule it breaks and pass every other rule, shown
+through pytester subprocess runs. Source:
+https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
+"""
+
+from __future__ import annotations
+
+import re
+import sys
+from collections.abc import Iterator, Mapping
+from contextlib import nullcontext
+from textwrap import dedent, indent
+from typing import Any
+
+import pytest
+
+from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.media import ImageEvidence, MediaCapabilities
+from judgevet.domain.questions import Choice, Noul, Question, Score
+from judgevet.domain.response import SystemOneResponse
+from judgevet.policy import PolicyAnswerError, evaluate_policy
+from judgevet.providers import ProviderFactory, ProviderTransportError
+from judgevet.testing import FakeSystemOnePort
+from judgevet.testing.conformance import (
+    CONFORMANCE_POLICY,
+    CONFORMANCE_QUESTIONS,
+    CONFORMANCE_STATE,
+    INVALID_ANSWERS,
+    VALID_ANSWERS,
+    BaseProviderConformance,
+)
+from tests.fixtures.providers.provider_fixture import RecordingProvider, drain, owned
+
+pytest_plugins = ["pytester"]
+
+SCOPE_TESTS = (
+    "test_scope_entry_yields_usable_port",
+    "test_scope_exit_runs_once",
+    "test_scope_propagates_body_exception",
+)
+RULE_TESTS = (
+    "test_port_shape",
+    "test_typed_answers_pass_policy",
+    "test_failure_raises_provider_error",
+    *SCOPE_TESTS,
+    "test_media_refused_without_media_support",
+    "test_media_port_refuses_undeclared_media",
+)
+
+
+class TestApplicationFixtureConformance(BaseProviderConformance):
+    """The application-owned provider fixture passes every rule in process."""
+
+    @pytest.fixture
+    def provider_factory(self) -> Iterator[ProviderFactory]:
+        """Own a recording provider per scope, then clear its events."""
+        yield lambda: owned("conformance-owned")
+        drain()
+
+    @pytest.fixture
+    def provider_port(self) -> FakeSystemOnePort:
+        """Answer the kit questions with the kit's valid answers."""
+        return FakeSystemOnePort(answers=VALID_ANSWERS)
+
+    @pytest.fixture
+    def failing_port(self) -> Iterator[RecordingProvider]:
+        """Raise a transport failure from every judgment."""
+        yield RecordingProvider("conformance-failing", fail=True)
+        drain()
+
+    @pytest.fixture
+    def media_port(self) -> Iterator[RecordingProvider]:
+        """Declare PNG and JPEG support only."""
+        yield RecordingProvider("conformance-media")
+        drain()
+
+
+class _MediaFake(FakeSystemOnePort):
+    """A public fake that also declares PNG support and judges media as text."""
+
+    def capabilities(self, model: str) -> MediaCapabilities:
+        """Declare PNG support for every model."""
+        return MediaCapabilities({"image/png"})
+
+    def system_one_media(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        evidence: ImageEvidence,
+    ) -> SystemOneResponse:
+        """Answer as the text fake does."""
+        return self.system_one(state, questions, model)
+
+
+class TestMediaCapableFakeConformance(BaseProviderConformance):
+    """A media-capable port from the default port fixture serves both media rules."""
+
+    @pytest.fixture
+    def provider_factory(self) -> ProviderFactory:
+        """Borrow a scripted media-capable fake per scope."""
+        return lambda: nullcontext(_MediaFake(answers=VALID_ANSWERS))
+
+    @pytest.fixture
+    def failing_port(self) -> FakeSystemOnePort:
+        """Raise a declared provider failure from every judgment."""
+        return FakeSystemOnePort(error=ProviderTransportError("synthetic failure"))
+
+
+@pytest.mark.unit
+def test_kit_questions_cover_every_kind() -> None:
+    """The kit asks one Noul, one Choice and one Score question."""
+    kinds = sorted(
+        type(question).__name__ for question in CONFORMANCE_QUESTIONS.values()
+    )
+    assert kinds == ["Choice", "Noul", "Score"]
+    assert isinstance(CONFORMANCE_STATE, str)
+
+
+@pytest.mark.unit
+def test_valid_answers_are_typed_and_accepted() -> None:
+    """The valid answers match each question kind and pass the kit policy."""
+    expected: dict[type, type] = {
+        Noul: NoulAnswer,
+        Choice: ChoiceAnswer,
+        Score: ScoreAnswer,
+    }
+    for name, question in CONFORMANCE_QUESTIONS.items():
+        assert isinstance(VALID_ANSWERS[name], expected[type(question)])
+    assert evaluate_policy(CONFORMANCE_POLICY, VALID_ANSWERS).passed
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("case", sorted(INVALID_ANSWERS))
+def test_invalid_answers_are_rejected(case: str) -> None:
+    """Every invalid answer set is refused by the public policy evaluator."""
+    assert set(INVALID_ANSWERS[case]) == set(CONFORMANCE_QUESTIONS)
+    with pytest.raises(PolicyAnswerError):
+        evaluate_policy(CONFORMANCE_POLICY, INVALID_ANSWERS[case])
+
+
+@pytest.mark.unit
+def test_testing_package_does_not_import_pytest(pytester: pytest.Pytester) -> None:
+    """The fakes package imports in a fresh interpreter without loading pytest."""
+    result = pytester.run(
+        sys.executable,
+        "-c",
+        "import sys, judgevet.testing; "
+        "print(judgevet.testing.FakeSystemOnePort.__name__, 'pytest' in sys.modules)",
+    )
+    assert result.ret == 0, result.stderr.str()
+    assert result.outlines == ["FakeSystemOnePort False"]
+
+
+@pytest.mark.unit
+def test_kit_without_pytest_names_the_extra(pytester: pytest.Pytester) -> None:
+    """Importing the kit where pytest is absent raises an ImportError naming the extra."""
+    result = pytester.run(
+        sys.executable,
+        "-c",
+        "import sys\n"
+        "sys.modules['pytest'] = None\n"
+        "try:\n"
+        "    import judgevet.testing.conformance\n"
+        "except ImportError as error:\n"
+        "    print(type(error).__name__, error)\n",
+    )
+    assert result.ret == 0, result.stderr.str()
+    assert result.outlines[0].startswith("ImportError ")
+    assert "judgevet[conformance]" in result.outlines[0]
+
+
+_GOOD = """\
+from contextlib import nullcontext
+
+import pytest
+
+from judgevet.domain.media import MediaCapabilities
+from judgevet.providers import ProviderTransportError
+from judgevet.testing import FakeSystemOnePort
+from judgevet.testing.conformance import (
+    INVALID_ANSWERS,
+    VALID_ANSWERS,
+    BaseProviderConformance,
+)
+
+
+class MediaFake(FakeSystemOnePort):
+    def capabilities(self, model):
+        return MediaCapabilities({"image/png"})
+
+    def system_one_media(self, state, questions, model, *, evidence):
+        return self.system_one(state, questions, model)
+
+
+class GoodProvider(BaseProviderConformance):
+    @pytest.fixture
+    def provider_factory(self):
+        return lambda: nullcontext(FakeSystemOnePort(answers=VALID_ANSWERS))
+
+    @pytest.fixture
+    def failing_port(self):
+        return FakeSystemOnePort(error=ProviderTransportError("synthetic"))
+
+    @pytest.fixture
+    def media_port(self):
+        return MediaFake(answers=VALID_ANSWERS)
+
+
+class ValidPortProvider(GoodProvider):
+    @pytest.fixture
+    def provider_port(self):
+        return FakeSystemOnePort(answers=VALID_ANSWERS)
+
+
+class Context:
+    def __init__(self):
+        self.port = FakeSystemOnePort(answers=VALID_ANSWERS)
+
+    def __enter__(self):
+        return self.port
+
+    def __exit__(self, *exc_info):
+        return None
+
+
+class SwallowingContext(Context):
+    def __exit__(self, *exc_info):
+        return True
+
+
+SHARED = Context()
+
+
+class KeywordModelPort:
+    def __init__(self):
+        self.inner = FakeSystemOnePort(answers=VALID_ANSWERS)
+
+    def system_one(self, state, questions, *, model):
+        return self.inner.system_one(state, questions, model)
+
+
+class ReturningPort:
+    def system_one(self, state, questions, model):
+        return FakeSystemOnePort(answers=VALID_ANSWERS).system_one(
+            state, questions, model
+        )
+
+
+class SetCapabilitiesFake(MediaFake):
+    def capabilities(self, model):
+        return {"image/png"}
+
+
+class CapabilitiesOnlyPort(FakeSystemOnePort):
+    def capabilities(self, model):
+        return MediaCapabilities({"image/png"})
+
+
+class NonCallableCapabilitiesPort(MediaFake):
+    capabilities = None
+"""
+
+_BROKEN = {
+    "keyword_only_model": (
+        "GoodProvider",
+        "provider_port",
+        "KeywordModelPort()",
+        ("test_port_shape",),
+    ),
+    "wrong_answer_type": (
+        "GoodProvider",
+        "provider_port",
+        'FakeSystemOnePort(answers=INVALID_ANSWERS["noul_for_choice"])',
+        ("test_typed_answers_pass_policy",),
+    ),
+    "policy_rejects_score": (
+        "GoodProvider",
+        "provider_port",
+        'FakeSystemOnePort(answers=INVALID_ANSWERS["score_off_scale"])',
+        ("test_typed_answers_pass_policy",),
+    ),
+    "bare_runtime_error": (
+        "GoodProvider",
+        "failing_port",
+        'FakeSystemOnePort(error=RuntimeError("boom"))',
+        ("test_failure_raises_provider_error",),
+    ),
+    "failing_port_returns": (
+        "GoodProvider",
+        "failing_port",
+        "ReturningPort()",
+        ("test_failure_raises_provider_error",),
+    ),
+    "factory_yields_invalid_port": (
+        "ValidPortProvider",
+        "provider_factory",
+        "lambda: nullcontext(object())",
+        SCOPE_TESTS,
+    ),
+    "shared_context_exits_twice": (
+        "GoodProvider",
+        "provider_factory",
+        "lambda: SHARED",
+        ("test_scope_exit_runs_once",),
+    ),
+    "context_swallows_body_error": (
+        "GoodProvider",
+        "provider_factory",
+        "SwallowingContext",
+        ("test_scope_propagates_body_exception",),
+    ),
+    "text_port_claimed_as_media": (
+        "GoodProvider",
+        "media_port",
+        "FakeSystemOnePort(answers=VALID_ANSWERS)",
+        ("test_media_port_refuses_undeclared_media",),
+    ),
+    "capabilities_without_media_method": (
+        "GoodProvider",
+        "provider_port",
+        "CapabilitiesOnlyPort(answers=VALID_ANSWERS)",
+        ("test_media_refused_without_media_support",),
+    ),
+    "non_callable_capabilities": (
+        "GoodProvider",
+        "provider_port",
+        "NonCallableCapabilitiesPort(answers=VALID_ANSWERS)",
+        ("test_media_refused_without_media_support",),
+    ),
+    "undeclared_capabilities": (
+        "GoodProvider",
+        "media_port",
+        "SetCapabilitiesFake(answers=VALID_ANSWERS)",
+        ("test_media_port_refuses_undeclared_media",),
+    ),
+}
+
+_OUTCOME = re.compile(r"::(test_\w+) (PASSED|FAILED|ERROR|SKIPPED)")
+
+
+def _run_output(pytester: pytest.Pytester, body: str) -> tuple[dict[str, str], str]:
+    """Run one provider module in a pytest subprocess; return outcomes and output."""
+    pytester.makepyfile(test_provider=_GOOD + "\n\n" + body)
+    result = pytester.runpytest_subprocess("-v", "-p", "no:cacheprovider")
+    output = result.stdout.str()
+    outcomes = dict(_OUTCOME.findall(output))
+    assert set(outcomes) == set(RULE_TESTS), output
+    return outcomes, output
+
+
+def _run(pytester: pytest.Pytester, body: str) -> dict[str, str]:
+    """Run one provider module in a pytest subprocess and map test to outcome."""
+    return _run_output(pytester, body)[0]
+
+
+@pytest.mark.unit
+def test_good_provider_passes_every_rule(pytester: pytest.Pytester) -> None:
+    """A correct provider passes all eight rule tests."""
+    outcomes = _run(pytester, "class TestGood(GoodProvider):\n    pass\n")
+    assert outcomes == dict.fromkeys(RULE_TESTS, "PASSED")
+
+
+@pytest.mark.unit
+def test_provider_without_media_port_skips_only_media_port_rule(
+    pytester: pytest.Pytester,
+) -> None:
+    """A provider with no media port skips the media-port rule and passes the rest."""
+    body = dedent(
+        """\
+        class TestTextOnly(GoodProvider):
+            @pytest.fixture
+            def media_port(self):
+                return None
+        """
+    )
+    outcomes = _run(pytester, body)
+    expected = dict.fromkeys(RULE_TESTS, "PASSED")
+    expected["test_media_port_refuses_undeclared_media"] = "SKIPPED"
+    assert outcomes == expected
+
+
+@pytest.mark.unit
+def test_media_capable_provider_port_skips_text_only_rule(
+    pytester: pytest.Pytester,
+) -> None:
+    """A media-capable provider port skips the text-only rule; the media rule runs."""
+    body = dedent(
+        """\
+        class TestMediaPort(GoodProvider):
+            @pytest.fixture
+            def provider_port(self):
+                return MediaFake(answers=VALID_ANSWERS)
+        """
+    )
+    outcomes = _run(pytester, body)
+    expected = dict.fromkeys(RULE_TESTS, "PASSED")
+    expected["test_media_refused_without_media_support"] = "SKIPPED"
+    assert outcomes == expected
+
+
+@pytest.mark.unit
+def test_wrong_answer_type_names_the_expected_type(pytester: pytest.Pytester) -> None:
+    """The typed-answers failure names the question and the answer type it needs."""
+    body = dedent(
+        """\
+        class TestWrongType(GoodProvider):
+            @pytest.fixture
+            def provider_port(self):
+                return FakeSystemOnePort(answers=INVALID_ANSWERS["noul_for_choice"])
+        """
+    )
+    outcomes, output = _run_output(pytester, body)
+    expected = dict.fromkeys(RULE_TESTS, "PASSED")
+    expected.update(dict.fromkeys(("test_typed_answers_pass_policy",), "FAILED"))
+    assert outcomes == expected
+    assert "conformance_choice needs ChoiceAnswer, got NoulAnswer" in output
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("case", sorted(_BROKEN))
+def test_broken_fake_fails_only_its_rule(pytester: pytest.Pytester, case: str) -> None:
+    """Each broken fake fails only its own rule's tests and passes the rest.
+
+    A factory whose port fails validation breaks every scope, so it fails all
+    three lifecycle tests of rule 4 and no test of another rule.
+    """
+    base, fixture, value, failing = _BROKEN[case]
+    method = f"@pytest.fixture\ndef {fixture}(self):\n    return {value}\n"
+    body = f"class TestBroken({base}):\n{indent(method, '    ')}"
+    outcomes = _run(pytester, body)
+    expected = dict.fromkeys(RULE_TESTS, "PASSED")
+    expected.update(dict.fromkeys(failing, "FAILED"))
+    assert outcomes == expected

@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Any
 
 ORIGINS_VARIABLE = "PROVIDER_FIXTURE_ORIGINS"
+CONFORMANCE_MODULE = "judgevet.testing.conformance"
 SEED = frozenset({"pip"})
 INFERENCE = frozenset(
     {
@@ -219,6 +220,10 @@ def check_origins(origins: Mapping[str, str], purelib: Path, checkout: Path) -> 
 def _import_all(extra: bool) -> Any:
     """Import every packaged module the selected install supports.
 
+    The conformance kit needs the ``conformance`` extra, which neither the
+    base nor the ``mcp`` environment installs, so it is skipped when pytest
+    is absent.
+
     Args:
         extra: Whether MCP adapter modules are importable.
 
@@ -226,8 +231,11 @@ def _import_all(extra: bool) -> Any:
         The imported judgevet package.
     """
     package = importlib.import_module("judgevet")
+    kit = importlib.util.find_spec("pytest") is not None
     for info in pkgutil.walk_packages(package.__path__, "judgevet."):
         if not extra and "mcp" in info.name.rsplit(".", 1)[-1]:
+            continue
+        if not kit and info.name == CONFORMANCE_MODULE:
             continue
         importlib.import_module(info.name)
     return package

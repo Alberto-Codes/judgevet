@@ -651,6 +651,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+conformance = [
+    { name = "pytest" },
+]
 mcp = [
     { name = "mcp" },
 ]
@@ -681,10 +684,11 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=2.2" },
     { name = "pydantic-settings", specifier = ">=2.4" },
+    { name = "pytest", marker = "extra == 'conformance'", specifier = ">=9.1.1" },
     { name = "structlog", specifier = ">=24.1" },
     { name = "typer", specifier = ">=0.12" },
 ]
-provides-extras = ["mcp"]
+provides-extras = ["mcp", "conformance"]
 
 [package.metadata.requires-dev]
 dev = [

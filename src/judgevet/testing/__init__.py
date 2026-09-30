@@ -99,6 +99,13 @@ See Also:
     - [judgevet.domain.questions][]: The typed questions the fakes answer
     - [judgevet.domain.spend][]: The cap both fakes accept as `spend_cap=`
     - [judgevet.domain.audit][]: The record both fakes write to `audit=`
+    - [judgevet.testing.conformance][]: The provider conformance kit, which
+      needs the `conformance` extra
+
+Attributes:
+    FakeSystemOnePort (type): Synchronous offline fake of `SystemOnePort`.
+    AsyncFakeSystemOnePort (type): Asynchronous offline fake of
+        `AsyncSystemOnePort`.
 """
 
 from __future__ import annotations

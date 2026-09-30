@@ -1,18 +1,24 @@
 """Prove application provider extensions against installed artifacts offline.
 
 Build the source wheel and source archive, rebuild a second wheel from that
-archive outside the checkout, and install each wheel into fresh base and
-``mcp``-extra environments. In every environment, copy only the
-repository-owned fixture and probe files, run them with the environment's
-interpreter and an isolated environment, and compare their receipts with the
-oracle below. No child reaches an inference service or the network. Every
-uv child names the cache that `uv_cache_args` selects.
+archive outside the checkout, and install each wheel into fresh base,
+``mcp``-extra and ``conformance``-extra environments. In every environment,
+copy only the repository-owned fixture and probe files, run them with the
+environment's interpreter and an isolated environment, and compare their
+receipts with the oracle below. No child reaches an inference service or the
+network. Every uv child names the cache that `uv_cache_args` selects.
+
+The base environment also proves that the fakes import without pytest and that
+the conformance kit refuses to import with an error naming its extra. The
+``conformance`` environment runs a provider test module against the installed
+kit with pytest and requires every rule test to pass.
 
 Source: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851596904.
 Repair: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851983135.
+Conformance: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
 
 Usage: ``uv run python scripts/smoke_provider_release.py``. Exit status is 0
-only when all four environments pass.
+only when all six environments pass.
 
 Examples:
     ```python
@@ -43,7 +49,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
-from scripts.provider_artifact_check import INFERENCE, SEED, check_origins, normalize
+from scripts.provider_artifact_check import (
+    INFERENCE,
+    ORIGINS_VARIABLE,
+    SEED,
+    check_origins,
+    normalize,
+)
 from scripts.smoke_release import (
     build_child_env,
     build_wheel,
@@ -60,9 +72,22 @@ FIXTURE_FILES = (
     "cli_app.py",
     "mcp_app.py",
     "consumer_checks.py",
+    "conformance_absent.py",
+    "conformance_provider.py",
 )
 PROBE = ROOT / "scripts" / "provider_artifact_check.py"
 CHILD_TIMEOUT = 600
+CONFORMANCE_EXTRA = "conformance"
+KIT_MODULE = "judgevet.testing.conformance"
+KIT_TESTS = "tests/fixtures/providers/conformance_provider.py"
+KIT_RULES = 8
+EXPECTED_ABSENT = {
+    "receipt": "conformance-absent",
+    "fakes": "FakeSystemOnePort",
+    "pytest": False,
+    "error": "ImportError",
+    "extra_named": True,
+}
 _LOCALE = ("LANG", "LC_ALL", "LC_CTYPE", "TZ")
 _SYSTEM_PATH = "/usr/bin:/bin"
 
@@ -535,6 +560,76 @@ def check_inventory(
         raise RuntimeError("An inference runtime is installed")
 
 
+def _active(
+    requires: Sequence[str], environment: Mapping[str, str], extra: str
+) -> set[str]:
+    """Name the requirements whose markers hold for one selected extra.
+
+    Args:
+        requires: Raw ``Requires-Dist`` strings of one distribution.
+        environment: The tested interpreter's marker environment.
+        extra: The selected extra, or an empty string for none.
+
+    Returns:
+        Normalized names of the applicable requirements.
+    """
+    context = dict(environment, extra=extra)
+    names = set()
+    for text in requires:
+        requirement = Requirement(text)
+        marker = requirement.marker
+        if marker is None or marker.evaluate(context):
+            names.add(canonicalize_name(requirement.name))
+    return names
+
+
+def check_conformance_metadata(
+    requires: Sequence[str], environment: Mapping[str, str]
+) -> None:
+    """Require pytest only behind the ``conformance`` extra, and nothing more.
+
+    Args:
+        requires: The installed judgevet ``Requires-Dist`` strings.
+        environment: The tested interpreter's marker environment.
+
+    Raises:
+        RuntimeError: The base install needs pytest, or the extra adds other
+            than pytest.
+    """
+    base = _active(requires, environment, "")
+    if "pytest" in base:
+        raise RuntimeError("The base install requires pytest")
+    added = _active(requires, environment, CONFORMANCE_EXTRA) - base
+    if added != {"pytest"}:
+        raise RuntimeError(f"The conformance extra adds {sorted(added)}")
+
+
+def check_conformance_inventory(
+    graph: Mapping[str, Sequence[str]], environment: Mapping[str, str]
+) -> None:
+    """Require the ``conformance`` closure, pytest and no inference runtime.
+
+    Args:
+        graph: Installed normalized names mapped to requirement strings.
+        environment: The tested interpreter's marker environment.
+
+    Raises:
+        RuntimeError: A dependency is missing, undeclared or forbidden.
+    """
+    installed = {canonicalize_name(name) for name in graph} - SEED
+    expected = closure("judgevet", (CONFORMANCE_EXTRA,), graph, environment)
+    if installed != expected:
+        undeclared, missing = sorted(installed - expected), sorted(expected - installed)
+        raise RuntimeError(
+            "Installed distributions differ from the conformance closure: "
+            f"undeclared={undeclared} missing={missing}"
+        )
+    if "pytest" not in installed or "mcp" in installed:
+        raise RuntimeError("The conformance install does not match its extra")
+    if installed & INFERENCE:
+        raise RuntimeError("An inference runtime is installed")
+
+
 def validate_identity(
     receipt: Mapping[str, Any],
     version: str,
@@ -553,7 +648,8 @@ def validate_identity(
         extra: Whether the environment installed the ``mcp`` extra.
 
     Raises:
-        RuntimeError: Any identity, typing, origin or inventory claim fails.
+        RuntimeError: Any identity, typing, origin, inventory or
+            conformance-extra metadata claim fails.
     """
     if receipt.get("receipt") != "provider-identity":
         raise RuntimeError("Wrong identity receipt")
@@ -574,6 +670,7 @@ def validate_identity(
         raise RuntimeError("Dependency inventory lacks the installed artifact")
     graph = {name: value["requires"] for name, value in distributions.items()}
     check_inventory(graph, receipt["environment"], extra=extra)
+    check_conformance_metadata(graph["judgevet"], receipt["environment"])
     if extra != receipt.get("mcp_spec"):
         raise RuntimeError("MCP presence differs from the selected install")
 
@@ -866,10 +963,121 @@ def run_consumer(
     return receipt
 
 
+def run_absent(python: Path, workdir: Path, env: Mapping[str, str]) -> dict:
+    """Prove the base install imports the fakes but refuses the kit.
+
+    Args:
+        python: Environment interpreter.
+        workdir: Consumer working directory.
+        env: Consumer environment.
+
+    Returns:
+        The validated absence receipt.
+
+    Raises:
+        RuntimeError: The receipt differs from the expected refusal.
+    """
+    module = "tests.fixtures.providers.conformance_absent"
+    command = [str(python), PROBE.name, "run", module]
+    completed = run_process(command, dict(env), workdir, CHILD_TIMEOUT)
+    receipt = parse_receipt(completed, "conformance-absent")
+    if receipt != EXPECTED_ABSENT:
+        raise RuntimeError(f"Base install conformance receipt differs: {receipt}")
+    return receipt
+
+
+def validate_kit_run(
+    completed: subprocess.CompletedProcess[str],
+    side: Mapping[str, Any],
+    purelib: Path,
+    checkout: Path,
+) -> None:
+    """Require every kit rule to pass against the installed kit, offline.
+
+    Args:
+        completed: The finished pytest child.
+        side: The child's origin receipt.
+        purelib: The environment's site-packages.
+        checkout: Repository checkout.
+
+    Raises:
+        RuntimeError: A rule did not pass, or the kit loaded from elsewhere.
+    """
+    lines = completed.stdout.strip().splitlines()
+    summary = lines[-1] if lines else ""
+    if completed.returncode != 0 or not summary.startswith(f"{KIT_RULES} passed "):
+        raise RuntimeError(f"Conformance kit run failed: {lines[-5:]}")
+    origins = side.get("origins") or {}
+    if KIT_MODULE not in origins:
+        raise RuntimeError("The conformance kit module was not loaded")
+    check_origins(origins, purelib, checkout)
+    if side.get("network") != BLOCKED or side.get("preimport") != []:
+        raise RuntimeError("The conformance run was not guarded before import")
+
+
+def check_conformance_environment(
+    wheel: Path, label: str, root: Path, version: str
+) -> dict[str, Any]:
+    """Install one wheel with the conformance extra and run the kit under pytest.
+
+    Args:
+        wheel: Wheel to install.
+        label: Artifact label.
+        root: Temporary root outside the checkout.
+        version: Artifact version.
+
+    Returns:
+        A bounded receipt for this environment.
+
+    Raises:
+        RuntimeError: The identity, inventory or kit run fails.
+    """
+    env_dir = root / f"{label}-{CONFORMANCE_EXTRA}"
+    python = create_venv(env_dir)
+    install_wheel(python, wheel, (CONFORMANCE_EXTRA,))
+    workdir = env_dir / "work"
+    stage(workdir)
+    env = consumer_env(workdir, python)
+    probe = [str(python), PROBE.name, "identity", str(ROOT), "base"]
+    identity = parse_receipt(
+        run_process(probe, env, workdir, CHILD_TIMEOUT), "provider-identity"
+    )
+    if identity.get("version") != version:
+        raise RuntimeError("Installed version differs from the artifact")
+    purelib = Path(str(identity.get("purelib")))
+    if not purelib.resolve().is_relative_to((env_dir / "venv").resolve()):
+        raise RuntimeError("site-packages is outside the environment")
+    check_origins(identity.get("origins") or {}, purelib, ROOT)
+    graph = {
+        normalize(name): value["requires"]
+        for name, value in dict(identity["distributions"]).items()
+    }
+    check_conformance_inventory(graph, identity["environment"])
+    side = workdir / "kit-origins.json"
+    command = [str(python), PROBE.name, "run", "pytest", "-q", "-p"]
+    command += ["no:cacheprovider", KIT_TESTS]
+    kit_env = dict(env) | {ORIGINS_VARIABLE: str(side)}
+    completed = run_process(command, kit_env, workdir, CHILD_TIMEOUT)
+    receipt = json.loads(side.read_text()) if side.is_file() else {}
+    validate_kit_run(completed, receipt, purelib, ROOT)
+    return {
+        "receipt": "provider-environment",
+        "wheel": label,
+        "kind": CONFORMANCE_EXTRA,
+        "wheel_sha256": sha256(wheel),
+        "version": version,
+        "purelib": str(purelib),
+        "kit_origin": receipt["origins"][KIT_MODULE],
+        "kit_summary": completed.stdout.strip().splitlines()[-1],
+    }
+
+
 def check_environment(
     wheel: Path, label: str, root: Path, version: str, *, extra: bool
 ) -> dict[str, Any]:
     """Install one wheel into a fresh environment and prove it.
+
+    The base environment also runs the conformance absence probe.
 
     Args:
         wheel: Wheel to install.
@@ -895,6 +1103,8 @@ def check_environment(
     validate_identity(identity, version, env_dir / "venv", ROOT, extra=extra)
     consumer = run_consumer(python, workdir, env, extra=extra)
     validate_children(consumer, Path(identity["purelib"]), ROOT, extra=extra)
+    if not extra:
+        run_absent(python, workdir, env)
     return environment_receipt(label, kind, sha256(wheel), identity, consumer)
 
 
@@ -923,7 +1133,7 @@ def _artifacts(root: Path) -> tuple[Path, Path, Path, str]:
 
 
 def main(argv: list[str]) -> int:
-    """Build, install and prove all four environments.
+    """Build, install and prove all six environments.
 
     Args:
         argv: No arguments are accepted.
@@ -949,12 +1159,14 @@ def main(argv: list[str]) -> int:
             for extra in (False, True):
                 receipt = check_environment(wheel, label, root, version, extra=extra)
                 print(json.dumps(receipt))
+            receipt = check_conformance_environment(wheel, label, root, version)
+            print(json.dumps(receipt))
     except (RuntimeError, OSError, KeyError, subprocess.TimeoutExpired) as error:
         print(f"smoke_provider_release: FAIL — {error}")
         return 1
     finally:
         shutil.rmtree(root, ignore_errors=True)
-    print("smoke_provider_release: PASS — four installed environments passed")
+    print("smoke_provider_release: PASS — six installed environments passed")
     return 0
 
 

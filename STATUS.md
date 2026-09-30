@@ -634,10 +634,23 @@ checks. No package was published and no live provider was called. #199 and #205
 retain deferred scope; #204 and live confidence research remain outside this work.
 Applications still own provider translation, inference and quality validation.
 
+#241 publishes the provider conformance kit `judgevet.testing.conformance`
+behind the `conformance` extra, which adds only pytest. A provider subclasses
+`BaseProviderConformance` and overrides the `provider_factory` and
+`failing_port` fixtures. The fixtures `provider_port`, `provider_model` and
+`media_port` are optional. Eight rule tests check the port signature, typed
+answers through `evaluate_policy`, `ProviderError` on failure, the
+`provider_scope` lifecycle and media refusal. judgevet's own fakes pass. Each
+broken fake fails only its own rule in a pytester subprocess. The
+`provider-artifacts` hook now also installs each wheel with `[conformance]` and
+runs a provider subclass. The base install imports `judgevet.testing`, and
+importing the kit there raises an `ImportError` that names the extra. No live
+provider was called, and the asynchronous port has no kit yet (#246).
+
 ## Gates
 
-**2708 tests pass, 7 live tests deselected.** The last measured coverage is
-**96.72%** (3004/3106 statements).
+**2773 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+coverage is **96.25%** (3185/3309 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at

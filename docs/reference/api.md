@@ -122,7 +122,15 @@ scripted `error` is raised after the call is recorded. The fakes accept the
 same `spend_cap`, `audit` and `fingerprint_key` options as the HTTP adapters and honour them the
 same way. Seeded answers are local test data, not service behaviour. See the
 [offline testing recipe](../how-to/test-offline.md) and the
-[fake source](../../src/judgevet/testing.py).
+[fake source](../../src/judgevet/testing/__init__.py).
+
+The `conformance` extra adds pytest and the provider conformance kit in
+`judgevet.testing.conformance`. A provider package subclasses
+`BaseProviderConformance` in its own test suite and overrides the
+`provider_factory` and `failing_port` fixtures, plus `media_port` when it
+supports images. Importing the kit without pytest raises `ImportError`. See the
+[kit source](../../src/judgevet/testing/conformance.py).
+Source: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
 
 ## Answer and container types
 
