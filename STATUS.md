@@ -694,6 +694,10 @@ Dependabot's `directory: /` entry updates the workflow pins. It does not scan
 `.github/actions/supply-chain/action.yml`, so a maintainer updates that pin by hand
 (#266).
 `.yamllint` raises yamllint's line limit to 100 so the pinned lines fit.
+The public dependency audit on 2026-09-30 found GHSA-42vr-xj54-vc7v in
+`pyjwt` 2.14.0, a dependency of `mcp[crypto]` behind the `mcp` extra. `uv.lock`
+now pins `pyjwt` 2.15.1, and `uv audit --locked` reports no known
+vulnerabilities and no adverse project statuses across 90 packages.
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at
