@@ -380,6 +380,37 @@ def test_inventory_evaluates_markers_and_missing_nodes(
         runner.check_inventory(graph, LINUX, extra=extra)
 
 
+_RUNTIME = "An inference runtime is installed"
+
+
+@pytest.mark.parametrize(
+    ("graph", "extra"),
+    [
+        (
+            {"judgevet": [*_JUDGEVET, "torch"], "httpx": [], "typer": [], "torch": []},
+            False,
+        ),
+        (
+            {
+                "judgevet": [*_JUDGEVET, 'torch; extra == "mcp"'],
+                "httpx": [],
+                "typer": [],
+                "mcp": [],
+                "torch": [],
+            },
+            True,
+        ),
+    ],
+    ids=["declared-engine-base", "declared-engine-mcp"],
+)
+def test_inventory_rejects_declared_inference_runtime(
+    graph: dict[str, list[str]], extra: bool
+) -> None:
+    """Reject a declared inference runtime after the closure check passes."""
+    with pytest.raises(RuntimeError, match=_RUNTIME):
+        runner.check_inventory(graph, LINUX, extra=extra)
+
+
 def test_inventory_accepts_marker_closures() -> None:
     requires = [
         *_JUDGEVET,
@@ -604,6 +635,18 @@ _EXTRA_INSTALL = "does not match its extra"
             {"judgevet": ["httpx", _KIT_ANYIO], "httpx": [], "anyio": [], "pip": []},
             _EXTRA_INSTALL,
         ),
+        (
+            _KIT_GRAPH
+            | {"judgevet": [*_KIT_GRAPH["judgevet"], 'torch; extra == "conformance"']}
+            | {"torch": []},
+            _RUNTIME,
+        ),
+        (
+            _KIT_GRAPH
+            | {"judgevet": [*_KIT_GRAPH["judgevet"], 'mcp; extra == "conformance"']}
+            | {"mcp": []},
+            _EXTRA_INSTALL,
+        ),
     ],
     ids=[
         "missing-dependency",
@@ -613,6 +656,8 @@ _EXTRA_INSTALL = "does not match its extra"
         "no-anyio",
         "extra-without-anyio",
         "extra-without-pytest",
+        "declared-engine",
+        "declared-mcp",
     ],
 )
 def test_conformance_inventory_rejects_other_installs(

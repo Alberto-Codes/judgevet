@@ -677,8 +677,14 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2845 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+**2849 tests pass, 1 test skips, 7 live tests deselected.** The last measured
 coverage is **95.86%** (3263/3404 statements).
+Four release smoke cases declare `torch` or `mcp` behind the relevant extra,
+so the closure check passes in each. The inference-runtime check fires in the
+base and MCP paths of `check_inventory` and in `check_conformance_inventory`,
+and the `mcp` clause of the conformance inventory fires too. Disabling the
+inference-runtime check fails three tests and removing the `mcp` clause fails
+one (#264).
 An Ollama `{"error": ...}` body now reaches the raised message, and a 16th
 contract fixture replays Ollama's documented `/v1/systemone` response (#268).
 `JevError` now derives from `ProviderError`, so hosted Jev failures pass the
