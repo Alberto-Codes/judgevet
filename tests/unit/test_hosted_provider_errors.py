@@ -12,7 +12,12 @@ from judgevet.adapters.outbound.http import (
     HTTPSystemOneAdapter,
 )
 from judgevet.domain import provider_errors
-from judgevet.domain.errors import JevError, JudgevetError
+from judgevet.domain.errors import (
+    JevAuthError,
+    JevError,
+    JevServiceError,
+    JudgevetError,
+)
 from judgevet.providers import ProviderError
 from judgevet.testing._conformance_probes import provider_error_problem
 
@@ -23,7 +28,10 @@ JEV_CLASSES = [
     for name in judgevet.__all__
     if name.startswith("Jev") and name.endswith("Error")
 ]
-FAILURES = [401, 503]
+FAILURES = [
+    pytest.param(401, JevAuthError, id="401-JevAuthError"),
+    pytest.param(503, JevServiceError, id="503-JevServiceError"),
+]
 
 
 def reply(status: int) -> Callable[[httpx.Request], httpx.Response]:
@@ -48,21 +56,25 @@ def reply(status: int) -> Callable[[httpx.Request], httpx.Response]:
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("status", FAILURES, ids=str)
-def test_sync_hosted_failure_passes_kit_error_check(status: int) -> None:
-    """A failing sync hosted adapter raises an error the kit accepts."""
+@pytest.mark.parametrize(("status", "expected"), FAILURES)
+def test_sync_hosted_failure_passes_kit_error_check(
+    status: int, expected: type[JevError]
+) -> None:
+    """A failing sync hosted adapter raises the mapped error the kit accepts."""
     adapter = HTTPSystemOneAdapter(
         api_key="synthetic", transport=httpx.MockTransport(reply(status))
     )
-    with pytest.raises(JevError) as caught:
+    with pytest.raises(expected) as caught:
         adapter.system_one(STATE, QUESTIONS, "jev-1.13.0")
     assert provider_error_problem(caught.value) is None
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("status", FAILURES, ids=str)
-def test_async_hosted_failure_passes_kit_error_check(status: int) -> None:
-    """A failing async hosted adapter raises an error the kit accepts."""
+@pytest.mark.parametrize(("status", "expected"), FAILURES)
+def test_async_hosted_failure_passes_kit_error_check(
+    status: int, expected: type[JevError]
+) -> None:
+    """A failing async hosted adapter raises the mapped error the kit accepts."""
 
     async def call() -> None:
         """Run one failing judgment on a scoped async adapter."""
@@ -71,7 +83,7 @@ def test_async_hosted_failure_passes_kit_error_check(status: int) -> None:
         ) as adapter:
             await adapter.system_one(STATE, QUESTIONS, "jev-1.13.0")
 
-    with pytest.raises(JevError) as caught:
+    with pytest.raises(expected) as caught:
         asyncio.run(call())
     assert provider_error_problem(caught.value) is None
 
