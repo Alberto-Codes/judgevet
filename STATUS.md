@@ -5,34 +5,43 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.14.0 is published. Library, CLI and optional MCP share one version.
-This release changes what MCP hosts see. The `ask_*` text block is the
-serialized JSON of `structuredContent`, and service errors return as `isError`
-tool results. `ask_score` results add `default_criteria`, and discovery adds
-`evaluate_policy`. It also adds opt-in spend cap settings, application-selected
-providers, bounded image evidence and an output schema per tool. The release
-notes lead with the MCP host changes. Runtime requirements and the `mcp` extra
-are unchanged. The documentation site is
-[live](https://alberto-codes.github.io/judgevet/).
+judgevet 0.15.0 is published to PyPI. Library, CLI and optional MCP share one
+version. This release adds the provider conformance kit behind the
+`conformance` extra, which adds only pytest: `BaseProviderConformance` for
+`SystemOnePort` providers and `BaseAsyncProviderConformance` for
+`AsyncSystemOnePort` providers. Runtime requirements, the CLI and the MCP
+tools are unchanged. The MCP registry does not list 0.15.0 yet: the submission
+returned 401 because the publisher login had expired.
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.14.0`, commit `bf5d15dcb5f5284ad4fa024d172f5197c40d0cab` |
-| Accepted candidate | none; the maintainer merged and published without a TestPyPI round, as for 0.10.2 through 0.13.0 |
-| Wheel SHA-256 | `f7d1b08135e77928302a93602b4e083070d06c8fe8e4c2b7efa0ecb8fc7d394a` |
-| Source distribution SHA-256 | `54daf8785978f01195bd42181b1c0e81fc822036ced4e3cb51452da6c35f5d49` |
+| Release/tag | `v0.15.0`, commit `0d0bda02d0503b1274936361df1c91c0a38aaf1f` |
+| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.14.0 |
+| Wheel SHA-256 | `10f961c31b2de61fad882f8a45115da8f025991553212efdcba9aae189477984` |
+| Source distribution SHA-256 | `df5368a9e52b4658127c021f1635392c99697390ebd510cdeea4d97372b46c3d` |
 | Actual PyPI download | PyPI JSON digests equal the SHA-256 of the wheel and sdist attached to the GitHub release |
 | Release files | 15 assets: wheel, sdist, two Sigstore bundles and 11 supply-chain files; `provenance.txt` names the tag commit and `complete: yes` |
 | Attestations | `gh attestation verify --bundle` exits 0 for the wheel and sdist (build provenance) and the wheel (CycloneDX SBOM) |
-| Library and CLI | The publish workflow's isolated wheel smoke passed before upload; no separate index-wheel check ran |
-| MCP | The publish workflow's MCP smoke passed before upload; the registry smoke resolved the PyPI package and discovered and called the three `ask_*` tools |
-| Registry | Manifest validated and submitted after a fresh publisher login; independent query lists `io.github.Alberto-Codes/judgevet` 0.14.0 active and latest, published `2026-09-29T14:24:44.289862Z`, package fields match |
+| Library and CLI | The publish workflow's wheel smoke step passed before upload; no separate index-wheel check ran |
+| MCP | The publish workflow's installed MCP tools smoke step passed before upload |
+| Registry | Manifest validated (`valid: true`) and the PyPI description carries the `mcp-name` marker; submission returned 401 on an expired publisher token, and the registry lists 0.14.0 as latest |
 
-The [release evidence](https://github.com/Alberto-Codes/judgevet/pull/207#issuecomment-5892265433)
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36665560245)
+ran build, attest, publish and release-files. The live footprint was the
+publish workflow's smoke calls; the exact call count was not recorded. No
+source-archive rebuild outside the checkout was done. No unseen API body,
+other model, modern protocol path or gateway became verified.
+
+Prior 0.14.0 evidence: tag `v0.14.0` at commit
+`bf5d15dcb5f5284ad4fa024d172f5197c40d0cab`, wheel SHA-256
+`f7d1b08135e77928302a93602b4e083070d06c8fe8e4c2b7efa0ecb8fc7d394a`, sdist SHA-256
+`54daf8785978f01195bd42181b1c0e81fc822036ced4e3cb51452da6c35f5d49`, registry
+listing published `2026-09-29T14:24:44.289862Z`. Its
+[release evidence](https://github.com/Alberto-Codes/judgevet/pull/207#issuecomment-5892265433)
 records publication, hashes, attestations and registry separately.
 [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36581978491)
-ran build, attest, release-files and publish. The live footprint was the
-publish workflow's smoke calls and the registry smoke's three tool calls;
+for 0.14.0 ran build, attest, release-files and publish. The live footprint
+was the publish workflow's smoke calls and the registry smoke's three tool calls;
 the exact call count was not recorded. No source-archive rebuild outside the
 checkout was done. No unseen API body, other model, modern protocol path or
 gateway became verified.
