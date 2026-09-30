@@ -42,6 +42,7 @@ nav:
       - Offline tests: how-to/test-offline.md
       - Library errors: how-to/handle-errors.md
       - Connect MCP: how-to/connect-mcp.md
+      - Self-hosted provider: how-to/use-a-self-hosted-provider.md
       - Troubleshooting: how-to/troubleshoot.md
       - CLI files and stdin: how-to/use-cli-files.md
       - CLI policy: how-to/use-cli-policy.md

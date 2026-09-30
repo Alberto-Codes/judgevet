@@ -178,6 +178,23 @@
       "reason": "Requires the three checkout example files and a temporary Git repository with controlled staged content."
     }
   ],
+  "docs/how-to/use-a-self-hosted-provider.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete offline program; selects a fake stand-in provider through provider_scope and reads model identity from the answer and audit record."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete CLI wrapper module; execution builds the Typer application on a fake provider and never invokes a command."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete MCP launcher module; execution defines serve without calling it, so no stdio server starts and no network is used."
+    }
+  ],
   "docs/how-to/use-async-library.md": [
     {
       "language": "python",
