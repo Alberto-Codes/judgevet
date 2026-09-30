@@ -17,6 +17,9 @@ Usage:
     smoke_release.py --wheel PATH  # test a pre-built wheel
 
 Exit status is 0 if the child's checks passed; 1 otherwise.
+
+Every uv child runs uncached, or against the private cache a pytest session
+names in JUDGEVET_TEST_UV_CACHE_DIR, so no run writes the shared uv cache.
 """
 
 from __future__ import annotations
@@ -39,6 +42,12 @@ _WHEEL_ARG_COUNT = 2
 # even when it does not touch src/.
 _CLEAR_VARS = frozenset(["PYTHONPATH", "PYTHONHOME"])
 
+# A pytest session names its private uv cache here; see tests/conftest.py.
+# The helpers pass it to each uv child and never touch the caller's own
+# UV_CACHE_DIR. Outside pytest the variable is unset and uv runs uncached, so
+# neither the suite nor release smoke leaves entries in the shared cache (#243).
+SESSION_CACHE_VAR = "JUDGEVET_TEST_UV_CACHE_DIR"
+
 
 def _uv() -> str:
     """Resolve uv to an absolute path.
@@ -60,8 +69,32 @@ def _uv() -> str:
     return found
 
 
+def uv_cache_args() -> list[str]:
+    """Name the uv cache a child command uses.
+
+    Returns:
+        ``["--cache-dir", <session cache>]`` when a pytest session set one,
+        otherwise ``["--no-cache"]``.
+    """
+    session = os.environ.get(SESSION_CACHE_VAR)
+    return ["--cache-dir", session] if session else ["--no-cache"]
+
+
+def uv_cache_env() -> dict[str, str]:
+    """Name the uv cache for a child that takes options only from its env.
+
+    Merge the result into the child's env, never into ``os.environ``.
+
+    Returns:
+        ``{"UV_CACHE_DIR": <session cache>}`` when a pytest session set one,
+        otherwise ``{"UV_NO_CACHE": "1"}``.
+    """
+    session = os.environ.get(SESSION_CACHE_VAR)
+    return {"UV_CACHE_DIR": session} if session else {"UV_NO_CACHE": "1"}
+
+
 def _build_wheel_subprocess(out_dir: Path) -> subprocess.CompletedProcess[str]:
-    """Run the uv build subprocess.
+    """Run the uv build subprocess against the cache `uv_cache_args` names.
 
     Args:
         out_dir: The directory to write the wheel into.
@@ -71,7 +104,7 @@ def _build_wheel_subprocess(out_dir: Path) -> subprocess.CompletedProcess[str]:
     """
     repo_root = Path(__file__).resolve().parent.parent
     return subprocess.run(
-        [_uv(), "build", "--out-dir", str(out_dir), "."],
+        [_uv(), "build", *uv_cache_args(), "--out-dir", str(out_dir), "."],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -138,7 +171,7 @@ def create_venv(base_dir: Path) -> Path:
 
 
 def install_wheel(venv_python: Path, wheel: Path, extras: tuple[str, ...] = ()) -> None:
-    """Install the wheel into the venv.
+    """Install the wheel into the venv, using the cache `uv_cache_args` names.
 
     Args:
         venv_python: The path to the venv's python interpreter.
@@ -153,6 +186,7 @@ def install_wheel(venv_python: Path, wheel: Path, extras: tuple[str, ...] = ()) 
             _uv(),
             "pip",
             "install",
+            *uv_cache_args(),
             "--python",
             str(venv_python),
             str(wheel) + ("[" + ",".join(extras) + "]" if extras else ""),

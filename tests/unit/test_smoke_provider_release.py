@@ -14,6 +14,7 @@ import pytest
 from judgevet import Question, SystemOneResponse
 from judgevet.ports import SystemOnePort
 from scripts import smoke_provider_release as runner
+from scripts.smoke_release import SESSION_CACHE_VAR
 from tests.fixtures.providers import consumer_checks, provider_fixture
 
 pytestmark = pytest.mark.unit
@@ -480,3 +481,21 @@ def test_children_run_through_network_bootstrap(
         runner.run_consumer(tmp_path / "python", tmp_path, {}, extra=False)
     assert commands[0][1:3] == ["provider_artifact_check.py", "run"]
     assert commands[0][3] == "tests.fixtures.providers.consumer_checks"
+
+
+def test_sdist_rebuild_names_the_session_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    commands: list[list[str]] = []
+
+    def record(command: list[str], *_: object) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        return _completed(1, "")
+
+    cache = tmp_path / "session-cache"
+    monkeypatch.setenv(SESSION_CACHE_VAR, str(cache))
+    monkeypatch.setattr(runner, "run_process", record)
+    with pytest.raises(RuntimeError):
+        runner.rebuild_from_sdist(tmp_path / "a.tar.gz", tmp_path, tmp_path)
+    assert commands[0][1:3] == ["build", "--wheel"]
+    assert commands[0][3:5] == ["--cache-dir", str(cache)]

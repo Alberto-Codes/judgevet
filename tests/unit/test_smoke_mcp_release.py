@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 
 from scripts import smoke_mcp_release as runner
+from scripts.smoke_release import SESSION_CACHE_VAR
 
 pytestmark = pytest.mark.unit
 
@@ -121,6 +122,8 @@ def test_exact_wheel_and_isolated_command(
     assert install[0][1:] == [
         "pip",
         "install",
+        "--cache-dir",
+        os.environ[SESSION_CACHE_VAR],
         "--python",
         str(workdir / "venv/bin/python"),
         f"{wheel}[mcp]",

@@ -1,13 +1,18 @@
 """Exercise configuration hooks in disposable tracked repositories."""
 
+import os
 import shlex
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
+
+from scripts.smoke_release import SESSION_CACHE_VAR, uv_cache_env
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -63,6 +68,48 @@ def prepare_fixture(tmp_path: Path, hook_id: str, broken: bool) -> None:
         (directory / "fixture.yml").write_text(workflow)
 
 
+def hook_child_env() -> dict[str, str]:
+    """Build the hook child's environment around the session uv cache.
+
+    Returns:
+        The inherited environment with the uv cache variables merged in.
+    """
+    return os.environ | uv_cache_env()
+
+
+UV_CACHE_KEYS = ("UV_CACHE_DIR", "UV_NO_CACHE")
+
+
+def test_hook_child_env_names_the_session_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Require the hook child to resolve uv against the session cache."""
+    cache = tmp_path / "session-cache"
+    monkeypatch.setenv(SESSION_CACHE_VAR, str(cache))
+    monkeypatch.delenv("UV_CACHE_DIR", raising=False)
+    monkeypatch.delenv("UV_NO_CACHE", raising=False)
+    seen: list[dict[str, str | None] | None] = []
+
+    def _record(command: list[str], **options: Any) -> subprocess.CompletedProcess[str]:
+        # Keep only the cache keys: --showlocals would print a whole child env.
+        env: Mapping[str, str] | None = options.get("env")
+        seen.append(
+            None if env is None else {key: env.get(key) for key in UV_CACHE_KEYS}
+        )
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", _record)
+    work = tmp_path / "work"
+    work.mkdir()
+    test_configuration_hook_executes(work, "uv-lock", "pre-commit", False)
+    assert len(seen) == 1
+    passed = seen[0]
+    assert passed is not None
+    assert passed["UV_CACHE_DIR"] == str(cache)
+    monkeypatch.delenv(SESSION_CACHE_VAR)
+    assert hook_child_env()["UV_NO_CACHE"] == "1"
+
+
 @pytest.mark.parametrize("stage", ["pre-commit", "pre-push"])
 @pytest.mark.parametrize("hook_id", ["uv-lock", "yamllint", "actionlint"])
 @pytest.mark.parametrize("broken", [False, True])
@@ -93,6 +140,7 @@ def test_configuration_hook_executes(
     result = subprocess.run(
         ["/usr/bin/bash", "check.sh"],
         cwd=tmp_path,
+        env=hook_child_env(),
         capture_output=True,
         text=True,
         check=False,

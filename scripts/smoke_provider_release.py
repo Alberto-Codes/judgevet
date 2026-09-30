@@ -5,7 +5,8 @@ archive outside the checkout, and install each wheel into fresh base and
 ``mcp``-extra environments. In every environment, copy only the
 repository-owned fixture and probe files, run them with the environment's
 interpreter and an isolated environment, and compare their receipts with the
-oracle below. No child reaches an inference service or the network.
+oracle below. No child reaches an inference service or the network. Every
+uv child names the cache that `uv_cache_args` selects.
 
 Source: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851596904.
 Repair: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851983135.
@@ -49,6 +50,7 @@ from scripts.smoke_release import (
     create_venv,
     install_wheel,
     run_process,
+    uv_cache_args,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -757,6 +759,8 @@ def artifact_version(source: Path, sdist: Path, rebuilt: Path) -> str:
 def rebuild_from_sdist(sdist: Path, out_dir: Path, workdir: Path) -> Path:
     """Build a wheel from the source archive outside the checkout.
 
+    The build uses the uv cache that `uv_cache_args` names.
+
     Args:
         sdist: Source archive.
         out_dir: Fresh output directory.
@@ -771,7 +775,15 @@ def rebuild_from_sdist(sdist: Path, out_dir: Path, workdir: Path) -> Path:
     uv = shutil.which("uv")
     if uv is None:
         raise RuntimeError("uv not found on PATH")
-    command = [uv, "build", "--wheel", "--out-dir", str(out_dir), str(sdist)]
+    command = [
+        uv,
+        "build",
+        "--wheel",
+        *uv_cache_args(),
+        "--out-dir",
+        str(out_dir),
+        str(sdist),
+    ]
     environment = {k: v for k, v in build_child_env().items() if k != "VIRTUAL_ENV"}
     result = run_process(command, environment, workdir, CHILD_TIMEOUT)
     wheels = sorted(out_dir.glob("*.whl"))

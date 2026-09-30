@@ -52,6 +52,15 @@ retried 429 or 5xx otherwise waited about one second. Tests that assert the
 computed delays still patch `retries.time.sleep` or `retries.asyncio.sleep`
 themselves, and they observe the same values.
 
+## Session uv cache
+
+The autouse `_session_uv_cache` fixture gives each pytest session, and so each
+xdist worker, one private uv cache under the session's base temporary
+directory. It publishes the path in `JUDGEVET_TEST_UV_CACHE_DIR`, which the
+uv helpers in `scripts.smoke_release` pass to each uv child. It never sets the
+caller's own `UV_CACHE_DIR`, and it removes the cache at teardown. A path the
+caller already set is reused and never removed. See issue #243.
+
 See Also:
     - [pytest_runtest_makereport][]: The hook that implements the guard.
     - [tests.unit.test_secret_guard][]: The proof test that verifies the guard.
@@ -62,6 +71,8 @@ See Also:
 from __future__ import annotations
 
 import asyncio
+import os
+import shutil
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -251,3 +262,28 @@ def _instant_retry_backoff(
 
     monkeypatch.setattr(retries, "time", _InstantClock)
     monkeypatch.setattr(retries, "asyncio", _InstantLoop)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _session_uv_cache(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
+    """Give the session one private uv cache and remove it at teardown.
+
+    Args:
+        tmp_path_factory: Supplies the session's base temporary directory.
+
+    Yields:
+        The cache directory that uv children of this session use.
+    """
+    from scripts.smoke_release import SESSION_CACHE_VAR
+
+    existing = os.environ.get(SESSION_CACHE_VAR)
+    if existing:
+        yield Path(existing)
+        return
+    cache = tmp_path_factory.mktemp("uv-cache")
+    os.environ[SESSION_CACHE_VAR] = str(cache)
+    try:
+        yield cache
+    finally:
+        os.environ.pop(SESSION_CACHE_VAR, None)
+        shutil.rmtree(cache, ignore_errors=True)

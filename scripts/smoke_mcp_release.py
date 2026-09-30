@@ -9,6 +9,7 @@ Examples:
 
 See Also:
     - [scripts.mcp_smoke_transport][]: Existing transport validation.
+    - [scripts.smoke_release][]: The uv cache helper reused here.
 """
 
 import asyncio
@@ -21,6 +22,7 @@ from contextlib import chdir
 from pathlib import Path
 
 from scripts.mcp_smoke_transport import _cleanup, smoke
+from scripts.smoke_release import uv_cache_args
 
 
 async def run_command(
@@ -163,6 +165,8 @@ async def check_wheel(wheel: Path, env: dict[str, str]) -> None:
 async def _exercise(wheel: Path, env: dict[str, str], workdir: Path) -> None:
     """Exercise wheel by creating venv, installing package, and testing MCP server.
 
+    The install uses the uv cache that `uv_cache_args` names.
+
     Args:
         wheel: Absolute path to the wheel file.
         env: Environment variables for command execution.
@@ -187,7 +191,15 @@ async def _exercise(wheel: Path, env: dict[str, str], workdir: Path) -> None:
 
     await run_command([sys.executable, "-I", "-m", "venv", str(venv)], env, workdir)
     await run_command(
-        [uv, "pip", "install", "--python", str(interpreter), f"{wheel}[mcp]"],
+        [
+            uv,
+            "pip",
+            "install",
+            *uv_cache_args(),
+            "--python",
+            str(interpreter),
+            f"{wheel}[mcp]",
+        ],
         env,
         workdir,
     )

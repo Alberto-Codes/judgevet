@@ -636,7 +636,7 @@ Applications still own provider translation, inference and quality validation.
 
 ## Gates
 
-**2700 tests pass, 7 live tests deselected.** The last measured coverage is
+**2708 tests pass, 7 live tests deselected.** The last measured coverage is
 **96.72%** (3004/3106 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
@@ -661,6 +661,15 @@ CI and both pytest hooks run the suite on parallel workers (`-n auto`,
 pytest-xdist). Local wall time fell from 93.6 s serial to 40.5 s on 4 workers,
 with the same tests and coverage (#208). CI push run 36337960770 finished its
 `test` job in 82 s (pytest 69.4 s), down from 233 s before #208.
+
+The suite leaves nothing in the shared uv cache (#243). A session fixture gives
+each pytest session a private uv cache and removes it at teardown. The
+`scripts/smoke_release.py` uv helpers pass that cache to each uv child, or
+run it uncached (`--no-cache` or `UV_NO_CACHE=1`) outside pytest. Before the
+fix, one full run added 4 editable `judgevet` entries to
+`~/.cache/uv/archive-v0`, from the `uv run yamllint` hook test. After it, two
+consecutive full runs of the pre-repair tree added 0 entries each, and two
+separate full runs of the final tree added 0 entries each.
 
 #206 assigns one mechanical validation owner and preserves independent review.
 The complete commit and push stages passed on 2026-09-26. The bounded trial
