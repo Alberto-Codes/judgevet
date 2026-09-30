@@ -692,10 +692,10 @@ Each conformance rejection case now names its rejecting check with `match=`,
 and three mutations of those checks now fail a test (#260).
 Every remote GitHub Action is pinned by full commit SHA with its tag as a
 comment, and a test fails on any unpinned remote `uses:` line (#245).
-Dependabot's `github-actions` entry lists `/` and `/.github/actions/*`, so it
-updates the workflow pins and the pin in
-`.github/actions/supply-chain/action.yml`; a test fails on any directory with a
-remote `uses:` line that the entry does not scan (#266).
+Dependabot's `github-actions` entry lists `/` and `/.github/actions/*`, and a
+test fails on any directory with a remote `uses:` line that no pattern covers
+(#266). Whether Dependabot reads `.github/actions/supply-chain/action.yml`
+through that pattern is an **open question** until its next weekly run shows it.
 `.yamllint` raises yamllint's line limit to 100 so the pinned lines fit.
 The public dependency audit on 2026-09-30 found GHSA-42vr-xj54-vc7v in
 `pyjwt` 2.14.0, a dependency of `mcp[crypto]` behind the `mcp` extra. `uv.lock`
