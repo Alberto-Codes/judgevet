@@ -1,7 +1,12 @@
 ---
-# Ecosystem values `uv` and `github-actions`, `directory` and
+# Ecosystem values `uv` and `github-actions`, `directory`, `directories` and
 # `schedule.interval`:
 # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+# "For GitHub Actions, use the value /. Dependabot will search the
+# /.github/workflows directory, as well as the action.yml/action.yaml file
+# from the root directory."
+# "The directories key supports globbing and the wildcard character *."
+# `/.github/actions/*` adds each composite action, such as supply-chain.
 version: 2
 
 updates:
@@ -11,6 +16,8 @@ updates:
       interval: weekly
 
   - package-ecosystem: github-actions
-    directory: /
+    directories:
+      - /
+      - /.github/actions/*
     schedule:
       interval: weekly

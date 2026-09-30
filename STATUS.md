@@ -677,7 +677,7 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2836 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+**2845 tests pass, 1 test skips, 7 live tests deselected.** The last measured
 coverage is **95.86%** (3263/3404 statements).
 An Ollama `{"error": ...}` body now reaches the raised message, and a 16th
 contract fixture replays Ollama's documented `/v1/systemone` response (#268).
@@ -692,9 +692,10 @@ Each conformance rejection case now names its rejecting check with `match=`,
 and three mutations of those checks now fail a test (#260).
 Every remote GitHub Action is pinned by full commit SHA with its tag as a
 comment, and a test fails on any unpinned remote `uses:` line (#245).
-Dependabot's `directory: /` entry updates the workflow pins. It does not scan
-`.github/actions/supply-chain/action.yml`, so a maintainer updates that pin by hand
-(#266).
+Dependabot's `github-actions` entry lists `/` and `/.github/actions/*`, so it
+updates the workflow pins and the pin in
+`.github/actions/supply-chain/action.yml`; a test fails on any directory with a
+remote `uses:` line that the entry does not scan (#266).
 `.yamllint` raises yamllint's line limit to 100 so the pinned lines fit.
 The public dependency audit on 2026-09-30 found GHSA-42vr-xj54-vc7v in
 `pyjwt` 2.14.0, a dependency of `mcp[crypto]` behind the `mcp` extra. `uv.lock`
