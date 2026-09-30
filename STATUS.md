@@ -677,13 +677,15 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2811 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+**2813 tests pass, 1 test skips, 7 live tests deselected.** The last measured
 coverage is **95.85%** (3259/3400 statements).
 The async conformance kit also passes under pytest-asyncio `asyncio_mode = "auto"`,
 and each broken async fake still fails only its own rule there (#257).
 The `conformance` extra now declares `anyio>=4.15.1`, which the async kit
 imports, and the `provider-artifacts` hook requires the extra to add exactly
 pytest and anyio (#253).
+Each conformance rejection case now names its rejecting check with `match=`,
+and three mutations of those checks now fail a test (#260).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at

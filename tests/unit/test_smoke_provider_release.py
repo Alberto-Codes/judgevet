@@ -524,16 +524,20 @@ _KIT_ANYIO = 'anyio>=4.15.1; extra == "conformance"'
 _KIT = [_KIT_PYTEST, _KIT_ANYIO]
 
 
+_BASE = "base install requires"
+_EXTRA = "conformance extra adds"
+
+
 @pytest.mark.parametrize(
-    "requires",
+    ("requires", "match"),
     [
-        ["httpx", "pytest>=9.1.1", _KIT_ANYIO],
-        ["httpx", _KIT_PYTEST, "anyio>=4.15.1"],
-        ["httpx"],
-        ["httpx", _KIT_PYTEST],
-        ["httpx", _KIT_ANYIO],
-        ["httpx", *_KIT, 'torch; extra == "conformance"'],
-        ["httpx", 'pytest; extra == "mcp"', 'anyio; extra == "mcp"'],
+        (["httpx", "pytest>=9.1.1", _KIT_ANYIO], _BASE),
+        (["httpx", _KIT_PYTEST, "anyio>=4.15.1"], _BASE),
+        (["httpx"], _EXTRA),
+        (["httpx", _KIT_PYTEST], _EXTRA),
+        (["httpx", _KIT_ANYIO], _EXTRA),
+        (["httpx", *_KIT, 'torch; extra == "conformance"'], _EXTRA),
+        (["httpx", 'pytest; extra == "mcp"', 'anyio; extra == "mcp"'], _EXTRA),
     ],
     ids=[
         "unconditional-pytest",
@@ -546,9 +550,9 @@ _KIT = [_KIT_PYTEST, _KIT_ANYIO]
     ],
 )
 def test_conformance_metadata_rejects_misplaced_kit_requirements(
-    requires: list[str],
+    requires: list[str], match: str
 ) -> None:
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match=match):
         runner.check_conformance_metadata(requires, LINUX)
 
 
@@ -571,21 +575,50 @@ def test_conformance_inventory_accepts_extra_closure() -> None:
     assert runner.check_conformance_inventory(_KIT_GRAPH, LINUX) is None
 
 
+_CLOSURE = "differ from the conformance closure"
+_EXTRA_INSTALL = "does not match its extra"
+
+
 @pytest.mark.parametrize(
-    "graph",
+    ("graph", "match"),
     [
-        {k: v for k, v in _KIT_GRAPH.items() if k != "iniconfig"},
-        _KIT_GRAPH | {"torch": []},
-        _KIT_GRAPH | {"mcp": []},
-        {k: v for k, v in _KIT_GRAPH.items() if k not in {"pytest", "iniconfig"}},
-        {k: v for k, v in _KIT_GRAPH.items() if k != "anyio"},
+        ({k: v for k, v in _KIT_GRAPH.items() if k != "iniconfig"}, _CLOSURE),
+        (_KIT_GRAPH | {"torch": []}, _CLOSURE),
+        (_KIT_GRAPH | {"mcp": []}, _CLOSURE),
+        (
+            {k: v for k, v in _KIT_GRAPH.items() if k not in {"pytest", "iniconfig"}},
+            _CLOSURE,
+        ),
+        ({k: v for k, v in _KIT_GRAPH.items() if k != "anyio"}, _CLOSURE),
+        (
+            {
+                "judgevet": ["httpx", _KIT_PYTEST],
+                "httpx": [],
+                "pytest": ["iniconfig>=1"],
+                "iniconfig": [],
+                "pip": [],
+            },
+            _EXTRA_INSTALL,
+        ),
+        (
+            {"judgevet": ["httpx", _KIT_ANYIO], "httpx": [], "anyio": [], "pip": []},
+            _EXTRA_INSTALL,
+        ),
     ],
-    ids=["missing-dependency", "engine", "mcp", "no-pytest", "no-anyio"],
+    ids=[
+        "missing-dependency",
+        "engine",
+        "mcp",
+        "no-pytest",
+        "no-anyio",
+        "extra-without-anyio",
+        "extra-without-pytest",
+    ],
 )
 def test_conformance_inventory_rejects_other_installs(
-    graph: dict[str, list[str]],
+    graph: dict[str, list[str]], match: str
 ) -> None:
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match=match):
         runner.check_conformance_inventory(graph, LINUX)
 
 
