@@ -89,6 +89,21 @@ Use the official [publisher instructions](https://github.com/modelcontextprotoco
 Authenticate for `io.github.Alberto-Codes/*` and publish the accepted manifest.
 GitHub Actions OIDC is supported; a local GitHub login is not registry login.
 Keep tokens out of commands printed in evidence and out of repository files.
+
+The `mcp-publisher login github` device flow can fail. On 2026-09-29, Homebrew
+mcp-publisher 1.7.9 and 1.8.1 both exited with `incorrect_device_code` right
+after printing the device code. Neither run wrote a token. The fallback is
+`mcp-publisher login github -token "$(gh auth token)"`. This command sends the
+maintainer's `gh` token to the registry. The command substitution keeps the
+token out of the printed command. Before you submit, confirm that
+`~/.config/mcp-publisher/token.json` has a new modification time. An old file
+means the login wrote no token.
+
+The registry token expires. Issue [#256](https://github.com/Alberto-Codes/judgevet/issues/256)
+records one observation: a token written at 07:24 on 2026-09-29 had expired by
+20:59 the same day. This is an observation, not a documented limit. Log in again
+on the day you submit.
+
 Record the submission command, exact manifest commit, package version and
 publisher response on the release tracker. If authentication or namespace
 ownership fails, report the external blocker without claiming a listing.
