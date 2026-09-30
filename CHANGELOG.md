@@ -3,6 +3,21 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.15.0](https://github.com/Alberto-Codes/judgevet/compare/v0.14.0...v0.15.0) (2026-09-30)
+
+
+### Features
+
+* **testing:** add an async provider conformance kit ([afaceec](https://github.com/Alberto-Codes/judgevet/commit/afaceec54d6b9220b51d93bf1eec0271844127d8)), references [#246](https://github.com/Alberto-Codes/judgevet/issues/246)
+* **testing:** publish a provider conformance kit for SystemOnePort ([3b36650](https://github.com/Alberto-Codes/judgevet/commit/3b36650dd1e85e5c3f5a11f78e89b4f74c6f407d)), references [#241](https://github.com/Alberto-Codes/judgevet/issues/241)
+* **testing:** send declared media through the conformance kit ([768baf9](https://github.com/Alberto-Codes/judgevet/commit/768baf9b6acf60aaf64520cd0e3ab9adfdb997c8)), references [#247](https://github.com/Alberto-Codes/judgevet/issues/247)
+
+
+### Documentation
+
+* **providers:** use a self-hosted judgment provider ([5a4e614](https://github.com/Alberto-Codes/judgevet/commit/5a4e614f581bab7ea1a8a0c26f15c4f2851ab3ad)), references [#242](https://github.com/Alberto-Codes/judgevet/issues/242)
+* **status:** record the published 0.14.0 release ([63cae5d](https://github.com/Alberto-Codes/judgevet/commit/63cae5df3d9a080bbaf513482f4499b0a116d6ff)), references [#207](https://github.com/Alberto-Codes/judgevet/issues/207)
+
 ## [0.14.0](https://github.com/Alberto-Codes/judgevet/compare/v0.13.0...v0.14.0) (2026-09-29)
 
 
