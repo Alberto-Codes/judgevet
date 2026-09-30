@@ -677,8 +677,14 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2849 tests pass, 1 test skips, 7 live tests deselected.** The last measured
-coverage is **95.86%** (3263/3404 statements).
+**2861 tests pass, 3 tests skip, 7 live tests deselected.** The last measured
+coverage is **95.89%** (3264/3404 statements).
+The provider conformance kit runs offline against `HTTPSystemOneAdapter`
+and `AsyncHTTPSystemOneAdapter` over `httpx.MockTransport`, with a transport
+that answers the kit's questions in the contract fixtures' wire shape. Twelve
+tests pass: ten kit rules and two hosted checks. The kit skips its two media-port rules, because
+the hosted adapters expose no media port. Disabling the adapter's off-list
+choice check fails the hosted replay of contract fixture 15 (#272).
 Four release smoke cases declare `torch` or `mcp` behind the relevant extra,
 so the closure check passes in each. The inference-runtime check fires in the
 base and MCP paths of `check_inventory` and in `check_conformance_inventory`,
