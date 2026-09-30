@@ -124,7 +124,7 @@ same way. Seeded answers are local test data, not service behaviour. See the
 [offline testing recipe](../how-to/test-offline.md) and the
 [fake source](../../src/judgevet/testing/__init__.py).
 
-The `conformance` extra adds pytest and the provider conformance kit in
+The `conformance` extra adds pytest, anyio and the provider conformance kit in
 `judgevet.testing.conformance`. A provider package subclasses
 `BaseProviderConformance` in its own test suite and overrides the
 `provider_factory` and `failing_port` fixtures, plus `media_port` when it

@@ -17,11 +17,19 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/252.
 
 Each rule is an ordinary synchronous test method that drives its coroutine
 with `anyio.run`. The kit adds no pytest plugin, because AnyIO's pytest plugin
-and pytest-asyncio can both claim the same asynchronous test. anyio is a
-runtime dependency of httpx, so the base install carries it.
+and pytest-asyncio interfere when both are installed.
 Source: https://anyio.readthedocs.io/en/stable/testing.html.
-Source: https://github.com/pytest-dev/pytest-asyncio/issues/1570.
+Source: https://github.com/agronholm/anyio/issues/328.
 Source: https://github.com/Alberto-Codes/judgevet/issues/246.
+
+The kit's fixtures are synchronous. pytest-asyncio's auto mode runs a
+synchronous test that requests an asynchronous fixture, and its strict mode
+refuses one.
+Source: https://github.com/pytest-dev/pytest-asyncio/issues/1570.
+
+The kit imports anyio directly, so the `conformance` extra declares it beside
+pytest.
+Source: https://github.com/Alberto-Codes/judgevet/issues/253#issuecomment-5904100904.
 
 Examples:
     ```python

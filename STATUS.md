@@ -7,9 +7,10 @@ release and credential history remains in Git and the linked issues.
 
 judgevet 0.15.0 is published to PyPI. Library, CLI and optional MCP share one
 version. This release adds the provider conformance kit behind the
-`conformance` extra, which adds only pytest: `BaseProviderConformance` for
+`conformance` extra, which in 0.15.0 adds only pytest: `BaseProviderConformance` for
 `SystemOnePort` providers and `BaseAsyncProviderConformance` for
-`AsyncSystemOnePort` providers. Runtime requirements, the CLI and the MCP
+`AsyncSystemOnePort` providers. The next release's extra also declares anyio
+(#253). Runtime requirements, the CLI and the MCP
 tools are unchanged. The MCP registry lists 0.15.0 as latest. The third
 submission, on 2026-09-30 UTC, succeeded. The first two returned 401 on an
 expired publisher login (#256).
@@ -645,7 +646,7 @@ retain deferred scope; #204 and live confidence research remain outside this wor
 Applications still own provider translation, inference and quality validation.
 
 #241 publishes the provider conformance kit `judgevet.testing.conformance`
-behind the `conformance` extra, which adds only pytest. A provider subclasses
+behind the `conformance` extra, which then added only pytest. A provider subclasses
 `BaseProviderConformance` and overrides the `provider_factory` and
 `failing_port` fixtures. The fixtures `provider_port`, `provider_model` and
 `media_port` are optional. Nine rule tests check the port signature, typed
@@ -676,10 +677,13 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2807 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+**2811 tests pass, 1 test skips, 7 live tests deselected.** The last measured
 coverage is **95.85%** (3259/3400 statements).
 The async conformance kit also passes under pytest-asyncio `asyncio_mode = "auto"`,
 and each broken async fake still fails only its own rule there (#257).
+The `conformance` extra now declares `anyio>=4.15.1`, which the async kit
+imports, and the `provider-artifacts` hook requires the extra to add exactly
+pytest and anyio (#253).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
 Pages build measures coverage again and publishes the README badge endpoint at

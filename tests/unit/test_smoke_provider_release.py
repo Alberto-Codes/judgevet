@@ -102,7 +102,11 @@ def _dists(graph: Mapping[str, list[str]]) -> dict[str, dict[str, object]]:
     }
 
 
-_KIT_REQUIRES = ["httpx", 'pytest>=9.1.1; extra == "conformance"']
+_KIT_REQUIRES = [
+    "httpx",
+    'pytest>=9.1.1; extra == "conformance"',
+    'anyio>=4.15.1; extra == "conformance"',
+]
 
 
 def _identity(purelib: Path, **changes: object) -> dict[str, object]:
@@ -515,34 +519,50 @@ def test_sdist_rebuild_names_the_session_cache(
     assert commands[0][3:5] == ["--cache-dir", str(cache)]
 
 
-_KIT = 'pytest>=9.1.1; extra == "conformance"'
+_KIT_PYTEST = 'pytest>=9.1.1; extra == "conformance"'
+_KIT_ANYIO = 'anyio>=4.15.1; extra == "conformance"'
+_KIT = [_KIT_PYTEST, _KIT_ANYIO]
 
 
 @pytest.mark.parametrize(
     "requires",
     [
-        ["httpx", "pytest>=9.1.1"],
+        ["httpx", "pytest>=9.1.1", _KIT_ANYIO],
+        ["httpx", _KIT_PYTEST, "anyio>=4.15.1"],
         ["httpx"],
-        ["httpx", _KIT, 'torch; extra == "conformance"'],
-        ["httpx", 'pytest; extra == "mcp"'],
+        ["httpx", _KIT_PYTEST],
+        ["httpx", _KIT_ANYIO],
+        ["httpx", *_KIT, 'torch; extra == "conformance"'],
+        ["httpx", 'pytest; extra == "mcp"', 'anyio; extra == "mcp"'],
     ],
-    ids=["unconditional", "absent", "engine", "wrong-extra"],
+    ids=[
+        "unconditional-pytest",
+        "unconditional-anyio",
+        "absent",
+        "pytest-only",
+        "anyio-only",
+        "engine",
+        "wrong-extra",
+    ],
 )
-def test_conformance_metadata_rejects_misplaced_pytest(requires: list[str]) -> None:
+def test_conformance_metadata_rejects_misplaced_kit_requirements(
+    requires: list[str],
+) -> None:
     with pytest.raises(RuntimeError):
         runner.check_conformance_metadata(requires, LINUX)
 
 
-def test_conformance_metadata_accepts_pytest_behind_extra() -> None:
-    requires = ["httpx", 'mcp>=2.2; extra == "mcp"', _KIT]
+def test_conformance_metadata_accepts_pytest_and_anyio_behind_extra() -> None:
+    requires = ["httpx", 'mcp>=2.2; extra == "mcp"', *_KIT]
     assert runner.check_conformance_metadata(requires, LINUX) is None
 
 
 _KIT_GRAPH = {
-    "judgevet": ["httpx", 'mcp>=2.2; extra == "mcp"', _KIT],
+    "judgevet": ["httpx", 'mcp>=2.2; extra == "mcp"', *_KIT],
     "httpx": [],
     "pytest": ["iniconfig>=1"],
     "iniconfig": [],
+    "anyio": [],
     "pip": [],
 }
 
@@ -558,8 +578,9 @@ def test_conformance_inventory_accepts_extra_closure() -> None:
         _KIT_GRAPH | {"torch": []},
         _KIT_GRAPH | {"mcp": []},
         {k: v for k, v in _KIT_GRAPH.items() if k not in {"pytest", "iniconfig"}},
+        {k: v for k, v in _KIT_GRAPH.items() if k != "anyio"},
     ],
-    ids=["missing-dependency", "engine", "mcp", "no-pytest"],
+    ids=["missing-dependency", "engine", "mcp", "no-pytest", "no-anyio"],
 )
 def test_conformance_inventory_rejects_other_installs(
     graph: dict[str, list[str]],

@@ -652,6 +652,7 @@ dependencies = [
 
 [package.optional-dependencies]
 conformance = [
+    { name = "anyio" },
     { name = "pytest" },
 ]
 mcp = [
@@ -682,6 +683,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "anyio", marker = "extra == 'conformance'", specifier = ">=4.15.1" },
     { name = "httpx", specifier = ">=0.28" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=2.2" },
     { name = "pydantic-settings", specifier = ">=2.4" },

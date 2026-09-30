@@ -185,7 +185,7 @@ provider lifetime.
 
 ## Check the provider with the conformance kit
 
-The `conformance` extra adds pytest and `judgevet.testing.conformance`.
+The `conformance` extra adds pytest, anyio and `judgevet.testing.conformance`.
 Install `judgevet[conformance]` in the provider's test environment. Subclass
 `BaseProviderConformance` in the provider's test suite. Override two fixtures:
 

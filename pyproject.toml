@@ -38,7 +38,13 @@ mcp = ["mcp>=2.2"]
 # Floor is 9.1.1 because 9.1.1 is the pytest release uv.lock resolves and the
 # kit's own tests run on. No older release has been exercised. Decision:
 # https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909
-conformance = ["pytest>=9.1.1"]
+#
+# The async kit (`judgevet.testing._conformance_async`) imports anyio
+# directly, so the extra declares it instead of relying on httpx to carry it.
+# Floor is 4.15.1 because 4.15.1 is the anyio release uv.lock resolves and the
+# kit's own tests run on. Source: https://deptry.com/rules-violations/.
+# Decision: https://github.com/Alberto-Codes/judgevet/issues/253#issuecomment-5904100904
+conformance = ["pytest>=9.1.1", "anyio>=4.15.1"]
 
 [project.scripts]
 judgevet = "judgevet.adapters.inbound.cli:app"
