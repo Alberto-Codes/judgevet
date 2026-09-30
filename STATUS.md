@@ -646,10 +646,13 @@ broken fake fails only its own rule in a pytester subprocess. The
 runs a provider subclass. The base install imports `judgevet.testing`, and
 importing the kit there raises an `ImportError` that names the extra. No live
 provider was called, and the asynchronous port has no kit yet (#246).
+A unit test pins the sentence in the self-hosted provider guide that a
+conforming provider is compatible in shape, not equivalent in judgment. The
+test fails when that sentence changes (#249).
 
 ## Gates
 
-**2773 tests pass, 1 test skips, 7 live tests deselected.** The last measured
+**2774 tests pass, 1 test skips, 7 live tests deselected.** The last measured
 coverage is **96.25%** (3185/3309 statements).
 
 The CI `test` job uploads `coverage.xml` as the `coverage-xml` artifact. The
