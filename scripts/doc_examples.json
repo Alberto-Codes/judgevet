@@ -195,6 +195,33 @@
       "reason": "Complete MCP launcher module; execution defines serve without calling it, so no stdio server starts and no network is used."
     }
   ],
+  "docs/how-to/use-ollama.md": [
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Downloads a model into a local Ollama installation; requires the Ollama CLI and network access, so never execute automatically."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Environment setup for a local Ollama server with a placeholder key; unit tests exercise the loopback base URL rule."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Environment setup that raises the read timeout for a first model load; unit tests exercise the timeout variable."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "CLI call against a running local Ollama server with a pulled model; never execute in offline documentation checks."
+    },
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete module; execution defines ask_ollama without calling it, so no adapter is built and no request reaches localhost."
+    }
+  ],
   "docs/how-to/use-async-library.md": [
     {
       "language": "python",

@@ -163,6 +163,16 @@ adding file operations to the pure domain. See the
 [HTTP adapter](../../src/judgevet/adapters/outbound/http.py) and
 [architecture contracts](../../pyproject.toml).
 
+### Decision model
+
+Ollama's term for a System One model: a model that answers Noul, Choice and
+Score questions. `nimble` and `tev1` are decision models that Ollama serves
+locally. judgevet keeps its own names and renames nothing. Its HTTP adapter
+reaches these models through Ollama's `/v1/systemone` endpoint. See
+[Use Ollama as a local server](../how-to/use-ollama.md).
+Source: https://docs.ollama.com/capabilities/decision.
+Source: https://ollama.com/blog/ollama-now-supports-jev-style-decision-models.
+
 ## Evidence and documentation status
 
 ### Verified

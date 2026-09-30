@@ -16,6 +16,9 @@ The application builds the provider, owns its dependencies and closes it.
 judgevet has no default provider, no discovery and no fallback.
 Source: https://github.com/Alberto-Codes/judgevet/issues/201#issuecomment-5850529268.
 
+Ollama is a second server behind the hosted adapter, not a provider. See
+[Use Ollama as a local server](use-ollama.md).
+
 ## Choose a backend
 
 typevet on Gemma 4 is the worked example. typevet documents two backends.

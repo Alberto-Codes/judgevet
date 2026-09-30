@@ -16,7 +16,8 @@ Unavailable-host checks are [deferred](https://github.com/Alberto-Codes/judgevet
 Choose [VS Code](#vs-code), [Cursor](#cursor), [Claude Code](#claude-code),
 [Claude Desktop](#claude-desktop), or [Codex](#configure-codex-for-a-project).
 [Pi uses the CLI](#pi-cli-access), not MCP. Tool calls need a TypeSafe key and
-service access. Inputs go to Jev; review
+service access. A local Ollama server needs neither; see
+[Use Ollama as a local server](use-ollama.md). Inputs go to Jev; review
 [data disclosure](../../SECURITY.md#data-sent-to-the-service).
 
 ## Install the optional MCP runtime
