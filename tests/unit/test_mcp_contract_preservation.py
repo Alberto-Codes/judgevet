@@ -10,21 +10,28 @@ from judgevet.adapters.inbound.mcp import create_mcp_server
 from judgevet.domain.answers import NoulAnswer, ScoreAnswer
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
+from judgevet.testing import FakeSystemOnePort as SeededPort
 from tests.unit.test_mcp_noul import FakeSystemOnePort, MockParams
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "mcp_contract.json"
+POLICY_CALL = {
+    "state": "test",
+    "questions": {"clear": {"type": "noul"}},
+    "policy": {"rules": [{"question": "clear", "pass": {"noul": {"min": 0}}}]},
+}
 
 
 def test_existing_discovery_and_results() -> None:
-    """Compare executable discovery and all tool outputs with the original wire contract."""
+    """Compare discovery of all four tools and one call of each with the pinned wire contract."""
     expected = json.loads(FIXTURE.read_text())
     server = create_mcp_server(FakeSystemOnePort())
+    policy_server = create_mcp_server(
+        SeededPort(answers={"clear": NoulAnswer(noul=0.9)})
+    )
 
     async def exercise() -> None:
         tools = await server._request_handlers["tools/list"].handler(None, None)
         serialized = tools.model_dump(mode="json", by_alias=True)
-        assert [tool["name"] for tool in serialized["tools"]][-1] == "evaluate_policy"
-        serialized["tools"] = serialized["tools"][:3]
         assert serialized == expected["tools"]
         for kind in ("noul", "choice", "score"):
             result = await server._request_handlers["tools/call"].handler(
@@ -38,6 +45,13 @@ def test_existing_discovery_and_results() -> None:
                 result.model_dump(mode="json", by_alias=True)
                 == expected["results"][kind]
             )
+        result = await policy_server._request_handlers["tools/call"].handler(
+            None, MockParams(name="evaluate_policy", arguments=POLICY_CALL)
+        )
+        assert (
+            result.model_dump(mode="json", by_alias=True)
+            == expected["results"]["evaluate_policy"]
+        )
 
     anyio.run(exercise)
 
