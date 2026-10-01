@@ -3,6 +3,21 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.17.0](https://github.com/Alberto-Codes/judgevet/compare/v0.16.0...v0.17.0) (2026-10-01)
+
+
+### Features
+
+* **ports:** carry provider receipts and forward provider options ([5aaa0af](https://github.com/Alberto-Codes/judgevet/commit/5aaa0afaf17f39013bc2e26ef0cae56404632526)), references [#281](https://github.com/Alberto-Codes/judgevet/issues/281) [#255](https://github.com/Alberto-Codes/judgevet/issues/255)
+
+
+### Documentation
+
+* backfill compatibility, glossary and reference omissions since 0.14.0 ([cbe5f39](https://github.com/Alberto-Codes/judgevet/commit/cbe5f39fe586d1f5e283f03e7b79df5fa9f78564)), references [#287](https://github.com/Alberto-Codes/judgevet/issues/287)
+* correct claims the shipped code contradicts ([43fa291](https://github.com/Alberto-Codes/judgevet/commit/43fa29160fc0eef7ac8b27cb9eafaf9a929dc800)), references [#285](https://github.com/Alberto-Codes/judgevet/issues/285)
+* repair the navigation map, release procedure and maintainer counts ([6666315](https://github.com/Alberto-Codes/judgevet/commit/6666315cbec88f392496b69a59e888a3eba3abd4)), references [#288](https://github.com/Alberto-Codes/judgevet/issues/288)
+* replace stale version anchors and guard unmarked pins ([b0f96c9](https://github.com/Alberto-Codes/judgevet/commit/b0f96c9f83a8dc7bf7ecae97c91cc7edcd7a367c)), references [#286](https://github.com/Alberto-Codes/judgevet/issues/286) [#289](https://github.com/Alberto-Codes/judgevet/issues/289)
+
 ## [0.16.0](https://github.com/Alberto-Codes/judgevet/compare/v0.15.0...v0.16.0) (2026-10-01)
 
 
