@@ -187,3 +187,9 @@ A local model answers the same question types. It does not give the same
 answers as Jev. A threshold tuned against Jev needs new evidence on `nimble`
 or `tev1`. See
 [Compatible in shape, not equivalent in judgment](use-a-self-hosted-provider.md#compatible-in-shape-not-equivalent-in-judgment).
+
+On 2026-09-30, ten conformance kit tests passed against `nimble` on Ollama
+0.35.0. The two media-port rules skipped because the hosted adapters supply
+no media port. Rerun it with
+`pytest -m live -p no:randomly -rsx -v tests/live/test_ollama_kit_live.py`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/267.

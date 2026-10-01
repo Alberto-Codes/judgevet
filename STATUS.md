@@ -677,8 +677,13 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2861 tests pass, 3 tests skip, 7 live tests deselected.** The last measured
+**2861 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
 coverage is **95.89%** (3264/3404 statements).
+A `live` module, `tests/live/test_ollama_kit_live.py`, runs both kit bases
+against local Ollama. Its one approved run on 2026-09-30 passed ten tests and
+skipped the two media-port rules; the receipt is on #267. #267 ask 2 decided
+no client-side guard for Ollama's limits, since the adapter already surfaces
+Ollama's error body (#267).
 The provider conformance kit runs offline against `HTTPSystemOneAdapter`
 and `AsyncHTTPSystemOneAdapter` over `httpx.MockTransport`, with a transport
 that answers the kit's questions in the contract fixtures' wire shape. Twelve
@@ -1034,6 +1039,7 @@ Published README links retain offline source and fragment validation.
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 16 hand-authored fixtures, inferred from docs/reference/api.md except the oversized-request fixture, which replays the body recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575, and `ollama_documented_response`, which copies Ollama's documented body from https://ollama.com/blog/ollama-now-supports-jev-style-decision-models and stays inferred from the docs: it is consistent with the one observed Ollama call but replays the docs' rounded numbers, not that call's (#268); the shipped `judgevet.testing` fakes match the adapter's whole response, error type and status, spend counters and audit record on every fixture (#171, #189) |
 | the hosted adapter parses Ollama's `/v1/systemone` response for choice, noul and score | **observed once** — judgevet 0.15.0 CLI at 62c6490 against local Ollama 0.35.0 with `nimble:latest` (9.0B, Q8_0) on 2026-09-30, `JEV_API__BASE_URL=http://localhost:11434`, `JEV_API__TIMEOUT_SECONDS=120`; probabilities arrived at full float precision, `model` echoed the tag, and the score equalled the probability-weighted level average; recorded at https://github.com/Alberto-Codes/judgevet/issues/268#issuecomment-5917968541. A first attempt at the default 30 s timeout failed while the model loaded. Ollama's error bodies, `tev1` and judgment quality are unverified |
+| the hosted adapters pass the provider conformance kit against local Ollama `nimble` | **observed once** — `tests/live/test_ollama_kit_live.py` on 2026-09-30 against Ollama 0.35.0, `nimble:latest` digest `24e550a16a7081881be2f1f0d91e8cc13a597472735c04119f035a0a85c67e0c` (qwen35, 9.0B, Q8_0), adapter `timeout_seconds=120.0`: `10 passed, 2 skipped in 9.14s`; the port-shape, typed-answers, failure, scope and media-refusal rules passed for the sync adapter and the three async rules passed; the two media-port rules skipped because the hosted adapters supply no media port; the failure rule used a closed loopback port, so it says nothing about how Ollama fails; recorded at https://github.com/Alberto-Codes/judgevet/issues/267#issuecomment-5922154877 |
 | an off-list Choice option or probability key raises JevResponseError | **inferred** — offline only (#195); the check runs where the response is bound to the questions; no live call has returned one |
 | `state_fingerprint` is HMAC-SHA-256 over the raw pre-redaction state under a caller-held key, and `None` without one | **inferred** — offline tests against `httpx.MockTransport` and a fixed test vector (#191); no live call has written a fingerprint |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
