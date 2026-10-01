@@ -253,6 +253,25 @@ verification claim. Applications own provider selection, model declarations,
 number semantics and policy thresholds.
 Source: [accepted media contract](https://github.com/Alberto-Codes/judgevet/issues/203#issuecomment-5851219798).
 
+## Provider options and receipts
+
+`SystemOneResponse` adds a `receipts` field. It maps each answer name to
+provider measurements of type `float`, `bool` or `None`. It defaults to an
+empty mapping, so existing constructors and equality checks keep working. The
+HTTP adapters and the fakes leave it empty.
+
+`judge_with_images` and `async_judge_with_images` add keyword-only
+`provider_options`. They forward the mapping only when it is set. judgevet
+never interprets its keys. The chosen provider method must take a
+`provider_options` keyword. Otherwise the call raises `ProviderCapabilityError`
+before dispatch.
+
+`judgevet.ports.options` holds four structural ports that declare the keyword.
+The existing ports, the HTTP adapters, the fakes and the conformance kit stay
+unchanged. A three-argument provider still satisfies `SystemOnePort`. The CLI,
+the MCP server and the policy entry points do not pass options.
+Source: [provider options contract](https://github.com/Alberto-Codes/judgevet/issues/281#issuecomment-5933041037).
+
 ## CLI image manifests
 
 The source tree adds optional `--evidence-file` through public Typer command and

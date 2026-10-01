@@ -17,12 +17,18 @@ Examples:
 `judge_with_images`, and awaits the provider instead.
 Source: https://github.com/Alberto-Codes/judgevet/issues/252#issuecomment-5924224316.
 
+Both entries forward an optional `provider_options` mapping unchanged. They
+pass it only when it is set, and only to a method whose signature takes it.
+Source: https://github.com/Alberto-Codes/judgevet/issues/281.
+
 See Also:
     - [judgevet.domain.media][]: Immutable evidence values.
     - [judgevet.ports.media][]: Optional provider extension.
+    - [judgevet.ports.options][]: Ports that take provider options.
 """
 
-from collections.abc import Mapping, Sequence
+import inspect
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
@@ -226,6 +232,42 @@ def _async_capabilities(
     return port
 
 
+def _options(
+    method: Callable[..., object],
+    provider_options: Mapping[str, object] | None,
+    args: tuple[object, ...],
+    kwargs: Mapping[str, object],
+) -> dict[str, Mapping[str, object]]:
+    """Return the keyword arguments that forward set options to a method.
+
+    The check binds the dispatch arguments to the method's signature, as the
+    conformance kit does in `signature_problem`.
+
+    Args:
+        method: The provider method chosen for dispatch.
+        provider_options: The caller's mapping, or None when unset.
+        args: The positional values the dispatch passes.
+        kwargs: The keyword values the dispatch passes besides the options.
+
+    Returns:
+        An empty dict when options are unset, else the `provider_options` keyword.
+
+    Raises:
+        ProviderCapabilityError: The method's signature cannot take the options.
+    """
+    if provider_options is None:
+        return {}
+    try:
+        inspect.signature(method).bind(
+            *args, **kwargs, provider_options=provider_options
+        )
+    except (TypeError, ValueError) as error:
+        raise ProviderCapabilityError(
+            "Provider method does not accept provider_options"
+        ) from error
+    return {"provider_options": provider_options}
+
+
 def _admit(
     questions: Mapping[str, Question | Mapping[str, Any]], evidence: ImageEvidence
 ) -> None:
@@ -307,6 +349,7 @@ def judge_with_images(
     model: str,
     *,
     evidence: ImageEvidence,
+    provider_options: Mapping[str, object] | None = None,
 ) -> SystemOneResponse:
     """Validate evidence before dispatch and preserve the original typed result.
 
@@ -322,6 +365,7 @@ def judge_with_images(
         questions: Typed or raw question definitions, including mixed mappings.
         model: Caller-selected model label.
         evidence: Immutable attachments and question associations.
+        provider_options: Provider-defined settings forwarded unchanged when set.
 
     Returns:
         The original response after media contract validation.
@@ -329,16 +373,24 @@ def judge_with_images(
     Raises:
         ProviderRequestError: Question definitions or evidence references are invalid.
         MissingEvidenceError: A required question has no evidence.
-        ProviderCapabilityError: The selected model cannot accept the evidence.
+        ProviderCapabilityError: The selected model cannot accept the evidence,
+            or the chosen provider method cannot take `provider_options`.
         ProviderResponseError: A media response violates the question contract.
         ProviderError: A declared provider failure propagates unchanged.
     """
     _admit(questions, evidence)
+    args = (state, questions, model)
     if not evidence.images:
-        return port.system_one(state, questions, model)
+        extra = _options(port.system_one, provider_options, args, {})
+        return port.system_one(state, questions, model, **extra)
     constraints = _constraints(questions)
     media_port = _capabilities(port, model, evidence)
-    response = media_port.system_one_media(state, questions, model, evidence=evidence)
+    extra = _options(
+        media_port.system_one_media, provider_options, args, {"evidence": evidence}
+    )
+    response = media_port.system_one_media(
+        state, questions, model, evidence=evidence, **extra
+    )
     _response(response, constraints)
     return response
 
@@ -350,6 +402,7 @@ async def async_judge_with_images(
     model: str,
     *,
     evidence: ImageEvidence,
+    provider_options: Mapping[str, object] | None = None,
 ) -> SystemOneResponse:
     """Validate evidence before an awaited dispatch and preserve the typed result.
 
@@ -365,6 +418,7 @@ async def async_judge_with_images(
         questions: Typed or raw question definitions, including mixed mappings.
         model: Caller-selected model label.
         evidence: Immutable attachments and question associations.
+        provider_options: Provider-defined settings forwarded unchanged when set.
 
     Returns:
         The original response after media contract validation.
@@ -372,17 +426,23 @@ async def async_judge_with_images(
     Raises:
         ProviderRequestError: Question definitions or evidence references are invalid.
         MissingEvidenceError: A required question has no evidence.
-        ProviderCapabilityError: The selected model cannot accept the evidence.
+        ProviderCapabilityError: The selected model cannot accept the evidence,
+            or the chosen provider method cannot take `provider_options`.
         ProviderResponseError: A media response violates the question contract.
         ProviderError: A declared provider failure propagates unchanged.
     """
     _admit(questions, evidence)
+    args = (state, questions, model)
     if not evidence.images:
-        return await port.system_one(state, questions, model)
+        extra = _options(port.system_one, provider_options, args, {})
+        return await port.system_one(state, questions, model, **extra)
     constraints = _constraints(questions)
     media_port = _async_capabilities(port, model, evidence)
+    extra = _options(
+        media_port.system_one_media, provider_options, args, {"evidence": evidence}
+    )
     response = await media_port.system_one_media(
-        state, questions, model, evidence=evidence
+        state, questions, model, evidence=evidence, **extra
     )
     _response(response, constraints)
     return response

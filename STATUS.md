@@ -701,12 +701,25 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**2968 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
-coverage is **95.57%** (3556/3721 statements).
+**2979 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+coverage is **95.61%** (3591/3756 statements).
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
 run when an earlier one fails, so no result is hidden. No check was dropped
 and main has no required status check to rename (#219).
+`SystemOneResponse.receipts` carries a provider's per-answer receipts as an
+open mapping keyed by answer name, default empty (#281). The hosted adapters
+leave it empty. `judgevet.ports.options` adds four narrow Protocols whose
+methods take `provider_options`. The four existing ports, the HTTP adapters,
+the fakes and the conformance kit are unchanged. A three-argument provider
+still satisfies `SystemOnePort` under `ty`. `judge_with_images` and
+`async_judge_with_images` forward `provider_options` only when it is set.
+They bind the provider's signature first and raise `ProviderCapabilityError`
+naming `provider_options` when it cannot take the keyword. A recording fake
+in the contract fixtures proves `{"off_option_threshold": 0.25}` reaches the
+provider. The maintainer chose the narrow-Protocol shape after a research pass
+on typeshed, the .NET interface guideline and PEP 249; the decision is on the
+issue. No live call has carried an option or returned a receipt.
 `JsonlAuditSink`, exported from `judgevet`, is the reference audit sink (#54
 slice 2). It appends one compact UTF-8 JSON object per `JudgmentRecord` to a
 file opened with `O_APPEND` and requests mode `0o600` at creation. It writes

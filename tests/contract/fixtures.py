@@ -10,7 +10,14 @@ See: https://docs.typesafe.ai/api.md
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
+
+from judgevet.domain.answers import NoulAnswer
+from judgevet.domain.media import ImageEvidence, MediaCapabilities
+from judgevet.domain.questions import Question
+from judgevet.domain.response import SystemOneResponse
+from judgevet.domain.usage import Usage
 
 
 def _make_noul_fixture() -> dict[str, Any]:
@@ -580,3 +587,109 @@ def get_fixture_by_name(name: str) -> dict[str, Any]:
         if fixture["name"] == name:
             return fixture
     raise ValueError(f"Fixture not found: {name}")
+
+
+OPTIONS_QUESTIONS: dict[str, Any] = {
+    "claim": {"type": "noul", "instructions": "Is the claim supported?"}
+}
+"""Questions the provider-options fakes answer, keyed like their response."""
+
+
+def _options_response() -> SystemOneResponse:
+    """Return the plain response every provider-options fake gives back."""
+    return SystemOneResponse(
+        model="options-fixture",
+        usage=Usage(0, 0),
+        answers={"claim": NoulAnswer(0.5)},
+    )
+
+
+def _png_capabilities() -> MediaCapabilities:
+    """Return a PNG declaration within every local media ceiling."""
+    return MediaCapabilities({"image/png"}, 16, 8 * 1024 * 1024, 32 * 1024 * 1024)
+
+
+class RecordingOptionsPort:
+    """Record the provider options each sync text and media call receives.
+
+    Attributes:
+        provider_options_calls: The method name and options of each call.
+        response: The response every call returns.
+    """
+
+    def __init__(self) -> None:
+        """Start with no recorded calls."""
+        self.provider_options_calls: list[tuple[str, Mapping[str, object] | None]] = []
+        self.response = _options_response()
+
+    def capabilities(self, model: str) -> MediaCapabilities:
+        """Return a static PNG declaration."""
+        return _png_capabilities()
+
+    def system_one(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        provider_options: Mapping[str, object] | None = None,
+    ) -> SystemOneResponse:
+        """Record the text call's options and return the response."""
+        self.provider_options_calls.append(("system_one", provider_options))
+        return self.response
+
+    def system_one_media(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        evidence: ImageEvidence,
+        provider_options: Mapping[str, object] | None = None,
+    ) -> SystemOneResponse:
+        """Record the media call's options and return the response."""
+        self.provider_options_calls.append(("system_one_media", provider_options))
+        return self.response
+
+
+class AsyncRecordingOptionsPort:
+    """Record the provider options each async text and media call receives.
+
+    Attributes:
+        provider_options_calls: The method name and options of each call.
+        response: The response every call returns.
+    """
+
+    def __init__(self) -> None:
+        """Start with no recorded calls."""
+        self.provider_options_calls: list[tuple[str, Mapping[str, object] | None]] = []
+        self.response = _options_response()
+
+    def capabilities(self, model: str) -> MediaCapabilities:
+        """Return a static PNG declaration."""
+        return _png_capabilities()
+
+    async def system_one(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        provider_options: Mapping[str, object] | None = None,
+    ) -> SystemOneResponse:
+        """Record the text call's options and return the response."""
+        self.provider_options_calls.append(("system_one", provider_options))
+        return self.response
+
+    async def system_one_media(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        evidence: ImageEvidence,
+        provider_options: Mapping[str, object] | None = None,
+    ) -> SystemOneResponse:
+        """Record the media call's options and return the response."""
+        self.provider_options_calls.append(("system_one_media", provider_options))
+        return self.response

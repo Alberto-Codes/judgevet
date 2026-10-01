@@ -131,6 +131,24 @@ through an `AuditSink`. Record both model identifiers with each judgment. A
 later reader can then tell which model answered.
 Source: https://github.com/Alberto-Codes/judgevet/issues/202#issuecomment-5850672112.
 
+## Pass provider options and return receipts
+
+A provider can take settings that judgevet does not define. Add a keyword-only
+`provider_options: Mapping[str, object] | None = None` parameter to
+`system_one`. Add it to `system_one_media` too if the provider judges images.
+The ports in `judgevet.ports.options` describe these signatures.
+
+Call `judge_with_images` or `async_judge_with_images` with
+`provider_options={...}`. judgevet passes the mapping unchanged and never reads
+its keys. It passes nothing when the caller leaves the argument unset. A
+provider method without the keyword makes the call raise
+`ProviderCapabilityError` before dispatch.
+
+A provider can report per-answer measurements in `SystemOneResponse.receipts`.
+Key it by answer name. Each value maps a measurement name to a `float`, `bool`
+or `None`. The field defaults to an empty mapping. judgevet carries it unchanged.
+Source: https://github.com/Alberto-Codes/judgevet/issues/281#issuecomment-5933041037.
+
 ## Run the CLI on the provider
 
 `create_cli_app` from `judgevet.adapters.inbound.cli` returns a Typer

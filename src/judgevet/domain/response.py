@@ -3,7 +3,8 @@
 The `SystemOneResponse` container holds answers with model and usage metadata.
 Frozen instances prevent attribute reassignment. The answers dictionary and
 nested answer dictionaries remain mutable. Typed accessors return fresh shallow
-dictionaries containing the same answer objects.
+dictionaries containing the same answer objects. A provider may fill per-answer
+`receipts`; the field defaults to an empty mapping.
 
 Examples:
     ```python
@@ -27,6 +28,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
@@ -52,6 +54,8 @@ class SystemOneResponse:
         nouls (dict[str, NoulAnswer]): Current Noul answers in a fresh dictionary.
         choices (dict[str, ChoiceAnswer]): Current Choice answers in a fresh dictionary.
         scores (dict[str, ScoreAnswer]): Current Score answers in a fresh dictionary.
+        receipts (Mapping[str, Mapping[str, float | bool | None]]): Provider
+            measurements keyed by answer name. Empty unless a provider fills it.
 
     Examples:
         ```python
@@ -77,6 +81,15 @@ class SystemOneResponse:
     """All answer objects keyed by question name.
 
     The field is always a dict (empty if no answers were provided).
+    """
+    receipts: Mapping[str, Mapping[str, float | bool | None]] = field(
+        default_factory=dict
+    )
+    """Provider measurements keyed by answer name.
+
+    A provider may record per-answer numbers or flags here. judgevet carries
+    them unchanged and never interprets a key. The HTTP adapters leave it
+    empty. Source: https://github.com/Alberto-Codes/judgevet/issues/281.
     """
 
     @property

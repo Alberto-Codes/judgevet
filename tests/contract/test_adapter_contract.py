@@ -44,10 +44,27 @@ from judgevet.domain.errors import (
 )
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
+from judgevet.media import (
+    ImageAttachment,
+    ImageEvidence,
+    async_judge_with_images,
+    judge_with_images,
+)
 from judgevet.ports import AsyncSystemOnePort, SystemOnePort
+from judgevet.ports.media import AsyncMediaSystemOnePort, MediaSystemOnePort
+from judgevet.ports.options import (
+    AsyncProviderOptionsMediaSystemOnePort,
+    ProviderOptionsMediaSystemOnePort,
+)
 from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
 
-from .fixtures import get_fixture_by_name, get_fixtures
+from .fixtures import (
+    OPTIONS_QUESTIONS,
+    AsyncRecordingOptionsPort,
+    RecordingOptionsPort,
+    get_fixture_by_name,
+    get_fixtures,
+)
 
 
 def _error_for(expect_data: tuple[str, str, int | None]) -> JevError:
@@ -595,3 +612,59 @@ def test_fakes_match_real_adapter_state_fingerprint(
     assert real.state_fingerprint is not None
     assert real.state_fingerprint == fake_record.state_fingerprint
     assert _fields(real, "status_code") == _fields(fake_record, "status_code")
+
+
+def _options_evidence(with_images: bool) -> ImageEvidence:
+    """Return empty evidence for the text route or one PNG for the media route."""
+    if not with_images:
+        return ImageEvidence([], {})
+    image = ImageAttachment("image", b"opaque-png", "image/png")
+    return ImageEvidence([image], {"claim": ["image"]})
+
+
+@pytest.mark.contract
+@FAKE_KINDS
+@pytest.mark.parametrize(
+    ("with_images", "method"),
+    [(False, "system_one"), (True, "system_one_media")],
+)
+def test_provider_options_reach_fake(
+    fake_kind: str, with_images: bool, method: str
+) -> None:
+    """The public judge entry hands the options mapping to the provider unchanged."""
+    options = {"off_option_threshold": 0.25}
+    evidence = _options_evidence(with_images)
+    if fake_kind == "sync":
+        port = RecordingOptionsPort()
+        result = judge_with_images(
+            port,
+            "state",
+            OPTIONS_QUESTIONS,
+            "selected",
+            evidence=evidence,
+            provider_options=options,
+        )
+    else:
+        port = AsyncRecordingOptionsPort()
+        result = anyio.run(
+            lambda: async_judge_with_images(
+                port,
+                "state",
+                OPTIONS_QUESTIONS,
+                "selected",
+                evidence=evidence,
+                provider_options=options,
+            )
+        )
+    assert result is port.response
+    assert port.provider_options_calls == [(method, options)]
+    assert port.provider_options_calls[0][1] is options
+
+
+@pytest.mark.contract
+def test_recording_fakes_satisfy_options_ports() -> None:
+    """The recording fakes type-check as the options ports and the media ports."""
+    sync_port: ProviderOptionsMediaSystemOnePort = RecordingOptionsPort()
+    async_port: AsyncProviderOptionsMediaSystemOnePort = AsyncRecordingOptionsPort()
+    assert isinstance(sync_port, MediaSystemOnePort)
+    assert isinstance(async_port, AsyncMediaSystemOnePort)

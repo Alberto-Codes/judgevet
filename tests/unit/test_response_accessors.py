@@ -11,13 +11,18 @@ See Also:
 
 import asyncio
 import shutil
+from collections.abc import Mapping
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
+from judgevet.domain.questions import Noul, Question
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.usage import Usage
+from judgevet.media import ImageEvidence, judge_with_images
 
 pytestmark = pytest.mark.unit
 
@@ -130,6 +135,58 @@ def test_nested_values_remain_shared(response: SystemOneResponse) -> None:
     answer = response.answers["c2"]
     assert isinstance(answer, ChoiceAnswer)
     assert answer.probabilities["yes"] == 0.5
+
+
+class _ReceiptProvider:
+    """Return a provider-filled response from the text route.
+
+    Attributes:
+        response: The response every call returns.
+    """
+
+    def __init__(self, response: SystemOneResponse) -> None:
+        """Keep the response to return."""
+        self.response = response
+
+    def system_one(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+    ) -> SystemOneResponse:
+        """Return the provider-filled response."""
+        return self.response
+
+
+def test_receipts_default_and_survive() -> None:
+    """Default receipts to empty and keep a provider's receipts on the response."""
+    plain = SystemOneResponse(model="m", usage=Usage(0, 0))
+    assert plain.receipts == {}
+    receipt = {
+        "off_option_mass": 0.125,
+        "off_option_threshold": 0.25,
+        "off_option_flag": False,
+        "unmeasured": None,
+    }
+    filled = SystemOneResponse(
+        model="m",
+        usage=Usage(0, 0),
+        answers={"claim": NoulAnswer(0.5)},
+        receipts={"claim": receipt},
+    )
+    result = judge_with_images(
+        _ReceiptProvider(filled),
+        "state",
+        {"claim": Noul(instructions="Is the claim supported?")},
+        "selected",
+        evidence=ImageEvidence([], {}),
+    )
+    assert result is filled
+    assert result.receipts == {"claim": receipt}
+    assert replace(filled, model="other").receipts == {"claim": receipt}
+    assert replace(plain, receipts={"claim": receipt}) != plain
+    with pytest.raises(FrozenInstanceError):
+        filled.__setattr__("receipts", {})
 
 
 async def _check_types(tmp_path: Path, valid: bool) -> None:

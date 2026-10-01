@@ -7,6 +7,7 @@ See Also:
     - [judgevet.media][]: Public media contract.
 """
 
+import asyncio
 from collections.abc import Mapping
 from typing import Any
 
@@ -26,6 +27,7 @@ from judgevet.media import (
     ImageEvidence,
     MediaCapabilities,
     MissingEvidenceError,
+    async_judge_with_images,
     judge_with_images,
 )
 from judgevet.policy import ChoiceRule, Policy, evaluate_policy, validate_policy
@@ -197,6 +199,78 @@ def test_empty_optional_evidence_keeps_text_route() -> None:
     assert provider.text_calls == 1
     assert provider.models == []
     assert provider.calls == []
+
+
+@pytest.mark.parametrize("with_images", [False, True])
+def test_three_argument_provider_rejects_options(with_images: bool) -> None:
+    """Refuse provider options a provider's chosen method cannot take."""
+    provider = RecordingMediaProvider()
+    submitted = evidence() if with_images else ImageEvidence([], {})
+    with pytest.raises(ProviderCapabilityError, match="provider_options"):
+        judge_with_images(
+            provider,
+            "text",
+            QUESTIONS,
+            "selected",
+            evidence=submitted,
+            provider_options={"off_option_threshold": 0.25},
+        )
+    assert provider.text_calls == 0
+    assert provider.calls == []
+
+
+@pytest.mark.parametrize("with_images", [False, True])
+def test_async_three_argument_provider_rejects_options(with_images: bool) -> None:
+    """Refuse options on the async route before any awaited dispatch."""
+
+    class AsyncThreeArgument:
+        """Declare an async provider whose methods take no provider options.
+
+        Examples:
+            Exercise this offline fixture through the tests in this module.
+        """
+
+        def capabilities(self, model: str) -> MediaCapabilities:
+            """Return a static PNG declaration."""
+            return MediaCapabilities({"image/png"})
+
+        async def system_one(self, state, questions, model) -> SystemOneResponse:
+            """Fail when dispatched."""
+            pytest.fail("options dispatched to a three-argument provider")
+
+        async def system_one_media(
+            self, state, questions, model, *, evidence
+        ) -> SystemOneResponse:
+            """Fail when dispatched."""
+            pytest.fail("options dispatched to a three-argument provider")
+
+    submitted = evidence() if with_images else ImageEvidence([], {})
+    with pytest.raises(ProviderCapabilityError, match="provider_options"):
+        asyncio.run(
+            async_judge_with_images(
+                AsyncThreeArgument(),
+                "text",
+                QUESTIONS,
+                "selected",
+                evidence=submitted,
+                provider_options={"off_option_threshold": 0.25},
+            )
+        )
+
+
+def test_none_options_keep_three_argument_dispatch() -> None:
+    """Pass nothing extra when the caller sets no provider options."""
+    provider = RecordingMediaProvider()
+    result = judge_with_images(
+        provider,
+        "text",
+        QUESTIONS,
+        "selected",
+        evidence=evidence(),
+        provider_options=None,
+    )
+    assert result is provider.response
+    assert len(provider.calls) == 1
 
 
 def test_missing_required_evidence_never_dispatches() -> None:
