@@ -6,7 +6,7 @@ status: draft
 
 Status: **draft**.
 
-This is the local event contract for judgevet 0.8.0. It does not describe a
+This is the local event contract for judgevet. It does not describe a
 vendor API or promote live-service evidence. Built-in event names form a closed
 set: `http.call` and `mcp.runtime`. Application-defined events are separate.
 

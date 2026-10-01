@@ -19,15 +19,18 @@ Service usage can incur charges. Obtain the key through the
 
 Run these commands from a directory where you can create a new folder:
 
+<!-- x-release-please-start-version -->
 ```bash
 mkdir judgevet-tutorial
 cd judgevet-tutorial
 python3 -m venv .venv
-.venv/bin/python -m pip install 'judgevet==0.7.0'
+.venv/bin/python -m pip install 'judgevet==0.16.0'
 .venv/bin/python -c 'import judgevet; print(judgevet.__version__)'
 ```
+<!-- x-release-please-end -->
 
-Checkpoint: the last command prints `0.7.0`. Keep using this shell and directory.
+Checkpoint: the last command prints the version from the install line.
+Keep using this shell and directory.
 If the folder already exists, choose a new name. If Python cannot create a
 virtual environment, install your platform's venv support and try again.
 For other installation approaches, use the [installation guide](../how-to/install.md).

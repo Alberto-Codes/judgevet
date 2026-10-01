@@ -40,7 +40,10 @@ for (const target of ['0.10.1', '0.11.0', '1.2.3', '2.0.0-rc.1']) {
       github: {}, targetBranch: 'main', path: '.', extraFiles: config['extra-files'],
     });
     const updates = await strategy.extraFileUpdates(Version.parse(target), new Map());
-    const pages = ['docs/how-to/connect-mcp.md', 'README.md'];
+    const pages = [
+      'docs/how-to/connect-mcp.md', 'README.md', 'docs/tutorials/first-judgment.md',
+      'docs/how-to/deploy.md', 'docs/how-to/use-policy-library.md',
+    ];
     for (const page of pages) {
       const original = fs.readFileSync(path.join(root, page), 'utf8');
       const pin = /\b(judgevet(?:\[mcp\])?==)\d+\.\d+\.\d+(?:-[\w.]+)?/g;

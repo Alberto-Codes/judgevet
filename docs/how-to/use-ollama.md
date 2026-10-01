@@ -5,7 +5,7 @@ status: draft
 # Use Ollama as a local server
 
 Status: **draft**. This page follows Ollama's documentation and one
-recorded call. On 2026-09-30, judgevet 0.15.0 called Ollama 0.35.0 with
+recorded call. On 2026-09-30, release 0.15.0 called Ollama 0.35.0 with
 `nimble:latest` (9.0B, Q8_0). The adapter parsed the choice, noul and score
 answers unchanged. That is one call, one model and one machine.
 It shows a compatible response shape, not equivalent judgment.

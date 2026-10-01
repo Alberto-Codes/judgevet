@@ -28,6 +28,9 @@
         },
         "docs/how-to/connect-mcp.md",
         "README.md",
+        "docs/tutorials/first-judgment.md",
+        "docs/how-to/deploy.md",
+        "docs/how-to/use-policy-library.md",
         {
           "type": "toml",
           "path": "uv.lock",

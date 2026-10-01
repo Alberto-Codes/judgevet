@@ -11,21 +11,24 @@ The base package includes both. Install the optional MCP extra only when your
 host launches the stdio server. judgevet does not provide an HTTP application
 server, a remote MCP endpoint or a load-balancer contract.
 
-This guide targets judgevet 0.8.0. Platform deployment, IAM permissions and
-network access remain your responsibility. The container recipe is checked with
-synthetic requests; it does not prove a deployment in your cloud account.
+Platform deployment, IAM permissions and network access remain your
+responsibility. The container
+recipe is checked with synthetic requests; it does not prove a deployment in
+your cloud account.
 
 ## Build a base CLI image
 
 Create a dedicated `image` build directory containing only the Dockerfile and
 one reviewed wheel. Keep runtime inputs, credentials and private configuration
-outside that directory. After 0.8.0 is published, prepare the wheel:
+outside that directory. Prepare the wheel:
 
+<!-- x-release-please-start-version -->
 ```bash
 mkdir -p image/wheels
 python -m pip download --no-deps --only-binary=:all: \
-  'judgevet==0.8.0' --dest image/wheels
+  'judgevet==0.16.0' --dest image/wheels
 ```
+<!-- x-release-please-end -->
 
 Use a fresh directory so an older wheel cannot enter the image. For a release
 candidate, use its verified downloaded wheel instead. Save this as
