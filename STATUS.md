@@ -694,7 +694,7 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**2956 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+**2957 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
 coverage is **95.53%** (3528/3693 statements).
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
@@ -729,9 +729,16 @@ a temporary project root, one against the repository's own list. The
 reviewer's two mutations each turned the matching tests red (#276).
 Inside an Agent-tool worktree the hook saw `.claude/worktrees/<name>/tests/...`
 and matched nothing, so the noise came back there. The hook now strips one
-worktree prefix before matching the list; three shim tests cover the stripped
+worktree prefix before matching the list. Three shim tests cover the stripped
 path, the `src` path under a worktree, and a second component that is not
 stripped (#279).
+The MCP smoke peer now writes its pid to a sibling file and renames it onto
+the pid path. `require_reaped` therefore sees either no file or a complete
+pid. One commit-stage run on 2026-09-30 read an empty pid file. The checker
+sends terminate and kills after two seconds. A SIGTERM before the write would
+fit; one occurrence cannot confirm it. That window now fails as a missing
+file, which #280 tracks. A test asserts the temporary file holds the pid
+before the rename (#278).
 Tests that launch `pre-commit` no longer write the user-level
 `~/.cache/pre-commit/db.db`. A seed store under the user's XDG cache, keyed by
 the config's repos and revs, the pre-commit version and the interpreter,

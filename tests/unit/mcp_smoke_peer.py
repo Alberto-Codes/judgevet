@@ -208,10 +208,25 @@ def serve(mode: str, version: str) -> None:
         sys.exit(7)
 
 
+def write_pid(path: Path, pid: int) -> None:
+    """Publish a pid so a reader sees no file or the complete pid, never empty.
+
+    The pid goes to a sibling temporary file, which ``os.replace`` then moves
+    onto ``path`` in one step. A child ended mid-write leaves ``path`` absent.
+
+    Args:
+        path: Pid file the tests read after the checker reaps this child.
+        pid: Process id to record.
+    """
+    temporary = path.with_name(f"{path.name}.tmp")
+    temporary.write_text(str(pid))
+    os.replace(temporary, path)
+
+
 def main() -> None:
     """Record this child's PID and run the selected fixture mode."""
     mode, pid_file, version = sys.argv[1:]
-    Path(pid_file).write_text(str(os.getpid()))
+    write_pid(Path(pid_file), os.getpid())
     if mode == "stalled_exit":
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
     if mode == "stalled_handshake":

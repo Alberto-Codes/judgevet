@@ -21,6 +21,7 @@ from typing import Any
 import pytest
 
 from scripts.mcp_smoke_transport import smoke
+from tests.unit import mcp_smoke_peer
 from tests.unit.test_mcp_subprocess import environment
 
 pytest_plugins = ["tests.unit.test_mcp_subprocess"]
@@ -229,3 +230,30 @@ def test_stdout_flood_is_drained(
                 await asyncio.wait_for(process.wait(), 2.0)
 
     asyncio.run(exercise())
+
+
+def test_pid_file_is_never_observed_empty(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The pid path holds no file until the complete pid replaces onto it."""
+    pid_path = tmp_path / "pid"
+    real_replace = os.replace
+    seen: list[str] = []
+
+    def checked_replace(source: str | Path, destination: str | Path) -> None:
+        """Require a complete source and an absent destination, then replace.
+
+        Args:
+            source: Temporary file the peer wrote.
+            destination: Pid path the checker's tests read.
+        """
+        assert Path(source).read_text() == "4242"
+        assert not Path(destination).exists()
+        seen.append(str(destination))
+        real_replace(source, destination)
+
+    monkeypatch.setattr(mcp_smoke_peer.os, "replace", checked_replace)
+    mcp_smoke_peer.write_pid(pid_path, 4242)
+    assert seen == [str(pid_path)]
+    assert pid_path.read_text() == "4242"
+    assert sorted(tmp_path.iterdir()) == [pid_path]
