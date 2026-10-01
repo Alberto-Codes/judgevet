@@ -108,7 +108,8 @@ assert transport.retryable is True
 ### Retry and exception boundaries
 
 `retryable` is advisory metadata. Callers can enable the adapter's
-[bounded retry policy](configuration.md#retry-limits). The default is one attempt.
+[bounded retry policy](configuration.md#retry-limits). The default is three attempts; see
+[the retry module](../../src/judgevet/adapters/outbound/retries.py).
 The adapter does not honor `Retry-After` headers. A read timeout does not prove the service stopped processing.
 
 `except JevError` does not catch every HTTPX or Python exception. Redirects are

@@ -701,8 +701,12 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**2979 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+**2990 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
 coverage is **95.61%** (3591/3756 statements).
+Eleven pin tests in `tests/unit/test_doc_contradictions.py` hold the sentences
+#285 corrected. They cover the MCP `evaluate_policy` tool, the three-attempt
+retry default, the opt-in audit sink, the review scope and the shipped-features
+sentence. No live-service claim changed.
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
 run when an earlier one fails, so no result is hidden. No check was dropped

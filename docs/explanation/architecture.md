@@ -107,9 +107,10 @@ caller can construct typed rules without treating JSON as the domain model.
 The CLI uses the shared comparisons while retaining its published error and
 malformed-answer behavior. See [compatibility](../reference/compatibility.md).
 
-MCP currently exposes question tools, not a policy-evaluation tool. Sharing
+MCP exposes the `evaluate_policy` tool since release 0.14.0; see the
+[MCP policy adapter](../../src/judgevet/adapters/inbound/mcp_policy.py). Sharing
 core types does not mean every entry point exposes every library operation.
-For policy use, choose the Python API or the CLI's policy option. A local
+For policy use, choose the Python API, the CLI's policy option or that MCP tool. A local
 policy decision also does not trigger an external action; the caller owns that.
 
 ## Optional MCP keeps installation boundaries explicit
@@ -165,8 +166,10 @@ These edges follow the [HTTP adapter](../../src/judgevet/adapters/outbound/http.
 [MCP adapter](../../src/judgevet/adapters/inbound/mcp.py) and
 [local policy evaluator](../../src/judgevet/domain/policy_evaluation.py).
 The [security policy](../../SECURITY.md#data-sent-to-the-service) records the full
-transport and disclosure limits. Retries are opt-in and remain in the outbound adapter. No audit sink, pre-send
-content redaction or storage control is part of this path.
+transport and disclosure limits. Retries are on by default and remain in the outbound adapter.
+An opt-in `JsonlAuditSink`, opened from `JEV_API__AUDIT_PATH`, appends the records that
+[the audit sink module](../../src/judgevet/adapters/outbound/audit_jsonl.py) documents.
+No pre-send content redaction or retention control is part of this path.
 
 ## Alternatives and consequences
 

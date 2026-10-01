@@ -6,9 +6,8 @@ status: draft
 
 Status: **draft**.
 
-The credential, transport and diagnostic review below was performed for
-judgevet 0.6.0. The 0.7.0 changes leave those paths unchanged and add local
-typed policy evaluation and JSON decoding. This is an implementation review,
+The credential, transport and diagnostic review below was performed against
+release 0.6.0. Later releases were not re-reviewed. This is an implementation review,
 not a new security certification. See [installation](docs/how-to/install.md) and the
 [release evidence and API verification limits](STATUS.md).
 
@@ -178,14 +177,20 @@ certificate validation or supply a separate cryptographic implementation.
 
 ### Storage and memory
 
-The request path has no persistent credential, state or answer store and no
-audit sink. The [CLI](src/judgevet/adapters/inbound/cli.py) prints answers and
+The request path has no persistent credential or state store. The [CLI](src/judgevet/adapters/inbound/cli.py) prints answers and
 errors; [file inputs](src/judgevet/adapters/inbound/cli_inputs.py) read
 caller-owned files. Shell redirection, MCP hosts and application log handlers
 can persist that output. Python, installers and the platform can also write
 caches, swap or crash dumps. judgevet supplies no encryption at rest or
 retention control for those artifacts; their storage and protection belong to
 the application and platform.
+
+An opt-in audit sink persists answers. `JEV_API__AUDIT_PATH` opens a
+[`JsonlAuditSink`](src/judgevet/adapters/outbound/audit_jsonl.py) for the CLI
+and the MCP server. The sink creates the file with mode `0o600` if absent and appends
+one JSON line per judgment. Each line carries every `JudgmentRecord` field;
+success lines include the answers and the usage.
+Rotation, retention and encryption at rest belong to the caller.
 
 `SecretStr` masks display; it is not encrypted or locked memory. Unwrapped keys,
 HTTP headers and serialized payloads can have multiple in-memory copies.
@@ -210,5 +215,4 @@ OS. It neither configures nor verifies a FIPS provider. OpenSSL documents
 [explicit FIPS module configuration requirements](https://docs.openssl.org/3.0/man7/fips_module/);
 a compliant deployment requires assessment of the actual cryptographic module,
 runtime and configuration. Certificate pinning, a judgevet mTLS configuration,
-encrypted storage and enterprise audit controls are not shipped features of
-0.7.0.
+encrypted storage and enterprise audit controls are not shipped features.
