@@ -45,6 +45,7 @@ exception type. It never prints exception text.
 
 | stderr message | Failed stage | Next action |
 |---|---|---|
+| `judgevet-mcp: audit sink failed (<TypeName>)` | Opening the file set by `JEV_API__AUDIT_PATH`, before credential resolution. | Check that the directory exists and the server can write the file. |
 | `judgevet-mcp: credential resolution failed (<TypeName>)` | Building the hosted adapter from the key source and connection settings. | Check the key source, key file access and gateway settings without printing them. |
 | `judgevet-mcp: provider acquisition failed (<TypeName>)` | Entering the application's provider factory, or receiving no provider from it. | Check the application's provider setup. |
 | `judgevet-mcp: serving failed (<TypeName>)` | The stdio run. A tool call's service error returns as a tool result instead. | Check the host connection and the provider named by the type. |

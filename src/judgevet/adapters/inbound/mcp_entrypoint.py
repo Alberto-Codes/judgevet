@@ -2,7 +2,8 @@
 
 This module provides the composition root for the MCP stdio server.
 The hosted path reads Settings once, configures stderr logging, builds the HTTP
-adapter and serves stdio. Explicit provider selection bypasses hosted settings.
+adapter and serves stdio. ``JEV_API__AUDIT_PATH`` opens one audit sink first,
+which closes after the adapter. Explicit provider selection bypasses hosted settings.
 An application factory acquires and closes its provider on the dispatch worker.
 Borrowed providers remain open when serving ends. A fatal failure names its
 stage and exception type names and omits exception text. A cleanup failure
@@ -31,6 +32,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from collections.abc import Iterable
+from contextlib import nullcontext
 
 from pydantic import ValidationError
 
@@ -38,9 +40,10 @@ from judgevet.adapters.inbound.logs import configure, configure_mcp_logging
 from judgevet.adapters.inbound.mcp import create_mcp_server
 from judgevet.adapters.inbound.mcp_dispatch import ProviderDispatch
 from judgevet.adapters.inbound.settings import Settings
+from judgevet.adapters.outbound.audit_jsonl import JsonlAuditSink
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.errors import JudgevetError
-from judgevet.ports import SystemOnePort
+from judgevet.ports import AuditSink, SystemOnePort
 from judgevet.providers import ProviderFactory
 
 try:
@@ -54,7 +57,9 @@ except ModuleNotFoundError as exc:
 __all__ = ["main"]
 
 
-def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
+def build_adapter(
+    settings: Settings, *, audit: AuditSink | None = None
+) -> HTTPSystemOneAdapter:
     """Resolve one wrapped credential and apply host-selected gateway configuration.
 
     The spend cap is read once here, so it spans the server's lifetime and a
@@ -62,6 +67,7 @@ def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
 
     Args:
         settings: The Settings instance.
+        audit: Open audit sink the caller owns and closes, or None.
 
     Returns:
         HTTPSystemOneAdapter configured with settings.
@@ -79,6 +85,7 @@ def build_adapter(settings: Settings) -> HTTPSystemOneAdapter:
         network=settings.api.network_config,
         gateway=settings.api.gateway_config,
         spend_cap=settings.api.spend_cap,
+        audit=audit,
     )
 
 
@@ -129,8 +136,8 @@ def main(
         SystemExit: If startup or serving raises a declared library error or an
             IO, runtime, value, type or grouped exception. The exit code is 1.
             The diagnostic reads ``judgevet-mcp: <stage> failed (<TypeName>)``.
-            The stage is credential resolution, provider acquisition,
-            serving or shutdown. A group lists its distinct leaf type names.
+            The stage is audit sink, credential resolution, provider
+            acquisition, serving or shutdown. A group lists its distinct leaf type names.
             When cleanup fails after serving fails, the serving types come
             first, then the cleanup types, each distinct name once. Exception
             text and the cause chain are omitted.
@@ -169,8 +176,8 @@ class _Stage:
     """Record the stage a fatal diagnostic names.
 
     Attributes:
-        name (str): Stage in progress: credential resolution, provider
-            acquisition, serving or shutdown.
+        name (str): Stage in progress: audit sink, credential resolution,
+            provider acquisition, serving or shutdown.
         error (Exception | None): Serving failure captured before cleanup
             runs, so a cleanup failure cannot replace it in the diagnostic.
 
@@ -228,15 +235,17 @@ def _run_hosted(model: str, stage: _Stage) -> int:
     Args:
         model: Explicit host-selected model. The default ``jev-latest``
             defers to ``settings.api.default_model``.
-        stage: Stage record advanced to serving after credential resolution
-            and to shutdown after serving returns. It records a serving
-            failure before the adapter closes.
+        stage: Stage record set to audit sink while the opted-in sink
+            opens, then credential resolution, serving after it and shutdown
+            after serving returns. It records a serving failure before the
+            adapter closes. The sink closes after the adapter.
 
     Returns:
         Zero on success or two on configuration failure.
 
     Raises:
-        Exception: Serving failed, or the adapter's close failed.
+        Exception: The audit sink failed to open, serving failed, or a close
+            failed.
     """
     try:
         settings = Settings()
@@ -251,20 +260,28 @@ def _run_hosted(model: str, stage: _Stage) -> int:
             file=sys.stderr,
         )
         return 2
-    adapter = build_adapter(settings)
-    stage.name = "serving"
-    chosen = settings.api.default_model if model == "jev-latest" else model
-    try:
-        if chosen == "jev-latest":
-            asyncio.run(run_stdio(adapter))
-        else:
-            asyncio.run(run_stdio(adapter, model=chosen))
-        stage.name = "shutdown"
-    except Exception as exc:
-        stage.error = exc
-        raise
-    finally:
-        adapter.close()
+    stage.name = "audit sink"
+    path = settings.api.audit_path
+    with nullcontext() if path is None else JsonlAuditSink(path) as sink:
+        stage.name = "credential resolution"
+        adapter = (
+            build_adapter(settings)
+            if sink is None
+            else build_adapter(settings, audit=sink)
+        )
+        stage.name = "serving"
+        chosen = settings.api.default_model if model == "jev-latest" else model
+        try:
+            if chosen == "jev-latest":
+                asyncio.run(run_stdio(adapter))
+            else:
+                asyncio.run(run_stdio(adapter, model=chosen))
+            stage.name = "shutdown"
+        except Exception as exc:
+            stage.error = exc
+            raise
+        finally:
+            adapter.close()
     return 0
 
 

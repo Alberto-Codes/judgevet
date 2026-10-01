@@ -131,7 +131,13 @@ scrubbed; see [diagnostic limits](../../SECURITY.md#diagnostics-and-error-conten
 
 The entry point constructs and closes the adapter around serving. It returns 2
 for missing runtime, invalid settings or missing key, and 130 for keyboard
-interruption. EOF ends the stdio session. The tested SDK baseline and legacy
+interruption. With `JEV_API__AUDIT_PATH` set, it opens the
+[audit file](configuration.md#entry-point-audit-file) first and closes it after
+the adapter. A fatal failure exits 1 and names its stage: `audit sink`,
+`credential resolution`, `provider acquisition`, `serving` or `shutdown`.
+A sink that cannot open reports `judgevet-mcp: audit sink failed (<TypeName>)`.
+See [fatal diagnostics](../how-to/troubleshoot.md).
+EOF ends the stdio session. The tested SDK baseline and legacy
 initialization path are recorded in the adapter source; an unexercised protocol
 path is not promoted by those tests. Intermittent host initialization failures
 have no established remedy; use [connection checks](../how-to/troubleshoot.md#when-mcp-does-not-connect).

@@ -5,6 +5,7 @@ return integer codes and the composition root closes its adapter. Explicit
 file and stdin sources are validated before adapter construction. Explicit
 policies use a separate composition path and distinguish unmet policy from errors.
 Hosted paths resolve credential sources once before adapter construction.
+An opted-in audit sink opens before the adapter and closes after it.
 Application-selected providers use their own ownership and configuration.
 They render rate limits as handled failures and configure stderr logging.
 Explicit image manifests use selected media providers; hosted media is rejected.
@@ -43,7 +44,11 @@ from judgevet.adapters.inbound.cli_composition import (
 from judgevet.adapters.inbound.cli_inputs import InputFailure, resolve_inputs
 from judgevet.adapters.inbound.cli_media import validate_hosted_evidence
 from judgevet.adapters.inbound.cli_options import FileCommand, FileInputs
-from judgevet.adapters.inbound.cli_policy_run import CliCallbacks, run_policy
+from judgevet.adapters.inbound.cli_policy_run import (
+    CliCallbacks,
+    open_audit,
+    run_policy,
+)
 from judgevet.adapters.inbound.logs import configure
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
@@ -231,6 +236,8 @@ def _command_inputs(
 ) -> tuple[str, str]:
     """Resolve explicit input sources before either judgment composition path.
 
+    Source failures print one handled diagnostic in the selected mode.
+
     Args:
         state: Legacy state positional argument.
         questions: Legacy questions positional argument.
@@ -248,10 +255,7 @@ def _command_inputs(
     """
     if policy_files and len(policy_files) > 1:
         message = "--policy: specify one policy file"
-        print(
-            json.dumps({"error": message}) if as_json else f"Error: {message}",
-            file=sys.stderr,
-        )
+        _print_error(message, as_json)
         raise typer.Exit(2)
     try:
         if state_files or question_files or policy_files:
@@ -263,10 +267,7 @@ def _command_inputs(
                 parse_questions,
             )
     except InputFailure as exc:
-        print(
-            json.dumps({"error": str(exc)}) if as_json else f"Error: {exc}",
-            file=sys.stderr,
-        )
+        _print_error(str(exc), as_json)
         raise typer.Exit(exc.code) from None
     if state is None or questions is None:
         raise typer.BadParameter("State and questions are required")
@@ -283,6 +284,8 @@ def _dispatch(
     selection: object = None,
 ) -> int:
     """Select the composition path after command input validation.
+
+    Invalid hosted evidence prints one handled diagnostic and returns 1.
 
     Args:
         state: Validated state text.
@@ -315,10 +318,7 @@ def _dispatch(
                 if isinstance(error, InputFailure)
                 else "--evidence-file: invalid questions"
             )
-            print(
-                json.dumps({"error": message}) if json_output else f"Error: {message}",
-                file=sys.stderr,
-            )
+            _print_error(message, json_output)
             return 1
     if files.policy is not None:
         return run_policy(
@@ -402,7 +402,9 @@ def main(
     timeout, gateway fields, network options, retry limits and spend cap, then
     calls run_cli. A tripped spend cap exits 1 with ``Error: Spend cap reached``.
     Configuration failures produce a generic handled diagnostic.
-    Closes the adapter in finally.
+    ``JEV_API__AUDIT_PATH`` opens an audit sink before credential resolution.
+    A sink that cannot open exits 1 before any request.
+    Closes the adapter in finally, then the sink.
     The command wrapper supplies separate help and propagates failure status.
 
     Args:
@@ -418,35 +420,65 @@ def main(
     try:
         settings = Settings()
         configure(settings.log)
-        key = settings.api.resolve_key(api_key)
-        adapter = HTTPSystemOneAdapter(
-            api_key=key.get_secret_value() if key is not None else None,
-            base_url=settings.api.base_url,
-            default_model=model,
-            timeout_seconds=settings.api.timeout_seconds,
-            retry=settings.api.retry_policy,
-            network=settings.api.network_config,
-            gateway=settings.api.gateway_config,
-            spend_cap=settings.api.spend_cap,
-        )
-    except ValueError:
-        message = "Invalid API configuration or credential source"
-        print(
-            json.dumps({"error": message}) if json_output else f"Error: {message}",
-            file=sys.stderr,
-        )
-        return 1
+        audit = open_audit(settings)
+    except ValueError as error:
+        return _configuration_failure(error, json_output)
+    with audit as sink:
+        try:
+            key = settings.api.resolve_key(api_key)
+            adapter = HTTPSystemOneAdapter(
+                api_key=key.get_secret_value() if key is not None else None,
+                base_url=settings.api.base_url,
+                default_model=model,
+                timeout_seconds=settings.api.timeout_seconds,
+                retry=settings.api.retry_policy,
+                network=settings.api.network_config,
+                gateway=settings.api.gateway_config,
+                spend_cap=settings.api.spend_cap,
+                audit=sink,
+            )
+        except ValueError as error:
+            return _configuration_failure(error, json_output)
+        try:
+            return run_cli(
+                port=adapter,
+                state=state,
+                questions=questions,
+                model=model,
+                json_output=json_output,
+            )
+        finally:
+            adapter.close()
 
-    try:
-        return run_cli(
-            port=adapter,
-            state=state,
-            questions=questions,
-            model=model,
-            json_output=json_output,
-        )
-    finally:
-        adapter.close()
+
+def _configuration_failure(error: ValueError, json_output: bool) -> int:
+    """Print a handled configuration diagnostic without caller values.
+
+    Args:
+        error: Settings, credential, connection or audit sink failure.
+        json_output: Select the JSON diagnostic.
+
+    Returns:
+        Exit code 1.
+    """
+    generic = "Invalid API configuration or credential source"
+    _print_error(
+        str(error) if isinstance(error, InputFailure) else generic, json_output
+    )
+    return 1
+
+
+def _print_error(message: str, as_json: bool) -> None:
+    """Print one handled diagnostic to stderr in the selected mode.
+
+    Args:
+        message: Sanitized diagnostic text.
+        as_json: Print ``{"error": message}`` instead of ``Error: message``.
+    """
+    print(
+        json.dumps({"error": message}) if as_json else f"Error: {message}",
+        file=sys.stderr,
+    )
 
 
 def cli_main() -> int:

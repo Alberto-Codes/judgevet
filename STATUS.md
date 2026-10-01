@@ -1,6 +1,6 @@
 # STATUS
 
-Last written: 2026-09-30. Current evidence ledger. Detailed implementation,
+Last written: 2026-10-01. Current evidence ledger. Detailed implementation,
 release and credential history remains in Git and the linked issues.
 
 ## Published release
@@ -694,8 +694,8 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**2957 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
-coverage is **95.53%** (3528/3693 statements).
+**2967 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+coverage is **95.57%** (3556/3721 statements).
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
 run when an earlier one fails, so no result is hidden. No check was dropped
@@ -709,6 +709,16 @@ adapters, eight writer threads, a closed sink, the file mode, Score string
 keys and provenance fields. The reviewer's five mutations each turned at least
 one test red. No valid record can carry NaN, so that case has no test. CLI and
 MCP wiring is slice 3.
+Slice 3 adds `JEV_API__AUDIT_PATH` to `ApiSettings`. Unset means no sink, as
+with the spend cap. The CLI `judge` command, the CLI policy command and
+`judgevet-mcp` each open one `JsonlAuditSink` at that path and close it after
+the adapter. An unopenable path exits the CLI with 1 before any request. The
+MCP server reports it as a new `audit sink` startup stage. Ten tests cover the
+three roots against a loopback peer. The CLI cases run in process and the MCP
+cases start `judgevet-mcp`. The success cases assert one line per call and no
+key in the file. The unset cases assert no file and the unopenable cases assert
+no request. The reviewer's mutations are recorded on the issue. No live call
+has written a record (#54 slice 3).
 The offline hosted kit run now records each request. One test per adapter
 asserts the `/v1/systemone` path, the `Authorization` header for the synthetic
 key, and the request's question names and types. The expected side derives
@@ -878,7 +888,7 @@ claim changes.
 #54 slice 1 adds an opt-in `AuditSink` port and a frozen `JudgmentRecord`.
 Both HTTP adapters write one record per logical call. A sink failure is
 reported on `http.call` as `audit_error` and never changes the result. The
-JSONL sink and the CLI and MCP settings wait for slices 2 and 3.
+JSONL sink landed as slice 2 and the CLI and MCP settings as slice 3.
 #56 slice A adds an opt-in library `SpendCap` for both HTTP adapters and
 `JevBudgetExceededError`. Slice B reads `JEV_API__SPEND_MAX_ATTEMPTS` and
 `JEV_API__SPEND_MAX_INPUT_TOKENS` into one cap per CLI process or MCP server

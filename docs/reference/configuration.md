@@ -119,6 +119,7 @@ The nested settings use the `JEV_` prefix and `__` separator.
 | `JEV_API__RETRY_TRANSPORT` | None | `false` | Permit retries after transport failures. |
 | `JEV_API__SPEND_MAX_ATTEMPTS` | None | Unset | Physical attempts one CLI process or MCP server may send, retries included; must be a positive integer. See [spend cap](#spend-cap). |
 | `JEV_API__SPEND_MAX_INPUT_TOKENS` | None | Unset | Settled input tokens after which the cap refuses further attempts; must be a positive integer. See [spend cap](#spend-cap). |
+| `JEV_API__AUDIT_PATH` | None | Unset | JSON Lines audit file the CLI and MCP entry points append to. See [entry-point audit file](#entry-point-audit-file). |
 | `JEV_LOG__FORMAT` | None | `auto` | `auto`, `json` or `console` logging format. |
 | `JEV_LOG__LEVEL` | None | `info` | `debug`, `info`, `warning`, `error` or `critical`, in lowercase. |
 
@@ -396,6 +397,23 @@ Source: https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-92
 closed`. The sink swallows no error. The adapter catches it and reports
 `audit_error`, as described above. Rotation and retention belong to the
 caller.
+
+### Entry-point audit file
+
+The CLI and MCP entry points read `JEV_API__AUDIT_PATH`. Unset installs no
+sink, as with the spend cap. An empty value is a path, not an opt-out.
+Each entry point opens one `JsonlAuditSink` on that path before any request.
+It passes the sink as `audit=` and closes it after the adapter.
+The judge command and the policy command each write one line per call.
+One MCP server writes one line per tool call for its whole lifetime.
+The directory must exist. The entry points do not set `fsync` or a
+`fingerprint_key`.
+
+A path that cannot be opened stops the entry point before any request.
+The CLI exits 1 with `Error: Cannot open the audit file set by JEV_API__AUDIT_PATH`.
+`judgevet-mcp` exits 1 with `judgevet-mcp: audit sink failed (<TypeName>)`.
+No record carries the key or the state. An explicit provider selection
+bypasses this setting and installs no sink.
 
 ### State fingerprint
 

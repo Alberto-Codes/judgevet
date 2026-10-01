@@ -78,6 +78,7 @@ def test_settings_once_and_constructor_propagation(
         tuple[str | None, str, str, float, RetryPolicy, NetworkConfig, GatewayConfig]
     ] = []
     caps: list[SpendCap | None] = []
+    audits: list[object] = []
     seen: list[RecordingPort] = []
     port = RecordingPort()
 
@@ -100,6 +101,7 @@ def test_settings_once_and_constructor_propagation(
             (api_key, base_url, default_model, timeout_seconds, retry, network, gateway)
         )
         caps.append(options.get("spend_cap"))
+        audits.append(options.get("audit", "missing"))
         return port
 
     async def serve(acquired: RecordingPort, *, model: str = "jev-latest") -> None:
@@ -125,6 +127,7 @@ def test_settings_once_and_constructor_propagation(
     assert [(cap.max_attempts, cap.max_input_tokens) for cap in caps if cap] == [
         (5, None)
     ]
+    assert audits == [None]
     assert seen == [port]
     assert port.close_count == 1
 

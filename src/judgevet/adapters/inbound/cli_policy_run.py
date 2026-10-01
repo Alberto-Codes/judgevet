@@ -1,6 +1,7 @@
 """Compose hosted policy judgments and render declared library failures.
 
 The neutral error catch includes service, provider and spend errors.
+``open_audit`` opens the optional audit sink that both hosted CLI roots share.
 
 Examples:
     ```python
@@ -18,6 +19,7 @@ See Also:
 import json
 import sys
 from collections.abc import Callable
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -27,10 +29,13 @@ from judgevet.adapters.inbound.cli_policy import Rule, parse_policy
 from judgevet.adapters.inbound.cli_policy_eval import evaluate_policy
 from judgevet.adapters.inbound.logs import configure
 from judgevet.adapters.inbound.settings import Settings
+from judgevet.adapters.outbound.audit_jsonl import JsonlAuditSink
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.errors import JudgevetError
 from judgevet.domain.questions import Question
 from judgevet.domain.response import SystemOneResponse
+
+AUDIT_FAILURE = "Cannot open the audit file set by JEV_API__AUDIT_PATH"
 
 
 @dataclass(frozen=True)
@@ -116,8 +121,33 @@ def _render_policy(
     return 0 if passed else 3
 
 
+def open_audit(settings: Settings) -> AbstractContextManager[JsonlAuditSink | None]:
+    """Open the configured audit sink once, before any request.
+
+    Args:
+        settings: Validated settings; ``api.audit_path`` selects the file.
+
+    Returns:
+        The open sink, or a null context that yields None when unset.
+
+    Raises:
+        InputFailure: If the file cannot be opened. The message names the
+            variable, not the path or the operating system error.
+    """
+    path = settings.api.audit_path
+    if path is None:
+        return nullcontext()
+    try:
+        return JsonlAuditSink(path)
+    except OSError:
+        raise InputFailure(AUDIT_FAILURE) from None
+
+
 def _build_adapter(
-    settings: Settings, api_key: str | None, model: str
+    settings: Settings,
+    api_key: str | None,
+    model: str,
+    audit: JsonlAuditSink | None,
 ) -> HTTPSystemOneAdapter:
     """Resolve the policy credential and construct its gateway-aware HTTP adapter.
 
@@ -127,6 +157,7 @@ def _build_adapter(
         settings: Validated connection, retry, spend and network settings.
         api_key: Optional explicit key override.
         model: Requested model.
+        audit: Open audit sink the caller closes, or None.
 
     Returns:
         An owned HTTP adapter for one policy invocation.
@@ -144,6 +175,7 @@ def _build_adapter(
         network=settings.api.network_config,
         gateway=settings.api.gateway_config,
         spend_cap=settings.api.spend_cap,
+        audit=audit,
     )
 
 
@@ -159,6 +191,7 @@ def run_policy(
     """Validate policy, build its configured adapter and close after judgment.
 
     Declared library failures retain their messages in handled diagnostics.
+    An opted-in audit sink opens before the adapter and closes after it.
 
     Args:
         state: Existing state string interpretation.
@@ -178,16 +211,17 @@ def run_policy(
         state_data = json.loads(state) if state.startswith(("{", "[")) else state
         settings = Settings()
         configure(settings.log)
-        adapter = _build_adapter(settings, api_key, model)
-        try:
-            response = adapter.system_one(
-                state=state_data, questions=typed_questions, model=model
-            )
-            return _render_policy(
-                response, rules, as_json, callbacks.build, callbacks.output
-            )
-        finally:
-            adapter.close()
+        with open_audit(settings) as sink:
+            adapter = _build_adapter(settings, api_key, model, sink)
+            try:
+                response = adapter.system_one(
+                    state=state_data, questions=typed_questions, model=model
+                )
+                return _render_policy(
+                    response, rules, as_json, callbacks.build, callbacks.output
+                )
+            finally:
+                adapter.close()
     except InputFailure as error:
         message = str(error)
     except JudgevetError as error:

@@ -13,6 +13,9 @@ That is what keeps the outbound adapter testable without touching
 opt-in spend cap. Each root reads ``spend_cap`` once, so one cap spans a CLI
 process or an MCP server's lifetime and never resets.
 
+``JEV_API__AUDIT_PATH`` opts in to the JSON Lines audit sink. Each hosted root
+opens the file once, so this module still does no IO.
+
 The configured key or command is a ``SecretStr``. File and command sources
 resolve only when ``resolve_key`` is called, not during Settings construction.
 Its ``repr`` renders as ``**********``, so a
@@ -87,6 +90,9 @@ class ApiSettings(BaseSettings):
         spend_max_input_tokens (int | None): Settled input tokens after which
             the cap refuses further attempts. None leaves it unbounded.
         spend_cap (SpendCap | None): New cap from both limits, or None.
+        audit_path (str | None): JSON Lines audit file each hosted root
+            opens once. None installs no sink. An empty value is a path that
+            fails to open, not an opt-out.
         proxy (SecretStr | None): Explicit proxy URL; masks optional credentials.
         ca_bundle (str | None): Explicit PEM trust bundle path.
         verify (bool): Enable certificate and hostname verification.
@@ -298,6 +304,8 @@ class ApiSettings(BaseSettings):
         if self.spend_max_attempts is None and self.spend_max_input_tokens is None:
             return None
         return SpendCap(self.spend_max_attempts, self.spend_max_input_tokens)
+
+    audit_path: str | None = None
 
     timeout_seconds: float = Field(default=30.0)
 
