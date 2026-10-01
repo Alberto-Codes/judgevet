@@ -5,34 +5,41 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.15.0 is published to PyPI. Library, CLI and optional MCP share one
-version. This release adds the provider conformance kit behind the
-`conformance` extra, which in 0.15.0 adds only pytest: `BaseProviderConformance` for
-`SystemOnePort` providers and `BaseAsyncProviderConformance` for
-`AsyncSystemOnePort` providers. The next release's extra also declares anyio
-(#253). Runtime requirements, the CLI and the MCP
-tools are unchanged. The MCP registry lists 0.15.0 as latest. The third
-submission, on 2026-09-30 UTC, succeeded. The first two returned 401 on an
-expired publisher login (#256).
+judgevet 0.16.0 is published to PyPI. Library, CLI and optional MCP share one
+version. This release adds `JsonlAuditSink` and the `JEV_API__AUDIT_PATH`
+setting that opens it from the CLI and the MCP server. It makes `JevError` a
+`ProviderError` and reads Ollama error bodies. It adds the async media port,
+`async_provider_scope` and the `AsyncProviderFactory` export. The `conformance`
+extra now declares anyio. Runtime requirements are unchanged. The MCP
+registry step is recorded below.
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.15.0`, commit `0d0bda02d0503b1274936361df1c91c0a38aaf1f` |
-| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.14.0 |
-| Wheel SHA-256 | `10f961c31b2de61fad882f8a45115da8f025991553212efdcba9aae189477984` |
-| Source distribution SHA-256 | `df5368a9e52b4658127c021f1635392c99697390ebd510cdeea4d97372b46c3d` |
+| Release/tag | `v0.16.0`, commit `e6aab4014183619d26a1cb0182a9e4105b3768c2` |
+| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.15.0 |
+| Wheel SHA-256 | `b984e3a5642e188a4ecc9f580248aae81d31a4ad3778ad3bee949392c53b9018` |
+| Source distribution SHA-256 | `71e25e46513a436ae17e47d56ac88954ec1c332737d2f2deec002abb1d60c31e` |
 | Actual PyPI download | PyPI JSON digests equal the SHA-256 of the wheel and sdist attached to the GitHub release |
 | Release files | 15 assets: wheel, sdist, two Sigstore bundles and 11 supply-chain files; `provenance.txt` names the tag commit and `complete: yes` |
-| Attestations | `gh attestation verify --bundle` exits 0 for the wheel and sdist (build provenance) and the wheel (CycloneDX SBOM) |
+| Attestations | `gh attestation verify --bundle` exits 0 for the wheel and sdist (build provenance) and for the wheel with the CycloneDX predicate type (SBOM) |
 | Library and CLI | The publish workflow's wheel smoke step passed before upload; no separate index-wheel check ran |
 | MCP | The publish workflow's installed MCP tools smoke step passed before upload |
-| Registry | Manifest validated (`valid: true`) and the PyPI description carries the `mcp-name` marker. Two submissions returned 401 on an expired publisher token. The device flow in `mcp-publisher` 1.7.9 and 1.8.1 exited with `incorrect_device_code`, so 1.8.1 logged in with a GitHub token. `mcp-publisher publish server.json` at a6bc134 reported version 0.15.0 published. The listing is recorded below |
+| Registry | The device flow stays unused; `mcp-publisher login github -token` with the maintainer's `gh` token wrote a fresh `token.json`. A first `publish` from a stale checkout at 0.15.0 was refused as a duplicate version. `mcp-publisher publish` of the release commit's `server.json` reported version 0.16.0 published. The listing is recorded below |
 
-[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36665560245)
-ran build, attest, publish and release-files. The live footprint was the
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36871006827)
+ran build, attest, release-files and publish. The live footprint was the
 publish workflow's smoke calls; the exact call count was not recorded. No
 source-archive rebuild outside the checkout was done. No unseen API body,
 other model, modern protocol path or gateway became verified.
+
+Prior 0.15.0 evidence: tag `v0.15.0` at commit
+`0d0bda02d0503b1274936361df1c91c0a38aaf1f`, wheel SHA-256
+`10f961c31b2de61fad882f8a45115da8f025991553212efdcba9aae189477984`, sdist SHA-256
+`df5368a9e52b4658127c021f1635392c99697390ebd510cdeea4d97372b46c3d`. Its registry
+listing was published `2026-09-30T04:03:00.71939Z` on the third submission.
+The first two returned 401 on an expired publisher login (#256).
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36665560245)
+for 0.15.0 ran build, attest, publish and release-files.
 
 Prior 0.14.0 evidence: tag `v0.14.0` at commit
 `bf5d15dcb5f5284ad4fa024d172f5197c40d0cab`, wheel SHA-256
@@ -82,8 +89,8 @@ records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
 The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.15.0` as active with
-`isLatest: true`, published at `2026-09-30T04:03:00.71939Z`; 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
+reports `io.github.Alberto-Codes/judgevet` version `0.16.0` as active with
+`isLatest: true`, published at `2026-10-01T13:57:12.153695Z`; 0.15.0, 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
 manifest. Registry acceptance does not verify a host installation or reload.
 No unseen API body, other model, modern protocol path or gateway became verified.
 
@@ -1123,7 +1130,7 @@ Published README links retain offline source and fragment validation.
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 16 hand-authored fixtures, inferred from docs/reference/api.md except the oversized-request fixture, which replays the body recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575, and `ollama_documented_response`, which copies Ollama's documented body from https://ollama.com/blog/ollama-now-supports-jev-style-decision-models and stays inferred from the docs: it is consistent with the one observed Ollama call but replays the docs' rounded numbers, not that call's (#268); the shipped `judgevet.testing` fakes match the adapter's whole response, error type and status, spend counters and audit record on every fixture (#171, #189) |
 | the hosted adapter parses Ollama's `/v1/systemone` response for choice, noul and score | **observed once** — judgevet 0.15.0 CLI at 62c6490 against local Ollama 0.35.0 with `nimble:latest` (9.0B, Q8_0) on 2026-09-30, `JEV_API__BASE_URL=http://localhost:11434`, `JEV_API__TIMEOUT_SECONDS=120`; probabilities arrived at full float precision, `model` echoed the tag, and the score equalled the probability-weighted level average; recorded at https://github.com/Alberto-Codes/judgevet/issues/268#issuecomment-5917968541. A first attempt at the default 30 s timeout failed while the model loaded. Ollama's error bodies, `tev1` and judgment quality are unverified |
-| the hosted adapters pass the provider conformance kit against local Ollama `nimble` | **observed once** — `tests/live/test_ollama_kit_live.py` on 2026-09-30 against Ollama 0.35.0, `nimble:latest` digest `24e550a16a7081881be2f1f0d91e8cc13a597472735c04119f035a0a85c67e0c` (qwen35, 9.0B, Q8_0), adapter `timeout_seconds=120.0`: `10 passed, 2 skipped in 9.14s`; the port-shape, typed-answers, failure, scope and media-refusal rules passed for the sync adapter and the three async rules passed; the two media-port rules skipped because the hosted adapters supply no media port; the failure rule used a closed loopback port, so it says nothing about how Ollama fails; recorded at https://github.com/Alberto-Codes/judgevet/issues/267#issuecomment-5922154877 |
+| the hosted adapters pass the provider conformance kit against local Ollama `nimble` | **observed twice** — `tests/live/test_ollama_kit_live.py` on 2026-09-30 against Ollama 0.35.0, `nimble:latest` digest `24e550a16a7081881be2f1f0d91e8cc13a597472735c04119f035a0a85c67e0c` (qwen35, 9.0B, Q8_0), adapter `timeout_seconds=120.0`: `10 passed, 2 skipped in 9.14s`; the port-shape, typed-answers, failure, scope and media-refusal rules passed for the sync adapter and the three async rules passed; the two media-port rules skipped because the hosted adapters supply no media port; the failure rule used a closed loopback port, so it says nothing about how Ollama fails; recorded at https://github.com/Alberto-Codes/judgevet/issues/267#issuecomment-5922154877. A second run on 2026-10-01 at main 128c867, after the async base grew to nine rules, returned `14 passed, 4 skipped in 10.74s` against the same server, model and digest: the seven sync rules and the same seven async rules passed, including the four async scope and media-refusal rules that had never run live, and the two media-port rules skipped in each class; recorded at https://github.com/Alberto-Codes/judgevet/issues/267#issuecomment-5932674842 |
 | an off-list Choice option or probability key raises JevResponseError | **inferred** — offline only (#195); the check runs where the response is bound to the questions; no live call has returned one |
 | `state_fingerprint` is HMAC-SHA-256 over the raw pre-redaction state under a caller-held key, and `None` without one | **inferred** — offline tests against `httpx.MockTransport` and a fixed test vector (#191); no live call has written a fingerprint |
 | 401 and 422 error responses become JevAuthError and JevRequestError with retryable=False | **verified** — live tests, 2026-09-21 |
