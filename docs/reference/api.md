@@ -246,9 +246,9 @@ were 1.0, 0.97 and 0.94. Confidence sat below that probability in every soft
 run. The vendor's demo approximation for three options is
 `(3 × largest probability − 1) / 2`.
 Source: https://docs.typesafe.ai/confidence.
-Generalised to `(n × largest − 1) / (n − 1)`, it matches three of the five
-soft runs within rounding and misses the 3-option run by 0.015. The top-two
-margin matches four and misses the 4-option run by 0.03.
+Generalised to `(n × largest − 1) / (n − 1)`, it matches four of the five
+soft runs within 0.01 and misses the 3-option run by 0.015. The top-two
+margin also matches four within 0.01 and misses the 4-option run by 0.03.
 Source: https://github.com/Alberto-Codes/judgevet/issues/193#issuecomment-5924550851.
 
 **Open question:** the formula that maps `probabilities` to `confidence`.
