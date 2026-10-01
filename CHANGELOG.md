@@ -3,6 +3,28 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.16.0](https://github.com/Alberto-Codes/judgevet/compare/v0.15.0...v0.16.0) (2026-10-01)
+
+
+### Features
+
+* **audit:** add JsonlAuditSink, the reference audit sink ([93fd8a3](https://github.com/Alberto-Codes/judgevet/commit/93fd8a301a00d8966e323498942fb96510eff4bf)), references [#54](https://github.com/Alberto-Codes/judgevet/issues/54)
+* **audit:** open the JSONL audit sink from JEV_API__AUDIT_PATH ([128c867](https://github.com/Alberto-Codes/judgevet/commit/128c867c3ccbad8e63888a7c2227d09aa1d05eef)), references [#54](https://github.com/Alberto-Codes/judgevet/issues/54) [#282](https://github.com/Alberto-Codes/judgevet/issues/282)
+* **errors:** make ProviderError the parent of JevError ([660bd4d](https://github.com/Alberto-Codes/judgevet/commit/660bd4d608ef7510acd4cdc2161eb9d6cef83e42)), references [#259](https://github.com/Alberto-Codes/judgevet/issues/259)
+* **http:** read Ollama's error body and pin its documented response ([17f24f3](https://github.com/Alberto-Codes/judgevet/commit/17f24f353743969629268cfaf55120cdb4edc409)), references [#268](https://github.com/Alberto-Codes/judgevet/issues/268)
+* **media:** add AsyncMediaSystemOnePort and async_judge_with_images ([9267658](https://github.com/Alberto-Codes/judgevet/commit/926765869e45fa7675f51705215f2c73deca1fe4)), references [#252](https://github.com/Alberto-Codes/judgevet/issues/252)
+* **providers:** add async_provider_scope and the async kit scope rules ([2ed818c](https://github.com/Alberto-Codes/judgevet/commit/2ed818c5df3bb7136eda4422f4f044db00904735)), references [#251](https://github.com/Alberto-Codes/judgevet/issues/251)
+* **testing:** export AsyncProviderFactory from the public conformance module ([5f4e260](https://github.com/Alberto-Codes/judgevet/commit/5f4e26087f0c9828d583fd5c61a70a911423fc64)), references [#277](https://github.com/Alberto-Codes/judgevet/issues/277) [#272](https://github.com/Alberto-Codes/judgevet/issues/272) [#267](https://github.com/Alberto-Codes/judgevet/issues/267)
+
+
+### Documentation
+
+* **how-to:** point judgevet at an Ollama System One server ([e164280](https://github.com/Alberto-Codes/judgevet/commit/e164280a4170f8fb9b81005488d490a14ea09ffc)), references [#268](https://github.com/Alberto-Codes/judgevet/issues/268)
+* **providers:** the typevet bridge ships in typevet 0.2.0 ([8ee86ef](https://github.com/Alberto-Codes/judgevet/commit/8ee86ef5ffdd09cdadb5cf43e51a655c362a4a6b)), references [#254](https://github.com/Alberto-Codes/judgevet/issues/254)
+* **release:** name the token login fallback in the MCP registry procedure ([fc09122](https://github.com/Alberto-Codes/judgevet/commit/fc09122d78b42e716609231736f051b8c8a2a73d)), references [#261](https://github.com/Alberto-Codes/judgevet/issues/261)
+* **status:** count both confidence candidates the same way ([44ca648](https://github.com/Alberto-Codes/judgevet/commit/44ca64865d0cfca20c27ac6c06cb7cf51b6507f6)), references [#193](https://github.com/Alberto-Codes/judgevet/issues/193)
+* **status:** state the Dependabot subdirectory scan as an open question ([706dbb3](https://github.com/Alberto-Codes/judgevet/commit/706dbb3da3a36ce13623d3809c7875a8fe98b662)), references [#266](https://github.com/Alberto-Codes/judgevet/issues/266)
+
 ## [0.15.0](https://github.com/Alberto-Codes/judgevet/compare/v0.14.0...v0.15.0) (2026-09-30)
 
 

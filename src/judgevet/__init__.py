@@ -132,7 +132,7 @@ from judgevet.ports import (
     SystemOnePort,
 )
 
-__version__ = "0.15.0"  # x-release-please-version
+__version__ = "0.16.0"  # x-release-please-version
 
 VERIFIED_MODEL = "jev-1.13.0"
 
