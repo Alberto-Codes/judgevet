@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def audit_command() -> str:
     """Read the owned workflow contract and reject optional audit execution."""
     workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
-    job = workflow["jobs"]["audit"]
+    job = workflow["jobs"]["checks"]
     assert "if" not in job
     assert not job.get("continue-on-error", False)
     steps = job["steps"]

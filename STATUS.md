@@ -679,6 +679,10 @@ refuses the kit with an error naming the extra.
 
 **2884 tests pass, 3 tests skip, 24 live tests deselected.** The last measured
 coverage is **95.94%** (3330/3471 statements).
+CI now runs the dependency audit, `ty`, the doc schema check and docvet as
+named steps of one `checks` job instead of three jobs. The three later steps
+run when an earlier one fails, so no result is hidden. No check was dropped
+and main has no required status check to rename (#219).
 `JsonlAuditSink`, exported from `judgevet`, is the reference audit sink (#54
 slice 2). It appends one compact UTF-8 JSON object per `JudgmentRecord` to a
 file opened with `O_APPEND` and requests mode `0o600` at creation. It writes

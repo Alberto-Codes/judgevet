@@ -29,9 +29,10 @@ Those records are provenance, not prerequisites for user tasks.
 ## Audit the current lockfile
 
 Run `uv audit --locked --preview-features audit-command` before publication.
-The pre-push hook and required CI audit job run the same command. CI pins the
-verified uv version to 0.11.20. The audit includes all extras and dependency
-groups, including MCP and development tools. It does not install the project.
+The pre-push hook and the audit step of the CI `checks` job run the same
+command. CI pins the verified uv version to 0.11.20. The audit includes all
+extras and dependency groups, including MCP and development tools. It does not
+install the project.
 See the [uv audit reference](https://docs.astral.sh/uv/reference/cli/#uv-audit).
 
 `--locked` rejects a missing or stale lockfile instead of rewriting it. Reported

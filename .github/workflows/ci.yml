@@ -15,16 +15,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  audit:
+  checks:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          fetch-depth: 0
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
         with:
           version: "0.11.20"
+          enable-cache: true
+      - name: Install Python
+        run: uv python install 3.12
+      - name: Sync dependencies
+        run: uv sync --locked --dev --extra mcp
       # Native uv audit is experimental; verify flags when upgrading uv.
-      - run: uv audit --locked --preview-features audit-command
+      - name: Dependency audit
+        run: uv audit --locked --preview-features audit-command
+      - name: Type check
+        if: ${{ !cancelled() }}
+        run: uv run ty check
+      - name: Doc schemas
+        if: ${{ !cancelled() }}
+        run: uv run python -m scripts.check_doc_schemas
+      - name: Docvet
+        if: ${{ !cancelled() }}
+        uses: Alberto-Codes/docvet@7a0463ddf05248215df59386045cb8532183aef3  # v1
+        id: docvet
+        with:
+          checks: "enrichment,freshness,coverage,griffe,presence"
+      - name: Prune uv cache
+        run: uv cache prune --ci
+        if: always()
+        continue-on-error: true
 
   # Supply-chain evidence for procurement (#59): CycloneDX source SBOMs per
   # scope, a licence table read from installed metadata, and the audit as
@@ -92,22 +118,6 @@ jobs:
         if: always()
         continue-on-error: true
 
-  type-check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
-        with:
-          enable-cache: true
-      - run: uv python install 3.12
-      - run: uv sync --locked --dev --extra mcp
-      - run: uv run ty check
-      - run: uv run python -m scripts.check_doc_schemas
-      - run: uv cache prune --ci
-        if: always()
-        continue-on-error: true
-
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -148,15 +158,3 @@ jobs:
       - run: uv cache prune --ci
         if: always()
         continue-on-error: true
-
-  docvet:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-        with:
-          fetch-depth: 0
-      - uses: Alberto-Codes/docvet@7a0463ddf05248215df59386045cb8532183aef3  # v1
-        id: docvet
-        with:
-          checks: "enrichment,freshness,coverage,griffe,presence"
