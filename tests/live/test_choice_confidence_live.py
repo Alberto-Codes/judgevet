@@ -6,6 +6,12 @@ the selected choice, its confidence, the probabilities and the resolved
 model. The supervisor compares those lines with candidate formulas by hand.
 The tests assert only the answer shape, never a formula.
 
+The state is an ambiguous synthetic ticket. It mixes a charge dispute with a
+login failure, so each of the 2, 3 and 4 option sets has at least two
+plausible answers. Round 1 used an unambiguous duplicate-charge ticket, and
+the service returned a hard distribution for every option count.
+Source: https://github.com/Alberto-Codes/judgevet/issues/193#issuecomment-5923966685.
+
 Source: https://docs.typesafe.ai/confidence defines confidence for a Choice
 answer. Question and answer shapes follow
 https://docs.typesafe.ai/primitives/choice.
@@ -36,8 +42,10 @@ from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.questions import Choice
 
 STATE = (
-    "Hello, I was billed twice for my March subscription. Both charges of "
-    "$12.99 appear on my card statement on the same day. Please refund one."
+    "Hello, there is a $12.99 charge on my card this month that I do not "
+    "recognise, and I want to dispute it. I tried to log in to check my "
+    "invoices, but the login page shows an error after I enter my password, "
+    "so I cannot see what the charge was for. Please help."
 )
 INSTRUCTIONS = "Which category best describes this support ticket?"
 CRITERIA_BY_COUNT: dict[int, dict[str, str]] = {

@@ -240,9 +240,21 @@ probability, top-two margin and one minus normalised entropy all equal 1.0
 there, so that run distinguishes no candidate formula.
 Source: https://github.com/Alberto-Codes/judgevet/issues/193#issuecomment-5923966685.
 
+A second run on 2026-09-30 used an ambiguous state. It returned `confidence`
+0.99, 0.94 and 0.92 for 2, 3 and 4 options. The chosen-option probabilities
+were 1.0, 0.97 and 0.94. Confidence sat below that probability in every soft
+run. The vendor's demo approximation for three options is
+`(3 × largest probability − 1) / 2`.
+Source: https://docs.typesafe.ai/confidence.
+Generalised to `(n × largest − 1) / (n − 1)`, it matches three of the five
+soft runs within rounding and misses the 3-option run by 0.015. The top-two
+margin matches four and misses the 4-option run by 0.03.
+Source: https://github.com/Alberto-Codes/judgevet/issues/193#issuecomment-5924550851.
+
 **Open question:** the formula that maps `probabilities` to `confidence`.
-No source publishes it. The one differential run returned hard distributions
-and measured nothing; a run on an ambiguous state is proposed on #193.
+No source publishes it. Two differential runs narrowed the candidates to the
+generalised demo approximation and the top-two margin; neither matches every
+run on the two-decimal wire values.
 
 ## Service limits
 
