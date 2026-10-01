@@ -54,12 +54,17 @@ themselves, and they observe the same values.
 
 ## Session uv cache
 
-The autouse `_session_uv_cache` fixture gives each pytest session, and so each
-xdist worker, one private uv cache under the session's base temporary
-directory. It publishes the path in `JUDGEVET_TEST_UV_CACHE_DIR`, which the
-uv helpers in `scripts.smoke_release` pass to each uv child. It never sets the
-caller's own `UV_CACHE_DIR`, and it removes the cache at teardown. A path the
-caller already set is reused and never removed. See issue #243.
+The autouse `_session_uv_cache` fixture gives each pytest run one private uv
+cache under the run's base temporary directory. Every xdist worker of the run
+shares it, because each worker's base temporary directory is a child of the
+run's, and uv supports concurrent commands on one cache. It publishes the path
+in `JUDGEVET_TEST_UV_CACHE_DIR`, which the uv helpers in
+`scripts.smoke_release` pass to each uv child. It never sets the caller's own
+`UV_CACHE_DIR`. No worker removes the shared cache at teardown, since others
+may still use it; pytest's base temporary directory retention removes old runs.
+A path the caller already set is reused, so two pytest runs share one warmed
+cache when both start with `JUDGEVET_TEST_UV_CACHE_DIR=<dir> uv run pytest`.
+See issues #243 and #262.
 
 See Also:
     - [pytest_runtest_makereport][]: The hook that implements the guard.
@@ -72,7 +77,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import shutil
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -266,13 +270,18 @@ def _instant_retry_backoff(
 
 @pytest.fixture(scope="session", autouse=True)
 def _session_uv_cache(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
-    """Give the session one private uv cache and remove it at teardown.
+    """Give the run one private uv cache that every xdist worker shares.
+
+    Under xdist each worker's base temporary directory is
+    ``<run basetemp>/popen-gwN``, so the run-wide cache sits in its parent.
+    The cache is left for pytest's base temporary directory retention to
+    remove, because other workers may still be using it.
 
     Args:
-        tmp_path_factory: Supplies the session's base temporary directory.
+        tmp_path_factory: Supplies the worker's base temporary directory.
 
     Yields:
-        The cache directory that uv children of this session use.
+        The cache directory that uv children of this run use.
     """
     from scripts.smoke_release import SESSION_CACHE_VAR
 
@@ -280,10 +289,12 @@ def _session_uv_cache(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path
     if existing:
         yield Path(existing)
         return
-    cache = tmp_path_factory.mktemp("uv-cache")
+    basetemp = tmp_path_factory.getbasetemp()
+    run_root = basetemp.parent if os.environ.get("PYTEST_XDIST_WORKER") else basetemp
+    cache = run_root / "uv-cache"
+    cache.mkdir(exist_ok=True)
     os.environ[SESSION_CACHE_VAR] = str(cache)
     try:
         yield cache
     finally:
         os.environ.pop(SESSION_CACHE_VAR, None)
-        shutil.rmtree(cache, ignore_errors=True)

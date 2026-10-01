@@ -24,6 +24,7 @@ from packaging.requirements import Requirement
 from packaging.utils import parse_wheel_filename
 
 from scripts.doc_host_contracts import HostRecipe, parse_recipe
+from scripts.smoke_release import uv_cache_env
 
 ROOT = Path(__file__).resolve().parents[2]
 PAGE = "docs/how-to/connect-mcp.md"
@@ -67,7 +68,12 @@ def exact_block(number: int, language: str, root: Path = ROOT) -> str:
 
 
 def environment(workdir: Path, wheel: Path, requirement: str) -> dict[str, str]:
-    """Create a fresh uvx cache and map only the requested extra to the candidate.
+    """Map only the requested extra to the candidate over the run's uv cache.
+
+    The uv cache is the one the pytest run shares, named by
+    [scripts.smoke_release.uv_cache_env][], so the ``mcp`` tree resolves from
+    PyPI once per run. ``HOME``, ``UV_OVERRIDE`` and the other isolation stay
+    per test, and the override pins judgevet to the exact wheel.
 
     Args:
         workdir: Test-owned directory outside the checkout.
@@ -91,9 +97,9 @@ def environment(workdir: Path, wheel: Path, requirement: str) -> dict[str, str]:
         "HOME": str(workdir),
         "UV_PYTHON": sys.executable,
         "UV_ISOLATED": "1",
-        "UV_CACHE_DIR": str(workdir / "cache"),
         "UV_OVERRIDE": str(override),
         "PIP_FIND_LINKS": str(wheel.resolve().parent),
+        **uv_cache_env(),
     }
 
 

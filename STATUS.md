@@ -677,8 +677,13 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2861 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
+**2862 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
 coverage is **95.89%** (3264/3404 statements).
+The doc host launcher tests share one warmed uv cache per pytest run instead
+of resolving from PyPI cold once per test. The cache sits at the run's
+temporary root, or in `JUDGEVET_TEST_UV_CACHE_DIR` when set. A unit test pins
+the shared path, the three broken-route cases still fail on their defects, and
+two concurrent runs of the file passed where one failed before (#262).
 A `live` module, `tests/live/test_ollama_kit_live.py`, runs both kit bases
 against local Ollama. Its one approved run on 2026-09-30 passed ten tests and
 skipped the two media-port rules; the receipt is on #267. #267 ask 2 decided
