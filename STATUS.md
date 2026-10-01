@@ -5,32 +5,42 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.16.0 is published to PyPI. Library, CLI and optional MCP share one
-version. This release adds `JsonlAuditSink` and the `JEV_API__AUDIT_PATH`
-setting that opens it from the CLI and the MCP server. It makes `JevError` a
-`ProviderError` and reads Ollama error bodies. It adds the async media port,
-`async_provider_scope` and the `AsyncProviderFactory` export. The `conformance`
-extra now declares anyio. Runtime requirements are unchanged. The MCP
+judgevet 0.17.0 is published to PyPI. Library, CLI and optional MCP share one
+version. This release adds `SystemOneResponse.receipts` and the
+`judgevet.ports.options` Protocols that take `provider_options`, and it forwards
+`provider_options` through the image-evidence helpers. The rest of the release
+is documentation corrected against the code, reference pages caught up since
+0.14.0, guarded version anchors and a repaired maintainer map. Runtime
+requirements, the CLI surface and the MCP tool set are unchanged. The MCP
 registry step is recorded below.
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.16.0`, commit `e6aab4014183619d26a1cb0182a9e4105b3768c2` |
-| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.15.0 |
-| Wheel SHA-256 | `b984e3a5642e188a4ecc9f580248aae81d31a4ad3778ad3bee949392c53b9018` |
-| Source distribution SHA-256 | `71e25e46513a436ae17e47d56ac88954ec1c332737d2f2deec002abb1d60c31e` |
+| Release/tag | `v0.17.0`, commit `2ad9b86de8084d880641540bb3ef7f7454b8aba9` |
+| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.16.0 |
+| Wheel SHA-256 | `519a89c2a6e277f2c6778dcfb5a7766655f087b81447a8354e03a9fc52b26c0c` |
+| Source distribution SHA-256 | `7f7bc76ca11db1de30ca4101e89c66e218d84758dd1138dadb77edd3086d9ab4` |
 | Actual PyPI download | PyPI JSON digests equal the SHA-256 of the wheel and sdist attached to the GitHub release |
 | Release files | 15 assets: wheel, sdist, two Sigstore bundles and 11 supply-chain files; `provenance.txt` names the tag commit and `complete: yes` |
 | Attestations | `gh attestation verify --bundle` exits 0 for the wheel and sdist (build provenance) and for the wheel with the CycloneDX predicate type (SBOM) |
 | Library and CLI | The publish workflow's wheel smoke step passed before upload; no separate index-wheel check ran |
 | MCP | The publish workflow's installed MCP tools smoke step passed before upload |
-| Registry | The device flow stays unused; `mcp-publisher login github -token` with the maintainer's `gh` token wrote a fresh `token.json`. A first `publish` from a stale checkout at 0.15.0 was refused as a duplicate version. `mcp-publisher publish` of the release commit's `server.json` reported version 0.16.0 published. The listing is recorded below |
+| Registry | `mcp-publisher login github -token` with the maintainer's `gh` token wrote a fresh `token.json`. The first `publish` of the release commit's `server.json` returned 400: the registry could not reach its own database. A retry 45 s later reported version 0.17.0 published. The listing is recorded below |
 
-[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36871006827)
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36895249004)
 ran build, attest, release-files and publish. The live footprint was the
 publish workflow's smoke calls; the exact call count was not recorded. No
 source-archive rebuild outside the checkout was done. No unseen API body,
 other model, modern protocol path or gateway became verified.
+
+Prior 0.16.0 evidence: tag `v0.16.0` at commit
+`e6aab4014183619d26a1cb0182a9e4105b3768c2`, wheel SHA-256
+`b984e3a5642e188a4ecc9f580248aae81d31a4ad3778ad3bee949392c53b9018`, sdist SHA-256
+`71e25e46513a436ae17e47d56ac88954ec1c332737d2f2deec002abb1d60c31e`. Its registry
+listing was published `2026-10-01T13:57:12.153695Z` after a stale-checkout
+duplicate refusal.
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36871006827)
+for 0.16.0 ran build, attest, release-files and publish.
 
 Prior 0.15.0 evidence: tag `v0.15.0` at commit
 `0d0bda02d0503b1274936361df1c91c0a38aaf1f`, wheel SHA-256
@@ -89,8 +99,8 @@ records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
 The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.16.0` as active with
-`isLatest: true`, published at `2026-10-01T13:57:12.153695Z`; 0.15.0, 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
+reports `io.github.Alberto-Codes/judgevet` version `0.17.0` as active with
+`isLatest: true`, published at `2026-10-01T16:55:39.67306Z`. The versions 0.16.0, 0.15.0, 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
 manifest. Registry acceptance does not verify a host installation or reload.
 No unseen API body, other model, modern protocol path or gateway became verified.
 
