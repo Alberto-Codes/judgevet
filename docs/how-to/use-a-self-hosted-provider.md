@@ -217,6 +217,10 @@ port, and `failing_port` returns a port whose awaited call fails. The scope
 and media rules are synchronous only for now. Each rule runs its coroutine
 with `anyio.run`, so the kit needs no async pytest plugin.
 Source: https://github.com/Alberto-Codes/judgevet/issues/246.
+Annotate the synchronous fixture with `ProviderFactory` from
+`judgevet.providers`. Annotate the async fixture with `AsyncProviderFactory`
+from `judgevet.testing.conformance`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/277.
 
 The kit source contains a minimal subclass in its module example. See the
 [conformance kit reference](../reference/api.md#offline-fakes) and the

@@ -38,8 +38,8 @@ from judgevet.adapters.outbound.http import (
 )
 from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.providers import ProviderFactory
-from judgevet.testing._conformance_async import AsyncProviderFactory
 from judgevet.testing.conformance import (
+    AsyncProviderFactory,
     BaseAsyncProviderConformance,
     BaseProviderConformance,
 )

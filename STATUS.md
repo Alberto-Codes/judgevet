@@ -677,8 +677,13 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2866 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
+**2867 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
 coverage is **95.89%** (3264/3404 statements).
+`judgevet.testing.conformance` now exports `AsyncProviderFactory` beside the
+two kit bases. A pin test holds the module's nine public names, and the hosted
+and Ollama kit modules import the alias from the public module; no test
+imports `_conformance_async` any more. The reviewer's removal of the export
+turned the pin test red (#277).
 The `PostToolUse` hook, `scripts/vet_file.sh`, reads the `[tool.docvet]`
 exclude list from `pyproject.toml` once per run and skips only its docvet step
 for a file under an excluded entry, so edits under `tests/` and `scripts/` no

@@ -136,6 +136,10 @@ from the same module. It overrides the same two fixtures, and its
 `provider_factory` returns an async context manager. It runs the shape,
 typed-answer and failure rules only.
 Source: https://github.com/Alberto-Codes/judgevet/issues/246.
+The synchronous `provider_factory` fixture returns a `ProviderFactory` from
+`judgevet.providers`. The async fixture returns an `AsyncProviderFactory` from
+`judgevet.testing.conformance`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/277.
 
 ## Answer and container types
 

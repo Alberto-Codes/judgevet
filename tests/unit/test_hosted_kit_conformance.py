@@ -48,11 +48,11 @@ from judgevet.adapters.outbound.http import (
 )
 from judgevet.domain.errors import JevResponseError
 from judgevet.providers import ProviderFactory
-from judgevet.testing._conformance_async import AsyncProviderFactory
 from judgevet.testing.conformance import (
     CONFORMANCE_MODEL,
     CONFORMANCE_QUESTIONS,
     VALID_ANSWERS,
+    AsyncProviderFactory,
     BaseAsyncProviderConformance,
     BaseProviderConformance,
 )

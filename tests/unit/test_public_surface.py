@@ -18,6 +18,7 @@ import pytest
 import judgevet
 from judgevet import AsyncHTTPSystemOneAdapter, HTTPSystemOneAdapter, ports
 from judgevet.domain import answers, audit, errors, questions, response, usage
+from judgevet.testing import conformance
 
 EXPECTED_EXPORTS = {
     "Answer",
@@ -55,6 +56,18 @@ EXPECTED_EXPORTS = {
     "__version__",
     "bind_request_id",
 }
+
+EXPECTED_CONFORMANCE_EXPORTS = (
+    "CONFORMANCE_MODEL",
+    "CONFORMANCE_POLICY",
+    "CONFORMANCE_QUESTIONS",
+    "CONFORMANCE_STATE",
+    "INVALID_ANSWERS",
+    "VALID_ANSWERS",
+    "AsyncProviderFactory",
+    "BaseAsyncProviderConformance",
+    "BaseProviderConformance",
+)
 
 
 def test_all_matches_the_documented_surface() -> None:
@@ -133,3 +146,15 @@ def test_the_async_adapter_refuses_the_sync_lifecycle() -> None:
 def test_exports_preserve_deep_import_identity(name: str, original: object) -> None:
     """Root exports retain the original objects and existing deep imports."""
     assert getattr(judgevet, name) is original
+
+
+def test_conformance_kit_exports_its_documented_surface() -> None:
+    """The conformance kit exports exactly its promised names, all bound.
+
+    A provider test suite imports these names, so a removal breaks it.
+    `AsyncProviderFactory` is pinned here so async provider suites never
+    reach into the private `_conformance_async` module (#277).
+    """
+    assert sorted(conformance.__all__) == sorted(EXPECTED_CONFORMANCE_EXPORTS)
+    for name in EXPECTED_CONFORMANCE_EXPORTS:
+        assert getattr(conformance, name) is not None
