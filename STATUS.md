@@ -677,22 +677,31 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2869 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
-coverage is **95.89%** (3264/3404 statements).
+**2884 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
+coverage is **95.94%** (3330/3471 statements).
+`JsonlAuditSink`, exported from `judgevet`, is the reference audit sink (#54
+slice 2). It appends one compact UTF-8 JSON object per `JudgmentRecord` to a
+file opened with `O_APPEND` and requests mode `0o600` at creation. It writes
+each line in one `os.write` under a lock and fails fast on a missing directory.
+Errors propagate to the adapter's existing catch. Fourteen tests cover both
+adapters, eight writer threads, a closed sink, the file mode, Score string
+keys and provenance fields. The reviewer's five mutations each turned at least
+one test red. No valid record can carry NaN, so that case has no test. CLI and
+MCP wiring is slice 3.
 The offline hosted kit run now records each request. One test per adapter
 asserts the `/v1/systemone` path, the `Authorization` header for the synthetic
-key, and that the request's question names and types equal
-`CONFORMANCE_QUESTIONS`; the expected side derives from the kit constant. A
-changed path at either call site and a dropped header each turned the matching
-test red; a handler that recorded nothing failed both (#275).
+key, and the request's question names and types. The expected side derives
+from `CONFORMANCE_QUESTIONS`. A changed path at either call site and a dropped
+header each turned the matching test red; a handler that recorded nothing
+failed both (#275).
 `judgevet.testing.conformance` now exports `AsyncProviderFactory` beside the
 two kit bases. A pin test holds the module's nine public names, and the hosted
 and Ollama kit modules import the alias from the public module; no test
 imports `_conformance_async` any more. The reviewer's removal of the export
 turned the pin test red (#277).
 The `PostToolUse` hook, `scripts/vet_file.sh`, reads the `[tool.docvet]`
-exclude list from `pyproject.toml` once per run and skips only its docvet step
-for a file under an excluded entry, so edits under `tests/` and `scripts/` no
+exclude list from `pyproject.toml` once per run. It skips only its docvet step
+for a file under an excluded entry. Edits under `tests/` and `scripts/` no
 longer return findings the real gate never raises. Ruff and `check_loc` run as
 before. Three tests drive the hook as a subprocess: two through a `uv` shim in
 a temporary project root, one against the repository's own list. The

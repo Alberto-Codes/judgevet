@@ -1,8 +1,8 @@
 """Outbound adapters that call external APIs.
 
 This package holds adapters that push data out to external services.
-For this project, the only outbound adapter is the HTTP adapter that
-calls the TypeSafe Jev System One API.
+The HTTP adapter calls the TypeSafe Jev System One API. The JSONL audit
+sink appends audit records to a local file.
 
 Examples:
     ```python
@@ -25,6 +25,7 @@ See Also:
     - [judgevet.domain.response][]: Response types
     - [judgevet.domain.errors][]: Error types
     - [judgevet.adapters.inbound.cli][]: CLI adapter
+    - [judgevet.adapters.outbound.audit_jsonl][]: JSONL audit sink
 
 Attributes:
     HTTPSystemOneAdapter (type): HTTP adapter for SystemOnePort.

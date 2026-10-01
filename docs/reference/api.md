@@ -78,6 +78,8 @@ An `audit` sink receives one `JudgmentRecord` per logical call. Its
 `state_fingerprint` field holds a keyed HMAC-SHA-256 of the state before
 redaction when `fingerprint_key` is set, and `None` otherwise; see
 [audit records](configuration.md#audit-records).
+`JsonlAuditSink` appends each record to a local file as one JSON line; see
+[JSONL sink](configuration.md#jsonl-sink).
 
 | Call argument | Python contract |
 |---|---|

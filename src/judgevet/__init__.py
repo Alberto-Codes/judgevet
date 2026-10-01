@@ -65,6 +65,7 @@ Attributes:
     StateRedactor (type): Caller-owned state transformation before transmission.
     AuditSink (type): Caller-owned destination for one record per logical call.
     JudgmentRecord (type): Frozen audit record of one logical call.
+    JsonlAuditSink (type): Append-only JSON Lines file sink for audit records.
     RequestMetadata (type): Immutable per-call HTTP metadata.
     NetworkConfig (type): Explicit proxy and certificate verification options.
     JevError (type): Base Jev exception.
@@ -98,6 +99,7 @@ See Also:
     - https://docs.typesafe.ai/introduction.md: Introduction to Jev
 """
 
+from judgevet.adapters.outbound.audit_jsonl import JsonlAuditSink
 from judgevet.adapters.outbound.gateway import GatewayConfig, RequestMetadata
 from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
@@ -152,6 +154,7 @@ __all__ = [
     "JevRequestError",
     "JevResponseError",
     "JevServiceError",
+    "JsonlAuditSink",
     "JudgevetError",
     "JudgmentRecord",
     "NetworkConfig",

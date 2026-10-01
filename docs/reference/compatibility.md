@@ -23,6 +23,7 @@ The root `__all__` declares these supported names:
 | Retry configuration | `RetryPolicy` |
 | Spend cap | `SpendCap` |
 | Audit records | `AuditSink`, `JudgmentRecord` |
+| JSONL audit sink | `JsonlAuditSink` |
 | Scoped diagnostic correlation | `bind_request_id` |
 | Structural ports | `SystemOnePort`, `AsyncSystemOnePort` |
 | Questions | `Question`, `Noul`, `Choice`, `Score` |

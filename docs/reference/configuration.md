@@ -275,7 +275,8 @@ Pass `audit=` to either HTTP adapter to receive one record per logical call.
 Auditing is off by default. Import the structural `AuditSink` protocol and the
 frozen `JudgmentRecord` from `judgevet`. The protocol defines one synchronous
 method, `record(record: JudgmentRecord) -> None`. The caller owns where records
-go, how long they stay and who reads them. This release ships no file sink.
+go, how long they stay and who reads them. `JsonlAuditSink` is the reference
+sink; see [JSONL sink](#jsonl-sink).
 See the [protocol](../../src/judgevet/ports/__init__.py) and the
 [record](../../src/judgevet/domain/audit.py).
 
@@ -331,6 +332,62 @@ CLI and MCP entry points do not set a sink. The offline fakes in
 `judgevet.testing` accept the same `audit=` option and write one record per
 call the same way, with `status_code=None` on success because no HTTP response
 arrived.
+
+### JSONL sink
+
+`JsonlAuditSink(path, *, fsync=False)` appends each record to one file as one
+JSON line. Import it from `judgevet`. See the
+[module source](../../src/judgevet/adapters/outbound/audit_jsonl.py).
+
+Each line is one compact JSON object in UTF-8, ended by a newline. No byte
+order mark is written.
+Source: https://jsonlines.org/.
+Source: https://github.com/ndjson/ndjson-spec.
+Source: https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/.
+Keys follow the record's field order, and every line carries every field. A
+`None` field is written as JSON `null`. Non-ASCII text is written as UTF-8,
+not escaped.
+
+- `timestamp` is RFC 3339 text from `datetime.isoformat()`, such as
+  `2026-09-30T12:00:00+00:00`.
+  Source: https://github.com/cloudevents/spec/blob/main/cloudevents/spec.md.
+- The OpenTelemetry logs data model uses epoch nanoseconds instead. This sink
+  follows CloudEvents.
+  Source: https://opentelemetry.io/docs/specs/otel/logs/data-model/.
+- `answers` use the API wire shape, with a `type` key per answer.
+- JSON object keys are strings. A Score answer's `legend` and `probabilities`
+  therefore read back with string keys such as `"1"`.
+- `usage` is an object with `input_tokens` and `output_tokens`.
+- `media_provenance` is an object; its `attachments` are pairs of id and
+  fingerprint.
+- The encoder refuses `NaN` and infinity, because neither is valid JSON.
+  Source: https://docs.python.org/3/library/json.html.
+
+The constructor opens the file with `O_WRONLY`, `O_CREAT` and `O_APPEND`. The
+sink requests mode `0o600` when it creates the file. The process umask can
+only remove bits. The file is never wider than owner read and write. An
+existing file keeps its mode.
+Source: https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html.
+A missing directory raises `FileNotFoundError` from the constructor, not on
+the first call.
+
+One sink is safe to share across threads. A lock serialises writes, and each
+line reaches the file in one `os.write` call. On a local POSIX file,
+`O_APPEND` makes the seek and the write one atomic step. That guarantee does
+not hold on NFS with several appenders.
+Source: https://man7.org/linux/man-pages/man2/open.2.html.
+Python's `FileHandler` makes the same promise: thread-safe, not process-safe.
+Source: https://docs.python.org/3/library/logging.handlers.html.
+
+`fsync=True` flushes each line to storage before `record` returns. It is off
+by default. Through the async adapter, each flush blocks the event loop.
+Source: https://nvlpubs.nist.gov/nistpubs/legacy/sp/nistspecialpublication800-92.pdf.
+
+`close()` closes the file once, and the context manager calls it. After
+`close()`, `record` raises `ValueError` with the message `audit sink is
+closed`. The sink swallows no error. The adapter catches it and reports
+`audit_error`, as described above. Rotation and retention belong to the
+caller.
 
 ### State fingerprint
 

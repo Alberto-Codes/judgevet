@@ -17,6 +17,7 @@ import pytest
 
 import judgevet
 from judgevet import AsyncHTTPSystemOneAdapter, HTTPSystemOneAdapter, ports
+from judgevet.adapters.outbound import audit_jsonl
 from judgevet.domain import answers, audit, errors, questions, response, usage
 from judgevet.testing import conformance
 
@@ -35,6 +36,7 @@ EXPECTED_EXPORTS = {
     "JevServiceError",
     "JudgevetError",
     "JudgmentRecord",
+    "JsonlAuditSink",
     "NoulAnswer",
     "Question",
     "RetryPolicy",
@@ -120,6 +122,7 @@ def test_the_async_adapter_refuses_the_sync_lifecycle() -> None:
         ("StateRedactor", ports.StateRedactor),
         ("AuditSink", ports.AuditSink),
         ("JudgmentRecord", audit.JudgmentRecord),
+        ("JsonlAuditSink", audit_jsonl.JsonlAuditSink),
         ("SystemOnePort", ports.SystemOnePort),
         ("AsyncSystemOnePort", ports.AsyncSystemOnePort),
         ("Question", questions.Question),

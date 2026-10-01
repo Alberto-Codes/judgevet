@@ -16,6 +16,7 @@ _EXPORTS = {
     "judgevet.adapters.outbound.network": ("NetworkConfig",),
     "judgevet.adapters.outbound.retries": ("RetryPolicy",),
     "judgevet.adapters.outbound.spend": ("SpendCap",),
+    "judgevet.adapters.outbound.audit_jsonl": ("JsonlAuditSink",),
     "judgevet.diagnostics": ("bind_request_id",),
     "judgevet.ports": (
         "SystemOnePort",
