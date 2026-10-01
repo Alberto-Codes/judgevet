@@ -26,7 +26,7 @@ outside that directory. Prepare the wheel:
 ```bash
 mkdir -p image/wheels
 python -m pip download --no-deps --only-binary=:all: \
-  'judgevet==0.16.0' --dest image/wheels
+  'judgevet==0.17.0' --dest image/wheels
 ```
 <!-- x-release-please-end -->
 
