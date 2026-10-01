@@ -701,7 +701,7 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**2993 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+**2996 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
 coverage is **95.61%** (3591/3756 statements).
 Eleven pin tests in `tests/unit/test_doc_contradictions.py` hold the sentences
 #285 corrected. They cover the MCP `evaluate_policy` tool, the three-attempt
@@ -713,6 +713,9 @@ the practised path; the TestPyPI round is optional. No release evidence changed.
 `tests/unit/test_doc_version_anchors.py` fails on any `judgevet` pin or version
 anchor outside a release-please marked block that differs from `__version__`
 (#286). Three more pages now sit in `extra-files`; the updater check covers them.
+`tests/unit/test_audit_sink_close_order.py` proves each hosted root closes the
+settings-opened `JsonlAuditSink` once, after `adapter.close()` (#282). An
+acceptance reviewer's no-op `close` and early-close mutations each failed it.
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
 run when an earlier one fails, so no result is hidden. No check was dropped
