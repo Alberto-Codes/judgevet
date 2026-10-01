@@ -346,3 +346,82 @@ This proof is offline. It makes no live service, model quality, server or
 private integration claim.
 Source: [installed provider proof contract](https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851596904)
 and [repair](https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851983135).
+
+## MCP output schemas
+
+Release 0.14.0 adds an `outputSchema` to each of the four MCP tools (#211).
+Each schema is a closed JSON Schema 2020-12 object without a `$schema` key.
+It describes the structured content of a successful tool call. Error outcomes
+carry no structured content and fall outside the schemas. Tool names and input
+schemas stay unchanged. Clients that read structured content can now validate it.
+See `src/judgevet/adapters/inbound/mcp_output_schemas.py`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/211#issuecomment-5860666386.
+
+## MCP ask tool text as JSON
+
+Release 0.14.0 changes the text block of each `ask_*` tool (#225). The single
+text block now holds `json.dumps` of the structured content. `json.loads` of
+that text equals the structured content. `evaluate_policy` already used the
+same serialization. Clients that parsed the earlier text must parse JSON instead.
+See `answer_result` in `src/judgevet/adapters/inbound/mcp_handlers.py`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/225.
+
+## Default rubric flag for ask_score
+
+Release 0.14.0 adds a boolean `default_criteria` to `ask_score` structured
+content (#228). It is true when the call omitted `criteria`. The server then
+applied the default rubric `Poor`, `Fair`, `Good`, `Excellent`. It is false
+when the caller supplied criteria. `evaluate_policy` Score answers omit the flag.
+See `src/judgevet/adapters/inbound/mcp_handlers.py`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/228#issuecomment-5882662573.
+
+## MCP model from settings
+
+Release 0.14.0 lets `JEV_API__DEFAULT_MODEL` select the `judgevet-mcp` model
+(#216). When the launch model is `jev-latest`, the entry point uses the
+configured default model instead. An explicit other launch model still wins.
+The CLI `--model` default stays unchanged; see the [CLI reference](cli.md).
+See `src/judgevet/adapters/inbound/mcp_entrypoint.py`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/216.
+
+## Spend cap settings in the roots
+
+Release 0.14.0 reads the spend cap in the CLI and MCP composition roots (#56).
+`JEV_API__SPEND_MAX_ATTEMPTS` and `JEV_API__SPEND_MAX_INPUT_TOKENS` opt in.
+Both default to unset, so existing launches build no cap. Each root reads the
+cap once. One cap spans a CLI process or an MCP server lifetime and never resets.
+See `src/judgevet/adapters/inbound/settings.py`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/56.
+
+## Audit file from settings
+
+Release 0.16.0 adds `JEV_API__AUDIT_PATH` (#54). When it is set, the CLI and
+`judgevet-mcp` open one `JsonlAuditSink` before credential resolution. Unset,
+both roots write no audit file, as before. A CLI open failure names the
+variable, not the path. See [JSONL sink](configuration.md#jsonl-sink).
+See `src/judgevet/adapters/inbound/cli_policy_run.py` and
+`src/judgevet/adapters/inbound/mcp_entrypoint.py`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/54.
+
+## Ollama error bodies
+
+Release 0.16.0 reads a second error body shape (#268). Ollama documents its
+errors as `{"error": "<string>"}`. When a body lacks `detail`, the adapter
+appends a nonempty string `error` to the exception message. Status mapping
+and `detail` parsing stay unchanged. This shape is documented, not observed
+against a running server. See `_read_error_detail` in
+`src/judgevet/adapters/outbound/http.py`.
+Source: https://docs.ollama.com/api/systemone.
+
+## Conformance kit and extra
+
+Release 0.15.0 publishes `judgevet.testing.conformance` (#241, #246, #247).
+A provider package subclasses `BaseProviderConformance` or
+`BaseAsyncProviderConformance` in its own test suite. Release 0.16.0 adds the
+async scope rules (#251) and exports `AsyncProviderFactory` from the kit (#277).
+The `conformance` extra installs pytest and anyio for the kit. The base
+install stays unchanged. Importing the kit without pytest raises `ImportError`.
+The [API reference](api.md) lists the fixtures. The
+[provider guide](../how-to/use-a-self-hosted-provider.md#check-the-provider-with-the-conformance-kit)
+shows a run. See `src/judgevet/testing/conformance.py` and `pyproject.toml`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.

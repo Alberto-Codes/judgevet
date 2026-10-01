@@ -18,6 +18,7 @@ The [CLI source](../../src/judgevet/adapters/inbound/cli.py) and installed
 | `--state-file PATH` | None | Read UTF-8 state; `-` reads stdin. At most once. |
 | `--questions-file PATH` | None | Read UTF-8 question JSON. At most once; `-` is a filename. |
 | `--policy PATH` | None | Read an explicit local JSON acceptance policy. At most once. |
+| `--evidence-file PATH` | None | Read a UTF-8 JSON image evidence manifest. Needs an application-selected media provider; the hosted adapter is text-only. See `src/judgevet/adapters/inbound/cli_media.py` and [CLI image manifests](compatibility.md#cli-image-manifests). |
 | `--model TEXT` | `jev-latest` | Model sent to the service. |
 | `--api-key TEXT` | Settings key | Explicit credential override; prefer the approved environment. |
 | `--json` | Off | JSON answers and handled-error output. |

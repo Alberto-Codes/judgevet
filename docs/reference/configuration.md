@@ -309,6 +309,7 @@ A record holds these fields:
 | `usage` | Token counts on success; `None` otherwise. | `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` |
 | `request_id` | Client-bound correlation from `bind_request_id`, or `None`. No service response identifier is read, because none has been observed. | none |
 | `state_fingerprint` | Keyed fingerprint of the state before redaction, or `None` without a `fingerprint_key`. See [state fingerprint](#state-fingerprint). | none |
+| `media_provenance` | Optional caller-built media fingerprints and declared revision identifiers; `None` by default. See `src/judgevet/domain/audit.py` and [media provenance](compatibility.md#optional-media-provenance). | none |
 
 Source: https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/.
 The UTC timestamp follows the OWASP ASVS logging requirements.
@@ -636,7 +637,11 @@ tracebacks remain outside that guarantee. Metadata is not a secret vault.
 Gateway-owned errors use the existing [status-based error mapping](errors.md).
 A gateway 429 remains retryable without TypeSafe JSON. Unknown JSON, HTML and
 text error bodies are omitted from messages; recognized TypeSafe detail parsing
-remains unchanged. Local loopback tests prove these client properties. They do
+remains unchanged. A body without `detail` but with a nonempty string `error`
+field adds that string to the message. Ollama documents that body shape; no
+call here has observed it. See `src/judgevet/adapters/outbound/http.py`.
+Source: https://docs.ollama.com/api/systemone.
+Local loopback tests prove these client properties. They do
 not verify a deployed gateway or unseen TypeSafe error bodies.
 
 

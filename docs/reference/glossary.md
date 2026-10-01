@@ -206,3 +206,52 @@ These are page trust statuses, not judgments about writing polish.
 
 See the [repository trust rules](../../AGENTS.md#trust-levels). Keep each
 claim's scope explicit even when a page has a single status marker.
+
+## Extension surfaces
+
+### JsonlAuditSink
+
+`JsonlAuditSink` is the reference `AuditSink`. It appends each `JudgmentRecord`
+to a local file as one JSON line. `JEV_API__AUDIT_PATH` makes the CLI and MCP
+roots open one. See `src/judgevet/adapters/outbound/audit_jsonl.py`.
+
+### receipts
+
+`receipts` is a `SystemOneResponse` field. It maps an answer name to provider
+measurements of type `float`, `bool` or `None`. It defaults to an empty mapping,
+and the HTTP adapters leave it empty. See `src/judgevet/domain/response.py`.
+
+### provider_options
+
+`provider_options` is a keyword-only mapping on `judge_with_images` and
+`async_judge_with_images`. judgevet forwards it unchanged and never reads its
+keys. The provider method must declare the keyword, or the call raises
+`ProviderCapabilityError`. The protocols are in `src/judgevet/ports/options.py`;
+the raise is in `src/judgevet/media.py`.
+
+### AsyncMediaSystemOnePort
+
+`AsyncMediaSystemOnePort` is the awaited form of `MediaSystemOnePort`. It adds
+`capabilities` and `system_one_media` to `AsyncSystemOnePort`.
+`async_judge_with_images` dispatches image evidence to it. See
+`src/judgevet/ports/media.py`.
+
+### async_provider_scope
+
+`async_provider_scope` borrows an async port or enters an application's owning
+async context. It keeps every `provider_scope` rule for an `AsyncSystemOnePort`.
+Exit runs exactly once after a factory entry succeeds. See
+`src/judgevet/providers.py`.
+
+### AsyncProviderFactory
+
+`AsyncProviderFactory` is a Protocol for a callable that returns an owning
+async context for an `AsyncSystemOnePort`. It mirrors `ProviderFactory`.
+`judgevet.testing.conformance` re-exports it. See `src/judgevet/providers.py`.
+
+### conformance extra
+
+The `conformance` extra installs pytest and anyio for the provider conformance
+kit in `judgevet.testing.conformance`. The base install omits both. Importing the
+kit without pytest raises `ImportError`. See `pyproject.toml` and
+`src/judgevet/testing/conformance.py`.

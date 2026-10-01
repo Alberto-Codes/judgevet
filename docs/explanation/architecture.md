@@ -44,6 +44,11 @@ and `AsyncSystemOnePort` define synchronous and asynchronous `system_one` calls
 returning `SystemOneResponse`. A caller can accept a compatible port rather
 than construct a concrete HTTP adapter inside its business logic. See the
 [port protocols](../../src/judgevet/ports/__init__.py).
+`src/judgevet/ports/media.py` adds the media ports for image evidence.
+`src/judgevet/ports/options.py` adds ports whose methods take `provider_options`.
+The media entry points forward that mapping unchanged to such a provider.
+A provider may return per-answer `receipts` on `SystemOneResponse`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/281.
 
 The outbound [HTTP adapter](../../src/judgevet/adapters/outbound/http.py) owns
 network requests and serialization. It returns typed answers and translates

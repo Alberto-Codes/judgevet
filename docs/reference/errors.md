@@ -136,6 +136,12 @@ redaction of remote text, URLs or credentials. The observed 401 body contains an
 object and the observed 422 body contains a list; neither shape establishes the
 unseen 429/529 bodies. See [diagnostic limits](../../SECURITY.md#diagnostics-and-error-content).
 
+A body without `detail` may carry `{"error": "<string>"}`, the shape Ollama
+documents. The adapter then appends a nonempty `error` string to the message.
+The status code still selects the exception type. No call here has observed
+this body. See `_read_error_detail` in `src/judgevet/adapters/outbound/http.py`.
+Source: https://docs.ollama.com/api/systemone.
+
 ## Local policy errors
 
 Import these from `judgevet.policy`, not the package root:
