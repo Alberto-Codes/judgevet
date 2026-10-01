@@ -29,10 +29,41 @@ pytestmark = pytest.mark.unit
 PEER = Path(__file__).with_name("mcp_smoke_peer.py")
 
 
-def require_reaped(pid_path: Path) -> None:
-    """Require the checker-owned fixture to have existed and now be reaped."""
-    assert pid_path.is_file(), "checker never launched the fixture"
-    pid = int(pid_path.read_text())
+def record_spawns(monkeypatch: pytest.MonkeyPatch) -> list[int]:
+    """Wrap the checker's spawn call so a test learns each child's pid.
+
+    Args:
+        monkeypatch: Fixture that restores the real spawn call afterwards.
+
+    Returns:
+        List that receives the pid of every child the checker spawns.
+    """
+    spawned: list[int] = []
+    original = asyncio.create_subprocess_exec
+
+    async def spy(*args: Any, **kwargs: Any) -> asyncio.subprocess.Process:
+        process = await original(*args, **kwargs)
+        spawned.append(process.pid)
+        return process
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spy)
+    return spawned
+
+
+def require_reaped(pid_path: Path, spawned: list[int]) -> None:
+    """Require the checker-owned fixture to have existed and now be reaped.
+
+    The pid file is optional: a child reaped before it records its pid leaves
+    none. A present file must name the child the checker spawned.
+
+    Args:
+        pid_path: Pid file the fixture writes once it starts.
+        spawned: Pids that [record_spawns][] captured from the checker.
+    """
+    assert spawned, "checker never launched the fixture"
+    pid = spawned[-1]
+    if pid_path.is_file():
+        assert int(pid_path.read_text()) == pid
     with pytest.raises(ProcessLookupError):
         os.kill(pid, 0)
 
@@ -66,12 +97,15 @@ def test_real_command_calls_all_tools(
 @pytest.mark.parametrize(
     "mode", ["success", "stderr_pressure", "integer_probability", "omit_error"]
 )
-def test_peer_success_reaped(mode: str, tmp_path: Path) -> None:
+def test_peer_success_reaped(
+    mode: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Require success and cleanup despite arbitrarily noisy stderr."""
+    spawned = record_spawns(monkeypatch)
     pid_path = tmp_path / "pid"
     command = [sys.executable, str(PEER), mode, str(pid_path), "9.8.7"]
     assert asyncio.run(smoke(command, "9.8.7", environment(), 3.0)) is None
-    require_reaped(pid_path)
+    require_reaped(pid_path, spawned)
 
 
 @pytest.mark.parametrize(
@@ -110,13 +144,15 @@ def test_peer_failure_reaped_and_safe(
     mode: str,
     tmp_path: Path,
     capfd: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Inject defects into the same child the checker launches and owns."""
+    spawned = record_spawns(monkeypatch)
     pid_path = tmp_path / "pid"
     command = [sys.executable, str(PEER), mode, str(pid_path), "9.8.7"]
     with pytest.raises(RuntimeError, match=r"^mcp_smoke:") as caught:
         asyncio.run(smoke(command, "9.8.7", environment(), 1.0))
-    require_reaped(pid_path)
+    require_reaped(pid_path, spawned)
     captured = capfd.readouterr()
     assert "canary-output" not in str(caught.value)
     assert "canary-output" not in repr(caught.value)

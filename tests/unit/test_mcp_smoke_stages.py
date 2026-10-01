@@ -16,7 +16,11 @@ from pathlib import Path
 import pytest
 
 from scripts import mcp_smoke_transport as probe
-from tests.unit.test_mcp_smoke_transport import PEER, require_reaped
+from tests.unit.test_mcp_smoke_transport import (
+    PEER,
+    record_spawns,
+    require_reaped,
+)
 from tests.unit.test_mcp_subprocess import environment
 
 pytestmark = pytest.mark.unit
@@ -42,8 +46,10 @@ def test_fault_stage(
     reason: str,
     tmp_path: Path,
     capfd: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Faults expose fixed stage/category strings and still reap the real child."""
+    spawned = record_spawns(monkeypatch)
     pid = tmp_path / "pid"
     with pytest.raises(RuntimeError) as caught:
         asyncio.run(
@@ -54,7 +60,7 @@ def test_fault_stage(
                 0.5,
             )
         )
-    require_reaped(pid)
+    require_reaped(pid, spawned)
     assert str(caught.value) == f"mcp_smoke: stage={stage} reason={reason}"
     output = capfd.readouterr()
     assert "canary-output" not in output.out + output.err + repr(caught.value)
@@ -81,6 +87,7 @@ def test_cleanup_diagnostic_preserves_first_failure(
         raise RuntimeError("private-cleanup-canary")
 
     monkeypatch.setattr(probe, "_cleanup", cleanup)
+    spawned = record_spawns(monkeypatch)
     pid = tmp_path / "pid"
     with pytest.raises(RuntimeError) as caught:
         asyncio.run(
@@ -91,7 +98,7 @@ def test_cleanup_diagnostic_preserves_first_failure(
                 2,
             )
         )
-    require_reaped(pid)
+    require_reaped(pid, spawned)
     message = str(caught.value)
     expected = "stage=cleanup reason=validation"
     if mode == "malformed":
@@ -120,3 +127,19 @@ def test_spawn_timeout_stage(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(RuntimeError) as caught:
         asyncio.run(probe.smoke(["private-command-canary"], "1", {}, 0.01))
     assert str(caught.value) == "mcp_smoke: stage=spawn reason=timeout"
+
+
+def test_fault_stage_peer_killed_before_pid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A peer reaped before it records its pid still reports the timeout stage."""
+    spawned = record_spawns(monkeypatch)
+    pid = tmp_path / "pid"
+    env = environment()
+    env["MCP_SMOKE_PEER_START_DELAY"] = "30"
+    command = [sys.executable, str(PEER), "stalled_handshake", str(pid), "9.8.7"]
+    with pytest.raises(RuntimeError) as caught:
+        asyncio.run(probe.smoke(command, "9.8.7", env, 0.5))
+    require_reaped(pid, spawned)
+    assert str(caught.value) == "mcp_smoke: stage=initialization reason=timeout"
+    assert not pid.exists(), "peer wrote its pid before the checker reaped it"

@@ -701,7 +701,7 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**2967 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+**2968 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
 coverage is **95.57%** (3556/3721 statements).
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
@@ -756,6 +756,15 @@ sends terminate and kills after two seconds. A SIGTERM before the write would
 fit; one occurrence cannot confirm it. That window now fails as a missing
 file, which #280 tracks. A test asserts the temporary file holds the pid
 before the rename (#278).
+The smoke tests now accept that window as the checker's timeout path (#280).
+A spy records the pid the checker spawns. `require_reaped` fails "checker
+never launched the fixture" only when nothing was spawned. A present pid
+file must equal the spawned pid, an absent file passes, and the spawned pid
+must be gone. A new test delays the peer 30 s inside its own process and
+runs the checker with a 0.5 s timeout. Five of the reviewer's six mutations
+turned a test red; dropping only the reap check went unnoticed, as a guard on
+the checker would. A checker that skips terminate fails the new test. The
+checker script is unchanged.
 Tests that launch `pre-commit` no longer write the user-level
 `~/.cache/pre-commit/db.db`. A seed store under the user's XDG cache, keyed by
 the config's repos and revs, the pre-commit version and the interpreter,

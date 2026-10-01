@@ -224,8 +224,13 @@ def write_pid(path: Path, pid: int) -> None:
 
 
 def main() -> None:
-    """Record this child's PID and run the selected fixture mode."""
+    """Record this child's PID and run the selected fixture mode.
+
+    ``MCP_SMOKE_PEER_START_DELAY`` holds seconds to wait before the pid is
+    recorded, so a test can have the checker reap a child that never wrote it.
+    """
     mode, pid_file, version = sys.argv[1:]
+    time.sleep(float(os.environ.get("MCP_SMOKE_PEER_START_DELAY", "0")))
     write_pid(Path(pid_file), os.getpid())
     if mode == "stalled_exit":
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
