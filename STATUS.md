@@ -677,8 +677,14 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2867 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
+**2869 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
 coverage is **95.89%** (3264/3404 statements).
+The offline hosted kit run now records each request. One test per adapter
+asserts the `/v1/systemone` path, the `Authorization` header for the synthetic
+key, and that the request's question names and types equal
+`CONFORMANCE_QUESTIONS`; the expected side derives from the kit constant. A
+changed path at either call site and a dropped header each turned the matching
+test red; a handler that recorded nothing failed both (#275).
 `judgevet.testing.conformance` now exports `AsyncProviderFactory` beside the
 two kit bases. A pin test holds the module's nine public names, and the hosted
 and Ollama kit modules import the alias from the public module; no test

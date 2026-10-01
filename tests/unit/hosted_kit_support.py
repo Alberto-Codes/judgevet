@@ -24,6 +24,7 @@ See Also:
 """
 
 import json
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
@@ -105,6 +106,39 @@ def answer_questions(request: httpx.Request) -> httpx.Response:
         "answers": answers,
     }
     return httpx.Response(200, json=body)
+
+
+@dataclass
+class RecordingHandler:
+    """Record each request, then answer it like `answer_questions`.
+
+    Each test builds its own instance, so no request list is shared across
+    tests or xdist workers.
+
+    Attributes:
+        requests (list[httpx.Request]): The requests received, in order.
+
+    Examples:
+        ```python
+        recorder = RecordingHandler()
+        adapter = sync_adapter(httpx.MockTransport(recorder))
+        adapter.close()
+        ```
+    """
+
+    requests: list[httpx.Request] = field(default_factory=list)
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        """Record the request and answer its questions.
+
+        Args:
+            request: The request the adapter sent.
+
+        Returns:
+            The `answer_questions` response for the request.
+        """
+        self.requests.append(request)
+        return answer_questions(request)
 
 
 def replay(name: str) -> httpx.MockTransport:

@@ -35,6 +35,7 @@ See Also:
     - [tests.unit.hosted_kit_support][]: The mock transports and adapters
 """
 
+import json
 from collections.abc import Iterator
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 
@@ -47,10 +48,12 @@ from judgevet.adapters.outbound.http import (
     HTTPSystemOneAdapter,
 )
 from judgevet.domain.errors import JevResponseError
+from judgevet.domain.questions import Choice, Noul, Score
 from judgevet.providers import ProviderFactory
 from judgevet.testing.conformance import (
     CONFORMANCE_MODEL,
     CONFORMANCE_QUESTIONS,
+    CONFORMANCE_STATE,
     VALID_ANSWERS,
     AsyncProviderFactory,
     BaseAsyncProviderConformance,
@@ -58,6 +61,8 @@ from judgevet.testing.conformance import (
 )
 from tests.contract.fixtures import get_fixture_by_name
 from tests.unit.hosted_kit_support import (
+    API_KEY,
+    RecordingHandler,
     answer_questions,
     async_adapter,
     replay,
@@ -89,6 +94,58 @@ def test_off_list_choice_raises_response_error() -> None:
     # A contract error fixture's expect tuple is (kind, error class, status).
     expected_status = fixture["expect"][2]
     assert caught.value.status_code == expected_status
+
+
+WIRE_TYPES: dict[type[Noul | Choice | Score], str] = {
+    Noul: "noul",
+    Choice: "choice",
+    Score: "score",
+}
+"""The wire `type` each kit question class carries in a request body."""
+
+
+def _assert_request_shape(recorder: RecordingHandler) -> None:
+    """Assert the one recorded request's path, auth header and questions.
+
+    The expected names and types come from `CONFORMANCE_QUESTIONS`, never
+    from the request. Source: https://docs.typesafe.ai/api.md.
+
+    Args:
+        recorder: The handler that recorded the adapter's requests.
+    """
+    assert len(recorder.requests) == 1
+    request = recorder.requests[0]
+    assert request.url.path == "/v1/systemone"
+    assert request.headers["Authorization"] == f"Bearer {API_KEY}"
+    sent = json.loads(request.content)["questions"]
+    expected = {
+        name: WIRE_TYPES[type(question)]
+        for name, question in CONFORMANCE_QUESTIONS.items()
+    }
+    assert {name: question["type"] for name, question in sent.items()} == expected
+
+
+def test_sync_request_shape() -> None:
+    """The sync adapter sends the kit's questions to the documented path."""
+    recorder = RecordingHandler()
+    with sync_adapter(httpx.MockTransport(recorder)) as adapter:
+        adapter.system_one(CONFORMANCE_STATE, CONFORMANCE_QUESTIONS, CONFORMANCE_MODEL)
+    _assert_request_shape(recorder)
+
+
+def test_async_request_shape() -> None:
+    """The async adapter sends the kit's questions to the documented path."""
+    recorder = RecordingHandler()
+
+    async def call() -> None:
+        """Send one kit request through a scoped async adapter."""
+        async with async_adapter(httpx.MockTransport(recorder)) as adapter:
+            await adapter.system_one(
+                CONFORMANCE_STATE, CONFORMANCE_QUESTIONS, CONFORMANCE_MODEL
+            )
+
+    anyio.run(call)
+    _assert_request_shape(recorder)
 
 
 class TestHostedSyncConformance(BaseProviderConformance):
