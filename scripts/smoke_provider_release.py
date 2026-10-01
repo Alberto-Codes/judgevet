@@ -13,12 +13,13 @@ the conformance kit refuses to import with an error naming its extra. The
 ``conformance`` environment requires the extra to add exactly pytest and
 anyio, runs a provider test module against the installed kit with pytest and
 requires every rule test to pass. The module runs nine
-synchronous rules and three asynchronous rules.
+synchronous rules and six asynchronous rules.
 
 Source: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851596904.
 Repair: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851983135.
 Conformance: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
 Async conformance: https://github.com/Alberto-Codes/judgevet/issues/246.
+Async scope rules: https://github.com/Alberto-Codes/judgevet/issues/251.
 Anyio in the extra: https://github.com/Alberto-Codes/judgevet/issues/253.
 
 Usage: ``uv run python scripts/smoke_provider_release.py``. Exit status is 0
@@ -85,7 +86,7 @@ CONFORMANCE_EXTRA = "conformance"
 CONFORMANCE_REQUIRES = frozenset({"pytest", "anyio"})
 KIT_MODULE = "judgevet.testing.conformance"
 KIT_TESTS = "tests/fixtures/providers/conformance_provider.py"
-KIT_RULES = 12
+KIT_RULES = 15
 EXPECTED_ABSENT = {
     "receipt": "conformance-absent",
     "fakes": "FakeSystemOnePort",

@@ -665,20 +665,27 @@ type through `judge_with_images` and requires answers that `evaluate_policy`
 accepts. A media port whose `system_one_media` raises `RuntimeError` fails
 only that rule, and so does one whose answers the policy rejects.
 #246 adds `BaseAsyncProviderConformance` for `AsyncSystemOnePort` providers,
-exported from the same module. It carries three rules: the port signature,
-typed answers through `evaluate_policy`, and `ProviderError` on failure. Its
-test methods drive coroutines with `anyio.run`, so it adds no pytest plugin
-and the `conformance` extra is unchanged. `AsyncFakeSystemOnePort` passes,
-and each broken async fake fails only its own rule. The library has no async
-`provider_scope` and no async media port, so the scope rules wait on #251 and
-the media rules on #252. The `provider-artifacts` hook now requires 12 passed
-rules in both conformance environments, and the base environment still
-refuses the kit with an error naming the extra.
+exported from the same module. It carries six rules: the port signature,
+typed answers through `evaluate_policy`, `ProviderError` on failure, and the
+three scope rules over `async_provider_scope` (#251). Its test methods drive
+coroutines with `anyio.run`, so it adds no pytest plugin and the
+`conformance` extra is unchanged. `AsyncFakeSystemOnePort` passes, and each
+broken async fake fails its own rule; the sync-port fake fails the typed-answer
+and scope-entry rules, because both await a judgment. `judgevet.providers`
+now exports the `AsyncProviderFactory` Protocol and `async_provider_scope`.
+The async scope follows the sync rules: one argument, a borrowed port stays
+open, a factory context exits once, and a body exception propagates. The #251 reviewer found
+the async body-exception rule passed when the scope swallowed the error; the
+repair added the missing check, and a kit test now fails under that mutation.
+The library has no async media port, so the media rules wait on #252. The
+`provider-artifacts` hook now requires 15 passed rules in both conformance
+environments, and the base environment still refuses the kit with an error
+naming the extra.
 
 ## Gates
 
-**2884 tests pass, 3 tests skip, 24 live tests deselected.** The last measured
-coverage is **95.94%** (3330/3471 statements).
+**2909 tests pass, 3 tests skip, 27 live tests deselected.** The last measured
+coverage is **95.87%** (3415/3562 statements).
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
 run when an earlier one fails, so no result is hidden. No check was dropped
@@ -1072,7 +1079,7 @@ Published README links retain offline source and fragment validation.
 | `detail` is polymorphic: an object for auth, an array for validation | **verified** — the two calls above disagree in shape |
 | an oversized request returns 400 with `{"detail": {"error_type": "max_tokens_exceeded"}}` | **verified, observed once** — live call on 2026-09-25 with a 400,000-character state against `jev-1.13.0`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575. The body does not say which budget fired; the request exceeded both the 32k and the 64k budget. A second 400,000-character call on 2026-09-30 through `tests/live/test_max_tokens_live.py` returned the same status, recorded at https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924025204. A 180,000-character state of repeated English words was answered in the same run; its token count was not read, so the threshold remains unverified |
 | a 2,959-byte JSON state with seven `choice` questions of up to 16 options fits the context budgets | **verified** — live call on 2026-09-25 against `jev-1.13.0` returned 200 with `input_tokens=3110`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825777868 |
-| 400 with `detail.error_type` = `max_tokens_exceeded` becomes JevMaxTokensExceededError, retryable=False | **verified, observed once** — `tests/live/test_max_tokens_live.py` sent a 400,000-character state through the real adapter on 2026-09-30 and caught `JevMaxTokensExceededError` with `retryable is False` and `status_code == 400`, recorded at https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924025204. The body is the one the 2026-09-25 call returned, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575 |
+| 400 with `detail.error_type` = `max_tokens_exceeded` becomes JevMaxTokensExceededError, retryable=False | **verified, observed once** — `tests/live/test_max_tokens_live.py` sent a 400,000-character state through the real adapter on 2026-09-30. It caught `JevMaxTokensExceededError` with `retryable is False` and `status_code == 400`, recorded at https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924025204. The body is the one the 2026-09-25 call returned, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575 |
 | an opt-in `SpendCap` refuses an attempt before sending once a limit is reached, and a failed attempt settles zero input tokens | **inferred** — offline tests against `httpx.MockTransport` only (#56 slice A); no live call has run the cap. Whether the service bills a failed attempt is an open question on #56 |
 | an opt-in `AuditSink` receives one `JudgmentRecord` per logical call, never per attempt, with no state, and a sink failure never changes the result | **inferred** — offline tests against `httpx.MockTransport` only (#54 slice 1); no live call has written a record |
 | a 422 body echoes the request payload back under `input` | **verified**, and the adapter discards it (#85) |
@@ -1080,7 +1087,7 @@ Published README links retain offline source and fragment validation.
 | every other field name | inferred from documentation |
 | resolved models other than `jev-1.13.0` | untested; both `jev-latest` and explicit `jev-1.13.0` have been called |
 | probabilities on the wire are rounded to two decimals | observed once — a consumer call on 2026-09-24 against `jev-1.13.0` returned a four-level Score summing to 0.99 (#175); the tolerance is 0.005 per probability since that fix. This repository's live suite asked a four-level Score once on 2026-09-24 (#184) and the resolved `jev-1.13.0` returned probabilities summing to exactly 1.0, which neither confirms nor refutes the rounding |
-| Choice `confidence` sits below `probabilities[choice]` | **observed twice**. The 0.12.0 production smoke on 2026-09-25 returned `ChoiceAnswer(choice='a', confidence=0.9, probabilities={'b': 0.05, 'a': 0.95})` with both values in one run record, at https://github.com/Alberto-Codes/judgevet/issues/194#issuecomment-5826847175. The 0.11.0 production smoke on 2026-09-25 returned `confidence=0.89` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/186#issuecomment-5825514560; that comment elides the probabilities, and `probabilities={'b': 0.05, 'a': 0.95}` is recorded only in the body of https://github.com/Alberto-Codes/judgevet/issues/187. The 0.10.2 production smoke on 2026-09-25 returned `confidence=0.9` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/183#issuecomment-5824552631, with the probabilities elided. The differential probe `tests/live/test_choice_confidence_live.py` ran once on 2026-09-30 with 2, 3 and 4 options on a duplicate-charge state and returned `confidence=1.0` with `probabilities[choice]=1.0` and every other option at `0.0` each time, recorded at https://github.com/Alberto-Codes/judgevet/issues/193#issuecomment-5923966685; every candidate spread measure equals 1.0 there, so that run distinguishes none. The vendor defines confidence as a spread measure and publishes no formula; the formula is unverified |
+| Choice `confidence` sits below `probabilities[choice]` | **observed twice for soft distributions; equal at 1.0 three times**. The 0.12.0 production smoke on 2026-09-25 returned `ChoiceAnswer(choice='a', confidence=0.9, probabilities={'b': 0.05, 'a': 0.95})` with both values in one run record, at https://github.com/Alberto-Codes/judgevet/issues/194#issuecomment-5826847175. The 0.11.0 production smoke on 2026-09-25 returned `confidence=0.89` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/186#issuecomment-5825514560; that comment elides the probabilities, and `probabilities={'b': 0.05, 'a': 0.95}` is recorded only in the body of https://github.com/Alberto-Codes/judgevet/issues/187. The 0.10.2 production smoke on 2026-09-25 returned `confidence=0.9` for `choice='a'`, recorded at https://github.com/Alberto-Codes/judgevet/issues/183#issuecomment-5824552631, with the probabilities elided. The differential probe `tests/live/test_choice_confidence_live.py` ran once on 2026-09-30 with 2, 3 and 4 options on a duplicate-charge state. Each call returned `confidence=1.0` with `probabilities[choice]=1.0` and every other option at `0.0`, recorded at https://github.com/Alberto-Codes/judgevet/issues/193#issuecomment-5923966685. Every candidate spread measure equals 1.0 there, so that run distinguishes none. The vendor defines confidence as a spread measure and publishes no formula; the formula is unverified |
 | `model` in a response is the **resolved** version, not the alias sent | verified — the live test caught `jev-1.13.0` where `jev-latest` was sent |
 | fake and real adapter produce identical outcomes | verified — contract tests on 16 hand-authored fixtures, inferred from docs/reference/api.md except the oversized-request fixture, which replays the body recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575, and `ollama_documented_response`, which copies Ollama's documented body from https://ollama.com/blog/ollama-now-supports-jev-style-decision-models and stays inferred from the docs: it is consistent with the one observed Ollama call but replays the docs' rounded numbers, not that call's (#268); the shipped `judgevet.testing` fakes match the adapter's whole response, error type and status, spend counters and audit record on every fixture (#171, #189) |
 | the hosted adapter parses Ollama's `/v1/systemone` response for choice, noul and score | **observed once** — judgevet 0.15.0 CLI at 62c6490 against local Ollama 0.35.0 with `nimble:latest` (9.0B, Q8_0) on 2026-09-30, `JEV_API__BASE_URL=http://localhost:11434`, `JEV_API__TIMEOUT_SECONDS=120`; probabilities arrived at full float precision, `model` echoed the tag, and the score equalled the probability-weighted level average; recorded at https://github.com/Alberto-Codes/judgevet/issues/268#issuecomment-5917968541. A first attempt at the default 30 s timeout failed while the model loaded. Ollama's error bodies, `tev1` and judgment quality are unverified |

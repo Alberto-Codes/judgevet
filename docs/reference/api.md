@@ -136,12 +136,17 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-590229
 An `AsyncSystemOnePort` provider subclasses `BaseAsyncProviderConformance`
 from the same module. It overrides the same two fixtures, and its
 `provider_factory` returns an async context manager. It runs the shape,
-typed-answer and failure rules only.
+typed-answer and failure rules.
 Source: https://github.com/Alberto-Codes/judgevet/issues/246.
+It also runs the three scope rules through `async_provider_scope`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/251.
+It has no media rules.
 The synchronous `provider_factory` fixture returns a `ProviderFactory` from
 `judgevet.providers`. The async fixture returns an `AsyncProviderFactory` from
 `judgevet.testing.conformance`.
 Source: https://github.com/Alberto-Codes/judgevet/issues/277.
+That name is the `AsyncProviderFactory` Protocol from `judgevet.providers`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/251.
 
 ## Answer and container types
 

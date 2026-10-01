@@ -4,7 +4,7 @@ A provider package writes a module like this one in its own test suite. It
 subclasses the kit's base classes and overrides the fixtures that supply its
 implementation. The installed-artifact runner runs it with pytest inside the
 ``conformance`` environment and requires every rule test to pass. The async
-subclass covers the three asynchronous rules (#246).
+subclass covers the six asynchronous rules (#246, #251).
 """
 
 from collections.abc import Callable, Mapping

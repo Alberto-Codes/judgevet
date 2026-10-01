@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import re
 import sys
-from collections.abc import Iterator, Mapping
-from contextlib import nullcontext
+from collections.abc import AsyncIterator, Iterator, Mapping
+from contextlib import asynccontextmanager, nullcontext
 from dataclasses import replace
 from textwrap import dedent, indent
 from typing import Any
@@ -24,9 +24,18 @@ from judgevet.domain.questions import Choice, Noul, Question, Score
 from judgevet.domain.response import SystemOneResponse
 from judgevet.media import judge_with_images
 from judgevet.policy import PolicyAnswerError, evaluate_policy
-from judgevet.providers import ProviderFactory, ProviderTransportError
-from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
-from judgevet.testing._conformance_probes import declared_evidence
+from judgevet.ports import AsyncSystemOnePort
+from judgevet.providers import (
+    AsyncProviderFactory,
+    ProviderFactory,
+    ProviderTransportError,
+)
+from judgevet.testing import (
+    AsyncFakeSystemOnePort,
+    FakeSystemOnePort,
+    _conformance_async_scope,
+)
+from judgevet.testing._conformance_probes import BodyError, declared_evidence
 from judgevet.testing.conformance import (
     CONFORMANCE_POLICY,
     CONFORMANCE_QUESTIONS,
@@ -55,7 +64,7 @@ RULE_TESTS = (
     "test_media_port_judges_declared_media",
 )
 MEDIA_PORT_TESTS = RULE_TESTS[-2:]
-ASYNC_RULE_TESTS = RULE_TESTS[:3]
+ASYNC_RULE_TESTS = RULE_TESTS[:6]
 
 
 class TestApplicationFixtureConformance(BaseProviderConformance):
@@ -670,33 +679,62 @@ class ReturningAsyncPort:
         return await AsyncFakeSystemOnePort(answers=VALID_ANSWERS).system_one(
             state, questions, model
         )
+
+
+class AsyncContext:
+    def __init__(self):
+        self.port = AsyncFakeSystemOnePort(answers=VALID_ANSWERS)
+
+    async def __aenter__(self):
+        return self.port
+
+    async def __aexit__(self, *exc_info):
+        return None
+
+
+class SwallowingAsyncContext(AsyncContext):
+    async def __aexit__(self, *exc_info):
+        return True
+
+
+SHARED_ASYNC = AsyncContext()
 """
 
 _ASYNC_BROKEN = {
     "keyword_only_model": (
         "provider_factory",
         "lambda: nullcontext(KeywordModelAsyncPort())",
-        "test_port_shape",
+        ("test_port_shape",),
     ),
     "wrong_answer_type": (
         "provider_factory",
         'lambda: nullcontext(AsyncFakeSystemOnePort(answers=INVALID_ANSWERS["noul_for_choice"]))',
-        "test_typed_answers_pass_policy",
+        ("test_typed_answers_pass_policy",),
     ),
     "sync_port_is_not_awaitable": (
         "provider_factory",
         "lambda: nullcontext(FakeSystemOnePort(answers=VALID_ANSWERS))",
-        "test_typed_answers_pass_policy",
+        ("test_typed_answers_pass_policy", "test_scope_entry_yields_usable_port"),
     ),
     "bare_runtime_error": (
         "failing_port",
         'AsyncFakeSystemOnePort(error=RuntimeError("boom"))',
-        "test_failure_raises_provider_error",
+        ("test_failure_raises_provider_error",),
     ),
     "failing_port_returns": (
         "failing_port",
         "ReturningAsyncPort()",
-        "test_failure_raises_provider_error",
+        ("test_failure_raises_provider_error",),
+    ),
+    "shared_async_context_exits_twice": (
+        "provider_factory",
+        "lambda: SHARED_ASYNC",
+        ("test_scope_exit_runs_once",),
+    ),
+    "async_context_swallows_body_error": (
+        "provider_factory",
+        "SwallowingAsyncContext",
+        ("test_scope_propagates_body_exception",),
     ),
 }
 
@@ -713,7 +751,7 @@ def _run_async(pytester: pytest.Pytester, body: str) -> tuple[dict[str, str], st
 
 @pytest.mark.unit
 def test_good_async_provider_passes_every_rule(pytester: pytest.Pytester) -> None:
-    """A correct async provider passes all three async rule tests."""
+    """A correct async provider passes all six async rule tests."""
     body = "class TestGood(GoodAsyncProvider):\n    pass\n"
     outcomes, _ = _run_async(pytester, body)
     assert outcomes == dict.fromkeys(ASYNC_RULE_TESTS, "PASSED")
@@ -724,13 +762,17 @@ def test_good_async_provider_passes_every_rule(pytester: pytest.Pytester) -> Non
 def test_broken_async_fake_fails_only_its_rule(
     pytester: pytest.Pytester, case: str
 ) -> None:
-    """Each broken async fake fails only its own rule and passes the other two."""
+    """Each broken async fake fails only its own rule tests and passes the rest.
+
+    A sync port has no awaitable result, so it fails both rules that await a
+    judgment: the typed-answer rule and the scope-entry rule.
+    """
     fixture, value, failing = _ASYNC_BROKEN[case]
     method = f"@pytest.fixture\ndef {fixture}(self):\n    return {value}\n"
     body = f"class TestBroken(GoodAsyncProvider):\n{indent(method, '    ')}"
     outcomes, _ = _run_async(pytester, body)
     expected = dict.fromkeys(ASYNC_RULE_TESTS, "PASSED")
-    expected[failing] = "FAILED"
+    expected.update(dict.fromkeys(failing, "FAILED"))
     assert outcomes == expected
 
 
@@ -740,6 +782,8 @@ def test_broken_async_fake_fails_only_its_rule(
     [
         ("sync_port_is_not_awaitable", "not an awaitable"),
         ("bare_runtime_error", "judgevet.providers.ProviderError subclass"),
+        ("shared_async_context_exits_twice", "one shared context for two scopes"),
+        ("async_context_swallows_body_error", "false value from __aexit__"),
     ],
 )
 def test_async_failure_names_the_contract(
@@ -750,5 +794,37 @@ def test_async_failure_names_the_contract(
     method = f"@pytest.fixture\ndef {fixture}(self):\n    return {value}\n"
     body = f"class TestBroken(GoodAsyncProvider):\n{indent(method, '    ')}"
     outcomes, output = _run_async(pytester, body)
-    assert outcomes[failing] == "FAILED"
+    assert all(outcomes[test] == "FAILED" for test in failing)
     assert message in output
+
+
+@pytest.mark.unit
+def test_async_body_rule_fails_when_the_scope_swallows_the_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The async body rule fails when the scope itself swallows the exception.
+
+    A provider context cannot model this, so the rule's scope is replaced with
+    one that exits the real scope with the error and then drops it.
+    """
+    real_scope = _conformance_async_scope.async_provider_scope
+
+    @asynccontextmanager
+    async def swallowing_scope(
+        *, factory: AsyncProviderFactory
+    ) -> AsyncIterator[AsyncSystemOnePort]:
+        """Run the real scope, then drop the body exception."""
+        try:
+            async with real_scope(factory=factory) as port:
+                yield port
+        except BodyError:
+            return
+
+    monkeypatch.setattr(
+        _conformance_async_scope, "async_provider_scope", swallowing_scope
+    )
+    kit = BaseAsyncProviderConformance()
+    with pytest.raises(pytest.fail.Exception, match="did not propagate"):
+        kit.test_scope_propagates_body_exception(
+            lambda: nullcontext(AsyncFakeSystemOnePort(answers=VALID_ANSWERS))
+        )

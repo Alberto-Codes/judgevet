@@ -63,7 +63,7 @@ def _run_auto(pytester: pytest.Pytester, body: str) -> dict[str, str]:
 def test_good_async_provider_passes_under_auto_mode(
     pytester: pytest.Pytester,
 ) -> None:
-    """The async fake passes all three async rules under auto mode."""
+    """The async fake passes all six async rules under auto mode."""
     body = "class TestGood(GoodAsyncProvider):\n    pass\n"
     outcomes = _run_auto(pytester, body)
     assert outcomes == dict.fromkeys(ASYNC_RULE_TESTS, "PASSED")
@@ -80,5 +80,5 @@ def test_broken_async_fake_fails_only_its_rule_under_auto_mode(
     body = f"class TestBroken(GoodAsyncProvider):\n{indent(method, '    ')}"
     outcomes = _run_auto(pytester, body)
     expected = dict.fromkeys(ASYNC_RULE_TESTS, "PASSED")
-    expected[failing] = "FAILED"
+    expected.update(dict.fromkeys(failing, "FAILED"))
     assert outcomes == expected

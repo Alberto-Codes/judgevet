@@ -24,10 +24,12 @@ method, so a failure names the rule it breaks:
   `SystemOneResponse` whose answers pass `evaluate_policy`. Any exception
   fails the rule.
 
-`BaseAsyncProviderConformance` applies the first three rules to an
-`AsyncSystemOnePort` provider. The scope and media rules are synchronous only.
-Its `provider_factory` fixture returns an `AsyncProviderFactory`. The
-synchronous fixture returns a `judgevet.providers.ProviderFactory`.
+`BaseAsyncProviderConformance` applies the shape, typed-answer, failure and
+scope rules to an `AsyncSystemOnePort` provider. Its scope rules use
+`judgevet.providers.async_provider_scope`. The media rules are synchronous only.
+Source: https://github.com/Alberto-Codes/judgevet/issues/251.
+Its `provider_factory` fixture returns a `judgevet.providers.AsyncProviderFactory`.
+The synchronous fixture returns a `judgevet.providers.ProviderFactory`.
 
 The kit needs pytest, which the `conformance` extra installs. Importing this
 module without pytest raises `ImportError`. The kit needs no credentials and
@@ -79,15 +81,13 @@ from judgevet.media import judge_with_images
 from judgevet.ports import SystemOnePort
 from judgevet.ports.media import MediaSystemOnePort
 from judgevet.providers import (
+    AsyncProviderFactory,
     ProviderCapabilityError,
     ProviderError,
     ProviderFactory,
     provider_scope,
 )
-from judgevet.testing._conformance_async import (
-    AsyncProviderFactory,
-    BaseAsyncProviderConformance,
-)
+from judgevet.testing._conformance_async import BaseAsyncProviderConformance
 from judgevet.testing._conformance_cases import (
     CONFORMANCE_MODEL,
     CONFORMANCE_POLICY,

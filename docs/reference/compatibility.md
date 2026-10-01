@@ -68,7 +68,8 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/78#issuecomment-5850346
 
 ## Provider imports and errors
 
-`judgevet.providers` supports `ProviderFactory`, `provider_scope`, `ProviderError`,
+`judgevet.providers` supports `ProviderFactory`, `provider_scope`,
+`AsyncProviderFactory`, `async_provider_scope`, `ProviderError`,
 `ProviderUnavailableError`, `ProviderRequestError`, `ProviderCapabilityError`,
 `ProviderTransportError` and `ProviderResponseError`. These are module exports;
 they add no root imports. The error classes retain identity with the classes

@@ -213,13 +213,17 @@ Subclass `BaseAsyncProviderConformance` for an `AsyncSystemOnePort` provider.
 It checks the port shape, that awaited answers pass the kit policy, and that
 an awaited failure raises a `ProviderError` subclass. Override two fixtures:
 `provider_factory` returns a callable whose async context manager yields the
-port, and `failing_port` returns a port whose awaited call fails. The scope
-and media rules are synchronous only for now. Each rule runs its coroutine
-with `anyio.run`, so the kit needs no async pytest plugin.
+port, and `failing_port` returns a port whose awaited call fails. Each rule
+runs its coroutine with `anyio.run`, so the kit needs no async pytest plugin.
 Source: https://github.com/Alberto-Codes/judgevet/issues/246.
+The async kit also runs the three scope rules through `async_provider_scope`.
+Each scope must get its own context, exit once and let a body exception
+propagate.
+Source: https://github.com/Alberto-Codes/judgevet/issues/251.
+The media rules are synchronous only for now.
 Annotate the synchronous fixture with `ProviderFactory` from
 `judgevet.providers`. Annotate the async fixture with `AsyncProviderFactory`
-from `judgevet.testing.conformance`.
+from `judgevet.testing.conformance` or `judgevet.providers`.
 Source: https://github.com/Alberto-Codes/judgevet/issues/277.
 
 The kit source contains a minimal subclass in its module example. See the

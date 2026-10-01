@@ -79,6 +79,14 @@ Unexpected errors propagate unchanged. Structural port conformance does not
 install audit records, state redaction or spend caps; applications must apply
 the existing mechanisms where their provider can honor them.
 
+Async applications import `AsyncProviderFactory` and `async_provider_scope` from
+`judgevet.providers`. Use `async with async_provider_scope(port=application_port)`
+to borrow an existing `AsyncSystemOnePort`. Use
+`async with async_provider_scope(factory=application_factory)` to acquire one.
+That factory returns an `AbstractAsyncContextManager[AsyncSystemOnePort]`.
+The async scope keeps every rule above for selection, validation and exit.
+Source: https://github.com/Alberto-Codes/judgevet/issues/251.
+
 This library boundary adds no environment settings or provider discovery.
 Existing hosted entry points retain their configuration.
 Source: [accepted ownership contract](https://github.com/Alberto-Codes/judgevet/issues/201#issuecomment-5850529268).

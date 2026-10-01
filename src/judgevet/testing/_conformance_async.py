@@ -1,6 +1,6 @@
 """Reusable pytest conformance tests for an `AsyncSystemOnePort` provider.
 
-`BaseAsyncProviderConformance` applies three rules of the synchronous kit to
+`BaseAsyncProviderConformance` applies six rules of the synchronous kit to
 an asynchronous provider:
 
 - `test_port_shape`: `system_one` is callable with the port's positional and
@@ -10,9 +10,12 @@ an asynchronous provider:
   `judgevet.policy.evaluate_policy`.
 - `test_failure_raises_provider_error`: awaiting the failing port raises a
   `ProviderError` subclass.
+- `test_scope_entry_yields_usable_port`, `test_scope_exit_runs_once` and
+  `test_scope_propagates_body_exception`: the factory keeps the
+  `async_provider_scope` lifecycle rules.
 
-The scope and media rules have no asynchronous form yet.
 Source: https://github.com/Alberto-Codes/judgevet/issues/251.
+The media rules have no asynchronous form yet.
 Source: https://github.com/Alberto-Codes/judgevet/issues/252.
 
 Each rule is an ordinary synchronous test method that drives its coroutine
@@ -59,17 +62,23 @@ See Also:
     - [judgevet.testing.conformance][]: The synchronous kit and the public names
     - [judgevet.testing.AsyncFakeSystemOnePort][]: The offline async fake
     - [judgevet.ports.AsyncSystemOnePort][]: The protocol the rules check
-    - [judgevet.providers][]: The provider errors
+    - [judgevet.testing._conformance_async_scope][]: The scope rule checks
+    - [judgevet.providers][]: `async_provider_scope` and the provider errors
 """
 
 import inspect
-from collections.abc import Callable
-from contextlib import AbstractAsyncContextManager
 
 import anyio
 import pytest
 
+from judgevet.domain.response import SystemOneResponse
 from judgevet.ports import AsyncSystemOnePort
+from judgevet.providers import AsyncProviderFactory, async_provider_scope
+from judgevet.testing._conformance_async_scope import (
+    AsyncScopeRecorder,
+    body_problem,
+    exit_problem,
+)
 from judgevet.testing._conformance_cases import (
     CONFORMANCE_MODEL,
     CONFORMANCE_QUESTIONS,
@@ -80,9 +89,6 @@ from judgevet.testing._conformance_probes import (
     provider_error_problem,
     signature_problem,
 )
-
-AsyncProviderFactory = Callable[[], AbstractAsyncContextManager[AsyncSystemOnePort]]
-"""A zero-argument callable whose async context yields an async port."""
 
 
 def _fail_on(problem: str | None) -> None:
@@ -128,7 +134,9 @@ class BaseAsyncProviderConformance:
 
     Name the subclass `Test...` so pytest collects it. Override the fixtures
     below as pytest fixtures on the subclass. Each rule enters one
-    `async with provider_factory()` scope inside its own `anyio.run` call.
+    `async with provider_factory()` scope inside its own `anyio.run` call. The
+    scope rules enter it through `async_provider_scope` and record each
+    context the factory constructs.
 
     Attributes:
         provider_factory (fixture): Required. A zero-argument callable that
@@ -231,3 +239,51 @@ class BaseAsyncProviderConformance:
         with pytest.raises(Exception) as caught:
             anyio.run(_judge, failing_port, provider_model)
         _fail_on(provider_error_problem(caught.value))
+
+    def test_scope_entry_yields_usable_port(
+        self, provider_factory: AsyncProviderFactory, provider_model: str
+    ) -> None:
+        """Rule 4: scope entry validates the port and yields one that answers.
+
+        Args:
+            provider_factory: The provider's factory.
+            provider_model: The selected model.
+        """
+        recorder = AsyncScopeRecorder(provider_factory)
+
+        async def judge() -> object:
+            """Enter one validated scope and await one judgment.
+
+            Returns:
+                The awaited value the port produced.
+            """
+            async with async_provider_scope(factory=recorder) as port:
+                return await _judge(port, provider_model)
+
+        response = anyio.run(judge)
+        if not isinstance(response, SystemOneResponse):
+            pytest.fail(f"The scoped port returned {type(response).__name__}.")
+        exits = [context.exits for context in recorder.contexts]
+        if exits != [[None]]:
+            pytest.fail(f"Expected one clean exit, observed {exits}.")
+
+    def test_scope_exit_runs_once(self, provider_factory: AsyncProviderFactory) -> None:
+        """Rule 4: each scope gets its own context, and each exits exactly once.
+
+        Args:
+            provider_factory: The provider's factory.
+        """
+        _fail_on(anyio.run(exit_problem, provider_factory))
+
+    def test_scope_propagates_body_exception(
+        self, provider_factory: AsyncProviderFactory
+    ) -> None:
+        """Rule 4: a body exception reaches the caller and exits the scope once.
+
+        The kit also enters one context directly, as `AsyncProviderFactory`
+        callers may, and requires that its exit does not suppress the error.
+
+        Args:
+            provider_factory: The provider's factory.
+        """
+        _fail_on(anyio.run(body_problem, provider_factory))
