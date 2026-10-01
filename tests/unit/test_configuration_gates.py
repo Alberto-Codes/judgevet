@@ -1,4 +1,17 @@
-"""Exercise configuration hooks in disposable tracked repositories."""
+"""Exercise configuration hooks in disposable tracked repositories.
+
+Each hook child resolves uv against the session cache and pre-commit against
+a store owned by the test run, never the user-level ``~/.cache/pre-commit``.
+
+Examples:
+    ```bash
+    uv run pytest -q tests/unit/test_configuration_gates.py
+    ```
+
+See Also:
+    - [tests.unit.pre_commit_home_support][]: The run's pre-commit stores.
+    - [scripts.smoke_release][]: The session uv cache helper.
+"""
 
 import os
 import shlex
@@ -13,12 +26,21 @@ import pytest
 import yaml
 
 from scripts.smoke_release import SESSION_CACHE_VAR, uv_cache_env
+from tests.unit.pre_commit_home_support import pre_commit_home_env
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def hook_configuration(hook_id: str, stage: str) -> str:
-    """Select the actual configured hook and retain its upstream repository pin."""
+    """Select the actual configured hook and retain its upstream repository pin.
+
+    Args:
+        hook_id: The configured hook to select.
+        stage: The stage the hook must run at.
+
+    Returns:
+        The whole configuration source, unchanged.
+    """
     source = (ROOT / ".pre-commit-config.yaml").read_text()
     configuration = yaml.safe_load(source)
     for repo in configuration["repos"]:
@@ -69,12 +91,13 @@ def prepare_fixture(tmp_path: Path, hook_id: str, broken: bool) -> None:
 
 
 def hook_child_env() -> dict[str, str]:
-    """Build the hook child's environment around the session uv cache.
+    """Build the hook child's environment around the run's caches.
 
     Returns:
-        The inherited environment with the uv cache variables merged in.
+        The inherited environment with the uv cache variables and a
+        test-owned ``PRE_COMMIT_HOME`` merged in.
     """
-    return os.environ | uv_cache_env()
+    return os.environ | uv_cache_env() | pre_commit_home_env()
 
 
 UV_CACHE_KEYS = ("UV_CACHE_DIR", "UV_NO_CACHE")
@@ -108,6 +131,23 @@ def test_hook_child_env_names_the_session_cache(
     assert passed["UV_CACHE_DIR"] == str(cache)
     monkeypatch.delenv(SESSION_CACHE_VAR)
     assert hook_child_env()["UV_NO_CACHE"] == "1"
+
+
+def test_hook_child_env_owns_its_pre_commit_home(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    """Keep the hook child's pre-commit store under the run's temporary directory.
+
+    The user-level ``~/.cache/pre-commit/db.db`` is shared with every other
+    process on the machine. See issue #232.
+    """
+    home = hook_child_env().get("PRE_COMMIT_HOME")
+    assert home is not None
+    basetemp = tmp_path_factory.getbasetemp().resolve()
+    run = basetemp.parent if os.environ.get("PYTEST_XDIST_WORKER") else basetemp
+    assert Path(home).resolve().is_relative_to(run)
+    assert not Path(home).resolve().is_relative_to(Path.home() / ".cache")
+    assert (Path(home) / "db.db").is_file()
 
 
 @pytest.mark.parametrize("stage", ["pre-commit", "pre-push"])

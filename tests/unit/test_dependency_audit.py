@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tests.unit.pre_commit_home_support import pre_commit_home_env
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -87,7 +89,7 @@ def test_pre_push_audit_propagates_status(tmp_path: Path, status: int) -> None:
             "--all-files",
         ],
         cwd=tmp_path,
-        env=environment,
+        env=environment | pre_commit_home_env(),
         capture_output=True,
         text=True,
         timeout=20,

@@ -677,8 +677,17 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2862 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
+**2863 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
 coverage is **95.89%** (3264/3404 statements).
+Tests that launch `pre-commit` no longer write the user-level
+`~/.cache/pre-commit/db.db`. A seed store under the user's XDG cache, keyed by
+the config's repos and revs, the pre-commit version and the interpreter,
+installs once per machine under a file lock. Each test copies only its
+`db.db` into a home under the run directory. A red test pins that home. The
+reviewer's empty-seed mutation failed every gate test with `FileNotFoundError`.
+Twenty loaded runs on the first build and ten after the seed moved, each
+beside an outside pre-commit loop, stayed green, and the user `db.db` mtime
+did not move (#232).
 The doc host launcher tests share one warmed uv cache per pytest run instead
 of resolving from PyPI cold once per test. The cache sits at the run's
 temporary root, or in `JUDGEVET_TEST_UV_CACHE_DIR` when set. A unit test pins

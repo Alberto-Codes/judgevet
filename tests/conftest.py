@@ -66,11 +66,22 @@ A path the caller already set is reused, so two pytest runs share one warmed
 cache when both start with `JUDGEVET_TEST_UV_CACHE_DIR=<dir> uv run pytest`.
 See issues #243 and #262.
 
+## Run pre-commit homes
+
+The autouse `_run_pre_commit_homes` fixture publishes the run's base
+temporary directory in `JUDGEVET_TEST_PRE_COMMIT_RUN`. Under xdist, each
+worker's base temporary directory is `<run basetemp>/popen-gwN`, so the
+fixture names their shared parent. It creates nothing. The helpers in
+`tests.unit.pre_commit_home_support` give each pre-commit child its own home
+there, copied from a persistent seed store, so no test writes the user-level
+`~/.cache/pre-commit`. See issue #232.
+
 See Also:
     - [pytest_runtest_makereport][]: The hook that implements the guard.
     - [tests.unit.test_secret_guard][]: The proof test that verifies the guard.
     - [tests.unit.leak_probe][]: The probe test that deliberately leaks a key.
     - [judgevet.adapters.outbound.retries][]: The policy whose backoff is skipped.
+    - [tests.unit.pre_commit_home_support][]: The seed and per-test homes.
 """
 
 from __future__ import annotations
@@ -298,3 +309,28 @@ def _session_uv_cache(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path
         yield cache
     finally:
         os.environ.pop(SESSION_CACHE_VAR, None)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _run_pre_commit_homes(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
+    """Name the run directory that holds every per-test pre-commit home.
+
+    Args:
+        tmp_path_factory: Supplies the session's base temporary directory.
+
+    Yields:
+        The run directory, shared by every worker of the run.
+    """
+    from tests.unit.pre_commit_home_support import RUN_VAR
+
+    existing = os.environ.get(RUN_VAR)
+    if existing:
+        yield Path(existing)
+        return
+    basetemp = tmp_path_factory.getbasetemp().resolve()
+    run = basetemp.parent if os.environ.get("PYTEST_XDIST_WORKER") else basetemp
+    os.environ[RUN_VAR] = str(run)
+    try:
+        yield run
+    finally:
+        os.environ.pop(RUN_VAR, None)
