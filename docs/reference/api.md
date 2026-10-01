@@ -225,8 +225,17 @@ https://github.com/Alberto-Codes/judgevet/issues/183#issuecomment-5824552631.
 The 0.89 value is consistent with the vendor definition. The 0.9 run recorded
 no probabilities, so it cannot be compared.
 
+A differential probe, `tests/live/test_choice_confidence_live.py`, ran once on
+2026-09-30 with Choice questions of 2, 3 and 4 options on one duplicate-charge
+state. Each call returned `confidence=1.0` with the whole probability mass on
+`billing` and the other options at `0.0`, from `jev-1.13.0`. Maximum
+probability, top-two margin and one minus normalised entropy all equal 1.0
+there, so that run distinguishes no candidate formula.
+Source: https://github.com/Alberto-Codes/judgevet/issues/193#issuecomment-5923966685.
+
 **Open question:** the formula that maps `probabilities` to `confidence`.
-No source publishes it, and no differential live test has measured it.
+No source publishes it. The one differential run returned hard distributions
+and measured nothing; a run on an ambiguous state is proposed on #193.
 
 ## Service limits
 
