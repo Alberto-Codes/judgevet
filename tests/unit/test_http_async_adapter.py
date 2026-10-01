@@ -221,7 +221,7 @@ class TestAsyncAdapterErrorPaths:
         with pytest.raises(httpx.HTTPStatusError) as exc_info:
             anyio.run(run_test)
 
-        # 3xx returns None from _translate_status_error, so it's re-raised
+        # 3xx returns None from translate_status, so it's re-raised
         # The spec says: assert __cause__ is None and __context__ is None
         assert exc_info.value.__cause__ is None
         assert exc_info.value.__context__ is None

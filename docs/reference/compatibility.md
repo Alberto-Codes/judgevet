@@ -410,7 +410,7 @@ errors as `{"error": "<string>"}`. When a body lacks `detail`, the adapter
 appends a nonempty string `error` to the exception message. Status mapping
 and `detail` parsing stay unchanged. This shape is documented, not observed
 against a running server. See `_read_error_detail` in
-`src/judgevet/adapters/outbound/http.py`.
+`src/judgevet/adapters/outbound/response_translation.py`.
 Source: https://docs.ollama.com/api/systemone.
 
 ## Conformance kit and extra

@@ -14,11 +14,11 @@ Error handling:
     The `input` key in validation errors contains the caller's request payload
     and is deliberately excluded from error messages to avoid leaking user data.
 
+    The transport-neutral `response_translation` module parses each body
+    and maps each status; this module passes it the raw body bytes.
+
 Helper functions:
     - _build_payload: Build the request payload.
-    - _parse_body: Parse the body and check each Choice option.
-    - _read_error_detail: Read the message and wire error type of an error body.
-    - _translate_status_error: Translate HTTP status errors to JevError subclasses.
     - _translate_request_error: Translate request errors to JevServiceError.
 
 Examples:
@@ -47,6 +47,7 @@ See Also:
     - [judgevet.domain.errors][]: Error types
     - [judgevet.adapters.inbound.cli][]: CLI adapter
     - [judgevet.domain.response_parser][]: Response parsing
+    - [judgevet.adapters.outbound.response_translation][]: Body and status translation
 
 Raises:
     JevAuthError: If the API returns 401 or 403.
@@ -89,67 +90,14 @@ from judgevet.adapters.outbound.request_body import (
     prepare_body,
     wire_question,
 )
+from judgevet.adapters.outbound.response_translation import (
+    parse_success,
+    translate_status,
+)
 from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.adapters.outbound.spend import ametered, metered
-from judgevet.domain.choice_options import check_choice_options
-from judgevet.domain.errors import (
-    JevAuthError,
-    JevError,
-    JevMaxTokensExceededError,
-    JevRateLimitError,
-    JevRequestError,
-    JevResponseError,
-    JevServiceError,
-)
+from judgevet.domain.errors import JevServiceError
 from judgevet.domain.response import SystemOneResponse
-from judgevet.domain.response_parser import parse_system_one_response
-
-
-def _extract_error_detail(detail: Any) -> str:
-    """Extract a message only from recognized, well-formed diagnostic fields.
-
-    The detail field can be:
-    - An array of validation errors: [{"type", "loc", "msg", "input"}]
-    - An object for auth errors: {"error_type", "message"}
-    - Something else (treat as unknown)
-
-    Never includes the "input" field as it contains caller content. Invalid
-    field shapes discard the entire detail rather than stringify containers.
-
-    Args:
-        detail: The detail field from the error response body.
-
-    Returns:
-        A formatted error message, or empty string if detail is unknown.
-    """
-    if isinstance(detail, list):
-        parts = []
-        for item in detail:
-            if not isinstance(item, dict):
-                return ""
-            type_part = item.get("type", "unknown_type")
-            location = item.get("loc", [])
-            msg_part = item.get("msg", "no message")
-            if (
-                not isinstance(type_part, str)
-                or not isinstance(msg_part, str)
-                or not isinstance(location, list)
-                or any(type(part) not in (str, int) for part in location)
-            ):
-                return ""
-            loc_part = ".".join(str(part) for part in location)
-            if loc_part:
-                parts.append(f"{type_part} at {loc_part}: {msg_part}")
-            else:
-                parts.append(f"{type_part}: {msg_part}")
-        return "; ".join(parts)
-    if isinstance(detail, dict):
-        error_type = detail.get("error_type", "")
-        message = detail.get("message", "")
-        if not isinstance(error_type, str) or not isinstance(message, str):
-            return ""
-        return ": ".join(part for part in (error_type, message) if part)
-    return ""
 
 
 def _build_payload(
@@ -180,104 +128,6 @@ def _build_payload(
         "questions": converted_questions,
         "model": model or default_model,
     }
-
-
-def _parse_body(
-    response: httpx.Response, questions: Mapping[str, Any]
-) -> SystemOneResponse:
-    """Parse the JSON response body and bind it to the request's questions.
-
-    Args:
-        response: The HTTP response from the API.
-        questions: The request's questions, which bound each Choice option.
-
-    Returns:
-        A parsed SystemOneResponse.
-
-    Raises:
-        JevResponseError: If the body is not valid JSON, does not parse, or
-            names a Choice option outside its question's criteria.
-    """
-    try:
-        raw = response.json()
-    except ValueError as exc:
-        raise JevResponseError(
-            f"Failed to parse response body: {exc}",
-            response.status_code,
-        ) from exc
-    parsed = parse_system_one_response("system-one", raw)
-    check_choice_options(questions, parsed.answers)
-    return parsed
-
-
-def _read_error_detail(exc: httpx.HTTPStatusError) -> tuple[str, str]:
-    """Read the error message and the wire error type from an error body.
-
-    Jev bodies carry `detail`. When `detail` is absent, a non-empty string
-    `error` field is appended instead, because Ollama's `/v1/systemone`
-    returns errors as `{"error": "<string>"}`.
-    Source: https://docs.ollama.com/api/systemone.
-
-    Args:
-        exc: The HTTP status error whose response body is read.
-
-    Returns:
-        The message, with any extracted detail appended, and the string
-        `detail.error_type`, or an empty string when the body carries none.
-    """
-    error_message = str(exc)
-    error_type = ""
-    try:
-        body = exc.response.json()
-    except ValueError:
-        return error_message, error_type  # Body is not JSON
-    detail = body.get("detail") if isinstance(body, dict) else None
-    if detail is not None:
-        extracted = _extract_error_detail(detail)
-        if extracted:
-            error_message = f"{exc!s}; {extracted}"
-    elif isinstance(body, dict) and isinstance(body.get("error"), str):
-        if body["error"]:
-            error_message = f"{exc!s}; {body['error']}"
-    if isinstance(detail, dict) and isinstance(detail.get("error_type"), str):
-        error_type = detail["error_type"]
-    return error_message, error_type
-
-
-def _translate_status_error(
-    exc: httpx.HTTPStatusError,
-) -> JevError | None:
-    """Translate an httpx.HTTPStatusError to a JevError subclass.
-
-    A 4xx body whose `detail.error_type` is `max_tokens_exceeded` becomes
-    JevMaxTokensExceededError. One live call returned that marker with 400.
-    Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575.
-
-    Args:
-        exc: The HTTP status error to translate.
-
-    Returns:
-        A JevError subclass instance for status codes 429, 401, 403, 4xx, or 5xx.
-        None for unhandled status codes (e.g., 3xx).
-    """
-    status_code = exc.response.status_code
-    error_message, error_type = _read_error_detail(exc)
-
-    if status_code == JevError.HTTP_STATUS_429_TOO_MANY_REQUESTS:
-        return JevRateLimitError(error_message, status_code)
-    elif status_code in (
-        JevError.HTTP_STATUS_401_UNAUTHORIZED,
-        JevError.HTTP_STATUS_403_FORBIDDEN,
-    ):
-        return JevAuthError(error_message, status_code)
-    elif JevError.HTTP_STATUS_400_MIN <= status_code < JevError.HTTP_STATUS_500_MIN:
-        if error_type == JevMaxTokensExceededError.WIRE_ERROR_TYPE:
-            return JevMaxTokensExceededError(error_message, status_code)
-        return JevRequestError(error_message, status_code)
-    elif status_code >= JevError.HTTP_STATUS_500_MIN:
-        return JevServiceError(error_message, status_code)
-    # Unhandled status code (e.g., 3xx)
-    return None
 
 
 def _translate_request_error(exc: httpx.RequestError) -> JevServiceError:
@@ -486,6 +336,9 @@ class HTTPSystemOneAdapter:
     ) -> SystemOneResponse:
         """Send one attempt and translate HTTP errors.
 
+        The body bytes go to `parse_success` or `translate_status` in
+        [judgevet.adapters.outbound.response_translation][].
+
         Args:
             payload: Existing JSON data or a redacted immutable body snapshot.
             event: Terminal metadata for this logical call.
@@ -509,9 +362,11 @@ class HTTPSystemOneAdapter:
             )
             event.status_code = response.status_code
             response.raise_for_status()
-            return _parse_body(response, questions)
+            return parse_success(response.status_code, response.content, questions)
         except httpx.HTTPStatusError as exc:
-            translated = _translate_status_error(exc)
+            translated = translate_status(
+                exc.response.status_code, exc.response.content, str(exc)
+            )
             if translated is None:
                 raise
             raise translated from exc
@@ -730,6 +585,9 @@ class AsyncHTTPSystemOneAdapter:
     ) -> SystemOneResponse:
         """Send one attempt and translate HTTP errors.
 
+        The body bytes go to `parse_success` or `translate_status` in
+        [judgevet.adapters.outbound.response_translation][].
+
         Args:
             payload: Existing JSON data or a redacted immutable body snapshot.
             event: Terminal metadata for this logical call.
@@ -753,9 +611,11 @@ class AsyncHTTPSystemOneAdapter:
             )
             event.status_code = response.status_code
             response.raise_for_status()
-            return _parse_body(response, questions)
+            return parse_success(response.status_code, response.content, questions)
         except httpx.HTTPStatusError as exc:
-            translated = _translate_status_error(exc)
+            translated = translate_status(
+                exc.response.status_code, exc.response.content, str(exc)
+            )
             if translated is None:
                 raise
             raise translated from exc

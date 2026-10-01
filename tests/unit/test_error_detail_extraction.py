@@ -1,5 +1,6 @@
 """Unit tests for error detail extraction in HTTP adapter."""
 
+import json
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -35,7 +36,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 422
-            mock_response.json.return_value = mock_body
+            mock_response.content = json.dumps(mock_body).encode()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unprocessable Entity",
                 request=MagicMock(),
@@ -71,7 +72,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 401
-            mock_response.json.return_value = mock_body
+            mock_response.content = json.dumps(mock_body).encode()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unauthorized",
                 request=MagicMock(),
@@ -95,7 +96,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 400
-            mock_response.json.return_value = {"error": "bad request"}
+            mock_response.content = json.dumps({"error": "bad request"}).encode()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Bad Request",
                 request=MagicMock(),
@@ -118,7 +119,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 422
-            mock_response.json.return_value = {"detail": []}
+            mock_response.content = json.dumps({"detail": []}).encode()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unprocessable Entity",
                 request=MagicMock(),
@@ -154,7 +155,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 422
-            mock_response.json.return_value = mock_body
+            mock_response.content = json.dumps(mock_body).encode()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unprocessable Entity",
                 request=MagicMock(),
@@ -179,7 +180,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 401
-            mock_response.json.return_value = mock_body
+            mock_response.content = json.dumps(mock_body).encode()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unauthorized",
                 request=MagicMock(),
@@ -202,7 +203,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 401
-            mock_response.json.return_value = mock_body
+            mock_response.content = json.dumps(mock_body).encode()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unauthorized",
                 request=MagicMock(),
@@ -233,7 +234,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 422
-            mock_response.json.return_value = mock_body
+            mock_response.content = json.dumps(mock_body).encode()
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unprocessable Entity",
                 request=MagicMock(),
@@ -254,7 +255,7 @@ class TestErrorDetailExtraction:
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
             mock_response.status_code = 500
-            mock_response.json.side_effect = ValueError("Invalid JSON")
+            mock_response.content = b"Invalid JSON"
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Internal Server Error",
                 request=MagicMock(),

@@ -9,7 +9,7 @@ That suite compares a fake (hand-built domain objects, no parse_system_one_respo
 against the real adapter. This suite compares two real adapters: the sync
 version is the oracle, the async version is under test.
 
-Because both adapters share _parse_body and _translate_status_error,
+Because both adapters share parse_success and translate_status,
 this suite cannot detect regressions in those shared helpers — a shared-helper
 change moves both adapters identically and the suite stays green. That is
 the sync unit suite's and the existing contract suite's job. This suite's job
@@ -227,7 +227,7 @@ def test_3xx_fallthrough_agrees() -> None:
     """Test that 3xx fallthrough produces httpx.HTTPStatusError in both adapters.
 
     No fixture drives a 3xx, so this test builds its 302 inline.
-    The shared _translate_status_error returns None for 3xx, so the raw
+    The shared translate_status returns None for 3xx, so the raw
     httpx.HTTPStatusError must propagate.
     """
     status = 302

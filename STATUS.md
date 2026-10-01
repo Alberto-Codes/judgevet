@@ -711,8 +711,8 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**2996 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
-coverage is **95.61%** (3591/3756 statements).
+**3003 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+coverage is **95.61%** (3597/3762 statements).
 Eleven pin tests in `tests/unit/test_doc_contradictions.py` hold the sentences
 #285 corrected. They cover the MCP `evaluate_policy` tool, the three-attempt
 retry default, the opt-in audit sink, the review scope and the shipped-features
@@ -726,6 +726,10 @@ anchor outside a release-please marked block that differs from `__version__`
 `tests/unit/test_audit_sink_close_order.py` proves each hosted root closes the
 settings-opened `JsonlAuditSink` once, after `adapter.close()` (#282). An
 acceptance reviewer's no-op `close` and early-close mutations each failed it.
+`judgevet.adapters.outbound.response_translation` holds `parse_success` and
+`translate_status`, which take a status code and the response bytes (#57
+slice 1). Both HTTP adapters call them; the 140 contract tests pass unchanged
+and an import-linter contract keeps `httpx` out of the module.
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
 run when an earlier one fails, so no result is hidden. No check was dropped

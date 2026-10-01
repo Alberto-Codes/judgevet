@@ -255,6 +255,14 @@ forbidden_modules = [
 ]
 
 [[tool.importlinter.contracts]]
+# Response translation reads status codes and body bytes only. It never
+# imports an HTTP client, so any transport can reuse it.
+name = "Response translation is transport-neutral"
+type = "forbidden"
+source_modules = ["judgevet.adapters.outbound.response_translation"]
+forbidden_modules = ["httpx", "httpcore"]
+
+[[tool.importlinter.contracts]]
 # The MCP runtime is an optional extra. Nothing outside its own adapter may
 # import it, so the library and CLI install without it.
 name = "MCP stays in its adapter"

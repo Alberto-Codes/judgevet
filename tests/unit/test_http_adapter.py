@@ -1,5 +1,6 @@
 """Unit tests for HTTP adapter."""
 
+import json
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -48,11 +49,13 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
-            mock_response.json.return_value = {
-                "model": "jev-1.13.0",
-                "answers": {},
-                "usage": {"input_tokens": 10, "output_tokens": 0},
-            }
+            mock_response.content = json.dumps(
+                {
+                    "model": "jev-1.13.0",
+                    "answers": {},
+                    "usage": {"input_tokens": 10, "output_tokens": 0},
+                }
+            ).encode()
             mock_response.raise_for_status = MagicMock()
             mock_post.return_value = mock_response
 
@@ -73,6 +76,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 401
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unauthorized",
@@ -90,6 +94,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 403
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Forbidden",
@@ -107,6 +112,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 400
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Bad Request",
@@ -124,6 +130,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 500
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Internal Server Error",
@@ -159,6 +166,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 401
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Unauthorized",
@@ -182,6 +190,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 403
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Forbidden",
@@ -205,6 +214,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 400
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Bad Request",
@@ -228,6 +238,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 500
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Internal Server Error",
@@ -272,7 +283,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.raise_for_status = MagicMock()
-            mock_response.json.side_effect = ValueError("Invalid JSON")
+            mock_response.content = b"Invalid JSON"
             mock_post.return_value = mock_response
 
             with pytest.raises(JevResponseError) as exc_info:
@@ -289,6 +300,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 429
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Rate limit exceeded",
@@ -312,6 +324,7 @@ class TestHTTPSystemOneAdapter:
 
         with patch.object(adapter._client, "post") as mock_post:
             mock_response = MagicMock()
+            mock_response.content = b""
             mock_response.status_code = 529
             mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
                 message="Service overloaded",
@@ -377,7 +390,7 @@ class TestHTTPSystemOneAdapter:
     ) -> None:
         """Test that 3xx status codes propagate httpx.HTTPStatusError unchanged.
 
-        3xx responses are unhandled by _translate_status_error and return None,
+        3xx responses are unhandled by translate_status and return None,
         which causes the original httpx.HTTPStatusError to be raised without
         wrapping or chaining. This test verifies:
 
@@ -390,7 +403,7 @@ class TestHTTPSystemOneAdapter:
         (context). A bare 'raise' in the except handler preserves both as None.
 
         The test drives the adapter with MockTransport to ensure a 3xx response
-        reaches raise_for_status() and propagates to _translate_status_error.
+        reaches raise_for_status() and propagates to translate_status.
         """
 
         def handler(request: httpx.Request) -> httpx.Response:

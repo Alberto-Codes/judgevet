@@ -49,7 +49,7 @@ exception is `JevMaxTokensExceededError`, which inherits from `JevRequestError`.
 | `JevResponseError` | `JevResponseError(message, status_code)` | Successful 200–299 answer that cannot be parsed | `False` |
 | `JevBudgetExceededError` | `JevBudgetExceededError(limit, cap, spent)` | No HTTP status; an opt-in `SpendCap` refused the attempt before sending | `False` |
 
-This table describes the [adapter mapping](../../src/judgevet/adapters/outbound/http.py)
+This table describes the [adapter mapping](../../src/judgevet/adapters/outbound/response_translation.py)
 and [error classes](../../src/judgevet/domain/errors.py). It does not assert that
 every status has been observed. The [vendor API reference](https://docs.typesafe.ai/api.md)
 is the source for documented service errors. Live 400, 401 and 422 bodies have
@@ -139,7 +139,7 @@ unseen 429/529 bodies. See [diagnostic limits](../../SECURITY.md#diagnostics-and
 A body without `detail` may carry `{"error": "<string>"}`, the shape Ollama
 documents. The adapter then appends a nonempty `error` string to the message.
 The status code still selects the exception type. No call here has observed
-this body. See `_read_error_detail` in `src/judgevet/adapters/outbound/http.py`.
+this body. See `_read_error_detail` in `src/judgevet/adapters/outbound/response_translation.py`.
 Source: https://docs.ollama.com/api/systemone.
 
 ## Local policy errors
