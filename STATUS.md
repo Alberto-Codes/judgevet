@@ -677,7 +677,7 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2884 tests pass, 3 tests skip, 22 live tests deselected.** The last measured
+**2884 tests pass, 3 tests skip, 24 live tests deselected.** The last measured
 coverage is **95.94%** (3330/3471 statements).
 `JsonlAuditSink`, exported from `judgevet`, is the reference audit sink (#54
 slice 2). It appends one compact UTF-8 JSON object per `JudgmentRecord` to a
@@ -1066,9 +1066,9 @@ Published README links retain offline source and fragment validation.
 | 401 returns `{"detail": {"error_type", "message"}}` | **verified** — live call with an invalid key, 2026-09-21 |
 | 422 returns `{"detail": [ {type, loc, msg, input} ]}` | **verified** — live call omitting `questions`, 2026-09-21 |
 | `detail` is polymorphic: an object for auth, an array for validation | **verified** — the two calls above disagree in shape |
-| an oversized request returns 400 with `{"detail": {"error_type": "max_tokens_exceeded"}}` | **verified, observed once** — live call on 2026-09-25 with a 400,000-character state against `jev-1.13.0`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575. The body does not say which budget fired; the request exceeded both the 32k and the 64k budget, so the threshold remains unverified |
+| an oversized request returns 400 with `{"detail": {"error_type": "max_tokens_exceeded"}}` | **verified, observed once** — live call on 2026-09-25 with a 400,000-character state against `jev-1.13.0`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575. The body does not say which budget fired; the request exceeded both the 32k and the 64k budget. A second 400,000-character call on 2026-09-30 through `tests/live/test_max_tokens_live.py` returned the same status, recorded at https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924025204. A 180,000-character state of repeated English words was answered in the same run; its token count was not read, so the threshold remains unverified |
 | a 2,959-byte JSON state with seven `choice` questions of up to 16 options fits the context budgets | **verified** — live call on 2026-09-25 against `jev-1.13.0` returned 200 with `input_tokens=3110`, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825777868 |
-| 400 with `detail.error_type` = `max_tokens_exceeded` becomes JevMaxTokensExceededError, retryable=False | **inferred** — the body is the one the 2026-09-25 live call returned, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575; that call raised plain JevRequestError, and the mapping now runs offline against the recorded body. No live call has run the new mapping |
+| 400 with `detail.error_type` = `max_tokens_exceeded` becomes JevMaxTokensExceededError, retryable=False | **verified, observed once** — `tests/live/test_max_tokens_live.py` sent a 400,000-character state through the real adapter on 2026-09-30 and caught `JevMaxTokensExceededError` with `retryable is False` and `status_code == 400`, recorded at https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924025204. The body is the one the 2026-09-25 call returned, recorded at https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575 |
 | an opt-in `SpendCap` refuses an attempt before sending once a limit is reached, and a failed attempt settles zero input tokens | **inferred** — offline tests against `httpx.MockTransport` only (#56 slice A); no live call has run the cap. Whether the service bills a failed attempt is an open question on #56 |
 | an opt-in `AuditSink` receives one `JudgmentRecord` per logical call, never per attempt, with no state, and a sink failure never changes the result | **inferred** — offline tests against `httpx.MockTransport` only (#54 slice 1); no live call has written a record |
 | a 422 body echoes the request payload back under `input` | **verified**, and the adapter discards it (#85) |

@@ -269,6 +269,12 @@ A request over the budget fails. One call sent a 400,000-character state with
 one `noul` question to `jev-1.13.0`. The service returned status 400 with the
 body `{"detail": {"error_type": "max_tokens_exceeded"}}`.
 Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575.
+A second call on 2026-09-30, through `tests/live/test_max_tokens_live.py`,
+sent the same size and raised `JevMaxTokensExceededError` with
+`retryable is False` and `status_code == 400`. In the same run, a
+180,000-character state of repeated English words was answered. That run did
+not read `usage.input_tokens`, so it does not show which budget binds.
+Source: https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924025204.
 The client raises `JevMaxTokensExceededError`, a subclass of `JevRequestError`
 with `retryable=False`. The adapter matches the `max_tokens_exceeded` marker,
 not the status. The body does not say which budget the request exceeded. That
