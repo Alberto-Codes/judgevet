@@ -190,6 +190,12 @@ or `tev1`. See
 
 On 2026-09-30, ten conformance kit tests passed against `nimble` on Ollama
 0.35.0. The two media-port rules skipped because the hosted adapters supply
-no media port. Rerun it with
-`pytest -m live -p no:randomly -rsx -v tests/live/test_ollama_kit_live.py`.
+no media port.
 Source: https://github.com/Alberto-Codes/judgevet/issues/267.
+
+On 2026-10-01, 14 conformance kit tests passed and 4 skipped against
+`nimble` on Ollama 0.35.0.
+Source: https://github.com/Alberto-Codes/judgevet/issues/267.
+
+Rerun the kit with
+`pytest -m live -p no:randomly -rsx -v tests/live/test_ollama_kit_live.py`.

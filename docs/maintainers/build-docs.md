@@ -87,7 +87,7 @@ uv run python -m scripts.check_doc_python
 ```
 
 This builds into a fresh temporary directory and installs that exact wheel into
-a new environment. It proves import isolation and executes all 15 current
+a new environment. It proves import isolation and executes all 27 current
 Python blocks from README/user docs without rewriting them. It reuses the release
 helpers and Python extractor, and verifies extraction matches the inventory's
 exact text. The base install has no optional MCP dependency. A final typing pass
@@ -130,18 +130,21 @@ a dummy key and closed stdin. That verifies startup and shutdown, not host
 connectivity. Credential acquisition and configured-host shell templates
 remain unexecuted, with explicit inventory reasons.
 
-The current 49-block scope is accounted for as follows:
+`scripts/doc_examples.json` records 80 blocks across 22 pages.
+This table counts them by language and kind:
 
-| Blocks | Verification |
-|---|---|
-| 15 Python programs | Isolated execution and typing |
-| 5 CLI shell workflows | Exact local inputs, output and exit checks |
-| 3 shell continuations | Saved tutorial programs and staged Git cases |
-| 8 JSON/TOML blocks | Decoder, discovery schema or contextual validation |
-| 8 installation blocks | Separate disposable setup audit |
-| 4 credential/host shell templates | Explicit substitution requirements; not executed |
-| 4 container blocks | Separate source-wheel image build and synthetic runtime checks; published-wheel preparation remains a release check |
-| 2 text outputs | Exact policy output; synthetic judgment output with live placeholders retained |
+| Language | Runnable | Template | Continuation | Output | Total |
+|---|---|---|---|---|---|
+| bash | 17 | 15 | 3 | 0 | 35 |
+| python | 27 | 0 | 0 | 0 | 27 |
+| json | 6 | 6 | 0 | 1 | 13 |
+| text | 0 | 1 | 0 | 2 | 3 |
+| toml | 0 | 1 | 0 | 0 | 1 |
+| dockerfile | 1 | 0 | 0 | 0 | 1 |
+| **Total** | 51 | 23 | 3 | 3 | 80 |
+
+Each record's `reason` names how that block is verified.
+Regenerate this table from the inventory when it changes.
 
 Repeat the setup audit when installation instructions or packaging changes.
 Record commands and outcomes on the tracking issue. Routine gates do not prove

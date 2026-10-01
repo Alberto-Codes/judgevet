@@ -18,9 +18,12 @@ Status: **draft**. Choose a path by what you need to do.
 - [Install the library or CLI](how-to/install.md#install-the-library).
 - [Call from synchronous Python](how-to/use-library.md) or
   [asynchronous Python](how-to/use-async-library.md).
+- [Test code that calls Jev without a network](how-to/test-offline.md).
 - [Handle failed library calls](how-to/handle-errors.md).
 - [Connect VS Code, Cursor, Claude Code, Desktop or Codex](how-to/connect-mcp.md).
 - [Use judgevet through Pi's CLI access](how-to/connect-mcp.md#pi-cli-access).
+- [Use a self-hosted judgment provider](how-to/use-a-self-hosted-provider.md).
+- [Use Ollama as a local server](how-to/use-ollama.md).
 - [Diagnose installation, input and connection failures](how-to/troubleshoot.md).
 - [Read questions from files and state from files or stdin](how-to/use-cli-files.md).
 - [Apply an acceptance policy in the CLI](how-to/use-cli-policy.md).
@@ -42,6 +45,7 @@ Status: **draft**. Choose a path by what you need to do.
 - [Diagnostic events and caller correlation](reference/events.md).
 - [Service, transport and local policy errors](reference/errors.md).
 - [Terms and meanings](reference/glossary.md).
+- [Worker run contract and commit trailers](reference/worker-runs.md).
 - [The installed typing marker](reference/py-typed-marker.md).
 - [Credential inputs and precedence](../SECURITY.md#credentials).
 - [Data disclosure and diagnostic limits](../SECURITY.md#data-sent-to-the-service).
@@ -59,6 +63,14 @@ Status: **draft**. Choose a path by what you need to do.
 Start with [contributor setup](maintainers/contributor-setup.md) for a fresh checkout.
 [Maintainer procedures](maintainers/index.md) cover wheel verification and
 release operations. They are separate from package use.
+
+- [Write and review technical prose](maintainers/writing-guide.md).
+- [Build and check documentation](maintainers/build-docs.md).
+- [Verify package typing](maintainers/verify-package.md).
+- [Cut and verify a release](maintainers/cut-a-release.md).
+- [Publish the MCP registry listing](maintainers/mcp-registry.md).
+- [Delegate a bounded change](maintainers/delegate-work.md).
+
 The former [release-guide path](how-to/cut-a-release.md) remains a pointer for
 existing links. [STATUS](../STATUS.md) holds current verification evidence;
 users do not need its linked issue history to follow the task guides.
