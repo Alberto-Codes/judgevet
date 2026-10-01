@@ -5,7 +5,8 @@
 # and the CLAUDE.md gate table. docvet honours the [tool.docvet] exclude
 # list in pyproject.toml: an explicit path overrides that list, so the hook
 # skips docvet itself for a file under an excluded entry. A missing file or
-# table leaves the list empty and docvet runs.
+# table leaves the list empty and docvet runs. The match strips one leading
+# .claude/worktrees/<name>/ so an Agent-tool worktree file matches too.
 # Reads the hook JSON on stdin. Write and Edit name the file. A Bash
 # command reports the files it changed in tool_response.bashEditDiff
 # when bashEditDiffEnabled is on. Without that list the hook takes every
@@ -90,7 +91,12 @@ PY
 
 # Succeed when one ./path falls under an entry of the docvet exclude list.
 excluded() {
-  local path="${1#./}" entry
+  local path="${1#./}" entry rest
+  case "$path" in .claude/worktrees/?*/*)
+    rest="${path#.claude/worktrees/}"
+    path="${rest#*/}"
+    ;;
+  esac
   while IFS= read -r entry; do
     [ -n "$entry" ] || continue
     case "$path" in "$entry"|"$entry"/*) return 0 ;; esac

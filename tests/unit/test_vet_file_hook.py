@@ -30,6 +30,7 @@ pytestmark = pytest.mark.unit
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HOOK = REPO_ROOT / "scripts" / "vet_file.sh"
 FINDING = "SYNTHETIC-DOCVET-FINDING"
+WORKTREE = ".claude/worktrees/w1"
 SHIM = f"""#!/usr/bin/env bash
 printf '%s\\n' "$*" >> "$SHIM_LOG"
 case " $* " in *" docvet "*) printf '%s\\n' "{FINDING}" ;; esac
@@ -54,6 +55,11 @@ def _project(tmp_path: Path) -> tuple[Path, Path, Path]:
     )
     (root / "src" / "pkg" / "mod.py").write_text("X = 1\n")
     (root / "tests" / "test_mod.py").write_text("Y = 2\n")
+    for prefix in (WORKTREE, f"{WORKTREE}/w2"):
+        (root / prefix / "src" / "pkg").mkdir(parents=True)
+        (root / prefix / "tests").mkdir()
+        (root / prefix / "src" / "pkg" / "mod.py").write_text("X = 1\n")
+        (root / prefix / "tests" / "test_mod.py").write_text("Y = 2\n")
     shim_dir = tmp_path / "shim"
     shim_dir.mkdir()
     shim = shim_dir / "uv"
@@ -144,3 +150,38 @@ def test_repository_exclude_list_is_read() -> None:
     code, stdout, stderr = _run_hook(REPO_ROOT, "tests/unit/test_cli_help.py")
     assert code == 0, stderr
     assert "docvet:" not in stdout
+
+
+def test_worktree_excluded_path_skips_docvet(tmp_path: Path) -> None:
+    """An excluded path inside an Agent-tool worktree never reaches docvet."""
+    root, shim_dir, log = _project(tmp_path)
+    code, stdout, stderr = _run_hook(
+        root, f"{WORKTREE}/tests/test_mod.py", shim_dir, log
+    )
+    assert code == 0, stderr
+    assert "docvet:" not in stdout
+    calls = log.read_text().splitlines()
+    assert not [c for c in calls if "docvet" in c]
+    assert len([c for c in calls if "ruff" in c]) == 2
+
+
+def test_worktree_included_path_runs_docvet(tmp_path: Path) -> None:
+    """A worktree path outside the exclude list still reports docvet findings."""
+    root, shim_dir, log = _project(tmp_path)
+    code, stdout, stderr = _run_hook(root, f"{WORKTREE}/src/pkg/mod.py", shim_dir, log)
+    assert code == 0, stderr
+    context = json.loads(stdout)["hookSpecificOutput"]["additionalContext"]
+    assert "docvet:" in context
+    assert FINDING in context
+
+
+def test_worktree_prefix_is_stripped_once(tmp_path: Path) -> None:
+    """Only one worktree component is stripped, so `w2/tests` is not excluded."""
+    root, shim_dir, log = _project(tmp_path)
+    code, stdout, stderr = _run_hook(
+        root, f"{WORKTREE}/w2/tests/test_mod.py", shim_dir, log
+    )
+    assert code == 0, stderr
+    context = json.loads(stdout)["hookSpecificOutput"]["additionalContext"]
+    assert "docvet:" in context
+    assert [c for c in log.read_text().splitlines() if "docvet" in c]
