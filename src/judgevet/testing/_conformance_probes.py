@@ -9,7 +9,8 @@ the declared capabilities admit, and `undeclared_evidence` builds one whose
 MIME type they do not admit. Each kit image is a valid one-pixel PNG, JPEG or
 WebP file. `signature_problem` and `provider_error_problem` describe a broken
 port shape or failure contract, so the synchronous and asynchronous kits share
-one message. None of these import pytest.
+one message. `media_members` reports a port's media methods for both kits.
+None of these import pytest.
 Source: https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909.
 
 Examples:
@@ -94,7 +95,25 @@ _IMAGE_BYTES = {
 }
 """One valid one-pixel image per MIME type that `judge_with_images` admits."""
 
+MEDIA_METHODS = ("capabilities", "system_one_media")
+"""The methods the media checks require as callables on a media port."""
+
 _FALLBACK_TYPE = "image/gif"
+
+
+def media_members(port: object) -> tuple[list[str], bool]:
+    """Report which media methods a port exposes and whether all are callable.
+
+    Args:
+        port: The provider port.
+
+    Returns:
+        The exposed media attribute names, and whether every media method is
+        present and callable.
+    """
+    exposed = [name for name in MEDIA_METHODS if hasattr(port, name)]
+    complete = all(callable(getattr(port, name, None)) for name in MEDIA_METHODS)
+    return exposed, complete
 
 
 def signature_problem(method: object, model: str) -> str | None:

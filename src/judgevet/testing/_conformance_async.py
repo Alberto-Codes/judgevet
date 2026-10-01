@@ -1,7 +1,7 @@
 """Reusable pytest conformance tests for an `AsyncSystemOnePort` provider.
 
-`BaseAsyncProviderConformance` applies six rules of the synchronous kit to
-an asynchronous provider:
+`BaseAsyncProviderConformance` applies the nine rules of the synchronous kit
+to an asynchronous provider:
 
 - `test_port_shape`: `system_one` is callable with the port's positional and
   keyword arguments.
@@ -13,9 +13,16 @@ an asynchronous provider:
 - `test_scope_entry_yields_usable_port`, `test_scope_exit_runs_once` and
   `test_scope_propagates_body_exception`: the factory keeps the
   `async_provider_scope` lifecycle rules.
+- `test_media_refused_without_media_support`: a port from the factory without
+  every media method callable exposes no partial media surface, and
+  `async_judge_with_images` refuses it with `ProviderCapabilityError`.
+- `test_media_port_refuses_undeclared_media`: `async_judge_with_images`
+  refuses media outside the declared capabilities before any media dispatch.
+- `test_media_port_judges_declared_media`: `system_one_media` returns an
+  awaitable, and one declared kit image returns answers that pass
+  `evaluate_policy`.
 
 Source: https://github.com/Alberto-Codes/judgevet/issues/251.
-The media rules have no asynchronous form yet.
 Source: https://github.com/Alberto-Codes/judgevet/issues/252.
 
 Each rule is an ordinary synchronous test method that drives its coroutine
@@ -63,17 +70,27 @@ See Also:
     - [judgevet.testing.AsyncFakeSystemOnePort][]: The offline async fake
     - [judgevet.ports.AsyncSystemOnePort][]: The protocol the rules check
     - [judgevet.testing._conformance_async_scope][]: The scope rule checks
+    - [judgevet.testing._conformance_async_media][]: The media rule checks
     - [judgevet.providers][]: `async_provider_scope` and the provider errors
 """
 
 import inspect
+from collections.abc import Awaitable, Callable
 
 import anyio
 import pytest
 
 from judgevet.domain.response import SystemOneResponse
 from judgevet.ports import AsyncSystemOnePort
+from judgevet.ports.media import AsyncMediaSystemOnePort
 from judgevet.providers import AsyncProviderFactory, async_provider_scope
+from judgevet.testing._conformance_async_media import (
+    RuleFailed,
+    RuleSkipped,
+    declared_problem,
+    refused_problem,
+    undeclared_problem,
+)
 from judgevet.testing._conformance_async_scope import (
     AsyncScopeRecorder,
     body_problem,
@@ -102,6 +119,25 @@ def _fail_on(problem: str | None) -> None:
     """
     if problem is not None:
         pytest.fail(problem)
+
+
+def _run_media_rule(check: Callable[[], Awaitable[str | None]]) -> None:
+    """Run one media check and turn its outcome into a pytest result.
+
+    Args:
+        check: A zero-argument callable that starts the media check.
+
+    Raises:
+        pytest.skip.Exception: If the rule does not apply to the provider.
+        pytest.fail.Exception: If the check found a problem.
+    """
+    try:
+        problem = anyio.run(check)
+    except RuleSkipped as skip:
+        pytest.skip(str(skip))
+    except RuleFailed as failure:
+        raise pytest.fail.Exception(str(failure)) from failure.__cause__
+    _fail_on(problem)
 
 
 async def _judge(port: AsyncSystemOnePort, model: str) -> object:
@@ -145,6 +181,9 @@ class BaseAsyncProviderConformance:
             awaited `system_one` call fails.
         provider_model (fixture): The model label the kit passes. The default
             is `CONFORMANCE_MODEL`.
+        media_port (fixture): Optional. An `AsyncMediaSystemOnePort` that both
+            media-port rules check. The default is None, and then a
+            media-capable port from `provider_factory` is used.
 
     Examples:
         ```python
@@ -170,6 +209,11 @@ class BaseAsyncProviderConformance:
             pytest.fail.Exception: Always.
         """
         pytest.fail("Override the failing_port fixture with a port that fails.")
+
+    @pytest.fixture
+    def media_port(self) -> AsyncMediaSystemOnePort | None:
+        """Supply no dedicated media port, so the kit checks the factory's port."""
+        return None
 
     @pytest.fixture
     def provider_model(self) -> str:
@@ -287,3 +331,54 @@ class BaseAsyncProviderConformance:
             provider_factory: The provider's factory.
         """
         _fail_on(anyio.run(body_problem, provider_factory))
+
+    def test_media_refused_without_media_support(
+        self, provider_factory: AsyncProviderFactory, provider_model: str
+    ) -> None:
+        """Rule 5: a text-only port exposes no partial media surface.
+
+        A media-capable port from the factory skips this rule, and
+        `test_media_port_refuses_undeclared_media` checks it instead.
+
+        Args:
+            provider_factory: The provider's factory.
+            provider_model: The selected model.
+        """
+        _run_media_rule(lambda: refused_problem(provider_factory, provider_model))
+
+    def test_media_port_refuses_undeclared_media(
+        self,
+        provider_factory: AsyncProviderFactory,
+        media_port: AsyncMediaSystemOnePort | None,
+        provider_model: str,
+    ) -> None:
+        """Rule 5: media outside the declared capabilities is refused first.
+
+        Args:
+            provider_factory: The provider's factory, used without a media port.
+            media_port: The dedicated media port, or None.
+            provider_model: The selected model.
+        """
+        _run_media_rule(
+            lambda: undeclared_problem(provider_factory, media_port, provider_model)
+        )
+
+    def test_media_port_judges_declared_media(
+        self,
+        provider_factory: AsyncProviderFactory,
+        media_port: AsyncMediaSystemOnePort | None,
+        provider_model: str,
+    ) -> None:
+        """Rule 6: declared media reaches the port and returns typed answers.
+
+        A `system_one_media` that returns a value that is not awaitable fails
+        this rule. The rule skips when the declaration admits no kit image.
+
+        Args:
+            provider_factory: The provider's factory, used without a media port.
+            media_port: The dedicated media port, or None.
+            provider_model: The selected model.
+        """
+        _run_media_rule(
+            lambda: declared_problem(provider_factory, media_port, provider_model)
+        )

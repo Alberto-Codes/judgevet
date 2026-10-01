@@ -13,7 +13,7 @@ the conformance kit refuses to import with an error naming its extra. The
 ``conformance`` environment requires the extra to add exactly pytest and
 anyio, runs a provider test module against the installed kit with pytest and
 requires every rule test to pass. The module runs nine
-synchronous rules and six asynchronous rules.
+synchronous rules and nine asynchronous rules.
 
 Source: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851596904.
 Repair: https://github.com/Alberto-Codes/judgevet/issues/205#issuecomment-5851983135.
@@ -86,7 +86,7 @@ CONFORMANCE_EXTRA = "conformance"
 CONFORMANCE_REQUIRES = frozenset({"pytest", "anyio"})
 KIT_MODULE = "judgevet.testing.conformance"
 KIT_TESTS = "tests/fixtures/providers/conformance_provider.py"
-KIT_RULES = 15
+KIT_RULES = 18
 EXPECTED_ABSENT = {
     "receipt": "conformance-absent",
     "fakes": "FakeSystemOnePort",

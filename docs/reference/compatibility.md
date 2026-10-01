@@ -232,7 +232,11 @@ Source: [keyed policy contract](https://github.com/Alberto-Codes/judgevet/issues
 ## Image evidence library extension
 
 `judgevet.media` supports `ImageAttachment`, `ImageEvidence`, `MediaCapabilities`,
-`MediaSystemOnePort`, `MissingEvidenceError` and `judge_with_images`. These are
+`MediaSystemOnePort`, `MissingEvidenceError` and `judge_with_images`.
+`judgevet.media` also exports `AsyncMediaSystemOnePort` and
+`async_judge_with_images`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/252.
+These are
 module exports; existing root exports, `SystemOnePort` and `SystemOneResponse`
 remain unchanged. The pure values live in `judgevet.domain.media`; the protocol
 lives in `judgevet.ports.media`. Re-exports retain object identity.

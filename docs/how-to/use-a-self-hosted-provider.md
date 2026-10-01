@@ -220,7 +220,9 @@ The async kit also runs the three scope rules through `async_provider_scope`.
 Each scope must get its own context, exit once and let a body exception
 propagate.
 Source: https://github.com/Alberto-Codes/judgevet/issues/251.
-The media rules are synchronous only for now.
+The async kit also runs the three media rules through `async_judge_with_images`.
+Override `media_port` with an `AsyncMediaSystemOnePort` to check media support.
+Source: https://github.com/Alberto-Codes/judgevet/issues/252.
 Annotate the synchronous fixture with `ProviderFactory` from
 `judgevet.providers`. Annotate the async fixture with `AsyncProviderFactory`
 from `judgevet.testing.conformance` or `judgevet.providers`.

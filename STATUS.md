@@ -665,9 +665,11 @@ type through `judge_with_images` and requires answers that `evaluate_policy`
 accepts. A media port whose `system_one_media` raises `RuntimeError` fails
 only that rule, and so does one whose answers the policy rejects.
 #246 adds `BaseAsyncProviderConformance` for `AsyncSystemOnePort` providers,
-exported from the same module. It carries six rules: the port signature,
-typed answers through `evaluate_policy`, `ProviderError` on failure, and the
-three scope rules over `async_provider_scope` (#251). Its test methods drive
+exported from the same module. It carries nine rules. Three are the base
+rules: the port signature, typed answers through `evaluate_policy`, and
+`ProviderError` on failure. Three are the scope rules over
+`async_provider_scope` (#251). Three are the media rules over
+`async_judge_with_images` (#252). Its test methods drive
 coroutines with `anyio.run`, so it adds no pytest plugin and the
 `conformance` extra is unchanged. `AsyncFakeSystemOnePort` passes, and each
 broken async fake fails its own rule; the sync-port fake fails the typed-answer
@@ -677,15 +679,23 @@ The async scope follows the sync rules: one argument, a borrowed port stays
 open, a factory context exits once, and a body exception propagates. The #251 reviewer found
 the async body-exception rule passed when the scope swallowed the error; the
 repair added the missing check, and a kit test now fails under that mutation.
-The library has no async media port, so the media rules wait on #252. The
-`provider-artifacts` hook now requires 15 passed rules in both conformance
-environments, and the base environment still refuses the kit with an error
-naming the extra.
+`judgevet.ports.media` now defines `AsyncMediaSystemOnePort` (#252). Its
+`capabilities` stays synchronous and its `system_one_media` is awaited.
+`judgevet.media` exports `async_judge_with_images`, a thin shell over the
+same refusal checks as the sync function. The async judging rule fails a
+synchronous `system_one_media` with a message naming "Declare it async def".
+The builder's first kit test for that message stayed green without the check,
+because the traceback printed the literal from the source. The test now
+matches the full rendered message. The suite's eight skips are declared: six
+from subclasses without a media port, two from media-capable subclasses that
+skip the refusal rule. The `provider-artifacts` hook now requires 18 passed
+rules in both conformance environments. The base environment still refuses
+the kit with an error naming the extra.
 
 ## Gates
 
-**2909 tests pass, 3 tests skip, 27 live tests deselected.** The last measured
-coverage is **95.87%** (3415/3562 statements).
+**2953 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+coverage is **95.53%** (3528/3693 statements).
 CI now runs the dependency audit, `ty`, the doc schema check and docvet as
 named steps of one `checks` job instead of three jobs. The three later steps
 run when an earlier one fails, so no result is hidden. No check was dropped

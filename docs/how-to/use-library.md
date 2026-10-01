@@ -95,6 +95,13 @@ preserves exact bytes, global image order and each question's reference order.
 Sharing an image across questions is allowed. Constructors snapshot collections
 and reject malformed associations with `ValueError`.
 
+An async provider implements `AsyncMediaSystemOnePort` from
+`judgevet.media`. Await `async_judge_with_images` with the same arguments.
+It runs the same checks in the same order and raises the same errors.
+Its `capabilities` method stays synchronous. Declare `system_one_media` with
+`async def`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/252.
+
 Unknown question references raise `ProviderRequestError`. Required questions
 without attachments raise `MissingEvidenceError`, its subclass. Unsupported
 formats or limits raise `ProviderCapabilityError` before inference. Allowed

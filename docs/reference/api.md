@@ -140,7 +140,9 @@ typed-answer and failure rules.
 Source: https://github.com/Alberto-Codes/judgevet/issues/246.
 It also runs the three scope rules through `async_provider_scope`.
 Source: https://github.com/Alberto-Codes/judgevet/issues/251.
-It has no media rules.
+It also runs the three media rules through `async_judge_with_images`.
+Its optional `media_port` fixture supplies an `AsyncMediaSystemOnePort`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/252.
 The synchronous `provider_factory` fixture returns a `ProviderFactory` from
 `judgevet.providers`. The async fixture returns an `AsyncProviderFactory` from
 `judgevet.testing.conformance`.

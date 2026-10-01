@@ -64,7 +64,7 @@ RULE_TESTS = (
     "test_media_port_judges_declared_media",
 )
 MEDIA_PORT_TESTS = RULE_TESTS[-2:]
-ASYNC_RULE_TESTS = RULE_TESTS[:6]
+ASYNC_RULE_TESTS = RULE_TESTS
 
 
 class TestApplicationFixtureConformance(BaseProviderConformance):
@@ -143,6 +143,60 @@ class TestMediaCapableFakeConformance(BaseProviderConformance):
     def failing_port(self) -> FakeSystemOnePort:
         """Raise a declared provider failure from every judgment."""
         return FakeSystemOnePort(error=ProviderTransportError("synthetic failure"))
+
+
+class _AsyncMediaFake(AsyncFakeSystemOnePort):
+    """A test-local async fake that declares PNG support and judges media as text."""
+
+    declared = MediaCapabilities({"image/png"})
+
+    def capabilities(self, model: str) -> MediaCapabilities:
+        """Declare the same image support for every model."""
+        return self.declared
+
+    async def system_one_media(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        evidence: ImageEvidence,
+    ) -> SystemOneResponse:
+        """Answer as the async text fake does."""
+        return await self.system_one(state, questions, model)
+
+
+class TestAsyncMediaFakeConformance(BaseAsyncProviderConformance):
+    """A dedicated async media port passes every async rule in process (#252)."""
+
+    @pytest.fixture
+    def provider_factory(self) -> Any:
+        """Borrow a text-only async fake per scope."""
+        return lambda: nullcontext(AsyncFakeSystemOnePort(answers=VALID_ANSWERS))
+
+    @pytest.fixture
+    def failing_port(self) -> AsyncFakeSystemOnePort:
+        """Raise a declared provider failure from every judgment."""
+        return AsyncFakeSystemOnePort(error=ProviderTransportError("synthetic"))
+
+    @pytest.fixture
+    def media_port(self) -> _AsyncMediaFake:
+        """Declare PNG support and answer the kit questions."""
+        return _AsyncMediaFake(answers=VALID_ANSWERS)
+
+
+class TestAsyncMediaCapableFactoryConformance(BaseAsyncProviderConformance):
+    """A media-capable port from the factory serves both async media-port rules."""
+
+    @pytest.fixture
+    def provider_factory(self) -> Any:
+        """Borrow a media-capable async fake per scope."""
+        return lambda: nullcontext(_AsyncMediaFake(answers=VALID_ANSWERS))
+
+    @pytest.fixture
+    def failing_port(self) -> AsyncFakeSystemOnePort:
+        """Raise a declared provider failure from every judgment."""
+        return AsyncFakeSystemOnePort(error=ProviderTransportError("synthetic"))
 
 
 class TestAsyncFakeConformance(BaseAsyncProviderConformance):
@@ -648,6 +702,7 @@ from contextlib import nullcontext
 
 import pytest
 
+from judgevet.domain.media import MediaCapabilities
 from judgevet.providers import ProviderTransportError
 from judgevet.testing import AsyncFakeSystemOnePort, FakeSystemOnePort
 from judgevet.testing.conformance import (
@@ -655,6 +710,14 @@ from judgevet.testing.conformance import (
     VALID_ANSWERS,
     BaseAsyncProviderConformance,
 )
+
+
+class AsyncMediaFake(AsyncFakeSystemOnePort):
+    def capabilities(self, model):
+        return MediaCapabilities({"image/png"})
+
+    async def system_one_media(self, state, questions, model, *, evidence):
+        return await self.system_one(state, questions, model)
 
 
 class GoodAsyncProvider(BaseAsyncProviderConformance):
@@ -665,6 +728,32 @@ class GoodAsyncProvider(BaseAsyncProviderConformance):
     @pytest.fixture
     def failing_port(self):
         return AsyncFakeSystemOnePort(error=ProviderTransportError("synthetic"))
+
+    @pytest.fixture
+    def media_port(self):
+        return AsyncMediaFake(answers=VALID_ANSWERS)
+
+
+class SetCapabilitiesAsyncFake(AsyncMediaFake):
+    def capabilities(self, model):
+        return {"image/png"}
+
+
+class CapabilitiesOnlyAsyncPort(AsyncFakeSystemOnePort):
+    def capabilities(self, model):
+        return MediaCapabilities({"image/png"})
+
+
+class RaisingAsyncMediaFake(AsyncMediaFake):
+    async def system_one_media(self, state, questions, model, *, evidence):
+        raise RuntimeError("media backend exploded")
+
+
+class SyncMediaAsyncFake(AsyncMediaFake):
+    def system_one_media(self, state, questions, model, *, evidence):
+        return FakeSystemOnePort(answers=VALID_ANSWERS).system_one(
+            state, questions, model
+        )
 
 
 class KeywordModelAsyncPort:
@@ -736,6 +825,36 @@ _ASYNC_BROKEN = {
         "SwallowingAsyncContext",
         ("test_scope_propagates_body_exception",),
     ),
+    "async_text_port_claimed_as_media": (
+        "media_port",
+        "AsyncFakeSystemOnePort(answers=VALID_ANSWERS)",
+        MEDIA_PORT_TESTS,
+    ),
+    "async_capabilities_without_media_method": (
+        "provider_factory",
+        "lambda: nullcontext(CapabilitiesOnlyAsyncPort(answers=VALID_ANSWERS))",
+        ("test_media_refused_without_media_support",),
+    ),
+    "async_undeclared_capabilities": (
+        "media_port",
+        "SetCapabilitiesAsyncFake(answers=VALID_ANSWERS)",
+        MEDIA_PORT_TESTS,
+    ),
+    "async_media_method_raises_runtime_error": (
+        "media_port",
+        "RaisingAsyncMediaFake(answers=VALID_ANSWERS)",
+        ("test_media_port_judges_declared_media",),
+    ),
+    "async_media_policy_rejects_score": (
+        "media_port",
+        'AsyncMediaFake(answers=INVALID_ANSWERS["score_off_scale"])',
+        ("test_media_port_judges_declared_media",),
+    ),
+    "sync_media_method_is_not_awaitable": (
+        "media_port",
+        "SyncMediaAsyncFake(answers=VALID_ANSWERS)",
+        ("test_media_port_judges_declared_media",),
+    ),
 }
 
 
@@ -751,7 +870,7 @@ def _run_async(pytester: pytest.Pytester, body: str) -> tuple[dict[str, str], st
 
 @pytest.mark.unit
 def test_good_async_provider_passes_every_rule(pytester: pytest.Pytester) -> None:
-    """A correct async provider passes all six async rule tests."""
+    """A correct async provider passes all nine async rule tests."""
     body = "class TestGood(GoodAsyncProvider):\n    pass\n"
     outcomes, _ = _run_async(pytester, body)
     assert outcomes == dict.fromkeys(ASYNC_RULE_TESTS, "PASSED")
@@ -784,6 +903,18 @@ def test_broken_async_fake_fails_only_its_rule(
         ("bare_runtime_error", "judgevet.providers.ProviderError subclass"),
         ("shared_async_context_exits_twice", "one shared context for two scopes"),
         ("async_context_swallows_body_error", "false value from __aexit__"),
+        (
+            "sync_media_method_is_not_awaitable",
+            (
+                "system_one_media returned SystemOneResponse, not an awaitable. "
+                "Declare it async def."
+            ),
+        ),
+        (
+            "async_media_method_raises_runtime_error",
+            "judgevet.providers.ProviderError subclass",
+        ),
+        ("async_undeclared_capabilities", "not MediaCapabilities"),
     ],
 )
 def test_async_failure_names_the_contract(

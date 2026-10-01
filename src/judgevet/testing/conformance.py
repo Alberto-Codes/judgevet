@@ -26,8 +26,10 @@ method, so a failure names the rule it breaks:
 
 `BaseAsyncProviderConformance` applies the shape, typed-answer, failure and
 scope rules to an `AsyncSystemOnePort` provider. Its scope rules use
-`judgevet.providers.async_provider_scope`. The media rules are synchronous only.
+`judgevet.providers.async_provider_scope`.
 Source: https://github.com/Alberto-Codes/judgevet/issues/251.
+Its three media rules call `judgevet.media.async_judge_with_images`.
+Source: https://github.com/Alberto-Codes/judgevet/issues/252.
 Its `provider_factory` fixture returns a `judgevet.providers.AsyncProviderFactory`.
 The synchronous fixture returns a `judgevet.providers.ProviderFactory`.
 
@@ -98,11 +100,13 @@ from judgevet.testing._conformance_cases import (
     policy_problem,
 )
 from judgevet.testing._conformance_probes import (
+    MEDIA_METHODS,
     BodyError,
     MediaProbe,
     ScopeRecorder,
     declared_evidence,
     image_evidence,
+    media_members,
     provider_error_problem,
     signature_problem,
     undeclared_evidence,
@@ -121,10 +125,6 @@ __all__ = [
 ]
 
 
-_MEDIA_METHODS = ("capabilities", "system_one_media")
-"""The methods `judge_with_images` requires as callables on a media port."""
-
-
 def _require(condition: object, message: str) -> None:
     """Fail the running test with a message when a condition is false.
 
@@ -140,21 +140,6 @@ def _require(condition: object, message: str) -> None:
     """
     if not condition:
         pytest.fail(message)
-
-
-def _media_members(port: object) -> tuple[list[str], bool]:
-    """Report which media methods a port exposes and whether all are callable.
-
-    Args:
-        port: The provider port.
-
-    Returns:
-        The exposed media attribute names, and whether every media method is
-        present and callable.
-    """
-    exposed = [name for name in _MEDIA_METHODS if hasattr(port, name)]
-    complete = all(callable(getattr(port, name, None)) for name in _MEDIA_METHODS)
-    return exposed, complete
 
 
 def _require_policy_answers(response: object, source: str) -> None:
@@ -455,19 +440,20 @@ class BaseProviderConformance:
         them, or a non-callable one, fails this rule. The library would refuse
         the media support that such a port appears to offer. A
         media-capable `provider_port` skips this rule, and
-        `test_media_port_refuses_undeclared_media` checks it instead.
+        `test_media_port_refuses_undeclared_media` checks it instead. The
+        asynchronous kit shares the media member check.
 
         Args:
             provider_port: The provider port.
             provider_model: The selected model.
         """
-        exposed, complete = _media_members(provider_port)
+        exposed, complete = media_members(provider_port)
         if complete:
             pytest.skip("provider_port supports media; the media-port rule checks it.")
         _require(
             not exposed,
             f"The port exposes {exposed} but not every method of "
-            f"{list(_MEDIA_METHODS)} as a callable, so judge_with_images refuses "
+            f"{list(MEDIA_METHODS)} as a callable, so judge_with_images refuses "
             "it. Implement every media method or none.",
         )
         with pytest.raises(ProviderCapabilityError):

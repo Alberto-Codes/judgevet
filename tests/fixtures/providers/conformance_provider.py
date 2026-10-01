@@ -4,7 +4,8 @@ A provider package writes a module like this one in its own test suite. It
 subclasses the kit's base classes and overrides the fixtures that supply its
 implementation. The installed-artifact runner runs it with pytest inside the
 ``conformance`` environment and requires every rule test to pass. The async
-subclass covers the six asynchronous rules (#246, #251).
+subclass covers the nine asynchronous rules, media rules included
+(#246, #251, #252).
 """
 
 from collections.abc import Callable, Mapping
@@ -14,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from judgevet.domain.media import ImageEvidence
+from judgevet.domain.media import ImageEvidence, MediaCapabilities
 from judgevet.domain.questions import Question
 from judgevet.domain.response import SystemOneResponse
 from judgevet.providers import ProviderFactory, ProviderTransportError
@@ -84,6 +85,42 @@ class TestInstalledProvider(BaseProviderConformance):
         return KitMediaProvider("installed-media")
 
 
+class AsyncKitMediaFake(AsyncFakeSystemOnePort):
+    """The public async fake, declaring PNG support and judging media as text."""
+
+    def capabilities(self, model: str) -> MediaCapabilities:
+        """Declare PNG support for every model.
+
+        Args:
+            model: The selected model.
+
+        Returns:
+            The static declaration.
+        """
+        return MediaCapabilities({"image/png"})
+
+    async def system_one_media(
+        self,
+        state: str | dict[str, Any] | list[Any],
+        questions: Mapping[str, Question | Mapping[str, Any]],
+        model: str,
+        *,
+        evidence: ImageEvidence,
+    ) -> SystemOneResponse:
+        """Answer the kit questions as the async text fake does.
+
+        Args:
+            state: The content to judge.
+            questions: Question names mapped to question definitions.
+            model: The selected model.
+            evidence: The ordered image evidence.
+
+        Returns:
+            The fake's scripted response.
+        """
+        return await self.system_one(state, questions, model)
+
+
 class TestInstalledAsyncProvider(BaseAsyncProviderConformance):
     """The public async fake passes every async rule."""
 
@@ -104,3 +141,12 @@ class TestInstalledAsyncProvider(BaseAsyncProviderConformance):
             An async fake configured to fail.
         """
         return AsyncFakeSystemOnePort(error=ProviderTransportError("offline"))
+
+    @pytest.fixture
+    def media_port(self) -> AsyncKitMediaFake:
+        """Supply an async media port with the kit's answers.
+
+        Returns:
+            An async fake with PNG support.
+        """
+        return AsyncKitMediaFake(answers=VALID_ANSWERS)
