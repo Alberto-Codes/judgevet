@@ -7,18 +7,30 @@ Source: https://docs.typesafe.ai/models.md. One earlier call sent a
 `{"detail": {"error_type": "max_tokens_exceeded"}}`.
 Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825759575.
 
-The tokenizer is unknown. Sizes here use the estimate of four characters per
-token, so 400,000 characters is about 100k tokens, above both budgets, and
-180,000 characters is about 45k tokens, between them. The estimate is not a
-measurement.
+The tokenizer is unknown. The oversized test uses the estimate of four
+characters per token, so 400,000 characters is about 100k tokens, above both
+budgets. The estimate is not a measurement.
+
+The near-32k test is a two-step probe. Round 1 sent a 180,000-character state
+between the estimated budgets, and the service answered it, but the probe did
+not read the call's token count, so it could not say which budget binds.
+Source: https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924025204.
+Step one is a calibration call with a 60,000-character state. It reads
+`usage.input_tokens` and computes characters per token for the generated
+text. Step two sends one state sized by that rate at about 40,000 tokens,
+above the 32k budget and below the 64k budget, and records its outcome and
+token count.
 
 Each state is generated in code from varied English words, not one repeated
 character, which a tokenizer may compress. No state is read from a file, and
 no state contains the API key.
 
-Each test prints one JSON line with the character count, the outcome, the
-status and the resolved model. Run with `-s` to see the lines. The module
-makes two paid calls; the adapter retries nothing.
+Each call prints one JSON line with the character count, the outcome, the
+status and the resolved model; the near-32k lines also carry the input token
+count. Run with `-s` to see the lines. The oversized test makes one paid call
+and the near-32k test makes two; the adapter retries nothing. The supervisor
+runs the near-32k test alone with `-k near_32k`, so the oversized test does
+not spend a call.
 
 Handling the key:
     The fixture reads the key from `JEV_API__KEY` or `TYPESAFE_API_KEY`
@@ -27,7 +39,7 @@ Handling the key:
 
 Examples:
     ```bash
-    TYPESAFE_API_KEY="your-key" pytest -m live -s tests/live/test_max_tokens_live.py
+    TYPESAFE_API_KEY="your-key" pytest -m live -s -k near_32k tests/live/test_max_tokens_live.py
     ```
 
 See Also:
@@ -51,7 +63,8 @@ from judgevet.domain.errors import JevMaxTokensExceededError
 from judgevet.domain.response import SystemOneResponse
 
 OVERSIZED_CHARACTERS = 400_000
-BETWEEN_BUDGETS_CHARACTERS = 180_000
+CALIBRATION_CHARACTERS = 60_000
+TARGET_TOKENS = 40_000
 TIMEOUT_SECONDS = 180.0
 
 _WORDS = (
@@ -168,25 +181,81 @@ def _record(
     return record
 
 
-def _send_between_budgets(adapter: HTTPSystemOneAdapter) -> dict[str, Any]:
-    """Send the between-budgets state and classify the outcome.
+def _record_measured(
+    fields: dict[str, Any],
+    status: int | None,
+    input_tokens: int | None,
+    model: str | None,
+) -> dict[str, Any]:
+    """Print one JSON line for a near-32k probe call and return it.
+
+    Args:
+        fields: The case, the character count, any target and the outcome,
+            in print order.
+        status: The HTTP status of the call.
+        input_tokens: The reported input tokens, or None when the call failed.
+        model: The resolved model, or None when the service refused.
+
+    Returns:
+        The record that was printed.
+    """
+    record = {
+        "probe": "max_tokens",
+        **fields,
+        "status": status,
+        "input_tokens": input_tokens,
+        "resolved_model": model,
+    }
+    print(json.dumps(record))
+    return record
+
+
+def _calibrate(adapter: HTTPSystemOneAdapter) -> float:
+    """Send the calibration state and return its characters per token.
 
     Args:
         adapter: The live adapter.
 
     Returns:
+        The calibration character count divided by the reported input tokens.
+        Any exception from the call propagates and fails the test.
+    """
+    state = build_state(CALIBRATION_CHARACTERS)
+    response = adapter.system_one(state=state, questions=_QUESTIONS)
+    assert isinstance(response, SystemOneResponse)
+    input_tokens = response.usage.input_tokens
+    if input_tokens is None:
+        pytest.fail("The service reported no usage for the calibration call.")
+    fields = {"case": "calibration", "characters": len(state), "outcome": "answered"}
+    _record_measured(fields, 200, input_tokens, response.model)
+    return CALIBRATION_CHARACTERS / input_tokens
+
+
+def _send_near_32k(adapter: HTTPSystemOneAdapter, characters: int) -> dict[str, Any]:
+    """Send the near-32k state once and classify the outcome.
+
+    Args:
+        adapter: The live adapter.
+        characters: The length of the state to send.
+
+    Returns:
         The printed record. Any exception other than
         `JevMaxTokensExceededError` propagates.
     """
-    state = build_state(BETWEEN_BUDGETS_CHARACTERS)
+    state = build_state(characters)
+    fields: dict[str, Any] = {
+        "case": "near_32k",
+        "characters": len(state),
+        "target_tokens": TARGET_TOKENS,
+    }
     try:
         response = adapter.system_one(state=state, questions=_QUESTIONS)
     except JevMaxTokensExceededError as exc:
-        return _record(
-            "between_budgets", len(state), "max_tokens_exceeded", exc.status_code, None
-        )
+        fields["outcome"] = "max_tokens_exceeded"
+        return _record_measured(fields, exc.status_code, None, None)
     assert isinstance(response, SystemOneResponse)
-    return _record("between_budgets", len(state), "answered", 200, response.model)
+    fields["outcome"] = "answered"
+    return _record_measured(fields, 200, response.usage.input_tokens, response.model)
 
 
 @pytest.fixture
@@ -238,21 +307,25 @@ def test_oversized_state_raises_max_tokens(
 
 
 @pytest.mark.live
-def test_state_between_budgets_records_which_fires(
+def test_state_near_32k_budget_records_which_fires(
     live_adapter: HTTPSystemOneAdapter,
 ) -> None:
-    """Send a state between the budgets and record which outcome happened.
+    """Calibrate characters per token, then send a state near 40k tokens.
 
-    The state is about 180,000 characters, about 45k tokens on the
-    four-characters-per-token estimate: above the 32k state-plus-question
-    budget and below the 64k request budget. The outcome is unknown on
-    purpose. `max_tokens_exceeded` means the 32k budget fires alone;
-    `answered` means the service did not enforce 32k on this input. Both
-    pass. Only a third outcome, any other exception, fails the test.
+    The first call sends a 60,000-character state, which must be answered,
+    and reads `usage.input_tokens` to measure characters per token for the
+    generated text. The second call sends one state of
+    `round(40000 * chars_per_token)` characters from the same generator:
+    above the 32k state-plus-question budget and below the 64k request
+    budget. The outcome is unknown on purpose. `max_tokens_exceeded` means
+    the 32k budget fires; `answered` means the service did not enforce 32k on
+    this input. Both pass. Any other exception fails the test.
 
     Args:
         live_adapter: The live adapter fixture.
     """
-    record = _send_between_budgets(live_adapter)
+    chars_per_token = _calibrate(live_adapter)
+    characters = round(TARGET_TOKENS * chars_per_token)
+    record = _send_near_32k(live_adapter, characters)
     assert record["outcome"] in {"max_tokens_exceeded", "answered"}
-    assert record["characters"] == BETWEEN_BUDGETS_CHARACTERS
+    assert record["characters"] == characters

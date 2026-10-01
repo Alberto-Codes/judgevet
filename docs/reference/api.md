@@ -294,6 +294,15 @@ sent the same size and raised `JevMaxTokensExceededError` with
 180,000-character state of repeated English words was answered. That run did
 not read `usage.input_tokens`, so it does not show which budget binds.
 Source: https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924025204.
+A second run on 2026-09-30 measured the rate first: 60,000 characters of the
+same text counted 10,798 input tokens. It then sent 222,263 characters, about
+40,000 tokens, with one `noul` question. The service refused that request
+with status 400 and the same body. So the 32k state-plus-question budget
+fires on its own, under the 64k request budget. The answered
+180,000-character state is about 32,394 tokens by that rate. So the boundary
+lies between 32,394 and 40,000 tokens for this text. The rate is specific to
+that repetitive English text.
+Source: https://github.com/Alberto-Codes/judgevet/issues/192#issuecomment-5924550998.
 The client raises `JevMaxTokensExceededError`, a subclass of `JevRequestError`
 with `retryable=False`. The adapter matches the `max_tokens_exceeded` marker,
 not the status. The body does not say which budget the request exceeded. That
