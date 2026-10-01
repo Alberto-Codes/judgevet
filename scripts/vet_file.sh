@@ -2,7 +2,10 @@
 # PostToolUse hook: vet every Python file a tool call just changed.
 # Runs ruff format, ruff check and docvet on each file, plus check_loc on
 # files under src; ty, lint-imports and pytest stay in the pre-commit hook
-# and the CLAUDE.md gate table.
+# and the CLAUDE.md gate table. docvet honours the [tool.docvet] exclude
+# list in pyproject.toml: an explicit path overrides that list, so the hook
+# skips docvet itself for a file under an excluded entry. A missing file or
+# table leaves the list empty and docvet runs.
 # Reads the hook JSON on stdin. Write and Edit name the file. A Bash
 # command reports the files it changed in tool_response.bashEditDiff
 # when bashEditDiffEnabled is on. Without that list the hook takes every
@@ -72,6 +75,28 @@ while IFS= read -r c; do
 done <<< "$candidates"
 files=$(printf '%s' "$files" | sort -u)
 [ -n "$files" ] || exit 0
+excludes=$(python3 - <<'PY' 2>/dev/null
+import tomllib
+try:
+    with open("pyproject.toml", "rb") as fh:
+        entries = tomllib.load(fh).get("tool", {}).get("docvet", {}).get("exclude", [])
+except (OSError, tomllib.TOMLDecodeError):
+    entries = []
+for entry in entries if isinstance(entries, list) else []:
+    if isinstance(entry, str) and entry.strip("/"):
+        print(entry.strip("/"))
+PY
+)
+
+# Succeed when one ./path falls under an entry of the docvet exclude list.
+excluded() {
+  local path="${1#./}" entry
+  while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
+    case "$path" in "$entry"|"$entry"/*) return 0 ;; esac
+  done <<< "$excludes"
+  return 1
+}
 
 # Print the gate findings for one file, or nothing when it is clean.
 vet() {
@@ -80,8 +105,10 @@ vet() {
     || one+="ruff format:"$'\n'"$(printf '%s\n' "$fmt" | head -30)"$'\n'
   chk=$(uv run ruff check --no-fix --output-format concise "$rel" 2>&1) \
     || one+="ruff check:"$'\n'"$(printf '%s\n' "$chk" | head -30)"$'\n'
-  doc=$(uv run docvet check --quiet "$rel" 2>&1 | head -30)
-  [ -n "$doc" ] && one+="docvet:"$'\n'"$doc"$'\n'
+  if ! excluded "$rel"; then
+    doc=$(uv run docvet check --quiet "$rel" 2>&1 | head -30)
+    [ -n "$doc" ] && one+="docvet:"$'\n'"$doc"$'\n'
+  fi
   case "$rel" in ./src/*)
     loc=$(uv run python scripts/check_loc.py "$(dirname "$rel")" 2>&1 | grep -F -- "${rel#./}")
     [ -n "$loc" ] && one+="check_loc:"$'\n'"$loc"$'\n'

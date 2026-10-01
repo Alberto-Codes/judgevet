@@ -677,8 +677,15 @@ refuses the kit with an error naming the extra.
 
 ## Gates
 
-**2863 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
+**2866 tests pass, 3 tests skip, 19 live tests deselected.** The last measured
 coverage is **95.89%** (3264/3404 statements).
+The `PostToolUse` hook, `scripts/vet_file.sh`, reads the `[tool.docvet]`
+exclude list from `pyproject.toml` once per run and skips only its docvet step
+for a file under an excluded entry, so edits under `tests/` and `scripts/` no
+longer return findings the real gate never raises. Ruff and `check_loc` run as
+before. Three tests drive the hook as a subprocess: two through a `uv` shim in
+a temporary project root, one against the repository's own list. The
+reviewer's two mutations each turned the matching tests red (#276).
 Tests that launch `pre-commit` no longer write the user-level
 `~/.cache/pre-commit/db.db`. A seed store under the user's XDG cache, keyed by
 the config's repos and revs, the pre-commit version and the interpreter,
