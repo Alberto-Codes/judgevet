@@ -139,7 +139,7 @@ Errors still arrive as `Jev*` classes. The hosted adapter maps each HTTP status
 the same way for any server. Every `JevError` is a `ProviderError`, so
 `except ProviderError` catches them. See [errors](../reference/errors.md).
 
-Ollama caps a request body at 64 KiB.
+Ollama caps a request body at 64 KiB without images and 32 MiB with images.
 Source: https://docs.ollama.com/api/systemone.
 An oversized request returns HTTP 413 with the body
 `{"error": "request body must not exceed 64 KiB"}`. The API reference lists
@@ -158,9 +158,15 @@ differ from Jev.
 
 - `model` echoes the requested tag, such as `nimble`. Jev returns a resolved
   version. Record the tag as the model identity.
-- Ollama does not support streaming, images, tools or generation controls.
+- Since Ollama v0.35.1 (2026-09-29), a `/v1/systemone` request can carry
+  base64 images beside the text state. Ollama accepts base64 only, not URLs
+  or data URLs. The request cap is 64 KiB without images and 32 MiB with
+  images. Streaming, tools and generation controls stay unsupported.
+  judgevet has not exercised the images path, so this page makes no live
+  claim about it.
 
 Source: https://docs.ollama.com/api/systemone.
+Source: https://github.com/ollama/ollama/releases/tag/v0.35.1.
 
 Probabilities arrive at full float precision, unlike the rounded examples in
 Ollama's documentation. The Jev service has returned two decimals once
