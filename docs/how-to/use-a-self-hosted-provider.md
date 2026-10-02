@@ -19,6 +19,12 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/201#issuecomment-585052
 Ollama is a second server behind the hosted adapter, not a provider. See
 [Use Ollama as a local server](use-ollama.md).
 
+OpenAI announced a Decisions API on 2026-09-29. On 2026-10-02 it is in
+limited preview, with no public endpoint, schema or pricing. judgevet does not
+support it. `HTTPSystemOneAdapter` has no endpoint to point at. Check again at
+broad release.
+Source: https://github.com/Alberto-Codes/judgevet/issues/292.
+
 ## Choose a backend
 
 typevet on Gemma 4 is the worked example. typevet documents two backends.
