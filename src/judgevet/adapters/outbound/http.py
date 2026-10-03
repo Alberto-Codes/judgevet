@@ -1,6 +1,8 @@
 """HTTP outbound adapter with optional redaction, gateway metadata, retries, spend cap and audit.
 
 An opt-in `fingerprint_key` adds a keyed state fingerprint to each audit record.
+An opt-in `profile` refuses a request that breaks a compatible server's
+documented limits before any IO, through `HostedOptions`.
 
 Error handling:
     The API error `detail` field is polymorphic:
@@ -58,6 +60,7 @@ Raises:
     JevResponseError: If a 2xx body does not parse or names an off-list
             Choice option.
     JevBudgetExceededError: If an opt-in spend cap refuses an attempt before sending.
+    ProviderRequestError: If an opt-in profile refuses the questions before sending.
 
 Async adapters:
     AsyncSystemOnePort: Async protocol for the System One API.
@@ -97,7 +100,28 @@ from judgevet.adapters.outbound.response_translation import (
 from judgevet.adapters.outbound.retries import RetryPolicy
 from judgevet.adapters.outbound.spend import ametered, metered
 from judgevet.domain.errors import JevServiceError
+from judgevet.domain.provider_profiles import ProviderProfile, check_profile
 from judgevet.domain.response import SystemOneResponse
+
+
+class HostedOptions(AdapterOptions, total=False):
+    """Add the opt-in provider profile to the shared constructor options.
+
+    The adapter removes `profile` before the shared options are validated.
+
+    Attributes:
+        profile (ProviderProfile | None): Server limits checked before each
+            call. None checks nothing.
+
+    Examples:
+        ```python
+        from judgevet.domain.provider_profiles import OLLAMA_PROFILE
+
+        options: HostedOptions = {"profile": OLLAMA_PROFILE}
+        ```
+    """
+
+    profile: ProviderProfile | None
 
 
 def _build_payload(
@@ -205,7 +229,7 @@ class HTTPSystemOneAdapter:
         *,
         retry: RetryPolicy | None = None,
         network: NetworkConfig | None = None,
-        **options: Unpack[AdapterOptions],
+        **options: Unpack[HostedOptions],
     ) -> None:
         """Initialize the HTTP adapter.
 
@@ -231,8 +255,12 @@ class HTTPSystemOneAdapter:
             fingerprint_key (bytes | None): Caller-held key for the record's
                 `state_fingerprint`. Omission leaves the field None. The key is
                 never logged or stored on a record.
+            profile (ProviderProfile | None): Opt-in server limits checked
+                before each call. Omission checks nothing, because the Jev API
+                documents no such limits.
 
         Raises:
+            TypeError: If an untyped caller supplies an unknown keyword.
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
         """
         self._api_key = api_key
@@ -243,6 +271,7 @@ class HTTPSystemOneAdapter:
             raise ValueError(f"timeout_seconds must be positive, got {timeout_seconds}")
 
         self._retry = retry or RetryPolicy()
+        self._profile = options.pop("profile", None)
         self._spend = options.get("spend_cap")
         self._audit = options.get("audit")
         self._fingerprint_key = options.get("fingerprint_key")
@@ -294,6 +323,8 @@ class HTTPSystemOneAdapter:
             JevResponseError: If a 2xx body does not parse or names an off-list
                 Choice option.
             JevBudgetExceededError: If the spend cap refuses an attempt before sending.
+            ProviderRequestError: If a configured profile refuses the questions.
+                No request is sent and no audit record is written.
 
         Error details:
             Validation errors (422) include an array of error objects. Each
@@ -315,6 +346,7 @@ class HTTPSystemOneAdapter:
             Uses helper functions for payload building, response parsing,
             and error translation to ensure consistent behavior across adapters.
         """
+        check_profile(questions, self._profile)
         with call_event(model or self._default_model, questions, self._audit) as event:
             event.state_fingerprint = keyed_fingerprint(self._fingerprint_key, state)
             headers = self._gateway.request_headers(metadata)
@@ -458,7 +490,7 @@ class AsyncHTTPSystemOneAdapter:
         *,
         retry: RetryPolicy | None = None,
         network: NetworkConfig | None = None,
-        **options: Unpack[AdapterOptions],
+        **options: Unpack[HostedOptions],
     ) -> None:
         """Initialize the async HTTP adapter.
 
@@ -484,8 +516,12 @@ class AsyncHTTPSystemOneAdapter:
             fingerprint_key (bytes | None): Caller-held key for the record's
                 `state_fingerprint`. Omission leaves the field None. The key is
                 never logged or stored on a record.
+            profile (ProviderProfile | None): Opt-in server limits checked
+                before each call. Omission checks nothing, because the Jev API
+                documents no such limits.
 
         Raises:
+            TypeError: If an untyped caller supplies an unknown keyword.
             ValueError: If the key is absent, timeout is nonpositive, or the CA bundle cannot load.
         """
         if api_key is None:
@@ -496,6 +532,7 @@ class AsyncHTTPSystemOneAdapter:
 
         self._api_key = api_key
         self._retry = retry or RetryPolicy()
+        self._profile = options.pop("profile", None)
         self._spend = options.get("spend_cap")
         self._audit = options.get("audit")
         self._fingerprint_key = options.get("fingerprint_key")
@@ -547,6 +584,8 @@ class AsyncHTTPSystemOneAdapter:
             JevResponseError: If a 2xx body does not parse or names an off-list
                 Choice option.
             JevBudgetExceededError: If the spend cap refuses an attempt before sending.
+            ProviderRequestError: If a configured profile refuses the questions.
+                No request is sent and no audit record is written.
 
         Error details:
             Validation errors (422) include an array of error objects. Each
@@ -564,6 +603,7 @@ class AsyncHTTPSystemOneAdapter:
             may be double-billed because the service may still be processing
             the first attempt.
         """
+        check_profile(questions, self._profile)
         with call_event(model or self._default_model, questions, self._audit) as event:
             event.state_fingerprint = keyed_fingerprint(self._fingerprint_key, state)
             headers = self._gateway.request_headers(metadata)

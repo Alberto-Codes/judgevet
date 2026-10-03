@@ -114,6 +114,7 @@ this module as `ollama_judgment.py`:
 
 ```python
 from judgevet import HTTPSystemOneAdapter, Noul, SystemOneResponse
+from judgevet.domain.provider_profiles import OLLAMA_PROFILE
 
 
 def ask_ollama(state: str) -> SystemOneResponse:
@@ -121,6 +122,7 @@ def ask_ollama(state: str) -> SystemOneResponse:
         api_key="ollama",
         base_url="http://localhost:11434",
         default_model="nimble",
+        profile=OLLAMA_PROFILE,
     ) as adapter:
         return adapter.system_one(
             state=state,
@@ -132,6 +134,16 @@ def ask_ollama(state: str) -> SystemOneResponse:
 Importing the module sends no request. Call `ask_ollama` while Ollama runs.
 The adapter passes `base_url` through without the settings check. Keep it
 on a loopback host or `https://`.
+
+`profile=OLLAMA_PROFILE` checks each request against Ollama's limits before
+the adapter sends it. A Choice needs 2 to 26 options, and a Score needs 2 to
+26 levels. Each supplied description must be text. A breach raises
+`ProviderRequestError`. No request goes out and no audit record is written.
+The message names the question key and the profile, never the criteria.
+The profile is opt-in, because the Jev API has no 26 maximum.
+The limits were verified against the v0.35.1 API documentation, not by a call.
+Source: https://docs.ollama.com/api/systemone.
+Source: https://github.com/Alberto-Codes/judgevet/issues/296.
 
 ## Handle errors
 

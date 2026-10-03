@@ -711,8 +711,11 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**3003 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
-coverage is **95.61%** (3597/3762 statements).
+**3033 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+coverage is **95.69%** (3661/3826 statements).
+`judgevet.domain.provider_profiles` holds `ProviderProfile`, `OLLAMA_PROFILE`
+and `check_profile` (#296). Both hosted adapters and the fake take an opt-in
+`profile` keyword and refuse a request that breaks it before any call.
 Eleven pin tests in `tests/unit/test_doc_contradictions.py` hold the sentences
 #285 corrected. They cover the MCP `evaluate_policy` tool, the three-attempt
 retry default, the opt-in audit sink, the review scope and the shipped-features

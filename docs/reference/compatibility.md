@@ -75,6 +75,9 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/78#issuecomment-5850346
 they add no root imports. The error classes retain identity with the classes
 `judgevet.domain.provider_errors` exports. `ProviderError` is defined in
 `judgevet.domain.errors`, and `judgevet.domain.provider_errors` re-exports it.
+`judgevet.domain.provider_profiles` exports `ProviderProfile`, `OLLAMA_PROFILE`
+and `check_profile` with no root or `judgevet.domain` import, and the hosted
+adapters and fakes take an opt-in `profile` keyword.
 
 `ProviderError` derives from `JudgevetError`. `JevError` derives from
 `ProviderError`, so the hierarchy is

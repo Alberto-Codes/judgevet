@@ -12,8 +12,8 @@ Seeded values are synthetic. They exercise caller code paths; they do not
 predict what the service would answer. The returned `model` echoes the model
 argument.
 
-Each fake takes five keyword-only arguments. Two script the whole call and
-three match the HTTP adapter options of the same name:
+Each fake takes six keyword-only arguments. Two script the whole call and
+four match the HTTP adapter arguments of the same name:
 
 Args:
     usage (Usage | None): The `Usage` every response carries. The default is
@@ -33,6 +33,9 @@ Args:
     fingerprint_key (bytes | None): A caller-held key. With it, each record
         carries the keyed `state_fingerprint` the HTTP adapters compute.
         Without it, the field is None.
+    profile (ProviderProfile | None): Opt-in server limits. A breach raises
+        `ProviderRequestError` before the call is recorded, claimed or
+        audited, as the HTTP adapters do. None checks nothing.
 
 Examples:
     ```python
@@ -114,13 +117,14 @@ import hashlib
 from collections.abc import Mapping
 from contextlib import suppress
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, TypedDict, Unpack
 
 from judgevet._fingerprint import state_fingerprint
 from judgevet.diagnostics import current_request_id
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.audit import JudgmentRecord
 from judgevet.domain.choice_options import check_choice_options
+from judgevet.domain.provider_profiles import ProviderProfile, check_profile
 from judgevet.domain.questions import Choice, Noul, Question, Score, question_types
 from judgevet.domain.response import SystemOneResponse
 from judgevet.domain.spend import SpendCap
@@ -130,6 +134,22 @@ from judgevet.ports import AuditSink
 State = str | dict[str, Any] | list[Any]
 Questions = Mapping[str, Question | Mapping[str, Any]]
 Call = tuple[State, Questions, str]
+
+
+class _FakeOptions(TypedDict, total=False):
+    """Keyword options a fake takes beyond its explicit parameters.
+
+    Attributes:
+        profile (ProviderProfile | None): Server limits checked before each
+            call. None checks nothing.
+
+    Examples:
+        ```python
+        options: _FakeOptions = {"profile": None}
+        ```
+    """
+
+    profile: ProviderProfile | None
 
 
 def _uniforms(key: str, count: int) -> list[float]:
@@ -234,6 +254,8 @@ class _FakeCore:
         audit (AuditSink | None): The sink that receives one record per call.
         fingerprint_key (bytes | None): The key for each record's state
             fingerprint, or None for no fingerprint.
+        profile (ProviderProfile | None): The limits checked before each
+            call, or None for no check.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -255,6 +277,7 @@ class _FakeCore:
         spend_cap: SpendCap | None = None,
         audit: AuditSink | None = None,
         fingerprint_key: bytes | None = None,
+        **options: Unpack[_FakeOptions],
     ):
         """Store the seed, a copy of the scripted answers and the call options.
 
@@ -270,7 +293,16 @@ class _FakeCore:
                 record.
             fingerprint_key: The key for each record's state fingerprint.
                 None means the field is None.
+
+        Other Parameters:
+            profile (ProviderProfile | None): The limits checked before each
+                call. Omission means no check.
+
+        Raises:
+            TypeError: If an untyped caller supplies an unknown keyword.
         """
+        if options.keys() - {"profile"}:
+            raise TypeError("Unknown fake port option")
         self.seed = seed
         self.answers: dict[str, Answer] = dict(answers or {})
         self.usage = usage if usage is not None else Usage()
@@ -278,6 +310,7 @@ class _FakeCore:
         self.spend_cap = spend_cap
         self.audit = audit
         self.fingerprint_key = fingerprint_key
+        self.profile = options.get("profile")
         self.calls: list[Call] = []
 
     def _respond(
@@ -294,10 +327,13 @@ class _FakeCore:
             A response with one answer per question name and the scripted usage.
 
         Raises:
+            ProviderRequestError: If the profile refuses the questions. Nothing
+                is recorded, claimed or audited.
             JevBudgetExceededError: If the spend cap refuses the call.
             BaseException: The scripted error, when one is set.
             JevResponseError: If a scripted Choice answer names an off-list option.
         """
+        check_profile(questions, self.profile)
         response: SystemOneResponse | None = None
         failure: BaseException | None = None
         fingerprint: str | None = None
@@ -433,6 +469,8 @@ class FakeSystemOnePort(_FakeCore):
         audit (AuditSink | None): The sink that receives one record per call.
         fingerprint_key (bytes | None): The key for each record's state
             fingerprint, or None for no fingerprint.
+        profile (ProviderProfile | None): The limits checked before each
+            call, or None for no check.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -471,6 +509,7 @@ class FakeSystemOnePort(_FakeCore):
             usage.
 
         Raises:
+            ProviderRequestError: If the profile refuses the questions.
             JevBudgetExceededError: If the spend cap refuses the call.
             BaseException: The scripted error, after the call is recorded.
         """
@@ -490,6 +529,8 @@ class AsyncFakeSystemOnePort(_FakeCore):
         audit (AuditSink | None): The sink that receives one record per call.
         fingerprint_key (bytes | None): The key for each record's state
             fingerprint, or None for no fingerprint.
+        profile (ProviderProfile | None): The limits checked before each
+            call, or None for no check.
         calls (list[Call]): Each call's (state, questions, model) in order.
             The questions mapping is copied, so later caller edits do not
             change the record.
@@ -531,6 +572,7 @@ class AsyncFakeSystemOnePort(_FakeCore):
             usage.
 
         Raises:
+            ProviderRequestError: If the profile refuses the questions.
             JevBudgetExceededError: If the spend cap refuses the call.
             BaseException: The scripted error, after the call is recorded.
         """
