@@ -3,6 +3,24 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.18.0](https://github.com/Alberto-Codes/judgevet/compare/v0.17.0...v0.18.0) (2026-10-03)
+
+
+### Features
+
+* **providers:** add an opt-in provider profile that refuses Ollama option and criteria limits before the call ([ede2370](https://github.com/Alberto-Codes/judgevet/commit/ede23705dc3aec72fa6ed77e5268423dfce2fb51)), references [#296](https://github.com/Alberto-Codes/judgevet/issues/296) [#293](https://github.com/Alberto-Codes/judgevet/issues/293)
+
+
+### Refactoring
+
+* **outbound:** move response translation out of the httpx helpers ([86a58e0](https://github.com/Alberto-Codes/judgevet/commit/86a58e003dbdcd5e543c72aec17c9f5ad27220cf)), references [#57](https://github.com/Alberto-Codes/judgevet/issues/57)
+
+
+### Documentation
+
+* **how-to:** name the OpenAI Decisions API as unsupported until it is public ([dfaaf3e](https://github.com/Alberto-Codes/judgevet/commit/dfaaf3e6019f195ebc8df396ede9856d8ec0e609)), references [#292](https://github.com/Alberto-Codes/judgevet/issues/292)
+* **how-to:** say Ollama v0.35.1 accepts base64 images on /v1/systemone ([0e73c89](https://github.com/Alberto-Codes/judgevet/commit/0e73c899ab1e617e80d25928520859bec5613649)), references [#294](https://github.com/Alberto-Codes/judgevet/issues/294)
+
 ## [0.17.0](https://github.com/Alberto-Codes/judgevet/compare/v0.16.0...v0.17.0) (2026-10-01)
 
 
