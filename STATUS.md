@@ -1,37 +1,46 @@
 # STATUS
 
-Last written: 2026-10-01. Current evidence ledger. Detailed implementation,
+Last written: 2026-10-05. Current evidence ledger. Detailed implementation,
 release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.17.0 is published to PyPI. Library, CLI and optional MCP share one
-version. This release adds `SystemOneResponse.receipts` and the
-`judgevet.ports.options` Protocols that take `provider_options`, and it forwards
-`provider_options` through the image-evidence helpers. The rest of the release
-is documentation corrected against the code, reference pages caught up since
-0.14.0, guarded version anchors and a repaired maintainer map. Runtime
-requirements, the CLI surface and the MCP tool set are unchanged. The MCP
-registry step is recorded below.
+judgevet 0.18.0 is published to PyPI. Library, CLI and optional MCP share one
+version. This release adds `judgevet.domain.provider_profiles` with
+`ProviderProfile`, `OLLAMA_PROFILE` and `check_profile`, and an opt-in
+`profile` keyword on both hosted adapters and the fake. It moves response
+translation out of the httpx helpers without a behaviour change. Two provider
+how-tos record Ollama v0.35.1 images and the unpublished OpenAI Decisions API.
+Runtime requirements, the CLI surface and the MCP tool set are unchanged.
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.17.0`, commit `2ad9b86de8084d880641540bb3ef7f7454b8aba9` |
-| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.16.0 |
-| Wheel SHA-256 | `519a89c2a6e277f2c6778dcfb5a7766655f087b81447a8354e03a9fc52b26c0c` |
-| Source distribution SHA-256 | `7f7bc76ca11db1de30ca4101e89c66e218d84758dd1138dadb77edd3086d9ab4` |
+| Release/tag | `v0.18.0`, commit `ded6252ba6041454f184a535a20b72be0790e365` |
+| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.17.0 |
+| Wheel SHA-256 | `baf90466d8f6b2b5dd74efa6f2ecd9b86461d2940d3d2ac68bf0d16b91b6d067` |
+| Source distribution SHA-256 | `86ea394d536634b98194aa1e5e1f854fc185d6cae35605c161ef1d6c9e89c443` |
 | Actual PyPI download | PyPI JSON digests equal the SHA-256 of the wheel and sdist attached to the GitHub release |
-| Release files | 15 assets: wheel, sdist, two Sigstore bundles and 11 supply-chain files; `provenance.txt` names the tag commit and `complete: yes` |
-| Attestations | `gh attestation verify --bundle` exits 0 for the wheel and sdist (build provenance) and for the wheel with the CycloneDX predicate type (SBOM) |
+| Release files | 15 assets; `provenance.txt` names the tag commit and `complete: yes` |
+| Attestations | `gh attestation verify` exits 0 for the wheel and the sdist |
 | Library and CLI | The publish workflow's wheel smoke step passed before upload; no separate index-wheel check ran |
 | MCP | The publish workflow's installed MCP tools smoke step passed before upload |
-| Registry | `mcp-publisher login github -token` with the maintainer's `gh` token wrote a fresh `token.json`. The first `publish` of the release commit's `server.json` returned 400: the registry could not reach its own database. A retry 45 s later reported version 0.17.0 published. The listing is recorded below |
+| Registry | The maintainer ran `mcp-publisher login github -token`. The first `publish` of the release commit's `server.json` reported version 0.18.0 published. The listing is recorded below |
 
-[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36895249004)
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/37260670602)
 ran build, attest, release-files and publish. The live footprint was the
 publish workflow's smoke calls; the exact call count was not recorded. No
 source-archive rebuild outside the checkout was done. No unseen API body,
-other model, modern protocol path or gateway became verified.
+other model, modern protocol path or gateway became verified. The
+`OLLAMA_PROFILE` limits come from the Ollama v0.35.1 API documentation, not
+from a call.
+
+Prior 0.17.0 evidence: tag `v0.17.0` at commit
+`2ad9b86de8084d880641540bb3ef7f7454b8aba9`, wheel SHA-256
+`519a89c2a6e277f2c6778dcfb5a7766655f087b81447a8354e03a9fc52b26c0c`, sdist SHA-256
+`7f7bc76ca11db1de30ca4101e89c66e218d84758dd1138dadb77edd3086d9ab4`. Its registry
+listing was published `2026-10-01T16:55:39.67306Z` on a retry after one 400.
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/36895249004)
+for 0.17.0 ran build, attest, release-files and publish.
 
 Prior 0.16.0 evidence: tag `v0.16.0` at commit
 `e6aab4014183619d26a1cb0182a9e4105b3768c2`, wheel SHA-256
@@ -99,8 +108,8 @@ records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
 The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.17.0` as active with
-`isLatest: true`, published at `2026-10-01T16:55:39.67306Z`. The versions 0.16.0, 0.15.0, 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
+reports `io.github.Alberto-Codes/judgevet` version `0.18.0` as active with
+`isLatest: true`, published at `2026-10-05T03:46:36.35978Z`. The versions 0.17.0, 0.16.0, 0.15.0, 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
 manifest. Registry acceptance does not verify a host installation or reload.
 No unseen API body, other model, modern protocol path or gateway became verified.
 
