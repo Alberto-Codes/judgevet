@@ -22,13 +22,14 @@ Runtime requirements, the CLI surface and the MCP tool set are unchanged.
 | Actual PyPI download | PyPI JSON digests equal the SHA-256 of the wheel and sdist attached to the GitHub release |
 | Release files | 15 assets; `provenance.txt` names the tag commit and `complete: yes` |
 | Attestations | `gh attestation verify` exits 0 for the wheel and the sdist |
-| Library and CLI | The publish workflow's wheel smoke step passed before upload; no separate index-wheel check ran |
-| MCP | The publish workflow's installed MCP tools smoke step passed before upload |
+| Library and CLI | The publish workflow's wheel smoke step passed before upload. A fresh Python 3.12 venv installed `judgevet[mcp]==0.18.0` from the PyPI index with no cache: the version reads 0.18.0, `judgevet --help` runs, and with socket connect blocked `OLLAMA_PROFILE` accepts 2 options and both `check_profile` and `HTTPSystemOneAdapter.system_one` raise `ProviderRequestError` on 27 |
+| MCP | The publish workflow's installed MCP tools smoke step passed before upload. The index install's `judgevet-mcp` exits 2 without a key; with a dummy key it reports version 0.18.0 over stdio and lists `ask_noul`, `ask_choice`, `ask_score` and `evaluate_policy`. No tool was called |
 | Registry | The maintainer ran `mcp-publisher login github -token`. The first `publish` of the release commit's `server.json` reported version 0.18.0 published. The listing is recorded below |
 
 [PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/37260670602)
 ran build, attest, release-files and publish. The live footprint was the
-publish workflow's smoke calls; the exact call count was not recorded. No
+publish workflow's smoke calls; the exact call count was not recorded. The
+index-wheel checks made no live call. No
 source-archive rebuild outside the checkout was done. No unseen API body,
 other model, modern protocol path or gateway became verified. The
 `OLLAMA_PROFILE` limits come from the Ollama v0.35.1 API documentation, not
