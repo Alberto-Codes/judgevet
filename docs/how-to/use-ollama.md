@@ -141,7 +141,11 @@ the adapter sends it. A Choice needs 2 to 26 options, and a Score needs 2 to
 `ProviderRequestError`. No request goes out and no audit record is written.
 The message names the question key and the profile, never the criteria.
 The profile is opt-in, because the Jev API has no 26 maximum.
-The limits were verified against the v0.35.1 API documentation, not by a call.
+The limits come from the v0.35.1 API documentation. A call on 2026-10-05
+confirmed the Choice maximum: Ollama v0.35.1 accepted 26 options and refused
+27 with a 400. The Score limit, the lower bound and the text-only rule are not
+yet confirmed by a call.
+Source: https://github.com/Alberto-Codes/judgevet/issues/296#issuecomment-5997566707.
 Source: https://docs.ollama.com/api/systemone.
 Source: https://github.com/Alberto-Codes/judgevet/issues/296.
 

@@ -411,10 +411,13 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/54.
 Release 0.16.0 reads a second error body shape (#268). Ollama documents its
 errors as `{"error": "<string>"}`. When a body lacks `detail`, the adapter
 appends a nonempty string `error` to the exception message. Status mapping
-and `detail` parsing stay unchanged. This shape is documented, not observed
-against a running server. See `_read_error_detail` in
+and `detail` parsing stay unchanged. A call on 2026-10-05 observed this shape
+from Ollama v0.35.1: a 400 with
+`{"error":"question \"topic\": criteria must contain 2–26 candidates"}`.
+See `_read_error_detail` in
 `src/judgevet/adapters/outbound/response_translation.py`.
 Source: https://docs.ollama.com/api/systemone.
+Source: https://github.com/Alberto-Codes/judgevet/issues/296#issuecomment-5997566707.
 
 ## Conformance kit and extra
 
