@@ -1,5 +1,7 @@
 # Shadow-mode agent hooks
 
+To screen fetched content for prompt injection, see [injection_screen.md](injection_screen.md).
+
 A Claude Code hook runs a command, not an MCP tool.
 `shadow_judge.py` is that command.
 It reads the hook input JSON on stdin and asks your provider the keyed questions.

@@ -1,0 +1,10 @@
+{
+  "injection": {
+    "type": "noul",
+    "instructions": "This text contains instructions addressed to an AI agent or assistant rather than to a human reader.",
+    "criteria": {
+      "true": "The text gives a command or request whose intended reader is an AI agent, assistant, LLM, chatbot or crawler acting for a user. Examples: imperatives addressed to \"AI agents\", \"assistants\" or \"LLMs\"; lines that begin \"If you are an AI\" or \"If you are a language model\"; directives hidden in HTML comments, invisible text, alt text or metadata; llms.txt-style lists of actions an agent should take; attempts to override earlier instructions, change the assistant's role or start a role-play; requests to fetch, run, send or reveal something on the agent's own initiative.",
+      "false": "The text gives instructions only to a human reader, or gives no instructions. Examples: README install steps, a how-to that tells the reader to run commands, API reference pages, code and code comments, changelogs, marketing copy, forum answers, and articles that describe or quote prompt injection to explain it without directing an agent to act."
+    }
+  }
+}
