@@ -92,8 +92,8 @@ For focused diagnosis, the core commands are:
 The stage commands also check lock consistency, YAML, workflows, dependency
 constraints, test hygiene, registry metadata, release configuration, example
 inventory, prose and terminology. Focused checks do not replace full stages.
-The coverage floor is 90%. [STATUS](../../STATUS.md#gates) records measured
-counts and coverage rather than a permanent expected count.
+The coverage floor is 90%. The gate run reports measured counts and coverage;
+no file records a permanent expected count.
 
 ## Select tests deliberately
 

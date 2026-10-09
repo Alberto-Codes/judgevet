@@ -44,6 +44,7 @@ Status: **draft**. Choose a path by what you need to do.
 - [Configuration defaults and precedence](reference/configuration.md).
 - [Diagnostic events and caller correlation](reference/events.md).
 - [Service, transport and local policy errors](reference/errors.md).
+- [Verified and inferred service claims](reference/verification-ledger.md).
 - [Terms and meanings](reference/glossary.md).
 - [Worker run contract and commit trailers](reference/worker-runs.md).
 - [The installed typing marker](reference/py-typed-marker.md).
@@ -72,5 +73,5 @@ release operations. They are separate from package use.
 - [Delegate a bounded change](maintainers/delegate-work.md).
 
 The former [release-guide path](how-to/cut-a-release.md) remains a pointer for
-existing links. [STATUS](../STATUS.md) holds current verification evidence;
-users do not need its linked issue history to follow the task guides.
+existing links. The [verification ledger](reference/verification-ledger.md)
+holds current verification evidence; users do not need it to follow the task guides.

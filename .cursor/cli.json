@@ -5,7 +5,7 @@
       "Shell(git)",
       "Shell(gh)",
       "Shell(rm)",
-      "Write(STATUS.md)",
+      "Write(docs/reference/verification-ledger.md)",
       "Write(CLAUDE.md)",
       "Write(AGENTS.md)",
       "Write(.pre-commit-config.yaml)",

@@ -13,7 +13,7 @@ import mkdocs_gen_files
 
 ROOT = Path.cwd()
 
-for name in ("README.md", "SECURITY.md", "STATUS.md", "CLAUDE.md", "AGENTS.md"):
+for name in ("README.md", "SECURITY.md", "CLAUDE.md", "AGENTS.md"):
     with mkdocs_gen_files.open(f"project/{name}", "w") as page:
         page.write((ROOT / name).read_text())
 

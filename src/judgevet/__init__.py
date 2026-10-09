@@ -79,9 +79,10 @@ Attributes:
     __version__ (str): The installed package version. release-please
         rewrites this line on every release. Do not edit it by hand.
     VERIFIED_MODEL (str): The one model this repository's live suite has
-        exercised. `STATUS.md` names it in its "What is verified, and what
-        is not" table. Adapters, the CLI and the MCP tools default to
-        `jev-latest`; pass this value as `model` to pin the verified one.
+        exercised. `docs/reference/verification-ledger.md` names it in
+        its "What is verified, and what is not" table. Adapters, the CLI
+        and the MCP tools default to `jev-latest`; pass this value as
+        `model` to pin the verified one.
     AsyncHTTPSystemOneAdapter (type): Async HTTP adapter for the Jev API,
         proven to agree with the sync one on the contract fixtures.
     Choice (type): Question type for selecting one option from a set.

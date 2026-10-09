@@ -9,7 +9,7 @@ Status: **draft**.
 The credential, transport and diagnostic review below was performed against
 release 0.6.0. Later releases were not re-reviewed. This is an implementation review,
 not a new security certification. See [installation](docs/how-to/install.md) and the
-[release evidence and API verification limits](STATUS.md).
+[API verification limits](docs/reference/verification-ledger.md).
 
 ## Report a vulnerability
 

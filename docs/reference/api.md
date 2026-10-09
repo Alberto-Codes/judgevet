@@ -6,7 +6,7 @@ status: draft
 
 Status: **draft**. Success and 401/422 bodies have live evidence. The 429/529
 bodies, resolved models other than `jev-1.13.0`, and untouched fields remain
-inferred. See the [evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not).
+inferred. See the [evidence ledger](verification-ledger.md#what-is-verified-and-what-is-not).
 
 The [supported imports](compatibility.md) enumerate the root exports and policy
 facades. Generated Python reference in the site provides source signatures;
@@ -315,7 +315,7 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/39#issuecomment-5825777
 
 The page says a request over either rate limit "returns `429 Too Many
 Requests`". judgevet has never observed a 429 body. See the
-[evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not).
+[evidence ledger](verification-ledger.md#what-is-verified-and-what-is-not).
 
 The page warns that the rate limits change. Its warning reads "Rate limits are
 adjusting dynamically." It also says "the limits above can change without

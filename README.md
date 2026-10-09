@@ -142,7 +142,7 @@ Use the [maintainer procedures](https://alberto-codes.github.io/judgevet/maintai
 for documentation checks, package verification and releases.
 [Repository contribution rules](https://github.com/Alberto-Codes/judgevet/blob/main/AGENTS.md)
 define gates and commits. The
-[evidence ledger](https://github.com/Alberto-Codes/judgevet/blob/main/STATUS.md)
-retains release records and the detailed live-verification table.
+[verification ledger](https://alberto-codes.github.io/judgevet/reference/verification-ledger/)
+records which service claims a live call has verified.
 
 <!-- mcp-name: io.github.Alberto-Codes/judgevet -->

@@ -21,7 +21,7 @@ library installations do not install them.
 The strict build checks authored local links and Markdown fragments before
 rendering. It then resolves generated Python cross-references and checks every rendered
 HTML destination and fragment, including root-relative navigation.
-It covers README, SECURITY, STATUS, repository guidance and all docs pages.
+It covers README, SECURITY, repository guidance and all docs pages.
 Absolute GitHub `blob/main` URLs for this repository resolve against the checkout,
 including their fragments. Published URLs beneath the judgevet Pages site map
 to authored pages and section indexes in `docs/`, including their fragments.

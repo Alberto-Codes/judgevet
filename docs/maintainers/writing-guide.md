@@ -60,8 +60,8 @@ Google section labels and parameter/type prefixes do not count as prose.
 Their descriptions remain checked. Fenced examples and doctest input/output
 are excluded. Diagnostics identify source lines, not generated reference lines.
 
-STATUS and repository agent instructions are working evidence and agent rules,
-not user documentation in this check. Tooling scripts and tests are outside the
+Repository agent instructions are agent rules, not user documentation in this
+check. Tooling scripts and tests are outside the
 package-docstring scope. Generated reference pages use the checked source
 strings. This scope does not exempt individual authored documentation files.
 

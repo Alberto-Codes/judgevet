@@ -21,7 +21,8 @@ For package use, follow [installation](../how-to/install.md) or the
 - [Delegate a bounded change](delegate-work.md) to pi or a Claude sub agent.
 - [Repository contribution rules](../../AGENTS.md): enabled gates, commits
   and evidence requirements.
-- [Current evidence ledger](../../STATUS.md): release, gates and service limits.
+- [Verification ledger](../reference/verification-ledger.md): verified service
+  claims and operational limits.
 
 Release and credential history remains in Git and linked issue evidence.
 Those records are provenance, not prerequisites for user tasks.

@@ -31,8 +31,9 @@ skill; Claude Code sub agents, through the Agent tool and the definitions in
 - The supervising session selects work, decides boundaries, accepts the
   result and commits.
 - A worker follows its brief and skips session bookkeeping.
-- A worker never commits, pushes, edits `STATUS.md` or changes policy unless
-  the brief assigns that action.
+- A worker never commits, pushes, edits the
+  [verification ledger](docs/reference/verification-ledger.md) or changes
+  policy unless the brief assigns that action.
 - Each checkout has one writer. Workers preserve unrelated changes.
 
 Use [the delegation procedure](docs/maintainers/delegate-work.md) for sizing,
@@ -84,9 +85,9 @@ code proving it.
   call has exercised it.** The 429 and 529 bodies are unseen — one needs
   abusing the service, the other cannot be provoked — every model other than
   `jev-1.13.0` is untested, and any field no call touched is still inference.
-  `STATUS.md` carries the line-by-line table, and moving a line from inferred
-  to verified without a call that did it is the one change this repo will not
-  accept.
+  The [verification ledger](docs/reference/verification-ledger.md) carries the
+  line-by-line table. Moving a row from inferred to verified without a call
+  that did it is the one change this repo will not accept.
 
   Nothing reaches `stable` while a documented status code has never been
   seen.
@@ -254,11 +255,10 @@ messages.
 - **One deliverable per round.** Workers return their assigned deliverable and
   stop. The supervisor lands each accepted slice and continues the authorized
   multi-slice goal until its agreed stopping condition.
-- **`STATUS.md` is rewritten in the commit that changes what it says.** It names
-  the test count, the coverage figure, the gate state and what is verified
-  against the live service. A commit that moves any of those and leaves STATUS
-  alone publishes a claim the next session has to discover is false. automarket
-  lost three sessions to exactly that and gated it; see #28.
+- **Edit the verification ledger only when a call changes a claim.** The
+  ledger records what a call has verified against the live service. Test
+  counts, coverage and gate state come from the gate run, not a file. The
+  retired `STATUS.md` is frozen under `docs/history/`; do not edit it.
 - **Read a file once.** Use `git diff` between reads rather than re-reading.
 - **Never poll.** Wait on a watcher, not a loop of empty checks.
 - **Do not write summary documents.** `docs/` holds `reference/api.md` and the

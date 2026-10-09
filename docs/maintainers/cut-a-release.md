@@ -44,13 +44,11 @@ preserves the outputs used by the lockfile job. Historical notes are not rewritt
 Merging the release PR creates a draft and tag. Publishing the draft triggers
 `publish.yml`. A draft permits a pause; it does not upload to PyPI.
 
-A post-release evidence commit records a published release in `STATUS.md` and
-on its tracker. It uses the type and scope `chore(release)` with the subject
-`record verified X.Y.Z`. release-please hides `chore` from the changelog, so
-the commit opens no release pull request on its own and needs no configuration
-change. A `docs:` type would propose a new version to record the old one. Keep
-`Closes` and `Refs` trailers factual. Decided on
-[#159](https://github.com/Alberto-Codes/judgevet/issues/159).
+Release evidence lives in the GitHub Release notes, the release assets and the
+PyPI attestations. No post-release commit records it in a file. The
+verification commands below check that evidence. The
+[verification ledger](../reference/verification-ledger.md) changes only when a
+call changes a service claim.
 
 ## Authority and prerequisites
 
@@ -59,8 +57,9 @@ these criteria without another approval:
 
 - Main and release PR CI are green. Required local gates pass.
 - The changelog describes the release and its user-visible changes.
-- `STATUS.md` reports measured tests, coverage and verified-versus-inferred
-  claims. No inferred claim becomes verified without an exercising call.
+- The gate run reports measured tests and coverage. The
+  [verification ledger](../reference/verification-ledger.md) separates verified
+  from inferred claims. No inferred claim becomes verified without an exercising call.
 - On the optional TestPyPI route, the downloaded candidate passes isolated
   base and MCP checks.
 - No unresolved release requirement affects the installation being shipped.
@@ -78,7 +77,7 @@ or checked-in configuration. Do not enable shell tracing.
 ## Practised release path
 
 Releases 0.10.2 through 0.16.0 followed this path without a TestPyPI round.
-`STATUS.md` records each one. The steps are:
+Their GitHub Releases record each one. The steps are:
 
 1. [Freeze the candidate](#freeze-the-candidate): read the release PR head,
    versions, changelog and main CI.
@@ -90,7 +89,6 @@ Releases 0.10.2 through 0.16.0 followed this path without a TestPyPI round.
 6. [Log in to the registry](#verify-digests-attestations-and-registry) with `mcp-publisher login github -token "$(gh auth token)"`.
    The device flow is unused. See [registry publication](mcp-registry.md).
 7. [Publish the `server.json` file](#verify-digests-attestations-and-registry) from the release commit, not from the checkout.
-8. Record the evidence in a `chore(release)` commit.
 
 The publish workflow runs the wheel and MCP smoke steps before upload.
 On this path no separate index-wheel check runs.
@@ -123,7 +121,7 @@ EVIDENCE_DIR=$(mktemp -d /tmp/judgevet-release.XXXXXXXX)
 Inspect all seven version values, including the registry root, package and
 uvx pin with `uv run python -m scripts.registry_manifest`. The existing four are: project version, root `__version__`, manifest
 root entry, and the root `judgevet` package version in `uv.lock`. All must equal
-`VERSION`. Review the changelog and STATUS trust table. Inspect the identified
+`VERSION`. Review the changelog and the verification ledger. Inspect the identified
 main CI run and require completed success. Fetching does not replace local
 files or discard unrelated work.
 
@@ -300,8 +298,8 @@ Confirm the production base/MCP steps and upload succeeded. A hash mismatch
 requires investigation; it does not authorize replacement of immutable files.
 Do not call the release verified until actual PyPI checks pass.
 
-Record final evidence on the active release tracker and measured results in `STATUS.md`. Update the
-installation guide after the published MCP command is verified. A fresh
+Record final evidence on the active release tracker and in the GitHub Release
+notes. Update the installation guide after the published MCP command is verified. A fresh
 transport probe does not prove the current Codex session reloaded its native
 tools. Leave unseen 429/529 bodies inferred.
 

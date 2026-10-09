@@ -186,7 +186,7 @@ Source: https://github.com/ollama/ollama/releases/tag/v0.35.1.
 
 Probabilities arrive at full float precision, unlike the rounded examples in
 Ollama's documentation. The Jev service has returned two decimals once
-([STATUS](../../STATUS.md), #175).
+([verification ledger](../reference/verification-ledger.md), #175).
 Source: https://github.com/Alberto-Codes/judgevet/issues/268#issuecomment-5917968541.
 
 The recorded call carried `usage` with `input_tokens` 826 and

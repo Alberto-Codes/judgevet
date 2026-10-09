@@ -5,7 +5,7 @@ status: draft
 # What the evidence can establish
 
 Status: **draft**. Service evidence is partial. This page explains its scope;
-the [evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not) records
+the [evidence ledger](../reference/verification-ledger.md#what-is-verified-and-what-is-not) records
 individual claims and their supporting observations.
 
 A support-ticket workflow has several independent failure points. The local

@@ -48,9 +48,9 @@ an independent failure proof before claiming success.
 Workers finish their assigned deliverable and stop. Supervisors continue each
 authorized slice until the goal reaches its agreed outcome. Require fresh
 independent acceptance of supervisor contributions as well as worker changes.
-Update [STATUS.md](STATUS.md) in the commit
-that changes its claims, using measured tests, coverage, gate state and service
-evidence. Synthetic tests do not verify live service behavior. Keep unseen
+Edit the [verification ledger](docs/reference/verification-ledger.md) only
+when a cited call changes a claim. Test counts, coverage and gate state come
+from the gate run, not a file. Synthetic tests do not verify live service behavior. Keep unseen
 responses and untested models explicitly unverified.
 
 Preserve unrelated workspace changes. Keep MCP dependencies in the optional

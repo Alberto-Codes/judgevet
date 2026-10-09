@@ -49,7 +49,7 @@ Do not accept your own deliverable. The supervisor accepts it after independent 
 Never weaken, skip or delete a test to obtain green output.
 Never add `# noqa`, `# type: ignore`, `per-file-ignores` or any gate suppression.
 Never commit, push, or pass `--no-verify`.
-Never edit `STATUS.md`, `CLAUDE.md` or a policy file unless the brief assigns it.
+Never edit `docs/reference/verification-ledger.md`, `CLAUDE.md` or a policy file unless the brief assigns it.
 Never run `git checkout`, `git restore`, `git reset`, `git stash`, `git clean` or `rm -rf`.
 Never make a live API call unless the brief authorizes it.
 If the change needs a path outside the allowed scope, stop and name that path.

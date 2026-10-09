@@ -137,7 +137,7 @@ def documentation_pages(root: Path) -> list[Path]:
     Returns:
         Complete documentation integrity scope.
     """
-    names = ("README.md", "SECURITY.md", "STATUS.md", "CLAUDE.md", "AGENTS.md")
+    names = ("README.md", "SECURITY.md", "CLAUDE.md", "AGENTS.md")
     return [*(root / name for name in names), *sorted((root / "docs").rglob("*.md"))]
 
 

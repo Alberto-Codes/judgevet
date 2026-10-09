@@ -36,7 +36,7 @@ A timed-out request may still be running at the service.
 
 The `jev-latest` alias follows the model the service currently serves.
 `VERIFIED_MODEL` names the one model version that this repository's live tests
-have exercised; [STATUS](../../STATUS.md) records it. Pass either value as
+have exercised; the [verification ledger](verification-ledger.md) records it. Pass either value as
 `model`; the choice between the latest and the verified model belongs to the caller.
 
 Direct constructors do not apply the CLI/MCP settings URL validator. Callers own

@@ -21,7 +21,7 @@ The [worker run contract](../reference/worker-runs.md) records launch evidence f
 - **Claude sub agents** run through the Agent tool with definitions in `.claude/agents/`.
 - **Cursor CLI** runs Cursor-pool models such as `cursor-grok-4.6-medium` in print mode.
 
-The Claude definitions are `builder.md`, `acceptance-reviewer.md`, `specifier.md` and `status-auditor.md`.
+The Claude definitions are `builder.md`, `acceptance-reviewer.md`, `specifier.md` and `ledger-auditor.md`.
 
 | Job | Harness and model |
 |---|---|
@@ -30,7 +30,7 @@ The Claude definitions are `builder.md`, `acceptance-reviewer.md`, `specifier.md
 | Implementation and gate repairs | Agent tool, `opus` with `builder`; pi with a local coder model; or Cursor CLI with a Cursor-pool model |
 | Acceptance review | Agent tool, `opus` with `acceptance-reviewer` |
 | Specification | Agent tool, `opus` with `specifier`; or pi with a local reasoning model |
-| STATUS claim review | Agent tool, `opus` with `status-auditor` |
+| Ledger claim review | Agent tool, `opus` with `ledger-auditor` |
 
 The `delegate-to-pi` skill names the local models and their settings.
 The supervisor assigns acceptance to a fresh reviewer who authored none of the reviewed changes.
@@ -116,7 +116,7 @@ The assigned validation owner runs the complete hook stages once per input snaps
 Report required checks you did not run and their assigned owner.
 
 Skip session bookkeeping and backlog sweeps.
-Do not edit STATUS.md, CLAUDE.md or policy files unless this brief assigns them.
+Do not edit the verification ledger, CLAUDE.md or policy files unless this brief assigns them.
 Do not commit, push, pass --no-verify or add a gate suppression.
 Preserve unrelated changes. Do not reset, clean, stash or restore them.
 If required edits exceed the allowed scope, return the missing scope.
@@ -135,7 +135,7 @@ Check each rule below before you dispatch a brief.
 - A change to a message or behaviour needs a grep of `tests/` for the old message. Also grep for each assertion on the changed error, including `not in` checks. Name every file that pins the old behaviour in the allowed edits. See #223.
 - Name one mechanical validation owner. The owner runs both complete hook stages under the validation rules below.
 - Write each URL citation as its own short sentence in the form "Source: <url>." A parenthesised URL merges two sentences for the plain-English checker.
-- A verified-table row in STATUS.md cites a recorded run, not a test name.
+- A verified-table row in the verification ledger cites a recorded run, not a test name.
 
 ## 4. Accept behaviour and finish
 

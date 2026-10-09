@@ -5,7 +5,7 @@ status: draft
 # Glossary
 
 Status: **draft**. Definitions follow the shipped typed contract. Service
-observations cover only the cases listed in the [evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not).
+observations cover only the cases listed in the [evidence ledger](verification-ledger.md#what-is-verified-and-what-is-not).
 The numeric examples below are illustrative, not recorded service answers.
 
 ## Canonical vocabulary
@@ -181,7 +181,7 @@ A claim supported by an identified check within a stated scope. **Live verified*
 means a call exercised the behavior against the service. For example, a recorded
 401 call verifies that observed error shape. A synthetic test can verify a
 local comparison or parser, but cannot establish an unseen service body.
-See the [evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not).
+See the [evidence ledger](verification-ledger.md#what-is-verified-and-what-is-not).
 
 ### Documented and inferred
 

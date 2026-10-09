@@ -6,11 +6,12 @@ status: draft
 
 Status: **draft**. These recipes follow current host documentation. Mechanical
 checks parse the exact configurations and exercise isolated launchers. They do
-not prove that a host loaded them. Actual host observations belong in the
-[evidence ledger](../../STATUS.md#onboarding-release).
+not prove that a host loaded them. The
+[frozen evidence record](../history/status-2026-10-09.md#onboarding-release)
+holds the recorded host observations.
 Codex CLI and Pi returned live answers. VS Code and Claude Code reached
 discovery; account access blocked their calls. Cursor and Desktop remain
-unverified in-host. See the ledger for exact versions and limits.
+unverified in-host. See that record for exact versions and limits.
 Unavailable-host checks are [deferred](https://github.com/Alberto-Codes/judgevet/issues/167).
 
 Choose [VS Code](#vs-code), [Cursor](#cursor), [Claude Code](#claude-code),

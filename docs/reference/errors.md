@@ -6,7 +6,7 @@ status: draft
 
 Status: **draft**. Local error mapping is separate from live-service evidence.
 Only the recorded calls establish what the service returned; see the
-[evidence ledger](../../STATUS.md#what-is-verified-and-what-is-not).
+[evidence ledger](verification-ledger.md#what-is-verified-and-what-is-not).
 
 ## Common error base
 
