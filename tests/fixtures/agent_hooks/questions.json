@@ -1,0 +1,7 @@
+{
+  "risky": {"type": "noul", "instructions": "Could this action destroy data?"},
+  "category": {
+    "type": "choice",
+    "criteria": {"read": "The action only reads", "write": "The action changes state"}
+  }
+}

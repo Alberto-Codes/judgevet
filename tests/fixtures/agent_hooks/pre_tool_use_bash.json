@@ -1,0 +1,15 @@
+{
+  "session_id": "session-pre-bash",
+  "transcript_path": "/home/user/.claude/projects/example/transcript.jsonl",
+  "cwd": "/home/user/my-project",
+  "permission_mode": "default",
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "rm -rf build/",
+    "description": "Remove the build directory",
+    "timeout": 120000,
+    "run_in_background": false
+  },
+  "tool_use_id": "toolu_01PRE"
+}

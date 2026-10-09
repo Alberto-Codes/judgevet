@@ -1,0 +1,9 @@
+{
+  "session_id": "session-stop",
+  "transcript_path": "/home/user/.claude/projects/example/transcript.jsonl",
+  "cwd": "/home/user/my-project",
+  "permission_mode": "default",
+  "hook_event_name": "Stop",
+  "stop_hook_active": false,
+  "last_assistant_message": "I've completed the refactoring and all tests pass."
+}

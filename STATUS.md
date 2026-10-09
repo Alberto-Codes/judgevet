@@ -727,13 +727,18 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**3053 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+**3079 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
 coverage is **95.70%** (3671/3836 statements).
 The MCP `evaluate_policy` input schema now requires `criteria` on choice and
 score questions, and its description says so (#305). The runtime errors stay
 as the backstop for clients that skip schema validation.
 The four MCP tools now publish a `title` and the hints `readOnlyHint: true` and
 `openWorldHint: true`, as the MCP 2026-07-28 tool annotations define (#306).
+`examples/agent-hooks/shadow_judge.py` lets a Claude Code hook ask one judgment
+in shadow mode (#309). It logs one JSONL record and writes nothing to stdout.
+Known failures exit 0, unexpected errors exit 1, and no path exits 2. Twenty-six
+offline tests in `tests/unit/test_agent_hooks_shadow_judge.py` hold this. No
+live-service claim changed.
 The MCP `ask_noul`, `ask_choice` and `ask_score` tools now close their input
 schemas and return `Unknown arguments: ...` before dispatch (#303). Six tests in
 `tests/unit/test_mcp_argument_errors.py` hold this. No live-service claim changed.
