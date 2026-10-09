@@ -727,7 +727,7 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**3082 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+**3085 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
 coverage is **95.71%** (3685/3850 statements).
 The MCP `evaluate_policy` input schema now requires `criteria` on choice and
 score questions, and its description says so (#305). The runtime errors stay
@@ -742,6 +742,9 @@ live-service claim changed.
 judgevet-mcp now sends MCP server `instructions` (95 words) with cross-tool
 guidance, and `mcp_entrypoint.main` takes `instructions_addendum` so a
 self-hosted launcher can add provider facts (#316).
+`examples/agent-hooks/` adds a Bash irreversible-loss Score recipe with 36
+labelled commands (#310). One offline run on local Gemma 4 agreed on 80.6%
+(kappa 0.75); the measurement is recorded on #310. No Jev claim changed.
 The MCP `ask_noul`, `ask_choice` and `ask_score` tools now close their input
 schemas and return `Unknown arguments: ...` before dispatch (#303). Six tests in
 `tests/unit/test_mcp_argument_errors.py` hold this. No live-service claim changed.
