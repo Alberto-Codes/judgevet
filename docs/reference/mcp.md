@@ -61,23 +61,48 @@ Source: https://modelcontextprotocol.io/specification/2026-07-28/server/tools.
 The `initialize` result carries `instructions`. A client may add this text to
 the model's system prompt. The specification says the text should help the
 model use the server and should not repeat the tool descriptions. judgevet
-sends this text, 95 words, pinned in `tests/fixtures/mcp_contract.json`:
+sends this default text, 108 words and 730 characters, pinned in
+`tests/fixtures/mcp_contract.json`:
 
-> judgevet answers judgment questions about a state. Pick the tool by the
-> decision. Use ask_noul to test one proposition. Use ask_choice to pick one
-> of several unordered labels. Use ask_score to place the state on ordered
-> levels. Use evaluate_policy to ask several questions under one acceptance
-> rule. Write criteria that define each label or level in plain terms. Vague
-> labels give vague answers. A probability or a confidence is not measured
-> accuracy. The caller decides what to do with an answer. Each tool refuses
-> unknown arguments. Send only the declared fields. Question design guide:
-> https://alberto-codes.github.io/judgevet/explanation/judgments/
+> judgevet answers judgment questions about a state. Each call sends the
+> state to the configured judgment backend. Send no secret. Pick the tool by
+> the decision. Use ask_noul to test one proposition. Use ask_choice to pick
+> one of several unordered labels. Use ask_score to place the state on
+> ordered levels. Use evaluate_policy to ask several questions under one
+> acceptance rule. Write criteria that define each label or level in plain
+> terms. Vague labels give vague answers. A probability or a confidence is
+> not measured accuracy. The caller decides what to do with an answer. Each
+> tool refuses unknown arguments. Send only the declared fields. Question
+> design guide: https://alberto-codes.github.io/judgevet/explanation/judgments/
 
-A self-hosted launcher may pass `instructions_addendum` to
-`mcp_entrypoint.main`. The server appends it after the base text and one blank
-line. The hosted `judgevet-mcp` command sends the base text alone. A
+The default text states no limits of use. A consumer states its own limits of
+use with the `instructions` argument of `mcp_entrypoint.main`, `run_stdio` or
+`create_mcp_server`. That text replaces the default text. The hosted
+`judgevet-mcp` command sends the default text. A non-string `instructions`
+value raises `TypeError` before serving starts.
+
+A self-hosted launcher may also pass `instructions_addendum`. The server
+appends it after the default or replacement text and one blank line. A
 non-string addendum raises `TypeError` before serving starts.
 Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
+
+In this example, a support team's launcher calls
+`main(instructions=INSTRUCTIONS)` with the text below. The text states the
+team's limits of use first and keeps the tool guidance the team needs:
+
+> judgevet answers judgment questions about support tickets. Each call sends
+> the ticket text to the configured judgment backend. Use these tools only to
+> route tickets to a queue. Do not use them to judge a person's credit, health
+> or employment. Remove names, account numbers and other personal data first.
+> Use ask_choice to pick the queue. The caller decides what to do.
+
+Claude Code truncates each server's instructions at 2,048 characters by
+default and advises putting critical details near the start. From Claude Code
+v2.1.280, the `CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH` environment variable
+changes that limit. A test holds the default text under 1,500 characters. Keep
+a replacement and its addendum under the client's limit, and put the limits
+of use first.
+Source: https://code.claude.com/docs/en/mcp.md.
 
 ## Successful answers
 
@@ -203,10 +228,10 @@ optional inbound adapter; importing the base library does not require MCP.
 
 ## Application-selected providers
 
-`create_mcp_server(port, *, model="jev-latest", instructions_addendum=None)`
+`create_mcp_server(port, *, model="jev-latest", instructions=None, instructions_addendum=None)`
 borrows a provider and accepts an explicit host-selected model. `run_stdio`
 accepts the same arguments. `mcp_entrypoint.main` accepts keyword-only `port`,
-`provider_factory`, `model` and `instructions_addendum`.
+`provider_factory`, `model`, `instructions` and `instructions_addendum`.
 Supply either a borrowed port or an owning factory. Supplying both raises
 `ValueError` before acquisition. Explicit selection skips hosted settings and
 credentials. Omission retains the hosted command and its configuration.

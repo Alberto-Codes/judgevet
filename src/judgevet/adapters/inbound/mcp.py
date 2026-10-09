@@ -8,8 +8,12 @@ The factory wires module-level schemas and handlers and resolves the optional
 SDK only when a caller constructs a server. It passes the host-selected model
 to a serialized worker dispatcher. The initialize result carries server
 instructions: cross-tool guidance a client may add to the model's system
-prompt. A launcher may append an addendum after a blank line.
+prompt. A launcher may replace the default text with its own, such as its
+limits of use, and may append an addendum after a blank line.
 Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
+Claude Code truncates each server's instructions at 2,048 characters by
+default, so the default text stays short and puts the purpose first.
+Source: https://code.claude.com/docs/en/mcp.md.
 The server lifespan owns the worker while the application retains ownership
 of its borrowed provider.
 
@@ -62,7 +66,8 @@ See Also:
 Attributes:
     SERVER_NAME (str): The MCP server name.
     SERVER_VERSION (str): The MCP server version, sourced from installed distribution metadata.
-    SERVER_INSTRUCTIONS (str): Base instructions sent in the initialize result.
+    SERVER_INSTRUCTIONS (str): Default instructions sent in the initialize
+        result when the launcher gives no replacement.
 
 Note:
     ``mcp`` is an optional extra (``uv sync --extra mcp``). An import-linter
@@ -103,6 +108,8 @@ SERVER_VERSION = version("judgevet")
 
 SERVER_INSTRUCTIONS = (
     "judgevet answers judgment questions about a state. "
+    "Each call sends the state to the configured judgment backend. "
+    "Send no secret. "
     "Pick the tool by the decision. "
     "Use ask_noul to test one proposition. "
     "Use ask_choice to pick one of several unordered labels. "
@@ -117,7 +124,7 @@ SERVER_INSTRUCTIONS = (
     "Question design guide: "
     "https://alberto-codes.github.io/judgevet/explanation/judgments/"
 )
-"""str: Base server instructions; they do not repeat tool descriptions."""
+"""str: Default server instructions; they do not repeat tool descriptions."""
 
 __all__ = [
     "SERVER_INSTRUCTIONS",
@@ -128,23 +135,32 @@ __all__ = [
 ]
 
 
-def server_instructions(addendum: str | None = None) -> str:
-    """Return the base instructions with an optional launcher addendum.
+def server_instructions(
+    addendum: str | None = None, *, instructions: str | None = None
+) -> str:
+    """Return the server instructions with an optional launcher addendum.
 
     Args:
         addendum: Provider facts a self-hosted launcher appends, or None.
+        instructions: Consumer text that replaces the default text, or None
+            to send ``SERVER_INSTRUCTIONS``.
 
     Returns:
-        The base text, then a blank line and the addendum when one is given.
+        The default or replacement text, then a blank line and the addendum
+        when one is given.
 
     Raises:
-        TypeError: If the addendum is given and is not a str.
+        TypeError: If the replacement or the addendum is given and is not a str.
     """
+    if instructions is None:
+        instructions = SERVER_INSTRUCTIONS
+    elif not isinstance(instructions, str):
+        raise TypeError("instructions must be a str")
     if addendum is None:
-        return SERVER_INSTRUCTIONS
+        return instructions
     if not isinstance(addendum, str):
         raise TypeError("instructions_addendum must be a str")
-    return f"{SERVER_INSTRUCTIONS}\n\n{addendum}"
+    return f"{instructions}\n\n{addendum}"
 
 
 async def _list_tools(mcp_types: Any, ctx: Any, params: Any | None) -> Any:
@@ -205,6 +221,7 @@ def create_mcp_server(
     port: SystemOnePort,
     *,
     model: str = "jev-latest",
+    instructions: str | None = None,
     instructions_addendum: str | None = None,
 ) -> Any:
     """Create an MCP stdio server exposing judgment tools and keyed policy evaluation.
@@ -212,6 +229,8 @@ def create_mcp_server(
     Args:
         port: Borrowed judgment port used for API calls.
         model: Host-selected model passed unchanged to the provider.
+        instructions: Consumer text that replaces the default server
+            instructions, such as its limits of use, or None.
         instructions_addendum: Provider facts appended to the server
             instructions after a blank line, or None.
 
@@ -220,21 +239,22 @@ def create_mcp_server(
 
     Raises:
         ModuleNotFoundError: If the optional MCP runtime is unavailable.
-        TypeError: If the addendum is given and is not a str.
+        TypeError: If the replacement or the addendum is given and is not
+            a str.
 
     Note:
         Resolve SDK modules only when constructing a server. Library and CLI
         imports do not require the optional runtime. Architecture contracts
         keep MCP dependencies inside inbound adapters.
     """
-    instructions = server_instructions(instructions_addendum)
+    text = server_instructions(instructions_addendum, instructions=instructions)
     mcp_types = import_module("mcp.types")
     server_type = import_module("mcp.server").Server
     dispatch = dispatch_for(port)
     return server_type(
         name=SERVER_NAME,
         version=SERVER_VERSION,
-        instructions=instructions,
+        instructions=text,
         on_list_tools=partial(_list_tools, mcp_types),
         on_call_tool=partial(_call_tool, dispatch, mcp_types, model),
         lifespan=partial(_lifespan, dispatch),

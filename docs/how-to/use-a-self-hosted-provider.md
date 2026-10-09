@@ -219,8 +219,14 @@ def serve() -> int:
 that the server requests from your provider. The `instructions_addendum`
 argument states provider facts for the agent: which model answers, that Jev
 calibration does not apply and the latency you measured. The server appends
-it after the base [server instructions](../reference/mcp.md#server-instructions)
+it after the [server instructions](../reference/mcp.md#server-instructions)
 and a blank line. Replace the example latency with your own measurement.
+
+To state your own limits of use, also pass `instructions` to `main`. That text
+replaces the default server instructions, and the addendum still follows it
+after a blank line. Claude Code truncates server instructions at 2,048
+characters by default, so put the limits of use first.
+Source: https://code.claude.com/docs/en/mcp.md.
 
 Declare both modules as console scripts in the `[project.scripts]` table of
 your application's `pyproject.toml`. Map `self-hosted-judge` to

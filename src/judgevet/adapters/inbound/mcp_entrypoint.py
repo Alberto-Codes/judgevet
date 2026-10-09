@@ -5,9 +5,10 @@ The hosted path reads Settings once, configures stderr logging, builds the HTTP
 adapter and serves stdio. ``JEV_API__AUDIT_PATH`` opens one audit sink first,
 which closes after the adapter. Explicit provider selection bypasses hosted settings.
 An application factory acquires and closes its provider on the dispatch worker.
-Borrowed providers remain open when serving ends. A self-hosted launcher may
-pass an instructions addendum, which follows the base server instructions
-after a blank line. A fatal failure names its
+Borrowed providers remain open when serving ends. A launcher may pass
+replacement instructions, such as its own limits of use, in place of the
+default server instructions. It may also pass an instructions addendum, which
+follows them after a blank line. A fatal failure names its
 stage and exception type names and omits exception text. A cleanup failure
 after serving returns names the shutdown stage. When serving and cleanup both
 fail, the serving stage names the serving types first, then the cleanup types.
@@ -91,18 +92,24 @@ def build_adapter(
     )
 
 
-def _options(addendum: str | None, **options: str) -> dict[str, str]:
-    """Add the instructions addendum to keyword options only when one is given.
+def _options(
+    instructions: str | None, addendum: str | None, **options: str
+) -> dict[str, str]:
+    """Add launcher instruction text to keyword options only when it is given.
 
     Args:
+        instructions: Replacement server instructions, or None.
         addendum: Launcher instructions addendum, or None.
 
     Other Parameters:
         **options: Other keyword options to pass through.
 
     Returns:
-        The options, with ``instructions_addendum`` when an addendum is given.
+        The options, with ``instructions`` and ``instructions_addendum`` when
+        each is given.
     """
+    if instructions is not None:
+        options["instructions"] = instructions
     if addendum is not None:
         options["instructions_addendum"] = addendum
     return options
@@ -112,6 +119,7 @@ async def run_stdio(
     port: SystemOnePort,
     *,
     model: str = "jev-latest",
+    instructions: str | None = None,
     instructions_addendum: str | None = None,
 ) -> None:
     """Run MCP stdio server with the given port.
@@ -119,6 +127,8 @@ async def run_stdio(
     Args:
         port: The port used for API calls.
         model: Host-selected model.
+        instructions: Text that replaces the default server instructions,
+            or None.
         instructions_addendum: Text appended to the server instructions
             after a blank line, or None.
 
@@ -128,7 +138,8 @@ async def run_stdio(
     if stdio_server is None:
         raise RuntimeError("MCP runtime not available")
     options = {} if model == "jev-latest" else {"model": model}
-    server = create_mcp_server(port, **_options(instructions_addendum, **options))
+    texts = _options(instructions, instructions_addendum, **options)
+    server = create_mcp_server(port, **texts)
     async with stdio_server() as (read, write):
         await server.run(read, write, server.create_initialization_options())
 
@@ -138,6 +149,7 @@ def main(
     port: SystemOnePort | None = None,
     provider_factory: ProviderFactory | None = None,
     model: str = "jev-latest",
+    instructions: str | None = None,
     instructions_addendum: str | None = None,
 ) -> int:
     """MCP stdio server entry point.
@@ -151,16 +163,20 @@ def main(
         provider_factory: Owning application factory.
         model: Host-selected model. On the hosted path, the default
             ``jev-latest`` defers to ``settings.api.default_model``.
+        instructions: A consumer's own server instructions, such as its
+            limits of use. They replace the default text. None sends the
+            default text.
         instructions_addendum: Provider facts a self-hosted launcher appends
             to the server instructions after a blank line, such as which
-            model answers. None sends the base instructions alone.
+            model answers. None sends the instructions alone.
 
     Returns:
         Exit code: 0 for success, 2 for configuration failures.
 
     Raises:
         ValueError: Both provider selection arguments are supplied.
-        TypeError: The instructions addendum is given and is not a str.
+        TypeError: The replacement instructions or the addendum is given
+            and is not a str.
         SystemExit: If startup or serving raises a declared library error or an
             IO, runtime, value, type or grouped exception. The exit code is 1.
             The diagnostic reads ``judgevet-mcp: <stage> failed (<TypeName>)``.
@@ -172,7 +188,8 @@ def main(
     """
     if port is not None and provider_factory is not None:
         raise ValueError("Supply at most one of port or provider_factory")
-    server_instructions(instructions_addendum)
+    server_instructions(instructions_addendum, instructions=instructions)
+    texts = _options(instructions, instructions_addendum)
     if stdio_server is None:
         print(
             "judgevet-mcp: install judgevet[mcp] to use this command",
@@ -185,13 +202,9 @@ def main(
     try:
         if selected:
             configure_mcp_logging()
-            asyncio.run(
-                _run_selected(
-                    port, provider_factory, model, stage, instructions_addendum
-                )
-            )
+            asyncio.run(_run_selected(port, provider_factory, model, stage, texts))
             return 0
-        return _run_hosted(model, stage, instructions_addendum)
+        return _run_hosted(model, stage, texts)
     except KeyboardInterrupt:
         return 130
     except (
@@ -262,7 +275,7 @@ def _diagnostic(stage: str, errors: Iterable[BaseException | None]) -> str:
     return f"judgevet-mcp: {stage} failed ({', '.join(dict.fromkeys(names))})"
 
 
-def _run_hosted(model: str, stage: _Stage, addendum: str | None = None) -> int:
+def _run_hosted(model: str, stage: _Stage, texts: dict[str, str] | None = None) -> int:
     """Preserve hosted settings and existing composition seams.
 
     Args:
@@ -272,7 +285,8 @@ def _run_hosted(model: str, stage: _Stage, addendum: str | None = None) -> int:
             opens, then credential resolution, serving after it and shutdown
             after serving returns. It records a serving failure before the
             adapter closes. The sink closes after the adapter.
-        addendum: Instructions addendum, or None.
+        texts: Launcher ``instructions`` and ``instructions_addendum``
+            keyword options, or None for neither.
 
     Returns:
         Zero on success or two on configuration failure.
@@ -307,7 +321,7 @@ def _run_hosted(model: str, stage: _Stage, addendum: str | None = None) -> int:
         chosen = settings.api.default_model if model == "jev-latest" else model
         options = {} if chosen == "jev-latest" else {"model": chosen}
         try:
-            asyncio.run(run_stdio(adapter, **_options(addendum, **options)))
+            asyncio.run(run_stdio(adapter, **(texts or {}), **options))
             stage.name = "shutdown"
         except Exception as exc:
             stage.error = exc
@@ -322,7 +336,7 @@ async def _run_selected(
     factory: ProviderFactory | None,
     model: str,
     stage: _Stage,
-    addendum: str | None = None,
+    texts: dict[str, str] | None = None,
 ) -> None:
     """Serve an explicit provider inside its worker-owned context.
 
@@ -333,7 +347,8 @@ async def _run_selected(
         stage: Stage record advanced to serving after provider acquisition
             and to shutdown after serving returns. It records a serving
             failure before the provider context exits.
-        addendum: Instructions addendum, or None.
+        texts: Launcher ``instructions`` and ``instructions_addendum``
+            keyword options, or None for neither.
 
     Raises:
         RuntimeError: Provider acquisition yielded no port.
@@ -345,7 +360,7 @@ async def _run_selected(
             raise RuntimeError("Provider acquisition did not return a port")
         stage.name = "serving"
         try:
-            await run_stdio(dispatch.port, **_options(addendum, model=model))
+            await run_stdio(dispatch.port, **(texts or {}), model=model)
         except Exception as exc:
             stage.error = exc
             raise
