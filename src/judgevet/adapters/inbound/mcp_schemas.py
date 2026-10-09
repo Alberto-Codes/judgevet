@@ -40,7 +40,8 @@ def create_noul_tool(mcp_types: Any) -> Any:
 
     Returns:
         Tool definition for ask_noul; `state` accepts a string or an object.
-        The output schema describes the structured content.
+        The input schema is closed with `additionalProperties: false`. The
+        output schema describes the structured content.
     """
     return mcp_types.Tool(
         name="ask_noul",
@@ -66,6 +67,7 @@ def create_noul_tool(mcp_types: Any) -> Any:
                 },
             },
             "required": ["state", "instruction"],
+            "additionalProperties": False,
         },
         output_schema=noul_output_schema(),
     )
@@ -79,7 +81,8 @@ def create_choice_tool(mcp_types: Any) -> Any:
 
     Returns:
         Tool definition for ask_choice; `state` accepts a string or an object.
-        The output schema describes the structured content.
+        The input schema is closed with `additionalProperties: false`. The
+        output schema describes the structured content.
     """
     return mcp_types.Tool(
         name="ask_choice",
@@ -113,6 +116,7 @@ def create_choice_tool(mcp_types: Any) -> Any:
                 },
             },
             "required": ["state", "instruction"],
+            "additionalProperties": False,
         },
         output_schema=choice_output_schema(),
     )
@@ -127,7 +131,8 @@ def create_score_tool(mcp_types: Any) -> Any:
     Returns:
         Tool definition for ask_score; `state` accepts a string or an object.
         The descriptions ask for criteria that fit the question and call the
-        default a generic quality rubric. The output schema describes the
+        default a generic quality rubric. The input schema is closed with
+        `additionalProperties: false`. The output schema describes the
         structured content.
     """
     return mcp_types.Tool(
@@ -168,6 +173,7 @@ def create_score_tool(mcp_types: Any) -> Any:
                 },
             },
             "required": ["state", "instruction"],
+            "additionalProperties": False,
         },
         output_schema=score_output_schema(),
     )

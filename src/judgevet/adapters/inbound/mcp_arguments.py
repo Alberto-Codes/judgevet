@@ -7,7 +7,8 @@ SDK field names follow the tagged
 [SDK definitions](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp-types/mcp_types/_types.py).
 The caller supplies SDK types, so importing this module needs no MCP runtime.
 `AskKind` names the three ask question types, so a misspelt kind fails the
-type check.
+type check. `ALLOWED` names the arguments each ask tool declares; any other
+argument is a tool error.
 
 Examples:
     ```python
@@ -29,6 +30,11 @@ from __future__ import annotations
 from typing import Any, Literal
 
 AskKind = Literal["noul", "choice", "score"]
+ALLOWED: dict[str, frozenset[str]] = {
+    "noul": frozenset({"state", "instruction"}),
+    "choice": frozenset({"state", "instruction", "criteria"}),
+    "score": frozenset({"state", "instruction", "criteria"}),
+}
 
 
 def tool_error(mcp_types: Any, message: str) -> Any:
@@ -50,7 +56,10 @@ def ask_arguments(arguments: Any, kind: AskKind) -> tuple[Any, Any, Any]:
     """Validate ask tool arguments before any provider call.
 
     Choice criteria must be a non-empty object and score criteria a
-    non-empty array when given. Noul ignores criteria.
+    non-empty array when given. Noul accepts no criteria. Any argument the
+    tool schema does not declare is an error, because not every client
+    validates the input schema. Source:
+    https://github.com/Alberto-Codes/judgevet/issues/303.
 
     Args:
         arguments: Decoded MCP argument object, or None.
@@ -61,13 +70,16 @@ def ask_arguments(arguments: Any, kind: AskKind) -> tuple[Any, Any, Any]:
         State, instruction and criteria; criteria is None when absent.
 
     Raises:
-        ValueError: If a required argument is missing or criteria has the
-            wrong shape.
+        ValueError: If a required argument is missing, an argument is
+            unknown, or criteria has the wrong shape.
     """
     arguments = arguments or {}
     for name in ("state", "instruction"):
         if arguments.get(name) is None:
             raise ValueError(f"Missing required argument: {name}")
+    unknown = sorted(set(arguments) - ALLOWED[kind])
+    if unknown:
+        raise ValueError(f"Unknown arguments: {', '.join(unknown)}")
     criteria = arguments.get("criteria")
     if criteria is not None:
         if kind == "choice" and (not isinstance(criteria, dict) or not criteria):

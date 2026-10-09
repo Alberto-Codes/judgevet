@@ -11,9 +11,19 @@ import pytest
 from mcp.types import CallToolRequestParams
 
 from judgevet.adapters.inbound.mcp import create_mcp_server
+from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.testing import FakeSystemOnePort
 
 TOOLS = ("ask_noul", "ask_choice", "ask_score")
+SCRIPTED = {
+    "noul_question": NoulAnswer(noul=0.9),
+    "choice_question": ChoiceAnswer(
+        choice="yes", confidence=0.98, probabilities={"yes": 0.98, "no": 0.02}
+    ),
+    "score_question": ScoreAnswer(
+        score=3, confidence=0.9, legend={3: "Excellent"}, probabilities={3: 1.0}
+    ),
+}
 
 
 def _call(port: FakeSystemOnePort, tool: str, arguments: dict[str, Any]) -> Any:
@@ -69,3 +79,37 @@ def test_wrong_criteria_is_tool_error(tool: str, criteria: Any, message: str) ->
     assert result.is_error is True
     assert result.content[0].text == message
     assert port.calls == []
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+def test_unknown_argument_is_tool_error(tool: str) -> None:
+    """Reject every unknown argument by name without a provider call.
+
+    The port scripts an answer for each tool, so a call that reaches it
+    succeeds and only the closed argument check makes this test pass.
+    Source: https://github.com/Alberto-Codes/judgevet/issues/303.
+    """
+    port = FakeSystemOnePort(answers=SCRIPTED)
+    arguments = {
+        "state": "text",
+        "instruction": "Which type?",
+        "options": ["feat", "fix", "docs", "chore"],
+        "Criteria": {"yes": "Yes"},
+    }
+    result = _call(port, tool, arguments)
+    assert result.is_error is True
+    assert result.content[0].text == "Unknown arguments: Criteria, options"
+    assert not result.structured_content
+    assert port.calls == []
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+def test_ask_schema_is_closed(tool: str) -> None:
+    """Declare additionalProperties false on each ask tool input schema."""
+    server = create_mcp_server(FakeSystemOnePort(seed=1))
+
+    async def exercise() -> Any:
+        return await server._request_handlers["tools/list"].handler(None, None)
+
+    listed = {item.name: item for item in asyncio.run(exercise()).tools}
+    assert listed[tool].input_schema["additionalProperties"] is False

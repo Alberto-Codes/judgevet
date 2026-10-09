@@ -726,8 +726,11 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**3034 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
-coverage is **95.69%** (3661/3826 statements).
+**3040 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+coverage is **95.69%** (3665/3830 statements).
+The MCP `ask_noul`, `ask_choice` and `ask_score` tools now close their input
+schemas and return `Unknown arguments: ...` before dispatch (#303). Six tests in
+`tests/unit/test_mcp_argument_errors.py` hold this. No live-service claim changed.
 The configuration-hook children drop inherited `GIT_*` variables, so a commit
 from a linked worktree no longer stages the fixture repository into the real
 index (#304).

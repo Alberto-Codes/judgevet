@@ -23,9 +23,9 @@ allows a string or object for `state`.
 The [tool definitions](../../src/judgevet/adapters/inbound/mcp.py) are the source
 for these local schemas. `ask_noul`, `ask_choice` and `ask_score` accept a
 string or an object for `state`. They do not accept an array. `evaluate_policy`
-accepts a string, an object or an array for `state`. The ask tool schemas do not
-specify item/value schemas for criteria or `additionalProperties: false`.
-Handlers are not a substitute for full schema validation.
+accepts a string, an object or an array for `state`. Each ask tool schema sets
+`additionalProperties: false`. The ask tool schemas do not specify item/value
+schemas for criteria. Handlers are not a substitute for full schema validation.
 
 Each tool constructs one named question and calls the sync port with
 the host-selected model, which defaults to `"jev-latest"`.
@@ -110,7 +110,11 @@ The ask tools check their arguments before any provider call. A missing
 `state` or `instruction` returns a tool result with `isError` true and the text
 `Missing required argument: <name>`. `ask_choice` criteria must be a non-empty
 object, and `ask_score` criteria must be a non-empty array, when given. Wrong
-criteria return the same kind of tool result. The MCP tools specification
+criteria return the same kind of tool result. An argument the tool schema does
+not declare returns `Unknown arguments: <names>`, with every unknown name in
+sorted order. `ask_noul` declares no `criteria`, so `criteria` is unknown
+there. The handlers check this because not every client validates the input
+schema. Source: https://github.com/Alberto-Codes/judgevet/issues/303. The MCP tools specification
 classifies input validation errors as tool execution errors; see
 [error handling](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling).
 
