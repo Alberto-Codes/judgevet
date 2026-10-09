@@ -726,8 +726,11 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**3033 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+**3034 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
 coverage is **95.69%** (3661/3826 statements).
+The configuration-hook children drop inherited `GIT_*` variables, so a commit
+from a linked worktree no longer stages the fixture repository into the real
+index (#304).
 `judgevet.domain.provider_profiles` holds `ProviderProfile`, `OLLAMA_PROFILE`
 and `check_profile` (#296). Both hosted adapters and the fake take an opt-in
 `profile` keyword and refuse a request that breaks it before any call.

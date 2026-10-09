@@ -95,9 +95,13 @@ def hook_child_env() -> dict[str, str]:
 
     Returns:
         The inherited environment with the uv cache variables and a
-        test-owned ``PRE_COMMIT_HOME`` merged in.
+        test-owned ``PRE_COMMIT_HOME`` merged in. ``GIT_*`` variables are
+        dropped, so the child's ``git`` acts on its own fixture repository.
     """
-    return os.environ | uv_cache_env() | pre_commit_home_env()
+    inherited = {
+        key: value for key, value in os.environ.items() if not key.startswith("GIT_")
+    }
+    return inherited | uv_cache_env() | pre_commit_home_env()
 
 
 UV_CACHE_KEYS = ("UV_CACHE_DIR", "UV_NO_CACHE")
@@ -148,6 +152,21 @@ def test_hook_child_env_owns_its_pre_commit_home(
     assert Path(home).resolve().is_relative_to(run)
     assert not Path(home).resolve().is_relative_to(Path.home() / ".cache")
     assert (Path(home) / "db.db").is_file()
+
+
+def test_hook_child_env_drops_the_parent_git_repository(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep the hook child's ``git add`` out of the committing checkout's index.
+
+    ``git commit`` exports ``GIT_INDEX_FILE`` to its hooks, as an absolute path
+    in a linked worktree. A child that inherits it stages the fixture
+    repository into the real index. See issue #304.
+    """
+    for key in ("GIT_INDEX_FILE", "GIT_DIR", "GIT_WORK_TREE"):
+        monkeypatch.setenv(key, "/parent/checkout")
+    child = hook_child_env()
+    assert [key for key in child if key.startswith("GIT_")] == []
 
 
 @pytest.mark.parametrize("stage", ["pre-commit", "pre-push"])
