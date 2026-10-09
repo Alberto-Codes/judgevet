@@ -7,7 +7,7 @@
     "tools": [
       {
         "name": "ask_noul",
-        "title": null,
+        "title": "Ask a yes/no judgment",
         "description": "Ask a yes/no question with a probability of true. Takes a state (text or JSON) and an instruction, returns the NoulAnswer.",
         "inputSchema": {
           "type": "object",
@@ -80,12 +80,18 @@
           "additionalProperties": false
         },
         "icons": null,
-        "annotations": null,
+        "annotations": {
+          "title": null,
+          "readOnlyHint": true,
+          "destructiveHint": null,
+          "idempotentHint": null,
+          "openWorldHint": true
+        },
         "_meta": null
       },
       {
         "name": "ask_choice",
-        "title": null,
+        "title": "Ask a multiple-choice judgment",
         "description": "Ask a multiple-choice question. Takes a state (text or JSON) and an instruction, returns the ChoiceAnswer with choice name, confidence, and probabilities.",
         "inputSchema": {
           "type": "object",
@@ -177,12 +183,18 @@
           "additionalProperties": false
         },
         "icons": null,
-        "annotations": null,
+        "annotations": {
+          "title": null,
+          "readOnlyHint": true,
+          "destructiveHint": null,
+          "idempotentHint": null,
+          "openWorldHint": true
+        },
         "_meta": null
       },
       {
         "name": "ask_score",
-        "title": null,
+        "title": "Ask a scored judgment",
         "description": "Ask a scored question. Takes a state (text or JSON) and an instruction, returns the ScoreAnswer with score, confidence, legend, and probabilities. Pass criteria that match the question, for example urgency levels ending in \"Critical\". The default [\"Poor\", \"Fair\", \"Good\", \"Excellent\"] is a generic quality rubric.",
         "inputSchema": {
           "type": "object",
@@ -287,12 +299,18 @@
           "additionalProperties": false
         },
         "icons": null,
-        "annotations": null,
+        "annotations": {
+          "title": null,
+          "readOnlyHint": true,
+          "destructiveHint": null,
+          "idempotentHint": null,
+          "openWorldHint": true
+        },
         "_meta": null
       },
       {
         "name": "evaluate_policy",
-        "title": null,
+        "title": "Evaluate a judgment policy",
         "description": "Evaluate keyed judgment questions against an acceptance policy. Questions map caller keys to noul, choice or score questions. A policy is a list of rules; each rule names a question and the answer it needs to pass. The result holds the answers, the policy result (pass or fail, with each rule's outcome and detail), the model and the usage. An unmet policy is not an error. Choice and score questions need criteria: an object of labels for choice, an ordered array lowest first for score. The ask tools' defaults do not apply here.",
         "inputSchema": {
           "type": "object",
@@ -709,7 +727,13 @@
           "additionalProperties": false
         },
         "icons": null,
-        "annotations": null,
+        "annotations": {
+          "title": null,
+          "readOnlyHint": true,
+          "destructiveHint": null,
+          "idempotentHint": null,
+          "openWorldHint": true
+        },
         "_meta": null
       }
     ],

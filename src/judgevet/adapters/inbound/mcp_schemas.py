@@ -2,7 +2,9 @@
 
 SDK fields follow the tagged
 [SDK definitions](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp-types/mcp_types/_types.py).
-Each tool also declares an `output_schema` for its structured content.
+Each tool also declares an `output_schema` for its structured content, a
+display `title`, and the shared hints from
+[judgment_hints][judgevet.adapters.inbound.mcp_schemas.judgment_hints].
 The factory supplies SDK types so importing this module needs no MCP runtime.
 The evaluate_policy `policy` argument carries a closed JSON Schema 2020-12 for
 the policy grammar, from [policy_schema][judgevet.adapters.inbound.mcp_schemas.policy_schema].
@@ -35,6 +37,26 @@ from judgevet.adapters.inbound.mcp_output_schemas import (
 )
 
 
+def judgment_hints(mcp_types: Any) -> Any:
+    """Return the tool annotations every judgment tool shares.
+
+    A judgment changes no environment state, so `readOnlyHint` is true. The
+    call reaches an outside judgment model through the configured provider, so
+    `openWorldHint` is true. The destructive and idempotent hints stay unset,
+    because the specification gives them meaning only when `readOnlyHint` is
+    false. All annotations are hints, and clients must not trust them from an
+    untrusted server.
+    Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
+
+    Args:
+        mcp_types: SDK type constructors.
+
+    Returns:
+        SDK tool annotations with only the read-only and open-world hints set.
+    """
+    return mcp_types.ToolAnnotations(read_only_hint=True, open_world_hint=True)
+
+
 def create_noul_tool(mcp_types: Any) -> Any:
     """Create the ask_noul tool definition.
 
@@ -44,10 +66,12 @@ def create_noul_tool(mcp_types: Any) -> Any:
     Returns:
         Tool definition for ask_noul; `state` accepts a string or an object.
         The input schema is closed with `additionalProperties: false`. The
-        output schema describes the structured content.
+        output schema describes the structured content. The tool carries a
+        display title and the shared judgment hints.
     """
     return mcp_types.Tool(
         name="ask_noul",
+        title="Ask a yes/no judgment",
         description=(
             "Ask a yes/no question with a probability of true. "
             "Takes a state (text or JSON) and an instruction, "
@@ -72,6 +96,7 @@ def create_noul_tool(mcp_types: Any) -> Any:
             "required": ["state", "instruction"],
             "additionalProperties": False,
         },
+        annotations=judgment_hints(mcp_types),
         output_schema=noul_output_schema(),
     )
 
@@ -85,10 +110,12 @@ def create_choice_tool(mcp_types: Any) -> Any:
     Returns:
         Tool definition for ask_choice; `state` accepts a string or an object.
         The input schema is closed with `additionalProperties: false`. The
-        output schema describes the structured content.
+        output schema describes the structured content. The tool carries a
+        display title and the shared judgment hints.
     """
     return mcp_types.Tool(
         name="ask_choice",
+        title="Ask a multiple-choice judgment",
         description=(
             "Ask a multiple-choice question. Takes a state (text or "
             "JSON) and an instruction, returns the ChoiceAnswer with "
@@ -121,6 +148,7 @@ def create_choice_tool(mcp_types: Any) -> Any:
             "required": ["state", "instruction"],
             "additionalProperties": False,
         },
+        annotations=judgment_hints(mcp_types),
         output_schema=choice_output_schema(),
     )
 
@@ -136,10 +164,12 @@ def create_score_tool(mcp_types: Any) -> Any:
         The descriptions ask for criteria that fit the question and call the
         default a generic quality rubric. The input schema is closed with
         `additionalProperties: false`. The output schema describes the
-        structured content.
+        structured content. The tool carries a display title and the shared
+        judgment hints.
     """
     return mcp_types.Tool(
         name="ask_score",
+        title="Ask a scored judgment",
         description=(
             "Ask a scored question. Takes a state (text or JSON) "
             "and an instruction, returns the ScoreAnswer with score, "
@@ -178,6 +208,7 @@ def create_score_tool(mcp_types: Any) -> Any:
             "required": ["state", "instruction"],
             "additionalProperties": False,
         },
+        annotations=judgment_hints(mcp_types),
         output_schema=score_output_schema(),
     )
 
@@ -325,9 +356,11 @@ def create_policy_tool(mcp_types: Any) -> Any:
         schema comes from `question_schema`, and the description says choice
         and score questions need criteria. The policy schema comes from
         `policy_schema`. The output schema describes the structured content.
+        The tool carries a display title and the shared judgment hints.
     """
     return mcp_types.Tool(
         name="evaluate_policy",
+        title="Evaluate a judgment policy",
         description=(
             "Evaluate keyed judgment questions against an acceptance policy. "
             "Questions map caller keys to noul, choice or score questions. "
@@ -357,5 +390,6 @@ def create_policy_tool(mcp_types: Any) -> Any:
             "required": ["state", "questions", "policy"],
             "additionalProperties": False,
         },
+        annotations=judgment_hints(mcp_types),
         output_schema=policy_output_schema(),
     )

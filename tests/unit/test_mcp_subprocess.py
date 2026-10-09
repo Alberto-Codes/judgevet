@@ -146,6 +146,21 @@ async def exchange(
             return message["result"]
 
 
+def assert_annotated(tools: list[dict[str, Any]]) -> None:
+    """Require a title and the read-only and open-world hints on every tool.
+
+    The destructive and idempotent hints stay absent, because the
+    specification gives them meaning only when readOnlyHint is false.
+    Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
+    """
+    for tool in tools:
+        assert isinstance(tool.get("title"), str) and tool["title"], tool["name"]
+        assert tool.get("annotations") == {
+            "readOnlyHint": True,
+            "openWorldHint": True,
+        }, tool["name"]
+
+
 async def exercise(process: asyncio.subprocess.Process) -> None:
     """Discover unchanged schemas and validate all three HTTP-backed tool answers."""
     initialized = await exchange(
@@ -170,6 +185,7 @@ async def exercise(process: asyncio.subprocess.Process) -> None:
         "ask_score",
         "evaluate_policy",
     }
+    assert_annotated(listed["tools"])
     server = create_mcp_server(RecordingPort())
     expected = await server._request_handlers["tools/list"].handler(None, None)
     assert listed["tools"] == [

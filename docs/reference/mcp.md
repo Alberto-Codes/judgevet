@@ -36,6 +36,26 @@ The internal question names are `noul_question`, `choice_question` and
 `score_question`. Host argument `instruction` becomes wire `instructions`.
 See [configuration overrides](configuration.md#entry-point-overrides).
 
+## Tool titles and annotations
+
+Each tool publishes a display `title` and two annotations in `tools/list`.
+
+| Tool | `title` |
+|---|---|
+| `ask_noul` | Ask a yes/no judgment |
+| `ask_choice` | Ask a multiple-choice judgment |
+| `ask_score` | Ask a scored judgment |
+| `evaluate_policy` | Evaluate a judgment policy |
+
+Every tool sets `readOnlyHint: true`, because a judgment changes no
+environment state. Every tool sets `openWorldHint: true`, because the call
+reaches an outside judgment model through the configured provider. judgevet
+omits `destructiveHint` and `idempotentHint`. The specification gives them
+meaning only when `readOnlyHint` is false. All annotations are hints. A client
+must not trust them from an untrusted server.
+Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
+Source: https://modelcontextprotocol.io/specification/2026-07-28/server/tools.
+
 ## Successful answers
 
 A successful call returns structured content and one text content item. The
