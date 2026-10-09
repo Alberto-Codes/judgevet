@@ -46,6 +46,7 @@ nav:
       - Connect MCP: how-to/connect-mcp.md
       - Self-hosted provider: how-to/use-a-self-hosted-provider.md
       - Ollama local server: how-to/use-ollama.md
+      - Agent harness: how-to/use-in-an-agent-harness.md
       - Troubleshooting: how-to/troubleshoot.md
       - CLI files and stdin: how-to/use-cli-files.md
       - CLI policy: how-to/use-cli-policy.md

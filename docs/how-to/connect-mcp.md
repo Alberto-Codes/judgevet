@@ -397,6 +397,7 @@ and close it in the application after serving ends. Explicit selection bypasses
 hosted credentials and settings. The existing `judgevet-mcp` command retains
 its hosted defaults. See [provider lifetime and cancellation](../reference/mcp.md#application-selected-providers).
 For a launcher on a self-hosted model, see [Use a self-hosted judgment provider](use-a-self-hosted-provider.md).
+For hooks, question wording and shadow mode, see [Use judgevet in an agent harness](use-in-an-agent-harness.md).
 
 
 The server also exposes `evaluate_policy`. Supply `state`, keyed `questions`

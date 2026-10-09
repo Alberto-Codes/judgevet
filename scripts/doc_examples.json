@@ -195,6 +195,13 @@
       "reason": "Complete MCP launcher module; execution defines serve without calling it, so no stdio server starts and no network is used."
     }
   ],
+  "docs/how-to/use-in-an-agent-harness.md": [
+    {
+      "language": "python",
+      "kind": "runnable",
+      "reason": "Complete MCP launcher module on the offline fake provider; execution defines serve without calling it, so no stdio server starts and no network is used."
+    }
+  ],
   "docs/how-to/use-ollama.md": [
     {
       "language": "bash",

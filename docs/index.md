@@ -24,6 +24,7 @@ Status: **draft**. Choose a path by what you need to do.
 - [Use judgevet through Pi's CLI access](how-to/connect-mcp.md#pi-cli-access).
 - [Use a self-hosted judgment provider](how-to/use-a-self-hosted-provider.md).
 - [Use Ollama as a local server](how-to/use-ollama.md).
+- [Use judgevet in an agent harness](how-to/use-in-an-agent-harness.md).
 - [Diagnose installation, input and connection failures](how-to/troubleshoot.md).
 - [Read questions from files and state from files or stdin](how-to/use-cli-files.md).
 - [Apply an acceptance policy in the CLI](how-to/use-cli-policy.md).
