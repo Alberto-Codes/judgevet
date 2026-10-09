@@ -1,0 +1,26 @@
+{
+  "allowed_paths": {
+    "type": "noul",
+    "instructions": "The diff changes only the allowed paths named in the contract",
+    "criteria": {
+      "true": "Every file in the changed-file list is one of the allowed paths, sits under an allowed directory, or is a file the contract names or plainly requires, such as a test, fixture or docs page for the behaviour it asks for. When no allowed paths are listed, every changed file serves the contract's stated change.",
+      "false": "At least one changed file is outside the allowed paths and is not needed by the contract. Examples: an unrelated module, a policy or settings file the contract does not mention, a status or ledger file, a gate configuration change, or a suppression list such as per-file-ignores."
+    }
+  },
+  "tests_kept": {
+    "type": "noul",
+    "instructions": "No existing test was weakened or removed",
+    "criteria": {
+      "true": "No removed line in a test file deletes a test function, an assertion or a test case without an equal or stricter replacement. Renamed, moved or reworded tests keep what they check, and a changed expected value follows a contract change.",
+      "false": "A removed or changed test line makes a test check less. Examples: a deleted test function or assertion, an assertion loosened to accept more outcomes, an added skip, xfail, noqa or type ignore, a narrowed parametrize list, or an expected value changed only so that the test passes."
+    }
+  },
+  "test_fails_without": {
+    "type": "noul",
+    "instructions": "A new or changed test would fail without the production change",
+    "criteria": {
+      "true": "The diff adds or changes a test that calls the changed behaviour and asserts its new result, so the test fails if the production hunks are removed. A change with no production code, such as a docs or configuration change, counts when a test or check pins the new content.",
+      "false": "No added or changed test exercises the new behaviour, or each new test would pass on the old code. Examples: a production change with no test hunk, a test that only checks a file exists, a test wrapped in a try that passes whether or not an error is raised, or assertions on values the change does not affect."
+    }
+  }
+}

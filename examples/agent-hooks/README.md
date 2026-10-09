@@ -3,6 +3,10 @@
 To screen fetched content for prompt injection, see [injection_screen.md](injection_screen.md).
 To check whether a stop left the task undone, see [stop_check.md](stop_check.md).
 To check commit types and issue verdicts in shadow mode, see [commit_check.md](commit_check.md).
+`prescreen.py` is a measurement record, not a pre-screen to use.
+On 17 slices in #312 it matched the acceptance review on 13, below always-accept at 15.
+It passed both reconstructed defects because the diff cut hid them, and its answers saturated at 1.0.
+Do not use it to skip or reduce acceptance review.
 
 A Claude Code hook runs a command, not an MCP tool.
 `shadow_judge.py` is that command.
