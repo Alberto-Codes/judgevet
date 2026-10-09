@@ -3,6 +3,22 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.19.0](https://github.com/Alberto-Codes/judgevet/compare/v0.18.1...v0.19.0) (2026-10-09)
+
+
+### Features
+
+* **examples:** add a shadow-mode hook runner that asks one judgment ([85f663e](https://github.com/Alberto-Codes/judgevet/commit/85f663e1c7d487ff858e91f0dd63ecf6e505f277)), references [#309](https://github.com/Alberto-Codes/judgevet/issues/309)
+* **examples:** score Bash commands for irreversible loss in shadow mode ([66a44fb](https://github.com/Alberto-Codes/judgevet/commit/66a44fbbb10eb967b8406b53b627c6c8e0864fb2)), references [#310](https://github.com/Alberto-Codes/judgevet/issues/310)
+* **examples:** screen fetched content for instructions aimed at the agent ([55d2e14](https://github.com/Alberto-Codes/judgevet/commit/55d2e14aaf2f5a7f89d643a043a024d06f9d0702)), references [#311](https://github.com/Alberto-Codes/judgevet/issues/311)
+* **mcp:** give the four tools titles and read-only, open-world hints ([811d67e](https://github.com/Alberto-Codes/judgevet/commit/811d67e330b2d38036b0b114a9ff7231bcd7420e)), references [#306](https://github.com/Alberto-Codes/judgevet/issues/306)
+* **mcp:** send server instructions, with a launcher addendum ([dac4ff9](https://github.com/Alberto-Codes/judgevet/commit/dac4ff949d2656e1aa45f2534871aa94fed04d1f)), references [#316](https://github.com/Alberto-Codes/judgevet/issues/316)
+
+
+### Fixes
+
+* **mcp:** declare that evaluate_policy choice and score questions need criteria ([b2b6328](https://github.com/Alberto-Codes/judgevet/commit/b2b63285437a9d5043fc6c54bf89535245ea58d1)), references [#305](https://github.com/Alberto-Codes/judgevet/issues/305)
+
 ## [0.18.1](https://github.com/Alberto-Codes/judgevet/compare/v0.18.0...v0.18.1) (2026-10-09)
 
 
