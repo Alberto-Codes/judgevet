@@ -6,6 +6,9 @@ Each tool also declares an `output_schema` for its structured content.
 The factory supplies SDK types so importing this module needs no MCP runtime.
 The evaluate_policy `policy` argument carries a closed JSON Schema 2020-12 for
 the policy grammar, from [policy_schema][judgevet.adapters.inbound.mcp_schemas.policy_schema].
+Each `questions` entry follows
+[question_schema][judgevet.adapters.inbound.mcp_schemas.question_schema], which
+requires criteria for choice and score questions.
 
 Examples:
     ```python
@@ -267,6 +270,50 @@ def policy_schema() -> dict[str, Any]:
     }
 
 
+def _requires_criteria(kind: str, criteria: dict[str, Any]) -> dict[str, Any]:
+    """Return a conditional that requires criteria for one question type.
+
+    Args:
+        kind: Question type that needs criteria: choice or score.
+        criteria: Schema the criteria must satisfy for that type.
+
+    Returns:
+        JSON Schema `if`/`then` pair keyed on the question `type`.
+    """
+    return {
+        "if": {"properties": {"type": {"const": kind}}, "required": ["type"]},
+        "then": {"required": ["criteria"], "properties": {"criteria": criteria}},
+    }
+
+
+def question_schema() -> dict[str, Any]:
+    """Return the closed JSON Schema 2020-12 for one evaluate_policy question.
+
+    Choice questions need a non-empty criteria object and score questions a
+    non-empty criteria array; the ask tools' defaults do not apply. Noul
+    criteria stay optional and pass through unchanged. The conditionals sit
+    in a nested `allOf`, never at the input schema root. Source:
+    https://github.com/Alberto-Codes/judgevet/issues/305.
+
+    Returns:
+        Closed object schema with a required `type`.
+    """
+    return {
+        "type": "object",
+        "properties": {
+            "type": {"enum": ["noul", "choice", "score"]},
+            "instructions": {},
+            "criteria": {},
+        },
+        "required": ["type"],
+        "additionalProperties": False,
+        "allOf": [
+            _requires_criteria("choice", {"type": "object", "minProperties": 1}),
+            _requires_criteria("score", {"type": "array", "minItems": 1}),
+        ],
+    }
+
+
 def create_policy_tool(mcp_types: Any) -> Any:
     """Create the keyed policy tool with optional embedded evidence JSON text.
 
@@ -274,9 +321,10 @@ def create_policy_tool(mcp_types: Any) -> Any:
         mcp_types: SDK type constructors.
 
     Returns:
-        Tool definition accepting state, questions and policy. The policy
-        schema comes from `policy_schema`. The output schema describes the
-        structured content.
+        Tool definition accepting state, questions and policy. Each question
+        schema comes from `question_schema`, and the description says choice
+        and score questions need criteria. The policy schema comes from
+        `policy_schema`. The output schema describes the structured content.
     """
     return mcp_types.Tool(
         name="evaluate_policy",
@@ -287,7 +335,9 @@ def create_policy_tool(mcp_types: Any) -> Any:
             "answer it needs to pass. The result holds the answers, the "
             "policy result (pass or fail, with each rule's outcome and "
             "detail), the model and the usage. An unmet policy is not an "
-            "error."
+            "error. Choice and score questions need criteria: an object of "
+            "labels for choice, an ordered array lowest first for score. The "
+            "ask tools' defaults do not apply here."
         ),
         input_schema={
             "type": "object",
@@ -296,16 +346,7 @@ def create_policy_tool(mcp_types: Any) -> Any:
                 "questions": {
                     "type": "object",
                     "minProperties": 1,
-                    "additionalProperties": {
-                        "type": "object",
-                        "properties": {
-                            "type": {"enum": ["noul", "choice", "score"]},
-                            "instructions": {},
-                            "criteria": {},
-                        },
-                        "required": ["type"],
-                        "additionalProperties": False,
-                    },
+                    "additionalProperties": question_schema(),
                 },
                 "policy": policy_schema(),
                 "evidence": {

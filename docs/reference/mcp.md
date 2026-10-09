@@ -81,7 +81,14 @@ Pass required `state`, `questions` and `policy`, with optional `evidence`.
 State accepts a string, object
 or array. Questions use the CLI JSON grammar, keyed by caller IDs. Each question
 accepts only `type`, `instructions` and `criteria`; unknown fields produce an
-error before dispatch. Optional Noul criteria pass through unchanged. Policy uses
+error before dispatch. Optional Noul criteria pass through unchanged. Choice
+and score questions need `criteria`. A choice question takes a non-empty object
+of labels. A score question takes a non-empty array of levels, lowest first.
+The defaults of `ask_choice` and `ask_score` do not apply here. The question
+schema declares this rule with nested `if` and `then` conditionals. The handler
+also rejects a question without valid criteria, because not every client
+validates the input schema.
+Source: https://github.com/Alberto-Codes/judgevet/issues/305. Policy uses
 the public [policy JSON grammar](policy.md#json-grammar). The `policy` schema
 declares that grammar as closed JSON Schema 2020-12 objects, with a nested
 `anyOf` for `pass` and one example in its description. The handler still checks

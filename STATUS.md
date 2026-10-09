@@ -727,8 +727,11 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**3040 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
-coverage is **95.69%** (3665/3830 statements).
+**3053 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+coverage is **95.70%** (3669/3834 statements).
+The MCP `evaluate_policy` input schema now requires `criteria` on choice and
+score questions, and its description says so (#305). The runtime errors stay
+as the backstop for clients that skip schema validation.
 The MCP `ask_noul`, `ask_choice` and `ask_score` tools now close their input
 schemas and return `Unknown arguments: ...` before dispatch (#303). Six tests in
 `tests/unit/test_mcp_argument_errors.py` hold this. No live-service claim changed.

@@ -165,3 +165,61 @@ def test_no_root_combinator_and_policy_described() -> None:
     assert _errors(json.JSONDecoder().raw_decode(example)[0]) == []
     assert "policy" in tool["description"]
     assert "usage" in tool["description"]
+
+
+def _question_errors(question: object) -> list[str]:
+    """Validate one keyed question against the declared `questions` schema.
+
+    Args:
+        question: Candidate question definition.
+
+    Returns:
+        Validation error messages; empty when the question is valid.
+    """
+    schema = _policy_tool()["inputSchema"]["properties"]["questions"]
+    Draft202012Validator.check_schema(schema)
+    validator = Draft202012Validator(schema)
+    return [error.message for error in validator.iter_errors({"q": question})]
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        {"type": "noul"},
+        {"type": "noul", "instructions": "Is it clear?"},
+        {"type": "noul", "criteria": {"anything": "passes through"}},
+        {"type": "choice", "criteria": {"yes": "Yes", "no": "No"}},
+        {"type": "score", "criteria": ["Low", "High"]},
+    ],
+)
+def test_question_forms_validate(question: dict[str, Any]) -> None:
+    """Noul questions need no criteria; choice and score questions with criteria pass."""
+    assert _question_errors(question) == []
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        {"type": "choice"},
+        {"type": "choice", "criteria": {}},
+        {"type": "choice", "criteria": ["yes", "no"]},
+        {"type": "score"},
+        {"type": "score", "criteria": []},
+        {"type": "score", "criteria": {"a": "b"}},
+        {"type": "noul", "extra": 1},
+    ],
+)
+def test_question_criteria_required(question: dict[str, Any]) -> None:
+    """The schema requires non-empty criteria for choice and score questions.
+
+    Source: https://github.com/Alberto-Codes/judgevet/issues/305.
+    """
+    assert _question_errors(question) != []
+
+
+def test_policy_description_states_criteria_rule() -> None:
+    """The tool description says choice and score questions need criteria."""
+    description = _policy_tool()["description"]
+    assert "need criteria" in description
+    assert "lowest first" in description
+    assert "defaults do not apply" in description

@@ -293,7 +293,7 @@
       {
         "name": "evaluate_policy",
         "title": null,
-        "description": "Evaluate keyed judgment questions against an acceptance policy. Questions map caller keys to noul, choice or score questions. A policy is a list of rules; each rule names a question and the answer it needs to pass. The result holds the answers, the policy result (pass or fail, with each rule's outcome and detail), the model and the usage. An unmet policy is not an error.",
+        "description": "Evaluate keyed judgment questions against an acceptance policy. Questions map caller keys to noul, choice or score questions. A policy is a list of rules; each rule names a question and the answer it needs to pass. The result holds the answers, the policy result (pass or fail, with each rule's outcome and detail), the model and the usage. An unmet policy is not an error. Choice and score questions need criteria: an object of labels for choice, an ordered array lowest first for score. The ask tools' defaults do not apply here.",
         "inputSchema": {
           "type": "object",
           "properties": {
@@ -323,7 +323,55 @@
                 "required": [
                   "type"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "type": {
+                          "const": "choice"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "criteria"
+                      ],
+                      "properties": {
+                        "criteria": {
+                          "type": "object",
+                          "minProperties": 1
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "properties": {
+                        "type": {
+                          "const": "score"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "criteria"
+                      ],
+                      "properties": {
+                        "criteria": {
+                          "type": "array",
+                          "minItems": 1
+                        }
+                      }
+                    }
+                  }
+                ]
               }
             },
             "policy": {
