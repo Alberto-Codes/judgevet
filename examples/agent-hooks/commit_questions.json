@@ -1,0 +1,25 @@
+{
+  "type": {
+    "type": "choice",
+    "instructions": "Which Conventional Commits type fits this change?",
+    "criteria": {
+      "build": "The change alters how the package is built, packaged or locked, such as build settings, the lock file or a dependency version.",
+      "chore": "The change is repository upkeep that alters no shipped code, test, documentation, build or CI behaviour, such as tool or agent settings, hook settings or release bookkeeping.",
+      "ci": "The change alters the continuous integration workflows, jobs or scripts that run on the CI service.",
+      "docs": "The change alters only documentation, such as README text, docs pages, docstrings, comments or status notes.",
+      "feat": "The change adds a new capability that users of the library, CLI or server can call or observe.",
+      "fix": "The change corrects behaviour that was wrong, broken or did not match its documented contract.",
+      "perf": "The change makes existing behaviour faster or use fewer resources without changing what it does.",
+      "refactor": "The change restructures code without changing its behaviour, and it neither adds a capability nor fixes a defect.",
+      "test": "The change adds or corrects tests, test fixtures or test helpers, and it changes no production code."
+    }
+  },
+  "closes": {
+    "type": "choice",
+    "instructions": "Does this commit finish the issue it names?",
+    "criteria": {
+      "closes": "The commit completes every remaining Done-when item of the issue it names, so the issue can close when the commit lands.",
+      "refs": "The commit does only part of the issue it names, such as partial, preparatory or follow-up work, so the issue stays open."
+    }
+  }
+}
