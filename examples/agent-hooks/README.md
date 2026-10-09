@@ -1,6 +1,7 @@
 # Shadow-mode agent hooks
 
 To screen fetched content for prompt injection, see [injection_screen.md](injection_screen.md).
+To check whether a stop left the task undone, see [stop_check.md](stop_check.md).
 
 A Claude Code hook runs a command, not an MCP tool.
 `shadow_judge.py` is that command.

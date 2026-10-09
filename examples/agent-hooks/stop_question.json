@@ -1,0 +1,10 @@
+{
+  "done": {
+    "type": "noul",
+    "instructions": "The request in this transcript excerpt is fully completed, with no step the assistant said it would do still undone.",
+    "criteria": {
+      "true": "Every item in the last user request is done, and the final assistant message reports it as done. The message announces no next step (such as \"next I will\", \"let me\" or \"I still need to\"), no background work that is still running, and no failing test or check left unfixed. A question to the user counts as completion only when the task is already done and the question offers optional extra work. An answer to a pure question counts as completion when it answers it. A mention of optional follow-up work outside the request does not make the task incomplete.",
+      "false": "Some item in the last user request is not done or not reported. Examples: the message says what the assistant will do next; it says work still runs in the background and the result is pending; it says a test, type check or other check still fails, even when it also claims to be done; it reports only part of the requested items; or it ends with a question the user must answer before the task can be finished, such as a choice between approaches."
+    }
+  }
+}
