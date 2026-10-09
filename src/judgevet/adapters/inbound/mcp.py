@@ -6,8 +6,12 @@ then returns the corresponding answer as MCP structured content.
 The evaluate_policy tool preserves keyed questions and returns a strict policy report.
 The factory wires module-level schemas and handlers and resolves the optional
 SDK only when a caller constructs a server. It passes the host-selected model
-to a serialized worker dispatcher. The server lifespan owns the worker while
-the application retains ownership of its borrowed provider.
+to a serialized worker dispatcher. The initialize result carries server
+instructions: cross-tool guidance a client may add to the model's system
+prompt. A launcher may append an addendum after a blank line.
+Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
+The server lifespan owns the worker while the application retains ownership
+of its borrowed provider.
 
 The server was tested with MCP Python SDK v2.2.0. Its
 [Server.run](https://github.com/modelcontextprotocol/python-sdk/blob/v2.2.0/src/mcp/server/lowlevel/server.py)
@@ -58,6 +62,7 @@ See Also:
 Attributes:
     SERVER_NAME (str): The MCP server name.
     SERVER_VERSION (str): The MCP server version, sourced from installed distribution metadata.
+    SERVER_INSTRUCTIONS (str): Base instructions sent in the initialize result.
 
 Note:
     ``mcp`` is an optional extra (``uv sync --extra mcp``). An import-linter
@@ -96,7 +101,50 @@ SERVER_NAME = "judgevet-mcp"
 SERVER_VERSION = version("judgevet")
 """str: The MCP server version."""
 
-__all__ = ["SERVER_NAME", "SERVER_VERSION", "create_mcp_server"]
+SERVER_INSTRUCTIONS = (
+    "judgevet answers judgment questions about a state. "
+    "Pick the tool by the decision. "
+    "Use ask_noul to test one proposition. "
+    "Use ask_choice to pick one of several unordered labels. "
+    "Use ask_score to place the state on ordered levels. "
+    "Use evaluate_policy to ask several questions under one acceptance rule. "
+    "Write criteria that define each label or level in plain terms. "
+    "Vague labels give vague answers. "
+    "A probability or a confidence is not measured accuracy. "
+    "The caller decides what to do with an answer. "
+    "Each tool refuses unknown arguments. "
+    "Send only the declared fields. "
+    "Question design guide: "
+    "https://alberto-codes.github.io/judgevet/explanation/judgments/"
+)
+"""str: Base server instructions; they do not repeat tool descriptions."""
+
+__all__ = [
+    "SERVER_INSTRUCTIONS",
+    "SERVER_NAME",
+    "SERVER_VERSION",
+    "create_mcp_server",
+    "server_instructions",
+]
+
+
+def server_instructions(addendum: str | None = None) -> str:
+    """Return the base instructions with an optional launcher addendum.
+
+    Args:
+        addendum: Provider facts a self-hosted launcher appends, or None.
+
+    Returns:
+        The base text, then a blank line and the addendum when one is given.
+
+    Raises:
+        TypeError: If the addendum is given and is not a str.
+    """
+    if addendum is None:
+        return SERVER_INSTRUCTIONS
+    if not isinstance(addendum, str):
+        raise TypeError("instructions_addendum must be a str")
+    return f"{SERVER_INSTRUCTIONS}\n\n{addendum}"
 
 
 async def _list_tools(mcp_types: Any, ctx: Any, params: Any | None) -> Any:
@@ -153,30 +201,40 @@ async def _call_tool(
             raise ValueError(f"Unknown tool: {params.name}")
 
 
-def create_mcp_server(port: SystemOnePort, *, model: str = "jev-latest") -> Any:
+def create_mcp_server(
+    port: SystemOnePort,
+    *,
+    model: str = "jev-latest",
+    instructions_addendum: str | None = None,
+) -> Any:
     """Create an MCP stdio server exposing judgment tools and keyed policy evaluation.
 
     Args:
         port: Borrowed judgment port used for API calls.
         model: Host-selected model passed unchanged to the provider.
+        instructions_addendum: Provider facts appended to the server
+            instructions after a blank line, or None.
 
     Returns:
-        An SDK server with discovery and tool handlers.
+        An SDK server with discovery, tool handlers and instructions.
 
     Raises:
         ModuleNotFoundError: If the optional MCP runtime is unavailable.
+        TypeError: If the addendum is given and is not a str.
 
     Note:
         Resolve SDK modules only when constructing a server. Library and CLI
         imports do not require the optional runtime. Architecture contracts
         keep MCP dependencies inside inbound adapters.
     """
+    instructions = server_instructions(instructions_addendum)
     mcp_types = import_module("mcp.types")
     server_type = import_module("mcp.server").Server
     dispatch = dispatch_for(port)
     return server_type(
         name=SERVER_NAME,
         version=SERVER_VERSION,
+        instructions=instructions,
         on_list_tools=partial(_list_tools, mcp_types),
         on_call_tool=partial(_call_tool, dispatch, mcp_types, model),
         lifespan=partial(_lifespan, dispatch),

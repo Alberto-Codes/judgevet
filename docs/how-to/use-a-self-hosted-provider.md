@@ -200,12 +200,27 @@ def self_hosted_factory() -> AbstractContextManager[SystemOnePort]:
     return nullcontext(FakeSystemOnePort())
 
 
+ADDENDUM = (
+    "A local model, application-model, answers these tools. "
+    "Jev calibration does not apply to its probabilities. "
+    "A call takes about 2 seconds on this host."
+)
+
+
 def serve() -> int:
-    return main(provider_factory=self_hosted_factory, model="application-model")
+    return main(
+        provider_factory=self_hosted_factory,
+        model="application-model",
+        instructions_addendum=ADDENDUM,
+    )
 ```
 
 `serve` returns the exit code of `main`. The `model` argument is the model
-that the server requests from your provider.
+that the server requests from your provider. The `instructions_addendum`
+argument states provider facts for the agent: which model answers, that Jev
+calibration does not apply and the latency you measured. The server appends
+it after the base [server instructions](../reference/mcp.md#server-instructions)
+and a blank line. Replace the example latency with your own measurement.
 
 Declare both modules as console scripts in the `[project.scripts]` table of
 your application's `pyproject.toml`. Map `self-hosted-judge` to

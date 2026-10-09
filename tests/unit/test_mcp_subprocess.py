@@ -175,6 +175,9 @@ async def exercise(process: asyncio.subprocess.Process) -> None:
     )
     assert initialized["serverInfo"]["name"] == "judgevet-mcp"
     assert initialized["serverInfo"]["version"] == version("judgevet")
+    instructions = initialized["instructions"]
+    assert isinstance(instructions, str) and instructions
+    assert len(instructions.split()) <= 120
     assert process.stdin is not None
     process.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
     await process.stdin.drain()

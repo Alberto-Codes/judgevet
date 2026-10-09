@@ -22,9 +22,11 @@ POLICY_CALL = {
 
 
 def test_existing_discovery_and_results() -> None:
-    """Compare discovery of all four tools and one call of each with the pinned wire contract."""
+    """Compare instructions, discovery of all four tools and one call of each with the pin."""
     expected = json.loads(FIXTURE.read_text())
     server = create_mcp_server(FakeSystemOnePort())
+    initialization = server.create_initialization_options()
+    assert initialization.instructions == expected["instructions"]
     policy_server = create_mcp_server(
         SeededPort(answers={"clear": NoulAnswer(noul=0.9)})
     )

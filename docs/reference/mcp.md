@@ -56,6 +56,29 @@ must not trust them from an untrusted server.
 Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
 Source: https://modelcontextprotocol.io/specification/2026-07-28/server/tools.
 
+## Server instructions
+
+The `initialize` result carries `instructions`. A client may add this text to
+the model's system prompt. The specification says the text should help the
+model use the server and should not repeat the tool descriptions. judgevet
+sends this text, 95 words, pinned in `tests/fixtures/mcp_contract.json`:
+
+> judgevet answers judgment questions about a state. Pick the tool by the
+> decision. Use ask_noul to test one proposition. Use ask_choice to pick one
+> of several unordered labels. Use ask_score to place the state on ordered
+> levels. Use evaluate_policy to ask several questions under one acceptance
+> rule. Write criteria that define each label or level in plain terms. Vague
+> labels give vague answers. A probability or a confidence is not measured
+> accuracy. The caller decides what to do with an answer. Each tool refuses
+> unknown arguments. Send only the declared fields. Question design guide:
+> https://alberto-codes.github.io/judgevet/explanation/judgments/
+
+A self-hosted launcher may pass `instructions_addendum` to
+`mcp_entrypoint.main`. The server appends it after the base text and one blank
+line. The hosted `judgevet-mcp` command sends the base text alone. A
+non-string addendum raises `TypeError` before serving starts.
+Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
+
 ## Successful answers
 
 A successful call returns structured content and one text content item. The
@@ -180,9 +203,10 @@ optional inbound adapter; importing the base library does not require MCP.
 
 ## Application-selected providers
 
-`create_mcp_server(port, *, model="jev-latest")` borrows a provider and accepts
-an explicit host-selected model. `run_stdio` accepts the same arguments.
-`mcp_entrypoint.main` accepts keyword-only `port`, `provider_factory` and `model`.
+`create_mcp_server(port, *, model="jev-latest", instructions_addendum=None)`
+borrows a provider and accepts an explicit host-selected model. `run_stdio`
+accepts the same arguments. `mcp_entrypoint.main` accepts keyword-only `port`,
+`provider_factory`, `model` and `instructions_addendum`.
 Supply either a borrowed port or an owning factory. Supplying both raises
 `ValueError` before acquisition. Explicit selection skips hosted settings and
 credentials. Omission retains the hosted command and its configuration.

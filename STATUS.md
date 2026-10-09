@@ -727,8 +727,8 @@ the kit with an error naming the extra.
 
 ## Gates
 
-**3079 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
-coverage is **95.70%** (3671/3836 statements).
+**3082 tests pass, 8 tests skip, 30 live tests deselected.** The last measured
+coverage is **95.71%** (3685/3850 statements).
 The MCP `evaluate_policy` input schema now requires `criteria` on choice and
 score questions, and its description says so (#305). The runtime errors stay
 as the backstop for clients that skip schema validation.
@@ -739,6 +739,9 @@ in shadow mode (#309). It logs one JSONL record and writes nothing to stdout.
 Known failures exit 0, unexpected errors exit 1, and no path exits 2. Twenty-six
 offline tests in `tests/unit/test_agent_hooks_shadow_judge.py` hold this. No
 live-service claim changed.
+judgevet-mcp now sends MCP server `instructions` (95 words) with cross-tool
+guidance, and `mcp_entrypoint.main` takes `instructions_addendum` so a
+self-hosted launcher can add provider facts (#316).
 The MCP `ask_noul`, `ask_choice` and `ask_score` tools now close their input
 schemas and return `Unknown arguments: ...` before dispatch (#303). Six tests in
 `tests/unit/test_mcp_argument_errors.py` hold this. No live-service claim changed.
