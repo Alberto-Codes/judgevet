@@ -742,6 +742,13 @@ live-service claim changed.
 judgevet-mcp now sends MCP server `instructions` (95 words) with cross-tool
 guidance, and `mcp_entrypoint.main` takes `instructions_addendum` so a
 self-hosted launcher can add provider facts (#316).
+The default `instructions` text now puts the limits of use first: advisory
+text checks and triage only, one binary or labelled question per call, and a
+probability read as a ranking until the caller calibrates it. It is 117 words
+and 792 characters, under the 2,048-character Claude Code truncation.
+`mcp_entrypoint.main` also takes `instructions`, which replaces the default
+text. Four offline tests in `tests/unit/test_mcp_instructions.py` hold the
+override and the length limit. No live-service claim changed.
 `examples/agent-hooks/` adds a Bash irreversible-loss Score recipe with 36
 labelled commands (#310). One offline run on local Gemma 4 agreed on 80.6%
 (kappa 0.75); the measurement is recorded on #310. No Jev claim changed.

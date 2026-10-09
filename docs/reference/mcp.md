@@ -60,23 +60,33 @@ Source: https://modelcontextprotocol.io/specification/2026-07-28/server/tools.
 
 The `initialize` result carries `instructions`. A client may add this text to
 the model's system prompt. The specification says the text should help the
-model use the server and should not repeat the tool descriptions. judgevet
-sends this text, 95 words, pinned in `tests/fixtures/mcp_contract.json`:
+model use the server. Claude Code loads the tool names and each server's
+instructions at session start. It truncates the instructions at 2,048
+characters. Source: https://code.claude.com/docs/en/mcp.md.
 
-> judgevet answers judgment questions about a state. Pick the tool by the
-> decision. Use ask_noul to test one proposition. Use ask_choice to pick one
-> of several unordered labels. Use ask_score to place the state on ordered
-> levels. Use evaluate_policy to ask several questions under one acceptance
-> rule. Write criteria that define each label or level in plain terms. Vague
-> labels give vague answers. A probability or a confidence is not measured
-> accuracy. The caller decides what to do with an answer. Each tool refuses
-> unknown arguments. Send only the declared fields. Question design guide:
+judgevet sends this default text, 117 words and 792 characters, pinned in
+`tests/fixtures/mcp_contract.json`. The limits of use come first, so a
+truncation removes the tool map before it removes a limit. A test holds the
+default under 1,500 characters.
+
+> judgevet sends one judgment question about a text state to the configured
+> backend. Send no secret. Use it for advisory text checks and triage. Never
+> use it for arithmetic, code correctness, fact checks against sources, or a
+> decision that moves money or blocks a release. Ask one binary or labelled
+> question per call. Write explicit criteria for each label or level.
+> ask_noul returns a yes probability for one proposition. ask_choice picks one
+> of several unordered labels. ask_score picks one of several ordered levels.
+> evaluate_policy returns pass or fail over keyed questions. Treat a
+> probability or a confidence as a ranking until you calibrate it against your
+> own labels. Send only the declared fields. Question design guide:
 > https://alberto-codes.github.io/judgevet/explanation/judgments/
 
-A self-hosted launcher may pass `instructions_addendum` to
-`mcp_entrypoint.main`. The server appends it after the base text and one blank
-line. The hosted `judgevet-mcp` command sends the base text alone. A
-non-string addendum raises `TypeError` before serving starts.
+A launcher may pass `instructions` to `mcp_entrypoint.main`. That text replaces
+the default text. A self-hosted launcher may pass `instructions_addendum`. The
+server appends it after the base text and one blank line. The base text is the
+override when one is given, and the default text otherwise. The hosted
+`judgevet-mcp` command sends the default text alone. A non-string override or
+addendum raises `TypeError` before serving starts.
 Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
 
 ## Successful answers
@@ -203,10 +213,10 @@ optional inbound adapter; importing the base library does not require MCP.
 
 ## Application-selected providers
 
-`create_mcp_server(port, *, model="jev-latest", instructions_addendum=None)`
+`create_mcp_server(port, *, model="jev-latest", instructions_addendum=None, instructions=None)`
 borrows a provider and accepts an explicit host-selected model. `run_stdio`
 accepts the same arguments. `mcp_entrypoint.main` accepts keyword-only `port`,
-`provider_factory`, `model` and `instructions_addendum`.
+`provider_factory`, `model`, `instructions_addendum` and `instructions`.
 Supply either a borrowed port or an owning factory. Supplying both raises
 `ValueError` before acquisition. Explicit selection skips hosted settings and
 credentials. Omission retains the hosted command and its configuration.

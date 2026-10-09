@@ -8,7 +8,10 @@ The factory wires module-level schemas and handlers and resolves the optional
 SDK only when a caller constructs a server. It passes the host-selected model
 to a serialized worker dispatcher. The initialize result carries server
 instructions: cross-tool guidance a client may add to the model's system
-prompt. A launcher may append an addendum after a blank line.
+prompt. The default text puts the limits of use first and stays under 1,500
+characters, because Claude Code truncates server instructions at 2,048
+characters. Source: https://code.claude.com/docs/en/mcp.md. A launcher may
+replace the default text and may append an addendum after a blank line.
 Source: https://modelcontextprotocol.io/specification/2026-07-28/schema.
 The server lifespan owns the worker while the application retains ownership
 of its borrowed provider.
@@ -102,22 +105,24 @@ SERVER_VERSION = version("judgevet")
 """str: The MCP server version."""
 
 SERVER_INSTRUCTIONS = (
-    "judgevet answers judgment questions about a state. "
-    "Pick the tool by the decision. "
-    "Use ask_noul to test one proposition. "
-    "Use ask_choice to pick one of several unordered labels. "
-    "Use ask_score to place the state on ordered levels. "
-    "Use evaluate_policy to ask several questions under one acceptance rule. "
-    "Write criteria that define each label or level in plain terms. "
-    "Vague labels give vague answers. "
-    "A probability or a confidence is not measured accuracy. "
-    "The caller decides what to do with an answer. "
-    "Each tool refuses unknown arguments. "
+    "judgevet sends one judgment question about a text state "
+    "to the configured backend. "
+    "Send no secret. "
+    "Use it for advisory text checks and triage. "
+    "Never use it for arithmetic, code correctness, fact checks against sources, "
+    "or a decision that moves money or blocks a release. "
+    "Ask one binary or labelled question per call. "
+    "Write explicit criteria for each label or level. "
+    "ask_noul returns a yes probability for one proposition. "
+    "ask_choice picks one of several unordered labels. "
+    "ask_score picks one of several ordered levels. "
+    "evaluate_policy returns pass or fail over keyed questions. "
+    "Treat a probability or a confidence as a ranking "
+    "until you calibrate it against your own labels. "
     "Send only the declared fields. "
-    "Question design guide: "
-    "https://alberto-codes.github.io/judgevet/explanation/judgments/"
+    "Question design guide: https://alberto-codes.github.io/judgevet/explanation/judgments/"
 )
-"""str: Base server instructions; they do not repeat tool descriptions."""
+"""str: Default server instructions. The limits of use come before the tool map."""
 
 __all__ = [
     "SERVER_INSTRUCTIONS",
@@ -128,23 +133,29 @@ __all__ = [
 ]
 
 
-def server_instructions(addendum: str | None = None) -> str:
+def server_instructions(
+    addendum: str | None = None, *, instructions: str | None = None
+) -> str:
     """Return the base instructions with an optional launcher addendum.
 
     Args:
         addendum: Provider facts a self-hosted launcher appends, or None.
+        instructions: Text that replaces ``SERVER_INSTRUCTIONS``, or None.
 
     Returns:
         The base text, then a blank line and the addendum when one is given.
 
     Raises:
-        TypeError: If the addendum is given and is not a str.
+        TypeError: If the override or the addendum is given and is not a str.
     """
+    if instructions is not None and not isinstance(instructions, str):
+        raise TypeError("instructions must be a str")
+    base = SERVER_INSTRUCTIONS if instructions is None else instructions
     if addendum is None:
-        return SERVER_INSTRUCTIONS
+        return base
     if not isinstance(addendum, str):
         raise TypeError("instructions_addendum must be a str")
-    return f"{SERVER_INSTRUCTIONS}\n\n{addendum}"
+    return f"{base}\n\n{addendum}"
 
 
 async def _list_tools(mcp_types: Any, ctx: Any, params: Any | None) -> Any:
@@ -206,6 +217,7 @@ def create_mcp_server(
     *,
     model: str = "jev-latest",
     instructions_addendum: str | None = None,
+    instructions: str | None = None,
 ) -> Any:
     """Create an MCP stdio server exposing judgment tools and keyed policy evaluation.
 
@@ -214,27 +226,29 @@ def create_mcp_server(
         model: Host-selected model passed unchanged to the provider.
         instructions_addendum: Provider facts appended to the server
             instructions after a blank line, or None.
+        instructions: Text that replaces the default server instructions,
+            or None for ``SERVER_INSTRUCTIONS``.
 
     Returns:
         An SDK server with discovery, tool handlers and instructions.
 
     Raises:
         ModuleNotFoundError: If the optional MCP runtime is unavailable.
-        TypeError: If the addendum is given and is not a str.
+        TypeError: If the override or the addendum is given and is not a str.
 
     Note:
         Resolve SDK modules only when constructing a server. Library and CLI
         imports do not require the optional runtime. Architecture contracts
         keep MCP dependencies inside inbound adapters.
     """
-    instructions = server_instructions(instructions_addendum)
+    text = server_instructions(instructions_addendum, instructions=instructions)
     mcp_types = import_module("mcp.types")
     server_type = import_module("mcp.server").Server
     dispatch = dispatch_for(port)
     return server_type(
         name=SERVER_NAME,
         version=SERVER_VERSION,
-        instructions=instructions,
+        instructions=text,
         on_list_tools=partial(_list_tools, mcp_types),
         on_call_tool=partial(_call_tool, dispatch, mcp_types, model),
         lifespan=partial(_lifespan, dispatch),
