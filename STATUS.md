@@ -5,33 +5,40 @@ release and credential history remains in Git and the linked issues.
 
 ## Published release
 
-judgevet 0.18.1 is published to PyPI. Library, CLI and optional MCP share one
-version. This release closes the input schemas of the MCP `ask_noul`,
-`ask_choice` and `ask_score` tools. An unknown argument now returns
-`Unknown arguments: ...` before any judgment call (#303). `ask_noul` now
-rejects `criteria`, which it never declared. A test fix keeps configuration-hook
-children from writing a linked worktree's index (#304). Runtime requirements,
-the CLI surface and the MCP tool set are unchanged.
+judgevet 0.19.0 is published to PyPI. Library, CLI and optional MCP share one
+version. The MCP server now sends server instructions, and
+`mcp_entrypoint.main` takes `instructions_addendum` (#316). The four tools
+carry titles and the `readOnlyHint` and `openWorldHint` annotations (#306).
+The `evaluate_policy` input schema requires `criteria` on choice and score
+questions (#305). `examples/agent-hooks/` adds a shadow-mode hook runner (#309),
+a Bash irreversible-loss recipe (#310) and an injected-instruction screen
+(#311). Runtime requirements and the CLI surface are unchanged.
 
 | Artifact | Evidence |
 |---|---|
-| Release/tag | `v0.18.1`, commit `894db0a36334282e4655c623b5ddbb6f2107f548` |
-| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.18.0 |
-| Wheel SHA-256 | `47d5c7365f1c8e4c82fea915e95eb020d8d2b2c86b72a843101fc10b3817d765` |
-| Source distribution SHA-256 | `65e74d0d6199bc809bd14db5b8b0ed4ffd9cc140513752d02835a1988d9ecb93` |
+| Release/tag | `v0.19.0`, commit `ec706e43b9f84d82effa06884d4ab73167caf573` |
+| Accepted candidate | none; the maintainer asked for the release, and it was merged and published without a TestPyPI round, as for 0.10.2 through 0.18.1 |
+| Wheel SHA-256 | `e515aa4dc9d294219b63688aa409041d6ad253681a2b46f317737d87d4c49a52` |
+| Source distribution SHA-256 | `36eae1df646be550ef53707110325241397146e515eff101963c28d6773e6706` |
 | Actual PyPI download | PyPI JSON digests equal the SHA-256 of the wheel and sdist attached to the GitHub release |
 | Release files | 15 assets; `provenance.txt` names the tag commit and `complete: yes` |
 | Attestations | `gh attestation verify --bundle` exits 0 for the wheel and sdist (build provenance) and for the wheel with the CycloneDX predicate type (SBOM) |
 | Library and CLI | The publish workflow's wheel smoke step passed before upload. No separate index-wheel smoke ran |
-| MCP | The publish workflow's installed MCP tools smoke step passed before upload. An index install of `judgevet[mcp]==0.18.1` beside `typevet[judgevet]==0.8.1` served `judgevet-mcp` 0.18.1 over stdio on a local Gemma 4 provider. `ask_choice` with an unknown `options` argument returned `Unknown arguments: options`, and `ask_noul` answered. No Jev call was made |
-| Registry | `mcp-publisher login github -token` succeeded. The first `publish` of the release commit's `server.json` reported version 0.18.1 published. The listing is recorded below |
+| MCP | The publish workflow's installed MCP tools smoke step passed before upload. Before the release, a headless Claude Code session on commit `dac4ff9` received the server instructions, accepted the conditional `evaluate_policy` schema and got a policy result from a local Gemma 4 provider. No Jev call was made |
+| Registry | The first `publish` failed with an expired registry token. After `mcp-publisher login github -token`, the publish of the release commit's `server.json` reported version 0.19.0 published. The listing is recorded below |
 
-[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/37975135988)
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/37986474700)
 ran build, attest, release-files and publish. The live footprint was the
-publish workflow's smoke calls; the exact call count was not recorded. The
-local MCP check called a local Gemma 4 model through typevet, not Jev, so it
-verifies no Jev claim. No unseen API body, other model, modern protocol path or
-gateway became verified.
+publish workflow's smoke calls; the exact call count was not recorded. No
+unseen API body, other model, modern protocol path or gateway became verified.
+
+Prior 0.18.1 evidence: tag `v0.18.1` at commit
+`894db0a36334282e4655c623b5ddbb6f2107f548`, wheel SHA-256
+`47d5c7365f1c8e4c82fea915e95eb020d8d2b2c86b72a843101fc10b3817d765`, sdist SHA-256
+`65e74d0d6199bc809bd14db5b8b0ed4ffd9cc140513752d02835a1988d9ecb93`. Its registry
+listing was published `2026-10-09T18:47:34.489182Z`.
+[PyPI publication](https://github.com/Alberto-Codes/judgevet/actions/runs/37975135988)
+for 0.18.1 ran build, attest, release-files and publish.
 
 Prior 0.18.0 evidence: tag `v0.18.0` at commit
 `ded6252ba6041454f184a535a20b72be0790e365`, wheel SHA-256
@@ -115,8 +122,8 @@ records uv 0.12.18. The rebuilt wheel is not byte-identical to the index wheel.
 The actual index files are byte-identical across both publication workflows.
 
 The [active registry listing](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.Alberto-Codes%2Fjudgevet)
-reports `io.github.Alberto-Codes/judgevet` version `0.18.1` as active with
-`isLatest: true`, published at `2026-10-09T18:47:34.489182Z`. The versions 0.18.0, 0.17.0, 0.16.0, 0.15.0, 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
+reports `io.github.Alberto-Codes/judgevet` version `0.19.0` as active with
+`isLatest: true`, published at `2026-10-09T20:23:27.54478Z`. The versions 0.18.1, 0.18.0, 0.17.0, 0.16.0, 0.15.0, 0.14.0, 0.13.0, 0.12.0, 0.11.0, 0.10.2, 0.10.1 and 0.10.0 stay listed as earlier active versions. Package and launcher fields match the release
 manifest. Registry acceptance does not verify a host installation or reload.
 No unseen API body, other model, modern protocol path or gateway became verified.
 
