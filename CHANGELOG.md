@@ -3,6 +3,21 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.20.0](https://github.com/Alberto-Codes/judgevet/compare/v0.19.0...v0.20.0) (2026-10-09)
+
+
+### Features
+
+* **examples:** ask in shadow mode whether the requested task is done at Stop ([afc2c64](https://github.com/Alberto-Codes/judgevet/commit/afc2c647b8733bbc193b9e85ee47c57f3fecb8de)), references [#314](https://github.com/Alberto-Codes/judgevet/issues/314)
+* **examples:** shadow-check commit type and Closes versus Refs at commit-msg ([e9c20f5](https://github.com/Alberto-Codes/judgevet/commit/e9c20f5269bea82f83ff19fa5e9618916c4f168e)), references [#313](https://github.com/Alberto-Codes/judgevet/issues/313)
+* **mcp:** let a launcher replace the server instructions, and lead with the backend ([6f4c1d7](https://github.com/Alberto-Codes/judgevet/commit/6f4c1d7ffc4d8061247e01ea925982cad40bba2b)), references [#319](https://github.com/Alberto-Codes/judgevet/issues/319)
+
+
+### Documentation
+
+* **how-to:** add a draft page on using judgevet in an agent harness ([550da47](https://github.com/Alberto-Codes/judgevet/commit/550da47c3a62183ee99fe5bcc055cec7de60aed6)), references [#307](https://github.com/Alberto-Codes/judgevet/issues/307)
+* retire STATUS.md and move the verified-versus-inferred ledger to a docs page ([a5821ec](https://github.com/Alberto-Codes/judgevet/commit/a5821ecb4e8e3a8a460761ea0829c46fbd3b68b8)), references [#321](https://github.com/Alberto-Codes/judgevet/issues/321)
+
 ## [0.19.0](https://github.com/Alberto-Codes/judgevet/compare/v0.18.1...v0.19.0) (2026-10-09)
 
 
