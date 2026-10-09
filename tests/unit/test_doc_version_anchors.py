@@ -42,14 +42,16 @@ def _scanned_pages(root: Path) -> list[Path]:
             ``SECURITY.md``.
 
     Returns:
-        Every Markdown page under ``docs/`` except ``docs/project/``, followed
-        by ``README.md`` and ``SECURITY.md``.
+        Every Markdown page under ``docs/`` except ``docs/project/`` and
+        ``docs/history/``, followed by ``README.md`` and ``SECURITY.md``.
+        Both excluded trees hold historical records whose versions must not
+        change: generated project copies and frozen snapshots.
     """
-    project = root / "docs" / "project"
+    excluded = (root / "docs" / "project", root / "docs" / "history")
     pages = [
         page
         for page in sorted((root / "docs").rglob("*.md"))
-        if project not in page.parents
+        if not any(tree in page.parents for tree in excluded)
     ]
     return [*pages, root / "README.md", root / "SECURITY.md"]
 
@@ -128,3 +130,21 @@ def test_guard_skips_marked_blocks_and_flags_unmarked_pins() -> None:
     flagged = [number for number, line in lines if ANCHOR.search(line)]
 
     assert flagged == [1, 5]
+
+
+def test_guard_skips_frozen_history_but_scans_current_pages(tmp_path: Path) -> None:
+    """Prove a frozen snapshot keeps its old versions while live pages are checked."""
+    (tmp_path / "docs" / "history").mkdir(parents=True)
+    (tmp_path / "docs" / "how-to").mkdir(parents=True)
+    (tmp_path / "docs" / "history" / "status.md").write_text(
+        "judgevet 0.1.0 is published.\n", encoding="utf-8"
+    )
+    (tmp_path / "docs" / "how-to" / "install.md").write_text(
+        "pip install 'judgevet==0.1.0'\n", encoding="utf-8"
+    )
+    (tmp_path / "README.md").write_text("judgevet 9.9.9\n", encoding="utf-8")
+    (tmp_path / "SECURITY.md").write_text("No anchor.\n", encoding="utf-8")
+
+    offenders = _stale_anchors(tmp_path, "9.9.9")
+
+    assert offenders == ["docs/how-to/install.md:1: pip install 'judgevet==0.1.0'"]
