@@ -3,6 +3,18 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.18.1](https://github.com/Alberto-Codes/judgevet/compare/v0.18.0...v0.18.1) (2026-10-09)
+
+
+### Fixes
+
+* **mcp:** reject unknown arguments on the ask tools ([28af7c1](https://github.com/Alberto-Codes/judgevet/commit/28af7c16f51d9e4ff441fee82551f8f77fe61cf2)), references [#303](https://github.com/Alberto-Codes/judgevet/issues/303)
+
+
+### Documentation
+
+* record the Ollama 0.35.1 option limit and error body observed by a call ([94c9b87](https://github.com/Alberto-Codes/judgevet/commit/94c9b876212a1aca70ea877f31434a4883632fc7))
+
 ## [0.18.0](https://github.com/Alberto-Codes/judgevet/compare/v0.17.0...v0.18.0) (2026-10-03)
 
 

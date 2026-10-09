@@ -10,7 +10,7 @@ The `judgevet.policy` and `judgevet.policy_json` modules ship in the base
 package. Install the current release:
 
 <!-- x-release-please-start-version -->
-`python -m pip install 'judgevet==0.18.0'`
+`python -m pip install 'judgevet==0.18.1'`
 <!-- x-release-please-end -->
 
 ## Construct a typed policy
