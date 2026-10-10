@@ -382,6 +382,11 @@
       "language": "bash",
       "kind": "template",
       "reason": "Cursor worker launch with placeholder brief and receipt paths; it bills a model pool and edits files, so never execute automatically."
+    },
+    {
+      "language": "bash",
+      "kind": "template",
+      "reason": "Harness build script usage with placeholder harness, worktree and brief; it bills a model pool and edits files, so never execute automatically."
     }
   ],
   "docs/tutorials/first-judgment.md": [

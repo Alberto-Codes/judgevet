@@ -20,6 +20,7 @@ The [worker run contract](../reference/worker-runs.md) records launch evidence f
 - **pi** runs local models through the `delegate-to-pi` skill.
 - **Claude sub agents** run through the Agent tool with definitions in `.claude/agents/`.
 - **Cursor CLI** runs Cursor-pool models such as `cursor-grok-4.6-medium` in print mode.
+- **Codex CLI** runs `codex exec` with a named model through `scripts/harness_build.sh`. It stays unverified until a run lands.
 
 The Claude definitions are `builder.md`, `acceptance-reviewer.md`, `specifier.md` and `ledger-auditor.md`.
 
@@ -27,10 +28,13 @@ The Claude definitions are `builder.md`, `acceptance-reviewer.md`, `specifier.md
 |---|---|
 | Lookups and file search | Agent tool, `haiku` |
 | Research and documentation reads | Agent tool, `sonnet` |
-| Implementation and gate repairs | Agent tool, `opus` with `builder`; pi with a local coder model; or Cursor CLI with a Cursor-pool model |
+| Implementation and gate repairs | Agent tool, `opus` with `builder`; pi with a local coder model; Cursor CLI with a Cursor-pool model; or Codex CLI with a named model through `scripts/harness_build.sh` |
 | Acceptance review | Agent tool, `opus` with `acceptance-reviewer` |
 | Specification | Agent tool, `opus` with `specifier`; or pi with a local reasoning model |
 | Ledger claim review | Agent tool, `opus` with `ledger-auditor` |
+
+Read the pools with the `quota` skill before you route a mechanical slice.
+Follow `.claude/skills/delegate-to-harness/SKILL.md` for the dispatch.
 
 The `delegate-to-pi` skill names the local models and their settings.
 The supervisor assigns acceptance to a fresh reviewer who authored none of the reviewed changes.

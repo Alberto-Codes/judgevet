@@ -27,6 +27,9 @@ judgevet has three verified worker harnesses: pi, through the `delegate-to-pi`
 skill; Claude Code sub agents, through the Agent tool and the definitions in
 `.claude/agents/`; and the Cursor CLI in print mode, guarded by
 `.cursor/cli.json`.
+The Codex CLI has a launch recipe in `scripts/harness_build.sh`, and the
+`delegate-to-harness` skill routes a mechanical slice to Cursor or Codex by
+quota headroom. Codex is unverified until a run lands.
 
 - The supervising session selects work, decides boundaries, accepts the
   result and commits.

@@ -30,6 +30,7 @@ judgevet has three verified worker harnesses.
 pi runs local models through the `delegate-to-pi` skill.
 Claude Code sub agents run through the Agent tool with definitions in `.claude/agents/`.
 The Cursor CLI runs Cursor-pool models in print mode; #49 was its first accepted slice.
+The Codex CLI has a launch recipe in `scripts/harness_build.sh` and stays unverified until a run lands.
 Choose the worker independently from the supervisor.
 
 | Harness | Required launch evidence |
@@ -37,7 +38,12 @@ Choose the worker independently from the supervisor.
 | pi | Installed version, provider/model, effective `--thinking` setting, instruction loading, tool permissions, session identifier |
 | Claude sub agent | Requested alias (`haiku`, `sonnet` or `opus`), resolved model ID from the agent's return or `unknown`, effort, allowed tools, agent definition name |
 | Cursor CLI | Installed version, requested model ID, identity the worker reports or `unknown`, `session_id` and usage from the JSON receipt, `.cursor/cli.json` deny list |
+| Codex CLI | Installed version, requested model and effort, thread id from the JSONL or `unknown`, usage from the `turn.completed` event or `unknown`, sandbox mode |
 | Any other harness | The same role, context, isolation, observation and return requirements |
+
+The Codex event names `thread.started`, `turn.completed`, `turn.failed` and `error` come from the exec event enum.
+
+Source: https://github.com/openai/codex/blob/main/codex-rs/exec/src/exec_events.rs.
 
 Read installed help and configuration before constructing a pi launch command.
 Do not copy flags, approval modes or token limits between harnesses.
@@ -85,6 +91,61 @@ All harnesses must report actual instruction loading and effective tool permissi
 A role prompt is not a sandbox. Do not claim isolation the harness does not enforce.
 Record the harness actually used, even when a role definition came from another harness.
 
+## Harnesses
+
+An external harness can run a mechanical builder slice.
+The [`delegate-to-harness` skill](https://github.com/Alberto-Codes/judgevet/blob/main/.claude/skills/delegate-to-harness/SKILL.md) holds the procedure.
+Read the usage of each pool with the `quota` skill before you route a slice.
+Route the slice to a pool with headroom. A pool over its allotment is not a target.
+The specifier, the acceptance reviewer and every judgment stay on Claude Code.
+The script runs Cursor or Codex:
+
+```bash
+scripts/harness_build.sh <cursor|codex> <worktree> <brief-file> [model] [effort]
+```
+
+pi follows the `delegate-to-pi` skill. The script does not cover pi.
+
+| Harness | Command | Model | Commit guard | `Generated-By` value |
+|---|---|---|---|---|
+| Cursor | `cursor-agent -p --trust --force --sandbox enabled --output-format json` | `cursor-grok-4.6-medium` by default | `.cursor/cli.json`, and the hook | `<requested model id> (via Cursor CLI <version>, print mode)` |
+| Codex | `codex exec -s workspace-write -c approval_policy=never --json` | Named with `-m`, always | The hook | `codex <model> (effort <level>, via Codex CLI <version>)` |
+| pi | `pi --model 'llama.cpp/<id>' --print --approve --no-session` | Named with `--model`, always | None. Snapshot the worktree first | `<model> (local, via pi)` |
+
+The script's Cursor path ran once on 2026-10-09; the receipt is on #325.
+The Cursor flags come from `cursor-agent --help` on version 2026.10.01-e373342.
+
+Source: https://cursor.com/docs/cli/overview.
+
+The Codex flags come from `codex exec --help` on Codex CLI 0.160.0, and the config keys `approval_policy` and `model_reasoning_effort` from its protocol types.
+
+Source: https://github.com/openai/codex/blob/main/codex-rs/protocol/src/config_types.rs.
+
+The script refuses Cursor when `.cursor/cli.json` is missing from the worktree.
+The hook is a refusing `pre-commit` hook. The script sets it through `GIT_CONFIG_*` variables in the environment.
+The repository config stays unchanged.
+`git commit --no-verify` skips the hook. The hook guards commits only.
+
+Cursor `Shell(git)` matches the first token only. A chained `cat x && git commit` passes the deny rule.
+
+Source: https://cursor.com/docs/cli/reference/permissions.
+
+Codex keeps `.git` read-only only in the macOS Seatbelt profile. On Linux the hook is the one dependable guard.
+
+Source: https://github.com/openai/codex/blob/main/codex-rs/core/README.md.
+
+Neither sandbox stops a write outside the worktree, for example to `/tmp`.
+Codex can start MCP servers from `~/.codex/config.toml`. A server can write into the worktree.
+Check `git status --short` for each untracked file before acceptance.
+Snapshot the worktree before a run, with `git -C <worktree> diff HEAD > before.patch` and `git -C <worktree> status --short`.
+Do not use `git stash` for the snapshot.
+The gates and `git diff` are the result. The agent's summary is only an assertion.
+
+**Open question.** This page says Cursor `auto` bills the Anthropic and OpenAI pool.
+A private sibling project says `auto` bills the Cursor plan pool at the routed model's list price.
+`quota-axi` reports a separate `cursor auto_usage` window.
+Both claims are recorded here. The script keeps the named model as its default.
+
 ## Commit trailers
 
 Trailers are evidence. This repository is partly an evaluation of its workers.
@@ -93,6 +154,7 @@ Trailers are evidence. This repository is partly an evaluation of its workers.
 - A Claude sub agent commit carries `Generated-By: <resolved model id> (via Claude Code Agent tool, <agent name>)`.
 - A Claude sub agent specification carries `Specified-By: <resolved model id> (via Claude Code Agent tool, specifier)`.
 - A Cursor worker commit carries `Generated-By: <requested model id> (via Cursor CLI <version>, print mode)`.
+- A Codex worker commit carries `Generated-By: codex <model> (effort <level>, via Codex CLI <version>)`.
 - The supervisor's own commits carry no `Generated-By` trailer.
 - Never invent a resolved ID. The ID comes from the agent's return, never from the requested alias.
 
