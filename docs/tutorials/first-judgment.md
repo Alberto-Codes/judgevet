@@ -24,7 +24,7 @@ Run these commands from a directory where you can create a new folder:
 mkdir judgevet-tutorial
 cd judgevet-tutorial
 python3 -m venv .venv
-.venv/bin/python -m pip install 'judgevet==0.20.0'
+.venv/bin/python -m pip install 'judgevet==0.21.0'
 .venv/bin/python -c 'import judgevet; print(judgevet.__version__)'
 ```
 <!-- x-release-please-end -->

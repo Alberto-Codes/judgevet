@@ -3,6 +3,13 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.21.0](https://github.com/Alberto-Codes/judgevet/compare/v0.20.0...v0.21.0) (2026-10-10)
+
+
+### Features
+
+* **delegation:** dispatch a builder slice to Cursor or Codex through one script ([51b1755](https://github.com/Alberto-Codes/judgevet/commit/51b1755f6ba5a0eef0d6f9366d9d4be38e695df7)), references [#325](https://github.com/Alberto-Codes/judgevet/issues/325)
+
 ## [0.20.0](https://github.com/Alberto-Codes/judgevet/compare/v0.19.0...v0.20.0) (2026-10-09)
 
 
