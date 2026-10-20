@@ -72,6 +72,7 @@ release operations. They are separate from package use.
 - [Cut and verify a release](maintainers/cut-a-release.md).
 - [Publish the MCP registry listing](maintainers/mcp-registry.md).
 - [Delegate a bounded change](maintainers/delegate-work.md).
+- [Triage issues](maintainers/triage.md).
 
 The former [release-guide path](how-to/cut-a-release.md) remains a pointer for
 existing links. The [verification ledger](reference/verification-ledger.md)

@@ -82,4 +82,5 @@ nav:
       - Release: maintainers/cut-a-release.md
       - MCP registry: maintainers/mcp-registry.md
       - Delegate work: maintainers/delegate-work.md
+      - Triage issues: maintainers/triage.md
       - Repository rules: project/AGENTS.md

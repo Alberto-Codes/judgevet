@@ -19,6 +19,8 @@ For package use, follow [installation](../how-to/install.md) or the
   notes, index publication and credential troubleshooting.
 - [Validate and publish the MCP registry listing](mcp-registry.md).
 - [Delegate a bounded change](delegate-work.md) to pi or a Claude sub agent.
+- [Triage issues](triage.md): state, priority, fit and size labels, and the
+  searches that read them.
 - [Repository contribution rules](../../AGENTS.md): enabled gates, commits
   and evidence requirements.
 - [Verification ledger](../reference/verification-ledger.md): verified service
