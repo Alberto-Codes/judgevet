@@ -187,12 +187,16 @@ commands allocate fresh temporary directories automatically.
 
 ## Deploy through GitHub Pages
 
-The [documentation workflow](../../.github/workflows/docs.yml) builds main with
-locked development dependencies and `mkdocs build --strict`. The build then
-runs the suite without live tests and writes the coverage badge endpoint to
-`site/badges/coverage.json` with `scripts/coverage_badge.py`. Its deployment job
-requires the successful build artifact and uses the `github-pages` environment.
-An explicit workflow dispatch also builds; only main may deploy.
+The [documentation workflow](../../.github/workflows/docs.yml) runs after the
+CI workflow completes on main (`workflow_run`). It checks out the commit of that
+CI run. It builds with locked development dependencies and
+`mkdocs build --strict`. It then downloads the `coverage-xml` artifact of the CI
+`test` job and writes the badge endpoint to `site/badges/coverage.json` with
+`scripts/coverage_badge.py`. The badge therefore shows the CI figure for the
+deployed commit. A manual dispatch builds
+from the successful CI push run for the same commit. Its deployment job requires
+the successful build artifact and uses the `github-pages` environment. Only main
+deploys.
 
 Pages uses the Actions publishing source. Repository visibility is public and
 this workflow does not change it. Deployment permission is limited to Pages and

@@ -249,6 +249,43 @@ def test_codeql_scans_pull_request_paths_only() -> None:
     assert workflow["jobs"]["analyze"]["if"] == SKIP_RELEASE_HEADS
 
 
+def test_docs_build_reads_the_ci_coverage_artifact() -> None:
+    """Build the docs after CI completes and take the badge from its artifact."""
+    workflow = yaml.safe_load((ROOT / ".github/workflows/docs.yml").read_text())
+    triggers = workflow["on"] if "on" in workflow else workflow[True]
+    assert triggers["workflow_run"] == {
+        "workflows": ["CI"],
+        "types": ["completed"],
+        "branches": ["main"],
+    }
+    assert "workflow_dispatch" in triggers
+    assert "push" not in triggers
+    build = workflow["jobs"]["build"]
+    assert "github.event.workflow_run.event == 'push'" in build["if"]
+    assert "github.event.workflow_run.conclusion == 'success'" in build["if"]
+    assert build["permissions"]["actions"] == "read"
+    steps = build["steps"]
+    commands = [step.get("run", "") for step in steps]
+    assert not any("pytest" in run or "coverage json" in run for run in commands)
+    checkout = steps[0]
+    assert checkout["uses"].startswith("actions/checkout@")
+    assert checkout["with"]["ref"] == (
+        "${{ github.event.workflow_run.head_sha || github.sha }}"
+    )
+    download = next(run for run in commands if "gh run download" in run)
+    assert "coverage-xml" in download
+    assert '[ "$RUN_ID" = null ]' in download
+    assert download.index("exit 1") < download.index("gh run download")
+    assert (
+        "uv run python scripts/coverage_badge.py coverage.xml site/badges/coverage.json"
+    ) in commands
+    deploy_condition = workflow["jobs"]["deploy"]["if"]
+    assert "github.event.workflow_run.head_branch == 'main'" in deploy_condition
+    assert (
+        "github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'"
+    ) in deploy_condition
+
+
 def test_ci_uses_shared_configuration_hooks() -> None:
     """Keep the CI checks required and sourced from the same hook configuration."""
     workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())

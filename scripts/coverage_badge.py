@@ -1,16 +1,19 @@
-"""Write a shields.io endpoint badge from a coverage JSON report (#50).
+"""Write a shields.io endpoint badge from a Cobertura coverage report (#50).
 
-The docs workflow runs the suite, writes ``coverage json`` and calls this
-script. The script writes ``site/badges/coverage.json``, and GitHub Pages
+The CI ``test`` job writes a Cobertura ``coverage.xml`` and uploads it as the
+``coverage-xml`` artifact. The docs workflow downloads that artifact and calls
+this script. The script writes ``site/badges/coverage.json``, and GitHub Pages
 publishes it. The README badge asks shields.io to render that file. The
 endpoint schema has ``schemaVersion``, ``label``, ``message`` and ``color``:
 https://shields.io/badges/endpoint-badge
 
-The script reads ``totals.covered_lines`` and ``totals.num_statements`` from
-the ``coverage json`` report (format 3). JSON needs only the standard
-``json`` module; XML parsing would need ``xml.etree``, which the ruff ``S``
-rules flag as unsafe for untrusted input. The CI ``test`` job still uploads
-``coverage.xml`` for people.
+The script reads the ``lines-covered`` and ``lines-valid`` attributes of the
+root ``<coverage>`` element. coverage.py sets them from its executed and
+statement counts:
+https://github.com/nedbat/coveragepy/blob/master/coverage/xmlreport.py
+The script matches each attribute on its own inside the root tag with ``re``,
+because the ruff ``S`` rules flag the standard XML parsers as unsafe for
+untrusted input.
 
 The figure is statement coverage, rounded to a whole percent as
 ``coverage report`` rounds it: it shows 100 only when every statement ran,
@@ -33,9 +36,8 @@ Examples:
     Measure the suite, then write the badge:
 
     ```console
-    $ uv run pytest -q -n auto --cov -m "not live"
-    $ uv run coverage json -o coverage.json
-    $ uv run python scripts/coverage_badge.py coverage.json site/badges/coverage.json
+    $ uv run pytest -q -n auto --cov --cov-report=xml -m "not live"
+    $ uv run python scripts/coverage_badge.py coverage.xml site/badges/coverage.json
     coverage badge: 97% brightgreen -> site/badges/coverage.json
     ```
 
@@ -47,6 +49,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -60,30 +63,47 @@ COLOURS = (
     (0, "red"),
 )
 FULL = 100
+ROOT_TAG = re.compile(r"<coverage\s[^>]*>")
+
+
+def attribute(tag: str, name: str) -> int:
+    """Read one non-negative integer attribute from the root tag.
+
+    Args:
+        tag: The opening ``<coverage ...>`` tag text.
+        name: The attribute name.
+
+    Returns:
+        The attribute value.
+
+    Raises:
+        ValueError: If the attribute is absent or not a non-negative integer.
+    """
+    match = re.search(rf'\s{re.escape(name)}="(\d+)"', tag)
+    if match is None:
+        raise ValueError(f"root has no integer {name} attribute")
+    return int(match.group(1))
 
 
 def percent(text: str) -> int:
-    """Read statement coverage from a coverage JSON report.
+    """Read statement coverage from a Cobertura coverage report.
 
     Args:
-        text: The report text that ``coverage json`` writes.
+        text: The ``coverage.xml`` text that coverage.py writes.
 
     Returns:
         The whole percent, never 100 or 0 unless exact.
 
     Raises:
-        ValueError: If the report is not JSON or its totals are not two
+        ValueError: If the report has no ``<coverage>`` root tag or its
+            ``lines-covered`` and ``lines-valid`` attributes are not two
             non-negative integers with covered at most valid.
     """
-    try:
-        totals = json.loads(text)["totals"]
-        covered = totals["covered_lines"]
-        valid = totals["num_statements"]
-    except (json.JSONDecodeError, KeyError, TypeError) as error:
-        raise ValueError(f"not a coverage JSON report: {error}") from error
-    counts = (covered, valid)
-    if any(type(count) is not int for count in counts):
-        raise ValueError(f"totals are not integers: {counts}")
+    root = ROOT_TAG.search(text)
+    if root is None:
+        raise ValueError("not a Cobertura report: no <coverage> root tag")
+    covered = attribute(root.group(0), "lines-covered")
+    valid = attribute(root.group(0), "lines-valid")
     if not 0 <= covered <= valid:
         raise ValueError(f"covered {covered} is outside 0..{valid}")
     if covered == valid:
@@ -122,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
         0 after the badge is written, 1 on a missing or malformed report.
     """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("report", type=Path, help="coverage json output")
+    parser.add_argument("report", type=Path, help="Cobertura coverage.xml")
     parser.add_argument("output", type=Path, help="endpoint JSON to write")
     args = parser.parse_args(argv)
     try:

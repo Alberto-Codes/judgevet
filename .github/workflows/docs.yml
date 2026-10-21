@@ -2,7 +2,9 @@
 name: Documentation
 
 "on":
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -13,15 +15,26 @@ concurrency:
   group: github-pages
   cancel-in-progress: false
 
+# The badge comes from the CI test job's coverage.xml, so the site builds
+# after CI completes on main instead of running the suite again (#340).
+# workflow_run fields and GITHUB_SHA:
+# https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 jobs:
   build:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      actions: read
       contents: read
       pages: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
         with:
           enable-cache: true
@@ -30,21 +43,33 @@ jobs:
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
       - run: uv run mkdocs build --strict
       # Coverage badge endpoint (#50): https://shields.io/badges/endpoint-badge
-      # The badge shows the true figure; CI and pre-push own the floor (#233).
-      - run: >-
-          uv run pytest -q -n auto --cov --cov-fail-under=0
-          -m "not live"
-      - run: uv run coverage json -o coverage.json
+      # The badge shows the CI test job's figure; CI and pre-push own the floor (#233).
+      - name: Download the CI coverage report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID=$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" \
+              --event push --status success --json databaseId --jq '.[0].databaseId')
+          fi
+          if [ -z "$RUN_ID" ] || [ "$RUN_ID" = null ]; then
+            echo "no successful CI push run for $GITHUB_SHA" >&2
+            exit 1
+          fi
+          gh run download "$RUN_ID" -n coverage-xml
       - run: >-
           uv run python scripts/coverage_badge.py
-          coverage.json site/badges/coverage.json
+          coverage.xml site/badges/coverage.json
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
         with:
           path: site
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      github.event.workflow_run.head_branch == 'main' ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
