@@ -6,11 +6,10 @@ status: draft
 
 Status: **draft**.
 
-!!! note "Shadow weeks reviewed for two recipes"
+!!! note "Shadow weeks reviewed for three recipes"
     Shadow runs of three recipes started on 2026-10-09.
-    The #310 and #311 shadow weeks were reviewed on 2026-10-20, and their numbers are on this page.
-    The #314 Stop-hook shadow week is still unreviewed, so its agreement numbers are still offline.
-    Its live latency appears in the latency table under [Shadow mode first](#shadow-mode-first).
+    The #310, #311 and #314 shadow weeks were reviewed on 2026-10-20, and their numbers are on this page.
+    Each recipe stays shadow.
     The shadow week ran on three models.
     On 2026-10-09 it ran on `gemma-4-31b-qat-q4_0-mm`, the model the offline fixtures used.
     From 2026-10-09 23:23 UTC it ran on kv9, first `gemma-4-31b-kv9-q4km-mm` and then `gemma-4-31b-kv9-text`.
@@ -268,12 +267,52 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/311.
 - Hook event: `Stop`.
 - Question: one Noul, `done`, over the last user request and the final assistant message.
 - Snippet: [stop_check.md](https://github.com/Alberto-Codes/judgevet/blob/main/examples/agent-hooks/stop_check.md).
-- Latency: p50 1.47 s on 20 cases.
+- Latency: p50 1.47 s on 20 cases; p50 1.75 s, p95 2.70 s on 740 live stops.
 
 All 20 synthetic cases were correct at 0.5 and 0.8.
 This is weak evidence, because one builder wrote both the criteria and the cases.
 The recipe does not hook `SubagentStop`.
 That hook sees the subagent's closing text, not the report it hands back.
+Source: https://github.com/Alberto-Codes/judgevet/issues/314.
+
+#### Shadow week
+
+| | value |
+|---|---|
+| span | 2026-10-09 21:18 UTC to 2026-10-21 00:48 UTC |
+| records / sessions | 758 / 76 |
+| answered / errors | 740 / 18 (14 timeouts at the 30 s cap, 4 provider errors) |
+| model | `gemma-4-31b-qat-q4_0-mm` 105 rows on 2026-10-09, `kv9-q4km-mm` 26, `kv9-text` 627 from 2026-10-10 00:05. The week ran on kv9, not the model the offline numbers used (#323). |
+| latency, answered | p50 1.75 s, p90 2.32 s, p95 2.70 s, p99 4.9 s, max 17.4 s, nearest rank |
+| `done` at or above 0.8 | 272 of 740 (37%) |
+| `done` below 0.2 | 451 (61%); 17 records sit between 0.2 and 0.8 |
+
+Source: https://github.com/Alberto-Codes/judgevet/issues/314.
+
+The log holds no state, so the review joined every record to its session transcript.
+The final message is the last assistant text before the record.
+The next request is the first human message after it.
+All 740 answered records joined, because `Stop` fires in the main session.
+572 have a later user message, and 168 are the session's last turn so far.
+The join and the hand labels come from the transcripts, so only the counts table is reproducible from the log.
+
+The review read the 199 flagged records that have a later user message against two labels.
+The recipe's label of record is what the next user message asks.
+The question's own criteria call a final message that names running work `false`.
+
+| class | n | `done` right? |
+|---|---|---|
+| next message starts a different task or question | 124 | yes |
+| next message asks to continue, fix or answer the same task | 24 | no |
+| final message says a sub agent, CI watcher, commit hook or push is still running | 50 | no under the criteria; the recipe's label says no only for the 9 whose next message is `Continue` |
+| ambiguous: a bare `yes` | 1 | unlabelled |
+
+Precision at 0.8 on the 198 labelled records was 83% under the recipe's label and about 63% under the criteria.
+The 50 in-flight finals scored 0.98 to 1.000.
+Most are progress turns in supervisor sessions that end with words like "so I'm waiting".
+In a random 100 of the records below 0.8, 99 were `false` under the criteria and 1 should have been `true`.
+The recipe's label of record does not fit sessions where the user talks to a waiting session.
+The recipe stays shadow.
 Source: https://github.com/Alberto-Codes/judgevet/issues/314.
 
 ### Commit type and Closes or Refs
@@ -337,7 +376,7 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/308.
 |---|---|---|---|---|
 | Score, 5 levels (bash risk) | command plus cwd | 14,612 | 1.56 s | 2.43 s |
 | Noul (injection) | up to 4,000 chars of tool output | 1,330 | 2.17 s | 7.4 s |
-| Noul (stop: done?) | up to 8,000 chars of transcript | 714 | 1.75 s | 2.78 s |
+| Noul (stop: done?) | up to 8,000 chars of transcript | 740 | 1.75 s | 2.70 s |
 
 Latency grows with state size.
 The 4,000-character injection state timed out 3.4% of the time.
@@ -359,6 +398,9 @@ Source: https://github.com/Alberto-Codes/judgevet/issues/308.
 On the Bash score, confidence p50 was 1.000 and 96% of records sat at or above 0.8.
 Confidence carried no information at that question.
 Source: https://github.com/Alberto-Codes/judgevet/issues/310.
+On the Stop Noul, 98% of answers sat below 0.2 or at or above 0.8.
+Of the 198 labelled answers at or above 0.8, 37% were wrong under the criteria.
+Source: https://github.com/Alberto-Codes/judgevet/issues/314.
 On the injection Noul, 1.000 was wrong 9 times in 30.
 Source: https://github.com/Alberto-Codes/judgevet/issues/311.
 
