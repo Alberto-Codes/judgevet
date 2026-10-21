@@ -3,6 +3,26 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.21.0](https://github.com/Alberto-Codes/judgevet/compare/v0.20.0...v0.21.0) (2026-10-21)
+
+
+### Features
+
+* **delegation:** dispatch a builder slice to Cursor or Codex through one script ([51b1755](https://github.com/Alberto-Codes/judgevet/commit/51b1755f6ba5a0eef0d6f9366d9d4be38e695df7)), references [#325](https://github.com/Alberto-Codes/judgevet/issues/325)
+
+
+### Fixes
+
+* **policy:** add an exact-level score predicate beside the expected-value bounds ([fbf1fb5](https://github.com/Alberto-Codes/judgevet/commit/fbf1fb51604e297c9e682ec7e71f009e006e7136)), references [#337](https://github.com/Alberto-Codes/judgevet/issues/337)
+
+
+### Documentation
+
+* **how-to:** carry the shadow-week measurements into the agent-harness page ([e91e56a](https://github.com/Alberto-Codes/judgevet/commit/e91e56ab546d73e31e90ac7b3bb5ec6dd19646b8)), references [#307](https://github.com/Alberto-Codes/judgevet/issues/307)
+* **how-to:** carry the Stop-hook shadow-week review into the agent-harness page ([ff02540](https://github.com/Alberto-Codes/judgevet/commit/ff02540ae9241df837ef9ff5ecad76a74e87579b)), references [#314](https://github.com/Alberto-Codes/judgevet/issues/314)
+* **how-to:** say 168 Stop records have no later user message, not that they end the session ([e74307a](https://github.com/Alberto-Codes/judgevet/commit/e74307ad0ae7ba70b439733fcdca02818d665ae2)), references [#314](https://github.com/Alberto-Codes/judgevet/issues/314)
+* **maintainers:** add the triage procedure ported from gepa-adk ([c175f32](https://github.com/Alberto-Codes/judgevet/commit/c175f32568b9185f9e77969ff86a5cf8ef63ce59))
+
 ## [0.20.0](https://github.com/Alberto-Codes/judgevet/compare/v0.19.0...v0.20.0) (2026-10-09)
 
 
