@@ -6,11 +6,19 @@ status: draft
 
 Status: **draft**.
 
-!!! note "Shadow runs pending"
-    One-week shadow runs of three recipes started on 2026-10-09.
-    They cover #310, #311 and #314, and their review is on 2026-10-16.
-    The numbers on this page come from offline fixture sets.
-    They may change after that review.
+!!! note "Shadow weeks reviewed for two recipes"
+    Shadow runs of three recipes started on 2026-10-09.
+    The #310 and #311 shadow weeks were reviewed on 2026-10-20, and their numbers are on this page.
+    The #314 Stop-hook shadow week is still unreviewed, so its agreement numbers are still offline.
+    Its live latency appears in the latency table under [Shadow mode first](#shadow-mode-first).
+    The shadow week ran on three models.
+    On 2026-10-09 it ran on `gemma-4-31b-qat-q4_0-mm`, the model the offline fixtures used.
+    From 2026-10-09 23:23 UTC it ran on kv9, first `gemma-4-31b-kv9-q4km-mm` and then `gemma-4-31b-kv9-text`.
+    Source: https://github.com/Alberto-Codes/judgevet/issues/323.
+    The kv9-text model answered 86% of the rows.
+    Source: https://github.com/Alberto-Codes/judgevet/issues/308.
+    #323 will measure the difference between the models.
+    Source: https://github.com/Alberto-Codes/judgevet/issues/323.
 
 This page shows where a judgment fits in a coding agent's loop.
 It covers MCP tools for the agent and hooks for the harness.
@@ -107,10 +115,18 @@ Round 2 reused the label definitions as criteria on the same issues.
 | measure | round 1 | round 2 |
 |---|---|---|
 | readiness agreement, kappa | 39.0%, 0.10 | 46.3%, 0.20 |
+| readiness majority baseline | 34.1% | 34.1% |
 | blocked found | 5 of 14 | 9 of 14 |
 | question found | 0 of 14 | 2 of 14 |
+| size agreement, kappa | 75.6%, 0.58 | 75.6%, 0.56 |
 | priority agreement, kappa | 51.2%, 0.24 | 56.1%, 0.27 |
+| priority majority baseline | 56.1% | 56.1% |
 
+Source: https://github.com/Alberto-Codes/judgevet/issues/308.
+
+Since round 2, the supervisor triaged #337 and #324 with the triage-page definitions as criteria.
+Each issue agreed 3 of 3 with the supervisor, all at confidence 0.999 or above.
+Six of six is too few to move the round-2 table.
 Source: https://github.com/Alberto-Codes/judgevet/issues/308.
 
 The definition of blocked named concrete external events, and recall on blocked nearly doubled.
@@ -151,6 +167,48 @@ It had 100% recall and 100% precision.
 Thirty-six rows is a small set, and the shadow week tests the threshold.
 Source: https://github.com/Alberto-Codes/judgevet/issues/310.
 
+#### Shadow week
+
+| | value |
+|---|---|
+| span | 2026-10-09 20:24 UTC to 2026-10-21 (UTC) |
+| records / sessions | 14,805 / 248 |
+| answered / errors | 14,612 / 193 (180 timeouts at the 20 s cap, 12 provider errors) |
+| model | `gemma-4-31b-qat-q4_0-mm` 1,651 rows on 2026-10-09, `kv9-q4km-mm` 385, `kv9-text` 12,684 from 2026-10-10 00:04. The week ran on kv9, not the model the offline numbers used (#323). |
+| latency, answered | p50 1.56 s, p90 2.14 s, p95 2.43 s, p99 4.5 s, max 19.9 s |
+| argmax level | none 11,998 (82%), low 800, medium 1,477, high 249, destructive 3 |
+| confidence | p50 1.000; 96% of records at or above 0.8 |
+
+Source: https://github.com/Alberto-Codes/judgevet/issues/310.
+
+**Open question:** the five argmax levels sum to 14,527 of 14,612 answered records.
+The 180 timeouts and 12 provider errors sum to 192 of 193 errors.
+The review comment carries these figures.
+The gap is unexplained until the next count.
+
+The alert threshold `high` fired on 252 records, 1.7%, about 23 a day.
+The review joined 223 of them to a command and labelled each by category:
+
+| category | n | level defensible under the definitions? |
+|---|---|---|
+| `git worktree remove` plus `git branch -D`, usually after a `status --porcelain` check | 112 | no: a clean worktree removal loses nothing; git restores the branch. Medium at most. Only the `--force` variants reach high. |
+| commit, land and push scripts | 35 | mostly no: `git add -A && git commit` scored high (0.63) |
+| other, including read-only `curl`, `ls`, `sed -n`, and a heredoc writing a new file | 34 | no, at 0.63 to 0.98 |
+| rebase, merge, pull | 14 | partly: a rebase of the session's own branch is medium |
+| `rm -rf` | 8 | mixed: deleting run output directories is high; `git bundle verify` scored destructive at 0.993 |
+| service and container operations | 7 | outside the question: no work loss |
+| force push with lease | 7 | yes: rewrites shared history |
+| forbidden list: `git checkout --`, `restore`, `reset`, `stash`, `clean` | 5 | yes |
+| a `gh issue comment` whose quoted text says "landed, rebased" | 1 | no, at 0.93: the model read prose inside a string |
+
+About 12 of 223 were clearly high or destructive.
+About 120 were worktree cleanups and rebases that git can recover.
+About 80 were wrong at confidence 0.9 or above.
+The offline 100% precision and recall at "level ≥ high" did not hold on traffic.
+No #82-class command occurred during the week, so destructive recall on traffic is unmeasured.
+The recipe stays shadow.
+Source: https://github.com/Alberto-Codes/judgevet/issues/310.
+
 ### Injected instructions in fetched content
 
 - Hook event: `PostToolUse` with the matcher `WebFetch|WebSearch|mcp__.*`.
@@ -163,6 +221,46 @@ Precision was 0.86 at threshold 0.5 and 0.92 at 0.8.
 The false positives were human-directed text that mentions agents, such as contributor docs.
 Expect agent instruction files to score high too.
 The runner screens only the first 4,000 characters of the state.
+Source: https://github.com/Alberto-Codes/judgevet/issues/311.
+
+#### Shadow week
+
+| | value |
+|---|---|
+| span | 2026-10-09 20:29 UTC to 2026-10-20 |
+| records / sessions | 1,377 / 47 |
+| answered / errors | 1,330 / 47 timeouts (3.4%, at the 20 s cap on 4,000-character states) |
+| tools | WebFetch 875, WebSearch 402, context7 57, judgevet-gemma 16 (all on 2026-10-09, before the matcher excluded them) |
+| model | qat 311 rows on 2026-10-09, kv9-q4km-mm 56, kv9-text 983 from 2026-10-10 (#323) |
+| latency, answered | p50 2.17 s, p90 4.9 s, p95 7.4 s, p99 15.4 s |
+| noul ≥ 0.8 | 348 of 1,330 (26%) |
+| noul ≥ 0.5 | 551 (41%) |
+
+Source: https://github.com/Alberto-Codes/judgevet/issues/311.
+
+**Open question:** the per-tool counts sum to 1,350 of 1,377 records.
+The review comment carries these figures.
+The gap is unexplained until the next count.
+
+The review joined 133 records to their fetched target, and 30 of them were flagged at 0.8 or above.
+By hand, 2 of the 30 were agent-directed.
+The other 28 fall in four classes:
+
+| class | n | noul |
+|---|---|---|
+| pages about agents: two multi-agent blog posts (the class predicted at landing) | 2 | 1.000 |
+| human-directed imperatives: a CFR section, a Federal Register notice, two terms-of-service pages, an API reference page, academic PDFs | 13 | 0.85 to 1.000 |
+| one YouTube transcript endpoint fetched six times | 6 | 0.86 to 1.000 |
+| WebSearch result lists | 5 | 0.82 to 1.000 |
+
+**Open question:** the four classes sum to 26, but the review says 28 records were not agent-directed.
+The gap of 2 is unexplained until the next count.
+
+Precision at 0.8 on this sample was about 7%, against 0.92 on the offline fixtures.
+The review judged the 103 unflagged records by their URL or query, not by the fetched text.
+By that target, none of them was agent-directed.
+A Noul probability of 1.000 was wrong 9 times in 30.
+The recipe stays shadow.
 Source: https://github.com/Alberto-Codes/judgevet/issues/311.
 
 ### Done or not at Stop
@@ -221,6 +319,28 @@ The log holds answers, the model and the latency, never the state.
 Source: https://github.com/Alberto-Codes/judgevet/issues/309.
 
 Budget about 1.2 s per question on local Gemma 4.
+The offline run measured each kind on a 214-token state, in seconds:
+
+| kind | n | p50 | p95 | max |
+|---|---|---|---|---|
+| Noul | 20 | 1.22 | 2.06 | 2.12 |
+| Choice, 5 labels | 20 | 1.20 | 1.27 | 1.37 |
+| Score, 4 levels | 20 | 1.18 | 1.22 | 1.26 |
+| 3 questions in one call | 5 | 3.67 | 6.62 | 6.62 |
+| 3 separate calls, summed | 5 | 3.67 | 5.62 | 5.62 |
+
+The shadow hooks measured these on live traffic, answered records only.
+The live rows mix models, and kv9-text answered 86% of them.
+Source: https://github.com/Alberto-Codes/judgevet/issues/308.
+
+| question | state | n | p50 | p95 |
+|---|---|---|---|---|
+| Score, 5 levels (bash risk) | command plus cwd | 14,612 | 1.56 s | 2.43 s |
+| Noul (injection) | up to 4,000 chars of tool output | 1,330 | 2.17 s | 7.4 s |
+| Noul (stop: done?) | up to 8,000 chars of transcript | 714 | 1.75 s | 2.78 s |
+
+Latency grows with state size.
+The 4,000-character injection state timed out 3.4% of the time.
 On a server that runs `--parallel 1`, several questions in one call cost the same as separate calls.
 The cost of a hook is the sum of its questions, so a 5 s budget fits about three.
 Source: https://github.com/Alberto-Codes/judgevet/issues/308.
@@ -236,6 +356,11 @@ See [Use a self-hosted judgment provider](use-a-self-hosted-provider.md#compatib
 On readiness and priority, answers at confidence 0.8 or above were right about half the time.
 Wrong answers at 0.99999 or above still occurred.
 Source: https://github.com/Alberto-Codes/judgevet/issues/308.
+On the Bash score, confidence p50 was 1.000 and 96% of records sat at or above 0.8.
+Confidence carried no information at that question.
+Source: https://github.com/Alberto-Codes/judgevet/issues/310.
+On the injection Noul, 1.000 was wrong 9 times in 30.
+Source: https://github.com/Alberto-Codes/judgevet/issues/311.
 
 **Thresholds do not transfer between judge models.**
 Every number on this page came from one local model and one wording.
