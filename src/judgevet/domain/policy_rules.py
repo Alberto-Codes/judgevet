@@ -1,5 +1,7 @@
 """Immutable typed rules and ordered policies.
 
+A score rule bounds the expected score or names one exact level.
+
 Examples:
     ```python
     from judgevet.domain.policy_rules import NoulRule, Policy
@@ -15,7 +17,12 @@ See Also:
 
 from dataclasses import dataclass
 
-from judgevet.domain.policy_checks import check_bound, check_name, check_range
+from judgevet.domain.policy_checks import (
+    check_bound,
+    check_level,
+    check_name,
+    check_range,
+)
 from judgevet.domain.policy_errors import PolicyDefinitionError
 
 
@@ -87,17 +94,24 @@ class ChoiceRule:
 
 @dataclass(frozen=True, slots=True)
 class ScoreRule:
-    """Inclusive score bounds and an optional confidence floor.
+    """Score bounds or an exact level, plus an optional confidence floor.
+
+    The answer's score is a continuous expected value: the probability-weighted
+    average of the levels. `minimum` and `maximum` bound that value. `level`
+    instead names the highest-probability level for an exact match, and it
+    cannot combine with either bound.
 
     Attributes:
         name (str): Question name.
-        minimum (float | None): Optional inclusive score floor.
-        maximum (float | None): Optional inclusive score ceiling.
+        minimum (float | None): Optional inclusive floor on the expected score.
+        maximum (float | None): Optional inclusive ceiling on the expected score.
         min_confidence (float | None): Optional inclusive confidence floor.
+        level (int | None): Optional required highest-probability level.
 
     Examples:
         ```python
         rule = ScoreRule("q", minimum=0)
+        exact = ScoreRule("q", level=1)
         ```
     """
 
@@ -105,9 +119,10 @@ class ScoreRule:
     minimum: float | None = None
     maximum: float | None = None
     min_confidence: float | None = None
+    level: int | None = None
 
     def __post_init__(self) -> None:
-        """Validate bounds independent of a question's score scale.
+        """Validate bounds or level independent of a question's score scale.
 
         Raises:
             PolicyDefinitionError: If a local constraint is invalid.
@@ -119,7 +134,10 @@ class ScoreRule:
         object.__setattr__(
             self, "maximum", check_bound(self.maximum, "score max", None)
         )
-        check_range(self.minimum, self.maximum)
+        if self.level is None:
+            check_range(self.minimum, self.maximum)
+        else:
+            check_level(self.level, self.minimum, self.maximum)
         object.__setattr__(
             self,
             "min_confidence",

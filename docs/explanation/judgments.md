@@ -69,6 +69,9 @@ A score also loses information. Equal probability on levels zero and two
 has mean one, just like all probability on level one. The first distribution
 splits between extremes; the second concentrates in the middle. Read the
 probabilities and confidence alongside the score before deciding how to act.
+A policy `min` or `max` bounds this expected value. A policy `level` instead
+requires the highest-probability level; see the
+[policy reference](../reference/policy.md#json-grammar).
 TypeSafe describes this distinction in its [Score interpretation guidance](https://docs.typesafe.ai/primitives/score).
 
 ## Valid structure is not a correct judgment

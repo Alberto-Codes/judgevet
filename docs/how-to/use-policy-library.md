@@ -70,7 +70,11 @@ print(report.rules[0].detail)
 Every rule must pass. Reports retain policy order, including rules after an
 unmet predicate. Noul and Score require at least one bound; all bounds are
 inclusive. Noul bounds and confidence floors lie in [0, 1]. Score bounds use
-zero through `len(question.criteria) - 1`. Choice uses an exact criteria label.
+zero through `len(question.criteria) - 1`. The answer's `score` is a continuous
+expected value: the probability-weighted average of the levels. `minimum` and
+`maximum` bound that value. `ScoreRule("quality", level=1)` instead passes when
+level 1 has the highest probability, with the lowest level winning an exact tie.
+A `level` rule takes no `minimum` or `maximum`. Choice uses an exact criteria label.
 Names must be nonempty and unique. A policy may select a subset of questions.
 
 These are local acceptance predicates over the [typed API fields](../reference/api.md).

@@ -80,6 +80,8 @@ class ValidatedPolicy:
 def _constraint(rule: Rule, question: Question) -> frozenset[str] | int | None:
     """Validate a question and retain only its policy-relevant constraints.
 
+    Score bounds and a score level must lie within the question scale.
+
     Args:
         rule: Rule to validate.
         question (str): Referenced typed question.
@@ -109,6 +111,8 @@ def _constraint(rule: Rule, question: Question) -> frozenset[str] | int | None:
             for bound in (rule.minimum, rule.maximum)
         ):
             raise PolicyDefinitionError("score bound is outside the question scale")
+        if rule.level is not None and rule.level > maximum:
+            raise PolicyDefinitionError("score level is outside the question scale")
         return maximum
     raise PolicyDefinitionError("predicate does not match question type")
 

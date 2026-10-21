@@ -262,7 +262,8 @@ def policy_schema() -> dict[str, Any]:
 
     The grammar is in docs/reference/policy.md "JSON grammar". Bound order,
     question-relative ranges, boolean bounds, unique question
-    names and duplicate keys stay enforced in `judgevet.policy_json`. The
+    names, duplicate keys and the exclusion of `level` with `min` or `max`
+    stay enforced in `judgevet.policy_json`. The
     `pass` branches use a nested `anyOf`, never a root combinator; see
     https://github.com/anthropics/claude-code/issues/95504.
 
@@ -270,6 +271,12 @@ def policy_schema() -> dict[str, Any]:
         Closed object schema with a nonempty `rules` array.
     """
     range_bounds = _bounds(("min", "max"), at_least_one=True)
+    level = {
+        "type": "object",
+        "required": ["level"],
+        "properties": {"level": {"type": "integer"}},
+        "additionalProperties": False,
+    }
     rule = {
         "type": "object",
         "required": ["question", "pass"],
@@ -280,6 +287,7 @@ def policy_schema() -> dict[str, Any]:
                     _predicate("noul", range_bounds, confidence=False),
                     _predicate("choice", {"type": "string"}, confidence=True),
                     _predicate("score", range_bounds, confidence=True),
+                    _predicate("score", level, confidence=True),
                 ]
             },
         },
@@ -291,8 +299,11 @@ def policy_schema() -> dict[str, Any]:
             "Acceptance rules over the keyed questions. Every rule must pass. "
             "Each rule names one question and one predicate that matches its "
             "type: noul takes min and max probability bounds, choice takes "
-            "an exact label and an optional confidence min, score takes min "
-            "and max level bounds and an optional confidence min. Example: "
+            "an exact label and an optional confidence min. A score answer is "
+            "the probability-weighted expected level, a continuous value. "
+            "score takes min and max bounds on that value, or level for an "
+            "exact match on the highest-probability level, never both, and "
+            "an optional confidence min. Example: "
             '{"rules":[{"question":"clear","pass":{"noul":{"min":0.8}}}]}'
         ),
         "required": ["rules"],

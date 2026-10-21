@@ -39,6 +39,8 @@ class Rule:
         min_confidence (float | None): Minimum confidence for Choice/Score predicates.
         score_min (float): Minimum allowed score value (0 for all scores).
         score_max (float): Maximum allowed score value (len(criteria)-1).
+        level (int | None): Exact highest-probability level for score
+            predicates; it excludes `minimum` and `maximum`.
 
     Examples:
         ```python
@@ -55,12 +57,16 @@ class Rule:
     min_confidence: float | None = None
     score_min: float = 0.0
     score_max: float = 0.0
+    level: int | None = None
 
 
 def _legacy_rule(
     rule: NoulRule | ChoiceRule | ScoreRule, questions: Mapping[str, Question]
 ) -> Rule:
     """Convert a validated typed rule to its historical CLI representation.
+
+    A score rule keeps its exact level, so the bridge never reads a level
+    rule as an unbounded range.
 
     Args:
         rule: Validated typed rule.
@@ -84,6 +90,7 @@ def _legacy_rule(
         rule.maximum,
         min_confidence=rule.min_confidence,
         score_max=maximum,
+        level=rule.level,
     )
 
 

@@ -159,8 +159,14 @@ validates the input schema.
 Source: https://github.com/Alberto-Codes/judgevet/issues/305. Policy uses
 the public [policy JSON grammar](policy.md#json-grammar). The `policy` schema
 declares that grammar as closed JSON Schema 2020-12 objects, with a nested
-`anyOf` for `pass` and one example in its description. The handler still checks
-bound order, question-relative ranges, boolean bounds and duplicate keys. An
+`anyOf` for `pass` and one example in its description. A score answer is the
+probability-weighted expected level, a continuous value. A score predicate
+takes `min` and `max` bounds on that value, or `{"level": integer}` for an exact
+match on the highest-probability level, as in
+`{"rules":[{"question":"s","pass":{"score":{"level":1}}}]}`. The `level` form
+excludes `min` and `max`. The handler still checks
+bound order, question-relative ranges, boolean bounds, duplicate keys and the
+exclusion of `level` with a bound. An
 unknown-field error names the first unknown key in sorted order, shortened to 64
 characters, and the allowed keys. The application selects the model;
 a `model` argument is rejected before dispatch. Invalid definitions also fail

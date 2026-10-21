@@ -66,6 +66,13 @@ index. It does not normalize that scale to a probability:
 {"question":"quality","pass":{"score":{"min":2,"max":3},"confidence":{"min":0.6}}}
 ```
 
+The answer's `score` is a continuous expected value: the probability-weighted
+average of the levels. `min` and `max` bound that value. To require one exact
+level instead, use `level`. It passes when that level has the highest
+probability; on an exact tie, the lowest tied level counts. `level` takes an
+integer and excludes `min` and `max`, as in
+`{"question":"quality","pass":{"score":{"level":2},"confidence":{"min":0.6}}}`.
+
 Confidence is optional for Choice and Score and accepts only `min`, between
 0 and 1. Bounds must be finite numbers; strings, booleans, NaN and infinity are
 invalid. Unknown fields, duplicate JSON keys, duplicate question rules and

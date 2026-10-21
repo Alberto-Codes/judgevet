@@ -2,11 +2,12 @@
 
 Examples:
     ```python
-    from judgevet.domain.policy_comparisons import range_report
+    from judgevet.domain.policy_comparisons import level_report, range_report
     from judgevet.policy import NoulRule
 
     report = range_report(NoulRule("q", 0.5), 0.5, "noul", None)
     assert report[0]
+    assert level_report(1, {1: 0.6, 2: 0.4}, None)[0]
     ```
 
 See Also:
@@ -14,6 +15,7 @@ See Also:
     - [judgevet.domain.policy_reports][]: Immutable reports.
 """
 
+from collections.abc import Mapping
 from typing import Protocol
 
 
@@ -126,6 +128,35 @@ def choice_report(
     """
     passed = observed == expected
     detail = f"choice '{observed}' == '{expected}'"
+    if confidence is not None:
+        value, minimum = confidence
+        passed = passed and value >= minimum
+        detail += f" and confidence {value} >= {minimum}"
+    return passed, detail + _verdict(passed)
+
+
+def level_report(
+    expected: int,
+    probabilities: Mapping[int, float],
+    confidence: tuple[float, float] | None,
+) -> tuple[bool, str]:
+    """Compare the highest-probability score level with a required level.
+
+    The observed level is the argmax of `probabilities`. On an exact tie the
+    lowest tied level wins. The predicate ignores the expected score.
+    See https://github.com/Alberto-Codes/judgevet/issues/337.
+
+    Args:
+        expected: Required exact level.
+        probabilities: Nonempty probability of each score level.
+        confidence: Observed confidence and minimum, or None.
+
+    Returns:
+        Complete comparison detail and predicate outcome.
+    """
+    observed = min(probabilities, key=lambda level: (-probabilities[level], level))
+    passed = observed == expected
+    detail = f"score level {observed} == {expected}"
     if confidence is not None:
         value, minimum = confidence
         passed = passed and value >= minimum

@@ -395,7 +395,7 @@
             },
             "policy": {
               "type": "object",
-              "description": "Acceptance rules over the keyed questions. Every rule must pass. Each rule names one question and one predicate that matches its type: noul takes min and max probability bounds, choice takes an exact label and an optional confidence min, score takes min and max level bounds and an optional confidence min. Example: {\"rules\":[{\"question\":\"clear\",\"pass\":{\"noul\":{\"min\":0.8}}}]}",
+              "description": "Acceptance rules over the keyed questions. Every rule must pass. Each rule names one question and one predicate that matches its type: noul takes min and max probability bounds, choice takes an exact label and an optional confidence min. A score answer is the probability-weighted expected level, a continuous value. score takes min and max bounds on that value, or level for an exact match on the highest-probability level, never both, and an optional confidence min. Example: {\"rules\":[{\"question\":\"clear\",\"pass\":{\"noul\":{\"min\":0.8}}}]}",
               "required": [
                 "rules"
               ],
@@ -480,6 +480,39 @@
                                 },
                                 "additionalProperties": false,
                                 "minProperties": 1
+                              },
+                              "confidence": {
+                                "type": "object",
+                                "properties": {
+                                  "min": {
+                                    "type": "number"
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "required": [
+                                  "min"
+                                ]
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "required": [
+                              "score"
+                            ],
+                            "properties": {
+                              "score": {
+                                "type": "object",
+                                "required": [
+                                  "level"
+                                ],
+                                "properties": {
+                                  "level": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "additionalProperties": false
                               },
                               "confidence": {
                                 "type": "object",

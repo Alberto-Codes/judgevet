@@ -59,6 +59,12 @@ QUESTIONS = {
             {"score": {"min": 1}, "confidence": {"min": 0.7}},
             False,
         ),
+        (
+            ScoreRule("score", min_confidence=0.6, level=1),
+            {"score": {"level": 1}, "confidence": {"min": 0.6}},
+            True,
+        ),
+        (ScoreRule("score", level=2), {"score": {"level": 2}}, False),
     ],
 )
 def test_constructed_decoded_legacy_equivalence(

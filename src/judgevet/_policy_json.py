@@ -2,6 +2,8 @@
 
 Unknown-field diagnostics name the first unknown key in sorted order,
 shortened to 64 characters, and the allowed keys. They carry no values.
+A score predicate takes `min`/`max` bounds on the expected score or one exact
+`level`, never both.
 
 Examples:
     ```python
@@ -210,17 +212,49 @@ def _parse_noul_predicate(
     return minimum, maximum, None
 
 
+def _parse_level(obj: dict[str, Any], max_bound: int) -> int:
+    """Parse an exact score level that excludes expected-value bounds.
+
+    See https://github.com/Alberto-Codes/judgevet/issues/337.
+
+    Args:
+        obj: The score predicate object, which contains 'level'.
+        max_bound: Highest level of the question scale.
+
+    Returns:
+        The required highest-probability level.
+
+    Raises:
+        PolicyDefinitionError: If a bound accompanies the level, a key is
+            unknown, or the level is not an integer within the scale.
+    """
+    if "min" in obj or "max" in obj:
+        raise PolicyDefinitionError("score level cannot combine with min or max")
+    unknown = _unknown_field("score predicate", obj, ("level",))
+    if unknown is not None:
+        raise PolicyDefinitionError(unknown)
+    level = obj["level"]
+    if isinstance(level, bool) or not isinstance(level, int):
+        raise PolicyDefinitionError("score level must be an integer")
+    if level < 0 or level > max_bound:
+        raise PolicyDefinitionError(f"score level must be in [0, {max_bound}]")
+    return level
+
+
 def _parse_score_predicate(
     obj: dict[str, Any], question: Score
-) -> tuple[float | None, float | None, float | None]:
+) -> tuple[float | None, float | None, float | None, int | None]:
     """Parse and validate score predicate.
+
+    The predicate holds either `min`/`max` bounds on the expected score or one
+    exact `level`.
 
     Args:
         obj: The pass object containing 'score' range and optionally 'confidence'.
         question: The Score question.
 
     Returns:
-        Tuple of (minimum, maximum, min_confidence) values.
+        Tuple of (minimum, maximum, min_confidence, level) values.
 
     Raises:
         PolicyDefinitionError: If validation fails.
@@ -239,9 +273,14 @@ def _parse_score_predicate(
     min_bound = 0.0
     max_bound = float(len(question.criteria) - 1)
 
-    minimum, maximum = _validate_range_object(
-        score_obj, "score", min_bound, max_bound, allow_min=True, allow_max=True
-    )
+    level = None
+    if "level" in score_obj:
+        level = _parse_level(score_obj, len(question.criteria) - 1)
+        minimum = maximum = None
+    else:
+        minimum, maximum = _validate_range_object(
+            score_obj, "score", min_bound, max_bound, allow_min=True, allow_max=True
+        )
 
     # Parse optional confidence
     min_confidence = None
@@ -265,7 +304,7 @@ def _parse_score_predicate(
             raise PolicyDefinitionError("confidence min must be in [0.0, 1.0]")
         min_confidence = float(min_conf)
 
-    return minimum, maximum, min_confidence
+    return minimum, maximum, min_confidence, level
 
 
 def _parse_choice_predicate(
@@ -328,6 +367,8 @@ def _validate_rule(
 ) -> Rule:
     """Decode one rule using the established grammar diagnostics.
 
+    A score rule carries either its expected-score bounds or its exact level.
+
     Args:
         rule: Decoded rule object.
         questions: Typed questions.
@@ -352,8 +393,10 @@ def _validate_rule(
         choice, confidence = _parse_choice_predicate(predicate, question)
         return ChoiceRule(name, choice, confidence)
     if kind == "score" and isinstance(question, Score):
-        minimum, maximum, confidence = _parse_score_predicate(predicate, question)
-        return ScoreRule(name, minimum, maximum, confidence)
+        minimum, maximum, confidence, level = _parse_score_predicate(
+            predicate, question
+        )
+        return ScoreRule(name, minimum, maximum, confidence, level)
     raise PolicyDefinitionError("predicate does not match question type")
 
 

@@ -2,7 +2,9 @@
 
 The CLI compatibility bridge shares these comparisons while retaining its
 historical answer checks. Public evaluation validates required scalars against
-snapshotted question constraints and returns complete ordered reports.
+snapshotted question constraints and returns complete ordered reports. A score
+level rule reads the answer's probabilities; a score bound reads its expected
+score.
 
 Examples:
     ```python
@@ -25,7 +27,11 @@ from collections.abc import Mapping
 
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.policy_checks import finite_number
-from judgevet.domain.policy_comparisons import choice_report, range_report
+from judgevet.domain.policy_comparisons import (
+    choice_report,
+    level_report,
+    range_report,
+)
 from judgevet.domain.policy_errors import PolicyAnswerError, PolicyDefinitionError
 from judgevet.domain.policy_reports import PolicyReport, RuleReport
 from judgevet.domain.policy_rules import ChoiceRule, NoulRule, Rule, ScoreRule
@@ -54,6 +60,8 @@ def _check_answer(
 ) -> None:
     """Validate the required answer variant and selected scalars.
 
+    A score level rule also requires a nonempty probability mapping.
+
     Args:
         rule: Typed rule.
         answer: Observed answer.
@@ -77,12 +85,17 @@ def _check_answer(
         if not isinstance(constraint, int):
             raise PolicyAnswerError("score scale is invalid")
         _number(answer.score, "score", constraint)
+        if rule.level is not None and not answer.probabilities:
+            raise PolicyAnswerError("score probabilities are empty")
     else:
         raise PolicyAnswerError("answer type mismatch for policy question")
 
 
 def compare_rule(rule: Rule, answer: Answer) -> RuleReport:
     """Compute shared predicates for an already checked answer.
+
+    A score rule with a level compares the highest-probability level; other
+    score rules bound the expected score.
 
     Args:
         rule: Typed rule.
@@ -111,6 +124,11 @@ def compare_rule(rule: Rule, answer: Answer) -> RuleReport:
             if rule.min_confidence is None
             else (answer.confidence, rule.min_confidence)
         )
+        if rule.level is not None:
+            return RuleReport(
+                rule.name,
+                *level_report(rule.level, answer.probabilities, confidence),
+            )
         return RuleReport(
             rule.name, *range_report(rule, answer.score, "score", confidence)
         )

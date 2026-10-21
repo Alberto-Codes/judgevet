@@ -2,7 +2,8 @@
 
 The tuple and mutable-dictionary return shape remains compatible. Required
 confidence checks follow the historical CLI contract; strict public evaluation
-also checks unrequested confidence and original question constraints.
+also checks unrequested confidence and original question constraints. A score
+level rule uses the same level comparison as typed evaluation.
 
 Examples:
     ```python
@@ -38,7 +39,11 @@ from collections.abc import Mapping
 from judgevet.adapters.inbound.cli_inputs import InputFailure
 from judgevet.adapters.inbound.cli_policy import Rule
 from judgevet.domain.answers import Answer, ChoiceAnswer, NoulAnswer, ScoreAnswer
-from judgevet.domain.policy_comparisons import choice_report, range_report
+from judgevet.domain.policy_comparisons import (
+    choice_report,
+    level_report,
+    range_report,
+)
 
 
 def _extract_noul_answer(answer: Answer) -> float:
@@ -168,6 +173,9 @@ def _evaluate_choice(rule: Rule, answer: Answer) -> tuple[bool, str]:
 def _evaluate_score(rule: Rule, answer: Answer) -> tuple[bool, str]:
     """Apply legacy Score checks and shared range/confidence comparisons.
 
+    A rule with a level compares the highest-probability level instead of
+    bounding the expected score.
+
     Args:
         rule: The policy rule.
         answer: The answer to evaluate.
@@ -186,6 +194,8 @@ def _evaluate_score(rule: Rule, answer: Answer) -> tuple[bool, str]:
         if not math.isfinite(confidence):
             raise InputFailure("response: score confidence is nonfinite", code=1)
         comparison = (confidence, rule.min_confidence)
+    if rule.level is not None and isinstance(answer, ScoreAnswer):
+        return level_report(rule.level, answer.probabilities, comparison)
     return range_report(rule, score, "score", comparison)
 
 

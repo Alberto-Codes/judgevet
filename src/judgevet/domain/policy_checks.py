@@ -8,6 +8,8 @@ Examples:
     assert not finite_number(True)
     ```
 
+Score rules take either expected-value bounds or one exact level.
+
 See Also:
     - [judgevet.domain.policy_rules][]: Typed policy rules.
 """
@@ -85,3 +87,26 @@ def check_range(minimum: float | None, maximum: float | None) -> None:
         raise PolicyDefinitionError("predicate requires at least one bound")
     if minimum is not None and maximum is not None and minimum > maximum:
         raise PolicyDefinitionError("min cannot exceed max")
+
+
+def check_level(level: object, minimum: float | None, maximum: float | None) -> None:
+    """Require a nonnegative integer level with no expected-value bound.
+
+    The scale ceiling depends on the question, so policy validation checks it.
+    See https://github.com/Alberto-Codes/judgevet/issues/337.
+
+    Args:
+        level: Candidate exact score level.
+        minimum: Lower bound on the expected score, which must be absent.
+        maximum: Upper bound on the expected score, which must be absent.
+
+    Raises:
+        PolicyDefinitionError: If the level is not an integer, is negative, or
+            combines with a bound.
+    """
+    if minimum is not None or maximum is not None:
+        raise PolicyDefinitionError("score level cannot combine with min or max")
+    if isinstance(level, bool) or not isinstance(level, int):
+        raise PolicyDefinitionError("score level must be an integer")
+    if level < 0:
+        raise PolicyDefinitionError("score level is outside the allowed range")

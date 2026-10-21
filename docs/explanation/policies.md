@@ -44,8 +44,10 @@ comparisons; it does not verify the underlying content against an external truth
 ## Combine conditions deliberately
 
 Noul bounds are inclusive. A minimum of `0.8` accepts exactly `0.8`.
-Choice rules match a label; Score rules compare the rubric value against
-bounds. Choice and Score can also require minimum confidence. When a rule
+Choice rules match a label. A Score answer's `score` is a continuous expected
+value, the probability-weighted average of the levels. Score bounds compare
+that value; a Score `level` instead requires the highest-probability level.
+Choice and Score can also require minimum confidence. When a rule
 contains both a value condition and a confidence condition, both must pass.
 Every rule in a policy must pass for the aggregate decision to pass.
 See the [typed policy guide](../how-to/use-policy-library.md) and
