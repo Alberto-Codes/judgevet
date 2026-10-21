@@ -55,7 +55,9 @@ call changes a service claim.
 Standing authorization permits merging and publishing a release that meets
 these criteria without another approval:
 
-- Main and release PR CI are green. Required local gates pass.
+- The main CI run at the base commit is green. The dispatched CI run at the
+  frozen release head is green. CI skips release-please branch heads on
+  pull_request events. Required local gates pass.
 - The changelog describes the release and its user-visible changes.
 - The gate run reports measured tests and coverage. The
   [verification ledger](../reference/verification-ledger.md) separates verified
@@ -76,11 +78,13 @@ or checked-in configuration. Do not enable shell tracing.
 
 ## Practised release path
 
-Releases 0.10.2 through 0.16.0 followed this path without a TestPyPI round.
+Releases 0.10.2 through 0.16.0 followed this path without a TestPyPI round
+and before CI skipped release heads. The dispatch step is new with #340.
 Their GitHub Releases record each one. The steps are:
 
 1. [Freeze the candidate](#freeze-the-candidate): read the release PR head,
-   versions, changelog and main CI.
+   versions, changelog and main CI. Dispatch CI on the release branch and
+   wait for it.
 2. [Merge the release PR](#merge-the-accepted-candidate) with
    `--match-head-commit` set to the frozen head.
 3. Verify that the tag points at the merge commit.
@@ -115,6 +119,13 @@ for file in pyproject.toml src/judgevet/__init__.py .release-please-manifest.jso
 done
 git show "$HEAD_SHA:CHANGELOG.md"
 gh run list --workflow ci.yml --commit "$BASE_SHA"
+gh workflow run ci.yml --ref "$RELEASE_BRANCH"
+gh run list --workflow ci.yml --branch "$RELEASE_BRANCH" --commit "$HEAD_SHA" \
+  --event workflow_dispatch --json databaseId,headSha,event,status,url
+read -r -p 'CI run ID for this dispatch: ' CI_RUN
+test "$(gh run view "$CI_RUN" --json headSha --jq .headSha)" = "$HEAD_SHA"
+test "$(gh run view "$CI_RUN" --json event --jq .event)" = workflow_dispatch
+gh run watch "$CI_RUN" --exit-status
 EVIDENCE_DIR=$(mktemp -d /tmp/judgevet-release.XXXXXXXX)
 ```
 
@@ -124,6 +135,14 @@ root entry, and the root `judgevet` package version in `uv.lock`. All must equal
 `VERSION`. Review the changelog and the verification ledger. Inspect the identified
 main CI run and require completed success. Fetching does not replace local
 files or discard unrelated work.
+
+`pull_request` events on the release branch start CI, but every job skips. The
+dispatched run is the one full run at the frozen head, and it runs all five
+jobs. A main push runs only `checks` and `test`. A later main push moves the
+release head, and the merge step detects that. Dispatch again if `HEAD_SHA`
+changed. Do not rely on `gh pr checks` to show the dispatched run. The
+`--commit` lookup is the record. If the run list comes back empty, run it
+again, because a dispatched run can take a few seconds to appear.
 
 Keep the generated release PR body intact. release-please parses its version
 heading and body structure after merge. Put acceptance evidence in issue or PR
@@ -240,7 +259,8 @@ gh run list --commit "$RELEASE_SHA"
 ```
 
 Inspect the release commit's CI and release-please runs; require completed
-success before publishing. The tree comparison must be empty. Verify the
+success before publishing. The release commit's CI run has two jobs, `checks`
+and `test`. The tree comparison must be empty. Verify the
 expected draft, tag, and version. Release-please must have created the tag at
 `RELEASE_SHA`; a mismatched tag is a stop condition.
 

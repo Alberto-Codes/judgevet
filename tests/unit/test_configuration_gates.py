@@ -218,11 +218,43 @@ def test_configuration_hook_executes(
     assert (tmp_path / "uv.lock").read_bytes() == lock
 
 
+SKIP_RELEASE_HEADS = "${{ !startsWith(github.head_ref, 'release-please--') }}"
+SKIP_RELEASE_HEADS_AND_PUSH = (
+    "${{ github.event_name != 'push' && "
+    "!startsWith(github.head_ref, 'release-please--') }}"
+)
+
+
+def test_ci_jobs_skip_release_please_heads() -> None:
+    """Pin each CI job's release-head and push conditions and the dispatch trigger."""
+    workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
+    triggers = workflow["on"] if "on" in workflow else workflow[True]
+    assert "workflow_dispatch" in triggers
+    conditions = {name: job["if"] for name, job in workflow["jobs"].items()}
+    assert conditions == {
+        "checks": SKIP_RELEASE_HEADS,
+        "sbom": SKIP_RELEASE_HEADS_AND_PUSH,
+        "lint": SKIP_RELEASE_HEADS_AND_PUSH,
+        "test": SKIP_RELEASE_HEADS,
+        "provider-artifacts": SKIP_RELEASE_HEADS_AND_PUSH,
+    }
+
+
+def test_codeql_scans_pull_request_paths_only() -> None:
+    """Limit CodeQL pull request scans by path and skip release-please heads."""
+    workflow = yaml.safe_load((ROOT / ".github/workflows/codeql.yml").read_text())
+    triggers = workflow["on"] if "on" in workflow else workflow[True]
+    assert triggers["pull_request"]["paths"] == ["src/**", ".github/**"]
+    assert "paths" not in triggers["push"]
+    assert workflow["jobs"]["analyze"]["if"] == SKIP_RELEASE_HEADS
+
+
 def test_ci_uses_shared_configuration_hooks() -> None:
     """Keep the CI checks required and sourced from the same hook configuration."""
     workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
     job = workflow["jobs"]["lint"]
-    assert "if" not in job and not job.get("continue-on-error", False)
+    assert job["if"] == SKIP_RELEASE_HEADS_AND_PUSH
+    assert not job.get("continue-on-error", False)
     steps = job["steps"]
     commands = [step["run"] for step in steps if "run" in step]
     assert commands.count("uv lock --check") == 1

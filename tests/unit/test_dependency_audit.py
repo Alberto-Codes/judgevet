@@ -18,7 +18,7 @@ def audit_command() -> str:
     """Read the owned workflow contract and reject optional audit execution."""
     workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
     job = workflow["jobs"]["checks"]
-    assert "if" not in job
+    assert job["if"] == "${{ !startsWith(github.head_ref, 'release-please--') }}"
     assert not job.get("continue-on-error", False)
     steps = job["steps"]
     setup = next(

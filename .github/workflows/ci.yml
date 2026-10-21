@@ -6,6 +6,7 @@ name: CI
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,8 +15,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# release-please re-pushes its branch on every main commit, so its PR events skip;
+# the release procedure dispatches the one full run at the frozen head (#340).
 jobs:
   checks:
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -32,6 +36,12 @@ jobs:
         run: uv python install 3.12
       - name: Sync dependencies
         run: uv sync --locked --dev --extra mcp
+      - run: >-
+          uv run python scripts/check_commit_msg.py
+          --range ${{ github.event.before }}..${{ github.sha }}
+        if: >-
+          github.event_name == 'push' &&
+          github.event.before != '0000000000000000000000000000000000000000'
       # Native uv audit is experimental; verify flags when upgrading uv.
       - name: Dependency audit
         run: uv audit --locked --preview-features audit-command
@@ -56,6 +66,7 @@ jobs:
   # scope, a licence table read from installed metadata, and the audit as
   # JSON. publish.yml runs the same action for each release (#231).
   sbom:
+    if: ${{ github.event_name != 'push' && !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -71,6 +82,7 @@ jobs:
           if-no-files-found: error
 
   lint:
+    if: ${{ github.event_name != 'push' && !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -104,12 +116,6 @@ jobs:
       - run: uv run python scripts/check_loc.py src
       - run: uv run python scripts/check_suppressions.py
       - run: >-
-          uv run python scripts/check_commit_msg.py
-          --range ${{ github.event.before }}..${{ github.sha }}
-        if: >-
-          github.event_name == 'push' &&
-          github.event.before != '0000000000000000000000000000000000000000'
-      - run: >-
           uv run python scripts/check_commit_msg.py --range
           ${{ github.event.pull_request.base.sha }}..${{
           github.event.pull_request.head.sha }}
@@ -119,6 +125,7 @@ jobs:
         continue-on-error: true
 
   test:
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -143,6 +150,7 @@ jobs:
         continue-on-error: true
 
   provider-artifacts:
+    if: ${{ github.event_name != 'push' && !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

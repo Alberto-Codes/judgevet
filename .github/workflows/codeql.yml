@@ -4,6 +4,7 @@ name: CodeQL
 "on":
   pull_request:
     branches: [main]
+    paths: ["src/**", ".github/**"]
   push:
     branches: [main]
   schedule:
@@ -17,7 +18,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Release-please branch heads skip; the release procedure covers them (#340).
   analyze:
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Job-level permissions replace the workflow-level block, so
