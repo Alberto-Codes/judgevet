@@ -21,3 +21,13 @@ updates:
       - /.github/actions/*
     schedule:
       interval: weekly
+    # One group bumps `init` and `analyze` together. A bump of one alone
+    # fails the analyze job: "All steps in a workflow that use
+    # `github/codeql-action` must use the same version to work correctly."
+    # https://github.com/Alberto-Codes/judgevet/actions/runs/38730866689/job/116408014443
+    # Dependabot turns each `*` into `.*`, so the pattern matches `/init` and `/analyze`:
+    # https://github.com/dependabot/dependabot-core/blob/main/common/lib/wildcard_matcher.rb
+    groups:
+      codeql-action:
+        patterns:
+          - github/codeql-action*

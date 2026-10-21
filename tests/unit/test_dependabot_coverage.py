@@ -138,3 +138,54 @@ def test_github_actions_entry_scans_every_pin() -> None:
         if not any(scanned_by(pattern, directory) for pattern in patterns)
     ]
     assert uncovered == []
+
+
+def codeql_action_pins() -> list[str]:
+    """List every distinct `github/codeql-action/*` action a workflow uses.
+
+    Returns:
+        The sorted action names without their `@ref` suffix.
+    """
+    workflows = ROOT / ".github/workflows"
+    return sorted(
+        {
+            match.group(1).split("@", 1)[0]
+            for path in workflows.glob("*.yml")
+            for line in path.read_text().splitlines()
+            if (match := USES_LINE.match(line))
+            and match.group(1).startswith("github/codeql-action/")
+        }
+    )
+
+
+@pytest.mark.unit
+def test_codeql_action_pins_share_one_group() -> None:
+    """Group every `github/codeql-action/*` pin so init and analyze bump together.
+
+    The CodeQL action refuses to run when `init` and `analyze` differ in
+    version (#341), so one Dependabot group must match every pin. Dependabot
+    turns each `*` in `patterns` into `.*`, so a wildcard crosses `/` as it
+    does in `fnmatchcase`:
+    https://github.com/dependabot/dependabot-core/blob/main/common/lib/wildcard_matcher.rb
+    Dependabot also lowercases both sides, which `fnmatchcase` does not, so
+    the test is stricter than Dependabot for a pattern with capitals. The
+    first assertion is a tripwire: a new `github/codeql-action/*` pin must
+    be added here so the group is checked against it.
+    """
+    pins = codeql_action_pins()
+    assert pins == ["github/codeql-action/analyze", "github/codeql-action/init"]
+    config = yaml.safe_load(CONFIG.read_text())
+    (entry,) = [
+        update
+        for update in config["updates"]
+        if update["package-ecosystem"] == "github-actions"
+    ]
+    covering = [
+        name
+        for name, group in entry.get("groups", {}).items()
+        if all(
+            any(fnmatchcase(pin, pattern) for pattern in group.get("patterns", []))
+            for pin in pins
+        )
+    ]
+    assert covering, f"no group in {CONFIG.name} matches every pin in {pins}"
