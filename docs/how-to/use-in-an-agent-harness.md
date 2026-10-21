@@ -293,7 +293,8 @@ The log holds no state, so the review joined every record to its session transcr
 The final message is the last assistant text before the record.
 The next request is the first human message after it.
 All 740 answered records joined, because `Stop` fires in the main session.
-572 have a later user message, and 168 are the session's last turn so far.
+572 have a later user message, and 168 do not.
+A record without a later user message may still have later assistant turns, driven by hooks or task notifications.
 The join and the hand labels come from the transcripts, so only the counts table is reproducible from the log.
 
 The review read the 199 flagged records that have a later user message against two labels.
