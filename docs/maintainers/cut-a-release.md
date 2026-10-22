@@ -210,7 +210,10 @@ against the live service. A local source build is not index verification.
 
 Verify live judgment through the installed CLI as well. Define this helper
 from the checkout root and keep it for the production check. It installs the
-exact wheel and pytest in a separate environment. Python isolated mode ignores
+exact wheel, pytest and PyYAML in a separate environment. The checkout's test
+fixtures import PyYAML during setup, so this helper installs it explicitly.
+pytest and PyYAML support the test harness; they are not runtime dependencies.
+Python isolated mode ignores
 checkout-related Python environment variables; the import assertion verifies
 the package location before pytest loads the live test.
 
@@ -220,7 +223,7 @@ check_cli_wheel() {
   repo_root=$(pwd)
   cli_env=$(mktemp -d /tmp/judgevet-cli-release.XXXXXXXX)
   uv venv "$cli_env"
-  uv pip install --python "$cli_env/bin/python" "$cli_wheel" 'pytest==9.1.1'
+  uv pip install --python "$cli_env/bin/python" "$cli_wheel" 'pytest==9.1.1' pyyaml
   direnv exec "$repo_root" bash -e -c '
     cd "$1"
     "$1/bin/python" -I -c "import pathlib,sysconfig,judgevet; p=pathlib.Path(judgevet.__file__).resolve(); root=pathlib.Path(sysconfig.get_paths()[\"purelib\"]).resolve(); assert p.is_relative_to(root); print(\"Installed package location verified\")"
