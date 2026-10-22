@@ -3,6 +3,22 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.22.0](https://github.com/Alberto-Codes/judgevet/compare/v0.21.0...v0.22.0) (2026-10-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** transport= requires httpx2 transports. Redirects raise JevError with httpx2 causes. Default TLS uses OS trust roots.
+
+### Refactoring
+
+* **deps:** migrate hosted adapters to httpx2 ([5bf4748](https://github.com/Alberto-Codes/judgevet/commit/5bf4748bbfc0a93e081507847074b506ea16d06f)), references [#291](https://github.com/Alberto-Codes/judgevet/issues/291)
+
+
+### Documentation
+
+* **release:** install CLI verification dependencies ([3cb0b87](https://github.com/Alberto-Codes/judgevet/commit/3cb0b87a9e8b268a3949a26d06a4a5d084cfd004)), references [#348](https://github.com/Alberto-Codes/judgevet/issues/348)
+
 ## [0.21.0](https://github.com/Alberto-Codes/judgevet/compare/v0.20.0...v0.21.0) (2026-10-21)
 
 
