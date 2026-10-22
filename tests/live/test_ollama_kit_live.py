@@ -29,7 +29,7 @@ from collections.abc import Iterator
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 
 import anyio
-import httpx
+import httpx2
 import pytest
 
 from judgevet.adapters.outbound.http import (
@@ -79,8 +79,8 @@ def _require_ollama() -> None:
     """Skip the module when the Ollama server does not answer in 5 seconds."""
     url = f"{_base_url()}/api/version"
     try:
-        httpx.get(url, timeout=5.0).raise_for_status()
-    except httpx.HTTPError as error:
+        httpx2.get(url, timeout=5.0).raise_for_status()
+    except httpx2.HTTPError as error:
         pytest.skip(f"Ollama did not answer GET {url} within 5 seconds: {error}")
 
 

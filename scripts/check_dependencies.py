@@ -103,12 +103,12 @@ def parse_runtime_names(pyproject: Path) -> set[str]:
 # The pinned runtime dependency set.
 # Raise this only with a reason in the commit message.
 # Current set: 4 packages
-# - httpx: async HTTP client for Jev API calls
+# - httpx2: async HTTP client for Jev API calls
 # - pydantic-settings: Settings class for API key and other config
 # - structlog: structured logging for CLI and MCP adapter
 # - typer: CLI framework for the judgevet command
 ALLOWED_RUNTIME_DEPENDENCIES = {
-    "httpx",
+    "httpx2",
     "pydantic-settings",
     "structlog",
     "typer",

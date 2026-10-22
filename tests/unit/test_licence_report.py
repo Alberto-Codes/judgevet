@@ -171,8 +171,8 @@ def test_rows_match_normalised_names_and_keep_absent_packages() -> None:
 
 def test_components_reads_uv_sbom_shape() -> None:
     """Read name and version from every component, skipping the root."""
-    text = sbom([("httpx", "0.28.1"), ("typer", "0.16.0")])
-    assert components(text) == [("httpx", "0.28.1", ""), ("typer", "0.16.0", "")]
+    text = sbom([("httpx2", "0.28.1"), ("typer", "0.16.0")])
+    assert components(text) == [("httpx2", "0.28.1", ""), ("typer", "0.16.0", "")]
 
 
 def test_main_writes_markdown_and_json_from_the_environment(
@@ -199,8 +199,8 @@ def test_main_writes_markdown_and_json_from_the_environment(
         "not json",
         "[]",
         json.dumps({"bomFormat": "CycloneDX"}),
-        json.dumps({"components": {"name": "httpx"}}),
-        json.dumps({"components": [{"name": "httpx"}]}),
+        json.dumps({"components": {"name": "httpx2"}}),
+        json.dumps({"components": [{"name": "httpx2"}]}),
         json.dumps({"components": [{"name": 3, "version": "1"}]}),
     ],
 )
@@ -234,14 +234,14 @@ MARKER = "uv:package:marker"
 
 def test_components_reads_uv_marker_property() -> None:
     """Read the ``uv:package:marker`` property, empty when absent."""
-    document = json.loads(sbom([("pywin32", "312"), ("httpx", "0.28.1")]))
+    document = json.loads(sbom([("pywin32", "312"), ("httpx2", "0.28.1")]))
     document["components"][0]["properties"] = [
         {"name": "uv:package:is_project_root", "value": "false"},
         {"name": MARKER, "value": "sys_platform == 'win32'"},
     ]
     assert components(json.dumps(document)) == [
         ("pywin32", "312", "sys_platform == 'win32'"),
-        ("httpx", "0.28.1", ""),
+        ("httpx2", "0.28.1", ""),
     ]
 
 

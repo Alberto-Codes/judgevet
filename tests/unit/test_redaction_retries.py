@@ -3,7 +3,7 @@
 import asyncio
 import json
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet import AsyncHTTPSystemOneAdapter, GatewayConfig, HTTPSystemOneAdapter
@@ -19,23 +19,23 @@ def test_redaction_snapshot_reused_across_retries(asynchronous, failure) -> None
     redactor = SyntheticRedactor()
     sent = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         sent.append(request.content)
         if len(sent) == 1:
             state["content"] = "late-input"
             assert isinstance(redactor.output, dict)
             redactor.output["content"] = "late-output"
             if failure == "transport":
-                raise httpx.ReadTimeout("synthetic timeout", request=request)
-            return httpx.Response(503, json={"gateway_error": "synthetic"})
-        return httpx.Response(200, json=SUCCESS)
+                raise httpx2.ReadTimeout("synthetic timeout", request=request)
+            return httpx2.Response(503, json={"gateway_error": "synthetic"})
+        return httpx2.Response(200, json=SUCCESS)
 
     invoke(
         asynchronous,
         redactor,
         state,
         url="https://gateway.example/prefix",
-        transport=httpx.MockTransport(handler),
+        transport=httpx2.MockTransport(handler),
     )
     assert redactor.calls == 1
     assert len(sent) == 2
@@ -50,9 +50,9 @@ def test_separate_calls_transform_again(asynchronous) -> None:
     redactor = SyntheticRedactor()
     sent = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         sent.append(json.loads(request.content)["state"])
-        return httpx.Response(200, json=SUCCESS)
+        return httpx2.Response(200, json=SUCCESS)
 
     if asynchronous:
 
@@ -60,7 +60,7 @@ def test_separate_calls_transform_again(asynchronous) -> None:
             async with AsyncHTTPSystemOneAdapter(
                 api_key="dummy",
                 redactor=redactor,
-                transport=httpx.MockTransport(handler),
+                transport=httpx2.MockTransport(handler),
             ) as adapter:
                 await adapter.system_one("first state-canary", {})
                 await adapter.system_one("second state-canary", {})
@@ -68,7 +68,7 @@ def test_separate_calls_transform_again(asynchronous) -> None:
         asyncio.run(call())
     else:
         with HTTPSystemOneAdapter(
-            api_key="dummy", redactor=redactor, transport=httpx.MockTransport(handler)
+            api_key="dummy", redactor=redactor, transport=httpx2.MockTransport(handler)
         ) as adapter:
             adapter.system_one("first state-canary", {})
             adapter.system_one("second state-canary", {})
@@ -82,14 +82,14 @@ def test_concurrent_calls_use_distinct_snapshots() -> None:
     inputs = [{"task": name, "content": "state-canary"} for name in ("first", "second")]
     sent = []
 
-    async def handler(request: httpx.Request) -> httpx.Response:
+    async def handler(request: httpx2.Request) -> httpx2.Response:
         await asyncio.sleep(0)
         sent.append(json.loads(request.content)["state"])
-        return httpx.Response(200, json=SUCCESS)
+        return httpx2.Response(200, json=SUCCESS)
 
     async def call() -> None:
         async with AsyncHTTPSystemOneAdapter(
-            api_key="dummy", redactor=redactor, transport=httpx.MockTransport(handler)
+            api_key="dummy", redactor=redactor, transport=httpx2.MockTransport(handler)
         ) as adapter:
             await asyncio.gather(*(adapter.system_one(state, {}) for state in inputs))
 
@@ -113,9 +113,9 @@ def test_cancellation_prevents_transport() -> None:
     """Cancellation during redaction must not become a transport retry."""
     sent = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         sent.append(request)
-        return httpx.Response(200, json=SUCCESS)
+        return httpx2.Response(200, json=SUCCESS)
 
     with pytest.raises(asyncio.CancelledError):
         invoke(
@@ -123,7 +123,7 @@ def test_cancellation_prevents_transport() -> None:
             CancelRedactor(),
             "state-canary",
             url="https://gateway.example",
-            transport=httpx.MockTransport(handler),
+            transport=httpx2.MockTransport(handler),
         )
     assert sent == []
 
@@ -132,15 +132,15 @@ def test_state_redaction_does_not_transform_other_fields() -> None:
     """The same sentinel in explicit question/header channels remains caller-owned."""
     captured = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         captured.append(request)
-        return httpx.Response(200, json=SUCCESS)
+        return httpx2.Response(200, json=SUCCESS)
 
     with HTTPSystemOneAdapter(
         api_key="dummy",
         redactor=SyntheticRedactor(),
         gateway=GatewayConfig(headers={"Example-Explicit": "state-canary"}),
-        transport=httpx.MockTransport(handler),
+        transport=httpx2.MockTransport(handler),
     ) as adapter:
         adapter.system_one(
             "state-canary", {"q": {"type": "noul", "instructions": "state-canary"}}

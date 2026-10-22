@@ -172,7 +172,7 @@ Choose ownership deliberately rather than treating a retained client as stateles
 Do not reuse an async adapter across separate event loops.
 
 Configure `JEV_API__PROXY` and a mounted `JEV_API__CA_BUNDLE` when your approved
-network requires them. Keep certificate verification enabled. Standard HTTPX
+network requires them. Keep certificate verification enabled. Standard HTTPX2
 proxy and certificate environment variables also apply; see
 [network precedence](../reference/configuration.md#proxy-and-tls-configuration).
 Test egress from the deployed workload, including DNS, proxy access and CA trust.

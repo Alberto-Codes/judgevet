@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any, Self
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet import AsyncHTTPSystemOneAdapter, HTTPSystemOneAdapter, StateRedactor
@@ -75,12 +75,12 @@ def test_default_and_identity_match_httpx_bytes(
     """Omitted/default paths and opt-in identity output share UTF-8 wire semantics."""
     state = {"content": ["café", "λ", 1.25, True, None]}
     payload = {"state": state, "questions": {}, "model": "jev-latest"}
-    expected = httpx.Request("POST", "https://example.invalid", json=payload).content
+    expected = httpx2.Request("POST", "https://example.invalid", json=payload).content
     captured = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         captured.append(request.content)
-        return httpx.Response(200, json=SUCCESS)
+        return httpx2.Response(200, json=SUCCESS)
 
     if asynchronous:
 
@@ -88,14 +88,14 @@ def test_default_and_identity_match_httpx_bytes(
             async with AsyncHTTPSystemOneAdapter(
                 api_key="dummy",
                 redactor=redactor,
-                transport=httpx.MockTransport(handler),
+                transport=httpx2.MockTransport(handler),
             ) as adapter:
                 await adapter.system_one(state, {})
 
         asyncio.run(call())
     else:
         with HTTPSystemOneAdapter(
-            api_key="dummy", redactor=redactor, transport=httpx.MockTransport(handler)
+            api_key="dummy", redactor=redactor, transport=httpx2.MockTransport(handler)
         ) as adapter:
             adapter.system_one(state, {})
     assert captured == [expected]
@@ -105,12 +105,12 @@ def test_default_path_does_not_copy_state() -> None:
     """The no-op default does not introduce new copy behavior for callers."""
     captured = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         captured.append(request.content)
-        return httpx.Response(200, json=SUCCESS)
+        return httpx2.Response(200, json=SUCCESS)
 
     with HTTPSystemOneAdapter(
-        api_key="dummy", transport=httpx.MockTransport(handler)
+        api_key="dummy", transport=httpx2.MockTransport(handler)
     ) as adapter:
         adapter.system_one(CopyFailure(content="synthetic"), {})
     assert len(captured) == 1

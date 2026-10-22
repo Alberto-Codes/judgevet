@@ -10,11 +10,11 @@ Source: https://docs.typesafe.ai/api.md.
 
 Examples:
     ```python
-    import httpx
+    import httpx2
 
     from tests.unit.hosted_kit_support import answer_questions, sync_adapter
 
-    adapter = sync_adapter(httpx.MockTransport(answer_questions))
+    adapter = sync_adapter(httpx2.MockTransport(answer_questions))
     adapter.close()
     ```
 
@@ -27,7 +27,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-import httpx
+import httpx2
 
 from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
@@ -86,7 +86,7 @@ WIRE_BY_TYPE = {
 """The wire answer for each question type, built from `VALID_ANSWERS`."""
 
 
-def answer_questions(request: httpx.Request) -> httpx.Response:
+def answer_questions(request: httpx2.Request) -> httpx2.Response:
     """Answer every question a request carries, by its declared type.
 
     Args:
@@ -105,7 +105,7 @@ def answer_questions(request: httpx.Request) -> httpx.Response:
         "usage": MIXED["body"]["usage"],
         "answers": answers,
     }
-    return httpx.Response(200, json=body)
+    return httpx2.Response(200, json=body)
 
 
 @dataclass
@@ -116,19 +116,19 @@ class RecordingHandler:
     tests or xdist workers.
 
     Attributes:
-        requests (list[httpx.Request]): The requests received, in order.
+        requests (list[httpx2.Request]): The requests received, in order.
 
     Examples:
         ```python
         recorder = RecordingHandler()
-        adapter = sync_adapter(httpx.MockTransport(recorder))
+        adapter = sync_adapter(httpx2.MockTransport(recorder))
         adapter.close()
         ```
     """
 
-    requests: list[httpx.Request] = field(default_factory=list)
+    requests: list[httpx2.Request] = field(default_factory=list)
 
-    def __call__(self, request: httpx.Request) -> httpx.Response:
+    def __call__(self, request: httpx2.Request) -> httpx2.Response:
         """Record the request and answer its questions.
 
         Args:
@@ -141,7 +141,7 @@ class RecordingHandler:
         return answer_questions(request)
 
 
-def replay(name: str) -> httpx.MockTransport:
+def replay(name: str) -> httpx2.MockTransport:
     """Return a transport that replays one contract fixture's status and body.
 
     Args:
@@ -152,7 +152,7 @@ def replay(name: str) -> httpx.MockTransport:
     """
     fixture = get_fixture_by_name(name)
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         """Build a fresh copy of the fixture response for each request.
 
         Args:
@@ -161,12 +161,12 @@ def replay(name: str) -> httpx.MockTransport:
         Returns:
             The fixture's status and body.
         """
-        return httpx.Response(fixture["status"], json=fixture["body"])
+        return httpx2.Response(fixture["status"], json=fixture["body"])
 
-    return httpx.MockTransport(handle)
+    return httpx2.MockTransport(handle)
 
 
-def sync_adapter(transport: httpx.MockTransport) -> HTTPSystemOneAdapter:
+def sync_adapter(transport: httpx2.MockTransport) -> HTTPSystemOneAdapter:
     """Build a sync hosted adapter over a mock transport.
 
     Args:
@@ -178,7 +178,7 @@ def sync_adapter(transport: httpx.MockTransport) -> HTTPSystemOneAdapter:
     return HTTPSystemOneAdapter(api_key=API_KEY, base_url=BASE_URL, transport=transport)
 
 
-def async_adapter(transport: httpx.MockTransport) -> AsyncHTTPSystemOneAdapter:
+def async_adapter(transport: httpx2.MockTransport) -> AsyncHTTPSystemOneAdapter:
     """Build an async hosted adapter over a mock transport.
 
     Args:

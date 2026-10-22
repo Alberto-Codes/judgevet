@@ -2,7 +2,7 @@
 
 import asyncio
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet import (
@@ -79,11 +79,11 @@ def test_retry_reuses_metadata_snapshot(asynchronous) -> None:
     metadata = RequestMetadata(headers=overrides)
     recorded = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         recorded.append(dict(request.headers))
         defaults["Example-Tenant"] = "changed"
         overrides["Example-Route"] = "changed"
-        return httpx.Response(503 if len(recorded) == 1 else 200, json=SUCCESS)
+        return httpx2.Response(503 if len(recorded) == 1 else 200, json=SUCCESS)
 
     if asynchronous:
 
@@ -91,7 +91,7 @@ def test_retry_reuses_metadata_snapshot(asynchronous) -> None:
             async with AsyncHTTPSystemOneAdapter(
                 api_key="dummy",
                 gateway=gateway,
-                transport=httpx.MockTransport(handler),
+                transport=httpx2.MockTransport(handler),
                 retry=RetryPolicy(2, 0, 0),
             ) as adapter:
                 await adapter.system_one("synthetic", {}, metadata=metadata)
@@ -101,7 +101,7 @@ def test_retry_reuses_metadata_snapshot(asynchronous) -> None:
         with HTTPSystemOneAdapter(
             api_key="dummy",
             gateway=gateway,
-            transport=httpx.MockTransport(handler),
+            transport=httpx2.MockTransport(handler),
             retry=RetryPolicy(2, 0, 0),
         ) as adapter:
             adapter.system_one("synthetic", {}, metadata=metadata)
@@ -115,18 +115,18 @@ def test_concurrent_scopes_do_not_share_headers() -> None:
     """Interleave tasks on one adapter and keep per-call fields isolated."""
     recorded = []
 
-    async def handler(request: httpx.Request) -> httpx.Response:
+    async def handler(request: httpx2.Request) -> httpx2.Response:
         await asyncio.sleep(0)
         recorded.append(
             (request.headers["example-request"], request.headers["example-task"])
         )
-        return httpx.Response(200, json=SUCCESS)
+        return httpx2.Response(200, json=SUCCESS)
 
     async def run() -> None:
         async with AsyncHTTPSystemOneAdapter(
             api_key="dummy",
             gateway=GatewayConfig(request_id_header="Example-Request"),
-            transport=httpx.MockTransport(handler),
+            transport=httpx2.MockTransport(handler),
         ) as adapter:
 
             async def call(name: str) -> None:

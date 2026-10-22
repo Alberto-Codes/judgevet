@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any
 
-import httpx
+import httpx2
 
 from judgevet import (
     AsyncHTTPSystemOneAdapter,
@@ -60,7 +60,7 @@ def invoke(
     *,
     url: str,
     gateway: GatewayConfig | None = None,
-    transport: httpx.MockTransport | None = None,
+    transport: httpx2.MockTransport | None = None,
 ) -> None:
     """Run the same typed request through each concrete adapter."""
     metadata = RequestMetadata(headers={"Example-Explicit": "header-canary"})

@@ -56,7 +56,7 @@ The context manager owns cleanup, including when a call raises. For several
 calls, keep the adapter open around those calls and close it after the last
 one. The returned values remain usable after closing. Direct constructors do
 not read judgevet environment settings: this example explicitly reads Settings
-and resolves one wrapped key before constructing the adapter. Leave `JEV_API__CA_BUNDLE` unset for normal HTTPX
+and resolves one wrapped key before constructing the adapter. Leave `JEV_API__CA_BUNDLE` unset for normal HTTPX2
 trust roots. In a private-CA deployment, set it to your approved PEM bundle.
 Certificate and hostname verification stay enabled. See
 [network configuration](../reference/configuration.md#proxy-and-tls-configuration)

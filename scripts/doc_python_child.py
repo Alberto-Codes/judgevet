@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
-import httpx
+import httpx2
 
 from judgevet import JevError
 from scripts.smoke_release_child import (
@@ -25,8 +25,8 @@ from scripts.smoke_release_child import (
     assert_in_site_packages,
 )
 
-SYNC_CLIENT = httpx.Client
-ASYNC_CLIENT = httpx.AsyncClient
+SYNC_CLIENT = httpx2.Client
+ASYNC_CLIENT = httpx2.AsyncClient
 EXAMPLE_ERRORS = (
     ArithmeticError,
     AssertionError,
@@ -39,12 +39,12 @@ EXAMPLE_ERRORS = (
     TypeError,
     ValueError,
     SystemExit,
-    httpx.HTTPError,
+    httpx2.HTTPError,
     JevError,
 )
 
 
-def synthetic_answer(request: httpx.Request) -> httpx.Response:
+def synthetic_answer(request: httpx2.Request) -> httpx2.Response:
     """Return a typed synthetic answer for each supplied question.
 
     Args:
@@ -82,7 +82,7 @@ def synthetic_answer(request: httpx.Request) -> httpx.Response:
             }
         else:
             raise ValueError("unsupported synthetic question type")
-    return httpx.Response(
+    return httpx2.Response(
         200,
         json={
             "model": "jev-1.13.0",
@@ -102,16 +102,16 @@ def run_example(path: Path, label: str) -> str | None:
     Returns:
         A bounded diagnostic, or None when execution and cleanup pass.
     """
-    clients: list[httpx.Client | httpx.AsyncClient] = []
+    clients: list[httpx2.Client | httpx2.AsyncClient] = []
 
-    def sync(**kwargs: Any) -> httpx.Client:
-        kwargs["transport"] = httpx.MockTransport(synthetic_answer)
+    def sync(**kwargs: Any) -> httpx2.Client:
+        kwargs["transport"] = httpx2.MockTransport(synthetic_answer)
         client = SYNC_CLIENT(**kwargs)
         clients.append(client)
         return client
 
-    def asynchronous(**kwargs: Any) -> httpx.AsyncClient:
-        kwargs["transport"] = httpx.MockTransport(synthetic_answer)
+    def asynchronous(**kwargs: Any) -> httpx2.AsyncClient:
+        kwargs["transport"] = httpx2.MockTransport(synthetic_answer)
         client = ASYNC_CLIENT(**kwargs)
         clients.append(client)
         return client
@@ -119,8 +119,8 @@ def run_example(path: Path, label: str) -> str | None:
     try:
         with contextlib.ExitStack() as stack:
             stack.enter_context(patch.dict(os.environ, offline_env(), clear=True))
-            stack.enter_context(patch("httpx.Client", sync))
-            stack.enter_context(patch("httpx.AsyncClient", asynchronous))
+            stack.enter_context(patch("httpx2.Client", sync))
+            stack.enter_context(patch("httpx2.AsyncClient", asynchronous))
             for target in ("create_connection", "getaddrinfo", "socket.connect"):
                 stack.enter_context(
                     patch(

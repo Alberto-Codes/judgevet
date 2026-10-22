@@ -149,16 +149,19 @@ does not run that validator: library callers must choose an HTTPS URL and a
 trusted transport themselves.
 
 The sync and async [HTTP adapters](src/judgevet/adapters/outbound/http.py)
-delegate TLS to HTTPX. They accept explicit proxy and CA configuration through
+delegate TLS to HTTPX2. They accept explicit proxy and CA configuration through
 `NetworkConfig` and the CLI/MCP settings. They do not install certificate pins
 or select cipher suites. With the default transport,
-[HTTPX verifies HTTPS certificates and host identity](https://www.python-httpx.org/advanced/ssl/)
-by default. It uses the certifi CA bundle rather than automatically using the
-OS trust store. The reviewed lockfile resolves HTTPX 0.28.1. The adapters also
-accept caller-supplied transports, whose behavior belongs to the caller.
+[HTTPX2 verifies HTTPS certificates and host identity](https://pydantic.dev/docs/httpx2/advanced/ssl/)
+by default. It uses the OS trust store through `truststore`. Offline sync and
+async tests inspect that default context and exercise explicit CA bundles.
+This targeted evidence does not repeat the full security review above.
+Containers need their own configured CA roots; they do not inherit the host's
+trust store. The adapters also accept caller-supplied transports, whose
+behavior belongs to the caller.
 
-HTTPX's default environment support remains enabled.
-[`SSL_CERT_FILE` and `SSL_CERT_DIR`](https://www.python-httpx.org/environment_variables/)
+HTTPX2's default environment support remains enabled.
+[`SSL_CERT_FILE` and `SSL_CERT_DIR`](https://pydantic.dev/docs/httpx2/api/environment_variables/)
 can replace its default trust roots; `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`
 and `NO_PROXY` affect routing. Review the launch environment as part of a
 deployment. An explicit proxy overrides environment proxy routing, including
@@ -204,9 +207,9 @@ network resources; it does not erase every copy of a credential.
 
 The production request path targets the configured service and has no judgevet
 telemetry or phone-home endpoint. This is not a guarantee of exactly one
-outbound connection: [HTTPX uses connection pools](https://www.python-httpx.org/advanced/clients/),
+outbound connection: [HTTPX2 uses connection pools](https://pydantic.dev/docs/httpx2/advanced/clients/),
 and DNS, proxies and caller-supplied transports affect network activity.
-The default HTTPX clients do not follow redirects; the
+The default HTTPX2 clients do not follow redirects; the
 [redirect test](tests/unit/test_http_adapter.py) checks that setting. Network
 allowlists and enforcement belong to the deployment.
 

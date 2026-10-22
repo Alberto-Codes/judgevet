@@ -27,7 +27,7 @@ import json
 from typing import Any
 
 import anyio
-import httpx
+import httpx2
 import pytest
 
 from judgevet import RetryPolicy
@@ -45,11 +45,10 @@ from .test_adapter_contract import _assert_responses_equal, _transport_for
 
 def _call_sync(
     adapter: HTTPSystemOneAdapter, fixture: dict[str, Any]
-) -> tuple[str, SystemOneResponse | JevError | httpx.HTTPStatusError]:
+) -> tuple[str, SystemOneResponse | JevError]:
     """Call sync adapter and return outcome.
 
-    Catches exactly (JevError, httpx.HTTPStatusError); anything else
-    escapes and fails the test with the real traceback.
+    Catches exactly JevError; anything else escapes and fails the test with the real traceback.
 
     Args:
         adapter: The sync HTTP adapter.
@@ -64,18 +63,17 @@ def _call_sync(
             questions=fixture["request"]["questions"],
             model=fixture["request"]["model"],
         )
-    except (JevError, httpx.HTTPStatusError) as exc:
+    except JevError as exc:
         return ("err", exc)
     return ("ok", response)
 
 
 def _call_async(
     adapter: AsyncHTTPSystemOneAdapter, fixture: dict[str, Any]
-) -> tuple[str, SystemOneResponse | JevError | httpx.HTTPStatusError]:
+) -> tuple[str, SystemOneResponse | JevError]:
     """Call async adapter and return outcome.
 
-    Catches exactly (JevError, httpx.HTTPStatusError); anything else
-    escapes and fails the test with the real traceback.
+    Catches exactly JevError; anything else escapes and fails the test with the real traceback.
 
     Args:
         adapter: The async HTTP adapter.
@@ -85,9 +83,7 @@ def _call_async(
         ("ok", response) on success, ("err", exc) on exception.
     """
 
-    async def _run() -> tuple[
-        str, SystemOneResponse | JevError | httpx.HTTPStatusError
-    ]:
+    async def _run() -> tuple[str, SystemOneResponse | JevError]:
         async with adapter:
             try:
                 response = await adapter.system_one(
@@ -95,7 +91,7 @@ def _call_async(
                     questions=fixture["request"]["questions"],
                     model=fixture["request"]["model"],
                 )
-            except (JevError, httpx.HTTPStatusError) as exc:
+            except JevError as exc:
                 return ("err", exc)
             return ("ok", response)
 
@@ -104,8 +100,8 @@ def _call_async(
 
 def _assert_agree(
     fixture: dict[str, Any],
-    expected: tuple[str, SystemOneResponse | JevError | httpx.HTTPStatusError],
-    actual: tuple[str, SystemOneResponse | JevError | httpx.HTTPStatusError],
+    expected: tuple[str, SystemOneResponse | JevError],
+    actual: tuple[str, SystemOneResponse | JevError],
 ) -> None:
     """Assert that sync and async outcomes agree.
 
@@ -131,8 +127,8 @@ def _assert_agree(
         _assert_responses_equal(exp_val, act_val)
     else:
         # Both raised — compare exception details
-        assert isinstance(exp_val, (JevError, httpx.HTTPStatusError))
-        assert isinstance(act_val, (JevError, httpx.HTTPStatusError))
+        assert isinstance(exp_val, JevError)
+        assert isinstance(act_val, JevError)
 
         # Same class by identity (same module, no aliasing)
         assert type(exp_val) is type(act_val), (
@@ -141,25 +137,14 @@ def _assert_agree(
             f"async={type(act_val).__name__}"
         )
 
-        # Same status_code
-        # JevError has status_code directly; httpx.HTTPStatusError has response.status_code
-        exp_sc = getattr(exp_val, "status_code", None)
-        if exp_sc is None and isinstance(exp_val, httpx.HTTPStatusError):
-            exp_sc = exp_val.response.status_code
-        act_sc = getattr(act_val, "status_code", None)
-        if act_sc is None and isinstance(act_val, httpx.HTTPStatusError):
-            act_sc = act_val.response.status_code
-        assert exp_sc == act_sc, (
-            f"[{fixture_name}] status_code mismatch: sync={exp_sc}, async={act_sc}"
+        assert exp_val.status_code == act_val.status_code, (
+            f"[{fixture_name}] status_code mismatch: "
+            f"sync={exp_val.status_code}, async={act_val.status_code}"
         )
-
-        # Same retryable (JevError only; httpx.HTTPStatusError has no retryable)
-        if isinstance(exp_val, JevError) and isinstance(act_val, JevError):
-            assert exp_val.retryable == act_val.retryable, (
-                f"[{fixture_name}] retryable mismatch: "
-                f"sync={exp_val.retryable}, "
-                f"async={act_val.retryable}"
-            )
+        assert exp_val.retryable == act_val.retryable, (
+            f"[{fixture_name}] retryable mismatch: "
+            f"sync={exp_val.retryable}, async={act_val.retryable}"
+        )
 
         # Same str(exc)
         assert str(exp_val) == str(act_val), (
@@ -223,20 +208,15 @@ def test_adapters_agree(fixture: dict[str, Any]) -> None:
 
 
 @pytest.mark.contract
-def test_3xx_fallthrough_agrees() -> None:
-    """Test that 3xx fallthrough produces httpx.HTTPStatusError in both adapters.
-
-    No fixture drives a 3xx, so this test builds its 302 inline.
-    The shared translate_status returns None for 3xx, so the raw
-    httpx.HTTPStatusError must propagate.
-    """
+def test_3xx_translation_agrees() -> None:
+    """Both adapters wrap a synthetic redirect in the same typed error."""
     status = 302
     body = {"redirecting": True}
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(status_code=status, json=body)
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(status_code=status, json=body)
 
-    transport = httpx.MockTransport(handler)
+    transport = httpx2.MockTransport(handler)
 
     sync_adapter = HTTPSystemOneAdapter(
         api_key="test-key", transport=transport, retry=RetryPolicy(max_attempts=1)
@@ -255,25 +235,17 @@ def test_3xx_fallthrough_agrees() -> None:
         {"request": {"state": "x", "questions": {}, "model": "jev-1.13.0"}},
     )
 
-    # Both must raise httpx.HTTPStatusError (not JevError)
     assert expected[0] == "err"
     assert actual[0] == "err"
-    assert type(expected[1]) is httpx.HTTPStatusError
-    assert type(actual[1]) is httpx.HTTPStatusError
-
     exc_sync = expected[1]
     exc_async = actual[1]
-
-    # Same status code (httpx.HTTPStatusError has response.status_code)
-    assert exc_sync.response.status_code == exc_async.response.status_code == 302
-
-    # __cause__ must be None (the 3xx fallthrough branch)
-    assert exc_sync.__cause__ is None
-    assert exc_async.__cause__ is None
-
-    # __context__ must be None (the 3xx fallthrough branch)
-    assert exc_sync.__context__ is None
-    assert exc_async.__context__ is None
+    assert type(exc_sync) is JevError
+    assert type(exc_async) is JevError
+    assert exc_sync.status_code == exc_async.status_code == 302
+    assert isinstance(exc_sync.__cause__, httpx2.HTTPStatusError)
+    assert isinstance(exc_async.__cause__, httpx2.HTTPStatusError)
+    assert exc_sync.__cause__.response.status_code == 302
+    assert exc_async.__cause__.response.status_code == 302
 
 
 def test_adapters_handle_question_objects() -> None:
@@ -287,10 +259,10 @@ def test_adapters_handle_question_objects() -> None:
     captured_sync: list[dict[str, Any]] = []
     captured_async: list[dict[str, Any]] = []
 
-    def sync_handler(request: httpx.Request) -> httpx.Response:
+    def sync_handler(request: httpx2.Request) -> httpx2.Response:
         body = request.read().decode("utf-8")
         captured_sync.append(json.loads(body))
-        return httpx.Response(
+        return httpx2.Response(
             200,
             json={
                 "model": "jev-1.13.0",
@@ -299,10 +271,10 @@ def test_adapters_handle_question_objects() -> None:
             },
         )
 
-    def async_handler(request: httpx.Request) -> httpx.Response:
+    def async_handler(request: httpx2.Request) -> httpx2.Response:
         body = request.read().decode("utf-8")
         captured_async.append(json.loads(body))
-        return httpx.Response(
+        return httpx2.Response(
             200,
             json={
                 "model": "jev-1.13.0",
@@ -311,8 +283,8 @@ def test_adapters_handle_question_objects() -> None:
             },
         )
 
-    transport_sync = httpx.MockTransport(sync_handler)
-    transport_async = httpx.MockTransport(async_handler)
+    transport_sync = httpx2.MockTransport(sync_handler)
+    transport_async = httpx2.MockTransport(async_handler)
 
     sync_adapter = HTTPSystemOneAdapter(
         api_key="test-key",

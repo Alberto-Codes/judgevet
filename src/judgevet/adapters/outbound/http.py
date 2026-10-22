@@ -64,7 +64,7 @@ Raises:
 
 Async adapters:
     AsyncSystemOnePort: Async protocol for the System One API.
-    AsyncHTTPSystemOneAdapter: Async HTTP adapter using httpx.AsyncClient.
+    AsyncHTTPSystemOneAdapter: Async HTTP adapter using httpx2.AsyncClient.
 
     The async adapter provides `aclose()`, `__aenter__`, and `__aexit__` for
     lifecycle management. It does NOT provide sync names (`close`, `__enter__`,
@@ -78,7 +78,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Self, Unpack
 
-import httpx
+import httpx2
 
 from judgevet.adapters.outbound.gateway import (
     RequestMetadata,
@@ -154,8 +154,8 @@ def _build_payload(
     }
 
 
-def _translate_request_error(exc: httpx.RequestError) -> JevServiceError:
-    """Translate an httpx.RequestError to a JevServiceError.
+def _translate_request_error(exc: httpx2.RequestError) -> JevServiceError:
+    """Translate an httpx2.RequestError to a JevServiceError.
 
     Args:
         exc: The request error to translate.
@@ -224,7 +224,7 @@ class HTTPSystemOneAdapter:
         api_key: str | None = None,
         base_url: str | None = None,
         default_model: str = "jev-latest",
-        transport: httpx.BaseTransport | None = None,
+        transport: httpx2.BaseTransport | None = None,
         timeout_seconds: float = 30.0,
         *,
         retry: RetryPolicy | None = None,
@@ -237,11 +237,11 @@ class HTTPSystemOneAdapter:
             api_key: TypeSafe API key.
             base_url: API base URL. Defaults to https://api.typesafe.ai.
             default_model: Default model to use. Defaults to jev-latest.
-            transport: Optional httpx transport for testing. Defaults to None.
+            transport: Optional httpx2 transport for testing. Defaults to None.
             timeout_seconds: Read timeout in seconds. Defaults to 30.0.
             retry: Validated retry policy. None uses `RetryPolicy()`, three
                 attempts; `RetryPolicy(max_attempts=1)` opts out.
-            network: Proxy and TLS options. None retains HTTPX defaults.
+            network: Proxy and TLS options. None retains HTTPX2 defaults.
 
         Other Parameters:
             gateway (GatewayConfig | None): Explicit authentication and metadata.
@@ -280,13 +280,13 @@ class HTTPSystemOneAdapter:
         network = network or NetworkConfig()
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
-        self._client = httpx.Client(
+        self._client = httpx2.Client(
             base_url=self._base_url,
             headers=self._gateway.authentication(self._api_key),
             transport=transport,
             proxy=network.proxy,
             verify=network.verification(),
-            timeout=httpx.Timeout(timeout_seconds, connect=5.0),
+            timeout=httpx2.Timeout(timeout_seconds, connect=5.0),
         )
 
     def system_one(
@@ -366,7 +366,7 @@ class HTTPSystemOneAdapter:
         headers: dict[str, str],
         questions: Mapping[str, Any],
     ) -> SystemOneResponse:
-        """Send one attempt and translate HTTP errors.
+        """Send one HTTPX2 attempt and wrap non-success status errors.
 
         The body bytes go to `parse_success` or `translate_status` in
         [judgevet.adapters.outbound.response_translation][].
@@ -382,7 +382,6 @@ class HTTPSystemOneAdapter:
 
         Raises:
             JevError: If the service or transport rejects the request.
-            httpx.HTTPStatusError: If an unhandled HTTP status occurs.
         """
         event.status_code = None
         try:
@@ -395,14 +394,14 @@ class HTTPSystemOneAdapter:
             event.status_code = response.status_code
             response.raise_for_status()
             return parse_success(response.status_code, response.content, questions)
-        except httpx.HTTPStatusError as exc:
+        except httpx2.HTTPStatusError as exc:
             translated = translate_status(
                 exc.response.status_code, exc.response.content, str(exc)
             )
             if translated is None:
                 raise
             raise translated from exc
-        except httpx.RequestError as exc:
+        except httpx2.RequestError as exc:
             raise _translate_request_error(exc) from exc
 
     def close(self) -> None:
@@ -485,7 +484,7 @@ class AsyncHTTPSystemOneAdapter:
         api_key: str | None = None,
         base_url: str | None = None,
         default_model: str = "jev-latest",
-        transport: httpx.AsyncBaseTransport | None = None,
+        transport: httpx2.AsyncBaseTransport | None = None,
         timeout_seconds: float = 30.0,
         *,
         retry: RetryPolicy | None = None,
@@ -498,11 +497,11 @@ class AsyncHTTPSystemOneAdapter:
             api_key: TypeSafe API key.
             base_url: API base URL. Defaults to https://api.typesafe.ai.
             default_model: Default model to use. Defaults to jev-latest.
-            transport: Optional httpx async transport for testing. Defaults to None.
+            transport: Optional httpx2 async transport for testing. Defaults to None.
             timeout_seconds: Read timeout in seconds. Defaults to 30.0.
             retry: Validated retry policy. None uses `RetryPolicy()`, three
                 attempts; `RetryPolicy(max_attempts=1)` opts out.
-            network: Proxy and TLS options. None retains HTTPX defaults.
+            network: Proxy and TLS options. None retains HTTPX2 defaults.
 
         Other Parameters:
             gateway (GatewayConfig | None): Explicit authentication and metadata.
@@ -541,13 +540,13 @@ class AsyncHTTPSystemOneAdapter:
         network = network or NetworkConfig()
         self._base_url = base_url or "https://api.typesafe.ai"
         self._default_model = default_model
-        self._client = httpx.AsyncClient(
+        self._client = httpx2.AsyncClient(
             base_url=self._base_url,
             headers=self._gateway.authentication(self._api_key),
             transport=transport,
             proxy=network.proxy,
             verify=network.verification(),
-            timeout=httpx.Timeout(timeout_seconds, connect=5.0),
+            timeout=httpx2.Timeout(timeout_seconds, connect=5.0),
         )
 
     async def system_one(
@@ -623,7 +622,7 @@ class AsyncHTTPSystemOneAdapter:
         headers: dict[str, str],
         questions: Mapping[str, Any],
     ) -> SystemOneResponse:
-        """Send one attempt and translate HTTP errors.
+        """Send one HTTPX2 attempt and wrap non-success status errors.
 
         The body bytes go to `parse_success` or `translate_status` in
         [judgevet.adapters.outbound.response_translation][].
@@ -639,7 +638,6 @@ class AsyncHTTPSystemOneAdapter:
 
         Raises:
             JevError: If the service or transport rejects the request.
-            httpx.HTTPStatusError: If an unhandled HTTP status occurs.
         """
         event.status_code = None
         try:
@@ -652,14 +650,14 @@ class AsyncHTTPSystemOneAdapter:
             event.status_code = response.status_code
             response.raise_for_status()
             return parse_success(response.status_code, response.content, questions)
-        except httpx.HTTPStatusError as exc:
+        except httpx2.HTTPStatusError as exc:
             translated = translate_status(
                 exc.response.status_code, exc.response.content, str(exc)
             )
             if translated is None:
                 raise
             raise translated from exc
-        except httpx.RequestError as exc:
+        except httpx2.RequestError as exc:
             raise _translate_request_error(exc) from exc
 
     async def aclose(self) -> None:

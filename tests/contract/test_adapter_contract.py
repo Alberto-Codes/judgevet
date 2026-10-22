@@ -9,7 +9,7 @@ This is the key: the fake is a SECOND implementation of the translation. If the
 real adapter's parser has a bug, the fake won't reproduce it, and the test will
 fail.
 
-The real adapter is driven through httpx.MockTransport, which replays the
+The real adapter is driven through httpx2.MockTransport, which replays the
 fixture's HTTP stimulus. The fake is called directly with the same (state,
 questions, model) arguments. Both outcomes are compared field-by-field.
 """
@@ -21,7 +21,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import anyio
-import httpx
+import httpx2
 import pytest
 
 from judgevet import RetryPolicy
@@ -173,24 +173,24 @@ class _ReplayPort:
         raise _error_for(expect_data)
 
 
-def _transport_for(fixture: dict[str, Any]) -> httpx.MockTransport:
-    """Build an httpx.MockTransport that replays the fixture's stimulus."""
+def _transport_for(fixture: dict[str, Any]) -> httpx2.MockTransport:
+    """Build an httpx2.MockTransport that replays the fixture's stimulus."""
     status = fixture.get("status")
     body = fixture.get("body", {})
     raw_bytes = fixture.get("raw_bytes")
     raise_connect_error = fixture.get("raise_connect_error", False)
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         if raise_connect_error:
-            raise httpx.ConnectError("Network error")
+            raise httpx2.ConnectError("Network error")
         if raw_bytes is not None:
-            return httpx.Response(status_code=status or 200, content=raw_bytes)
-        return httpx.Response(
+            return httpx2.Response(status_code=status or 200, content=raw_bytes)
+        return httpx2.Response(
             status_code=status or 200,
             json=body,
         )
 
-    return httpx.MockTransport(handler)
+    return httpx2.MockTransport(handler)
 
 
 def _assert_responses_equal(real: SystemOneResponse, fake: SystemOneResponse) -> None:
@@ -473,16 +473,16 @@ class _ListSink:
 
 def _counting_transport(
     fixture: dict[str, Any],
-) -> tuple[httpx.MockTransport, list[int]]:
+) -> tuple[httpx2.MockTransport, list[int]]:
     """Wrap the fixture's transport so the test can count the requests it sees."""
     seen: list[int] = []
     inner = _transport_for(fixture)
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         seen.append(1)
         return inner.handle_request(request)
 
-    return httpx.MockTransport(handler), seen
+    return httpx2.MockTransport(handler), seen
 
 
 def _call_twice(call: Any) -> BaseException | None:

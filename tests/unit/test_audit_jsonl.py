@@ -10,7 +10,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-import httpx
+import httpx2
 import pytest
 import structlog
 from structlog.testing import capture_logs
@@ -49,20 +49,20 @@ SUCCESS = {
 INVALID = {"detail": [{"type": "missing", "loc": ["body"], "msg": "x", "input": STATE}]}
 
 
-def replies(response: httpx.Response) -> Callable[[httpx.Request], httpx.Response]:
+def replies(response: httpx2.Response) -> Callable[[httpx2.Request], httpx2.Response]:
     """Return a handler that answers every attempt with one response."""
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         return response
 
     return handle
 
 
-def sync_call(sink: JsonlAuditSink, response: httpx.Response) -> object:
+def sync_call(sink: JsonlAuditSink, response: httpx2.Response) -> object:
     """Run one sync call and return its answer or error."""
     with HTTPSystemOneAdapter(
         api_key="synthetic",
-        transport=httpx.MockTransport(replies(response)),
+        transport=httpx2.MockTransport(replies(response)),
         retry=RETRY,
         audit=sink,
     ) as adapter:
@@ -72,13 +72,13 @@ def sync_call(sink: JsonlAuditSink, response: httpx.Response) -> object:
             return exc
 
 
-def async_call(sink: JsonlAuditSink, response: httpx.Response) -> object:
+def async_call(sink: JsonlAuditSink, response: httpx2.Response) -> object:
     """Run one async call and return its answer or error."""
 
     async def run() -> object:
         async with AsyncHTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(replies(response)),
+            transport=httpx2.MockTransport(replies(response)),
             retry=RETRY,
             audit=sink,
         ) as adapter:
@@ -112,7 +112,7 @@ def test_success_record_round_trips(tmp_path: Path) -> None:
     path = tmp_path / "audit.jsonl"
     before = datetime.now(UTC)
     with JsonlAuditSink(path) as sink:
-        answer = sync_call(sink, httpx.Response(200, json=SUCCESS))
+        answer = sync_call(sink, httpx2.Response(200, json=SUCCESS))
     after = datetime.now(UTC)
     assert isinstance(answer, SystemOneResponse)
     assert STATE.encode() not in path.read_bytes()
@@ -151,7 +151,7 @@ def test_error_record_round_trips(tmp_path: Path) -> None:
     """A rejected call writes one error line with null answers."""
     path = tmp_path / "audit.jsonl"
     with JsonlAuditSink(path) as sink:
-        error = sync_call(sink, httpx.Response(422, json=INVALID))
+        error = sync_call(sink, httpx2.Response(422, json=INVALID))
     assert isinstance(error, JevRequestError)
     assert STATE.encode() not in path.read_bytes()
     [line] = lines(path)
@@ -167,7 +167,7 @@ def test_async_adapter_writes_one_line(tmp_path: Path) -> None:
     """The async adapter writes through the same sink."""
     path = tmp_path / "audit.jsonl"
     with JsonlAuditSink(path) as sink:
-        answer = async_call(sink, httpx.Response(200, json=SUCCESS))
+        answer = async_call(sink, httpx2.Response(200, json=SUCCESS))
     assert isinstance(answer, SystemOneResponse)
     [line] = lines(path)
     assert line["outcome"] == "success"
@@ -224,7 +224,7 @@ def test_closed_sink_keeps_the_adapter_answer(tmp_path: Path) -> None:
             cache_logger_on_first_use=False,
         )
         with capture_logs() as events:
-            answer = sync_call(sink, httpx.Response(200, json=SUCCESS))
+            answer = sync_call(sink, httpx2.Response(200, json=SUCCESS))
     finally:
         if was_configured:
             structlog.configure(**previous)

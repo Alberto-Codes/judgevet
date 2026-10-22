@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 import anyio
-import httpx
+import httpx2
 
 from judgevet.adapters.outbound.http import (
     AsyncHTTPSystemOneAdapter,
@@ -27,10 +27,10 @@ class TestHTTPSystemOneQuestionSerialization:
         """
         captured_requests: list[dict[str, Any]] = []
 
-        def handler(request: httpx.Request) -> httpx.Response:
+        def handler(request: httpx2.Request) -> httpx2.Response:
             body = request.read().decode("utf-8")
             captured_requests.append(json.loads(body))
-            return httpx.Response(
+            return httpx2.Response(
                 200,
                 json={
                     "model": "jev-1.13.0",
@@ -41,7 +41,7 @@ class TestHTTPSystemOneQuestionSerialization:
 
         adapter = HTTPSystemOneAdapter(
             api_key="test-key",
-            transport=httpx.MockTransport(handler),
+            transport=httpx2.MockTransport(handler),
         )
 
         noul_no_criteria = Noul(instructions="Is this valid?")
@@ -102,10 +102,10 @@ class TestHTTPSystemOneQuestionSerialization:
         """Test that mixed Question objects and raw dicts work together."""
         captured_requests: list[dict[str, Any]] = []
 
-        def handler(request: httpx.Request) -> httpx.Response:
+        def handler(request: httpx2.Request) -> httpx2.Response:
             body = request.read().decode("utf-8")
             captured_requests.append(json.loads(body))
-            return httpx.Response(
+            return httpx2.Response(
                 200,
                 json={
                     "model": "jev-1.13.0",
@@ -116,7 +116,7 @@ class TestHTTPSystemOneQuestionSerialization:
 
         adapter = HTTPSystemOneAdapter(
             api_key="test-key",
-            transport=httpx.MockTransport(handler),
+            transport=httpx2.MockTransport(handler),
         )
 
         adapter.system_one(
@@ -163,9 +163,9 @@ class TestAsyncHTTPSystemOneQuestionSerialization:
         """
         captured_requests: list[dict[str, Any]] = []
 
-        def handler(request: httpx.Request) -> httpx.Response:
+        def handler(request: httpx2.Request) -> httpx2.Response:
             captured_requests.append(json.loads(request.read().decode("utf-8")))
-            return httpx.Response(
+            return httpx2.Response(
                 200,
                 json={
                     "model": "jev-1.13.0",
@@ -177,7 +177,7 @@ class TestAsyncHTTPSystemOneQuestionSerialization:
         async def drive() -> None:
             async with AsyncHTTPSystemOneAdapter(
                 api_key="test-key",
-                transport=httpx.MockTransport(handler),
+                transport=httpx2.MockTransport(handler),
             ) as adapter:
                 await adapter.system_one(
                     state="Test content",

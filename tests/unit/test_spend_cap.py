@@ -4,7 +4,7 @@ import asyncio
 import threading
 from collections.abc import Callable
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet import JevBudgetExceededError, RetryPolicy, SpendCap
@@ -18,10 +18,10 @@ QUESTIONS = {"q": {"type": "noul"}}
 RETRY_FIVE = RetryPolicy(max_attempts=5, retry_base_delay=0)
 
 
-def success(input_tokens: int = 60) -> httpx.Response:
+def success(input_tokens: int = 60) -> httpx2.Response:
     """Return a synthetic successful judgment reporting the given input tokens."""
     usage = {"input_tokens": input_tokens, "output_tokens": 0}
-    return httpx.Response(
+    return httpx2.Response(
         200,
         json={
             "model": "jev-1.13.0",
@@ -32,12 +32,12 @@ def success(input_tokens: int = 60) -> httpx.Response:
 
 
 def recorder(
-    reply: Callable[[int], httpx.Response],
-) -> tuple[list[httpx.Request], Callable[[httpx.Request], httpx.Response]]:
+    reply: Callable[[int], httpx2.Response],
+) -> tuple[list[httpx2.Request], Callable[[httpx2.Request], httpx2.Response]]:
     """Return a request log and a handler that records each physical request."""
-    calls: list[httpx.Request] = []
+    calls: list[httpx2.Request] = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
         return reply(len(calls))
 
@@ -45,32 +45,32 @@ def recorder(
 
 
 def sync_adapter(
-    handle: Callable[[httpx.Request], httpx.Response],
+    handle: Callable[[httpx2.Request], httpx2.Response],
     cap: SpendCap | None,
     retry: RetryPolicy | None = None,
 ) -> HTTPSystemOneAdapter:
     """Build a sync adapter over a mock transport, passing the cap only when set."""
     if cap is None:
         return HTTPSystemOneAdapter(
-            api_key="synthetic", transport=httpx.MockTransport(handle), retry=retry
+            api_key="synthetic", transport=httpx2.MockTransport(handle), retry=retry
         )
     return HTTPSystemOneAdapter(
         api_key="synthetic",
-        transport=httpx.MockTransport(handle),
+        transport=httpx2.MockTransport(handle),
         retry=retry,
         spend_cap=cap,
     )
 
 
 def async_adapter(
-    handle: Callable[[httpx.Request], httpx.Response],
+    handle: Callable[[httpx2.Request], httpx2.Response],
     cap: SpendCap,
     retry: RetryPolicy | None = None,
 ) -> AsyncHTTPSystemOneAdapter:
     """Build an async adapter over a mock transport with the given cap."""
     return AsyncHTTPSystemOneAdapter(
         api_key="synthetic",
-        transport=httpx.MockTransport(handle),
+        transport=httpx2.MockTransport(handle),
         retry=retry,
         spend_cap=cap,
     )
@@ -78,7 +78,7 @@ def async_adapter(
 
 def test_no_cap_leaves_behaviour_unchanged() -> None:
     """Without a cap, retries exhaust the policy and the last service error surfaces."""
-    calls, handle = recorder(lambda _: httpx.Response(503))
+    calls, handle = recorder(lambda _: httpx2.Response(503))
     with sync_adapter(handle, None, RETRY_FIVE) as adapter:
         with pytest.raises(JevServiceError):
             adapter.system_one("synthetic", QUESTIONS)
@@ -93,7 +93,7 @@ def test_no_cap_leaves_behaviour_unchanged() -> None:
 
 def test_attempt_cap_is_hard_across_retries() -> None:
     """Each retry claims a slot, and the third attempt is refused before sending."""
-    calls, handle = recorder(lambda _: httpx.Response(503))
+    calls, handle = recorder(lambda _: httpx2.Response(503))
     cap = SpendCap(max_attempts=2)
     with (
         sync_adapter(handle, cap, RETRY_FIVE) as adapter,
@@ -135,7 +135,7 @@ def test_token_cap_counts_the_first_call() -> None:
 
 def test_failed_attempt_and_missing_usage_settle_zero() -> None:
     """A 5xx attempt claims a slot but adds no tokens; a None count adds zero."""
-    replies = {1: httpx.Response(503), 2: success(60)}
+    replies = {1: httpx2.Response(503), 2: success(60)}
     calls, handle = recorder(lambda n: replies[n])
     cap = SpendCap(max_input_tokens=100)
     retry = RetryPolicy(max_attempts=2, retry_base_delay=0)
@@ -165,7 +165,7 @@ def test_threads_cannot_overrun_the_attempt_cap() -> None:
     lock = threading.Lock()
     calls, record = recorder(lambda _: success(1))
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         with lock:
             return record(request)
 
@@ -195,7 +195,7 @@ def test_threads_cannot_overrun_the_attempt_cap() -> None:
 
 def test_async_attempt_cap_is_hard_across_retries() -> None:
     """The async adapter refuses the third attempt without sending it."""
-    calls, handle = recorder(lambda _: httpx.Response(503))
+    calls, handle = recorder(lambda _: httpx2.Response(503))
     cap = SpendCap(max_attempts=2)
 
     async def run() -> JevBudgetExceededError:

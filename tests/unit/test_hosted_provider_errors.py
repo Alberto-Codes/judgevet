@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 
-import httpx
+import httpx2
 import pytest
 
 import judgevet
@@ -34,23 +34,23 @@ FAILURES = [
 ]
 
 
-def reply(status: int) -> Callable[[httpx.Request], httpx.Response]:
+def reply(status: int) -> Callable[[httpx2.Request], httpx2.Response]:
     """Return a mock transport handler that fails every request with one status.
 
     Args:
         status: The synthetic HTTP status to return.
 
     Returns:
-        A handler for `httpx.MockTransport`.
+        A handler for `httpx2.MockTransport`.
     """
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         """Build a fresh synthetic failure for each request.
 
         Returns:
             A failing response with the chosen status.
         """
-        return httpx.Response(status, json={"detail": "Synthetic failure"})
+        return httpx2.Response(status, json={"detail": "Synthetic failure"})
 
     return handle
 
@@ -65,7 +65,7 @@ def test_sync_hosted_failure_passes_kit_error_check(
     The test pins the HTTP status code too.
     """
     adapter = HTTPSystemOneAdapter(
-        api_key="synthetic", transport=httpx.MockTransport(reply(status))
+        api_key="synthetic", transport=httpx2.MockTransport(reply(status))
     )
     with pytest.raises(expected) as caught:
         adapter.system_one(STATE, QUESTIONS, "jev-1.13.0")
@@ -86,7 +86,7 @@ def test_async_hosted_failure_passes_kit_error_check(
     async def call() -> None:
         """Run one failing judgment on a scoped async adapter."""
         async with AsyncHTTPSystemOneAdapter(
-            api_key="synthetic", transport=httpx.MockTransport(reply(status))
+            api_key="synthetic", transport=httpx2.MockTransport(reply(status))
         ) as adapter:
             await adapter.system_one(STATE, QUESTIONS, "jev-1.13.0")
 

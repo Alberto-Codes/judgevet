@@ -3,7 +3,7 @@
 import asyncio
 import json
 
-import httpx
+import httpx2
 import pytest
 
 import judgevet
@@ -72,8 +72,8 @@ def test_concurrent_tasks_are_isolated(stream) -> None:
                     await first_finished.wait()
                 async with judgevet.AsyncHTTPSystemOneAdapter(
                     api_key="credential-canary",
-                    transport=httpx.MockTransport(
-                        lambda request: httpx.Response(200, json=SUCCESS)
+                    transport=httpx2.MockTransport(
+                        lambda request: httpx2.Response(200, json=SUCCESS)
                     ),
                 ) as adapter:
                     await adapter.system_one("state-canary", {})
@@ -116,17 +116,17 @@ def test_cancellation_logs_once_and_restores_scope(stream) -> None:
         assert hasattr(judgevet, "bind_request_id")
         entered = asyncio.Event()
 
-        async def respond(request: httpx.Request) -> httpx.Response:
+        async def respond(request: httpx2.Request) -> httpx2.Response:
             entered.set()
             await asyncio.Event().wait()
-            return httpx.Response(200, json=SUCCESS)
+            return httpx2.Response(200, json=SUCCESS)
 
         async def task() -> None:
             try:
                 with judgevet.bind_request_id("cancelled"):
                     async with judgevet.AsyncHTTPSystemOneAdapter(
                         api_key="credential-canary",
-                        transport=httpx.MockTransport(respond),
+                        transport=httpx2.MockTransport(respond),
                     ) as adapter:
                         await adapter.system_one("state-canary", {})
             finally:

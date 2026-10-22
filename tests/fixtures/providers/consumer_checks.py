@@ -21,7 +21,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Protocol
 
-import httpx
+import httpx2
 
 try:
     import mcp
@@ -303,15 +303,15 @@ def library_hosted() -> dict[str, Any]:
     Returns:
         Observed request line, body, credential match and parsed response.
     """
-    seen: list[httpx.Request] = []
+    seen: list[httpx2.Request] = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         seen.append(request)
-        return httpx.Response(200, json=_HOSTED)
+        return httpx2.Response(200, json=_HOSTED)
 
     with HTTPSystemOneAdapter(
         api_key=SYNTHETIC_KEY,
-        transport=httpx.MockTransport(handle),
+        transport=httpx2.MockTransport(handle),
         retry=RetryPolicy(max_attempts=1),
     ) as adapter:
         response = adapter.system_one(STATE, to_questions(REVIEW), REQUESTED_MODEL)

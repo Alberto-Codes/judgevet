@@ -2,7 +2,6 @@
 
 import asyncio
 
-import httpx
 import pytest
 import structlog
 
@@ -10,6 +9,7 @@ from judgevet import (
     AsyncHTTPSystemOneAdapter,
     GatewayConfig,
     HTTPSystemOneAdapter,
+    JevError,
     RequestMetadata,
     bind_request_id,
 )
@@ -91,7 +91,7 @@ def test_redirect_does_not_disclose(asynchronous, same_origin) -> None:
                 async with AsyncHTTPSystemOneAdapter(
                     api_key="dummy", base_url=origin.url, gateway=gateway
                 ) as adapter:
-                    with pytest.raises(httpx.HTTPStatusError):
+                    with pytest.raises(JevError):
                         await adapter.system_one("synthetic", {})
 
             asyncio.run(call())
@@ -100,7 +100,7 @@ def test_redirect_does_not_disclose(asynchronous, same_origin) -> None:
                 HTTPSystemOneAdapter(
                     api_key="dummy", base_url=origin.url, gateway=gateway
                 ) as adapter,
-                pytest.raises(httpx.HTTPStatusError),
+                pytest.raises(JevError),
             ):
                 adapter.system_one("synthetic", {})
         assert destination.requests == []

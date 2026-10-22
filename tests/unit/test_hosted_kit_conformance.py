@@ -1,7 +1,7 @@
 """Run the provider conformance kit against the hosted adapters offline (#272).
 
 `HTTPSystemOneAdapter` and `AsyncHTTPSystemOneAdapter` run over
-`httpx.MockTransport`, a synthetic key and a loopback base URL. The kit asks
+`httpx2.MockTransport`, a synthetic key and a loopback base URL. The kit asks
 its own questions, which the contract fixtures do not name. The transport
 therefore answers each request's questions in the wire shape of contract
 fixture 4 and does not replay a success body verbatim. The failing ports
@@ -16,7 +16,7 @@ Source: https://docs.typesafe.ai/api.md.
 
 Examples:
     ```python
-    import httpx
+    import httpx2
 
     from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
     from tests.unit.hosted_kit_support import BASE_URL, answer_questions
@@ -24,7 +24,7 @@ Examples:
     with HTTPSystemOneAdapter(
         api_key="synthetic",
         base_url=BASE_URL,
-        transport=httpx.MockTransport(answer_questions),
+        transport=httpx2.MockTransport(answer_questions),
     ) as adapter:
         adapter.system_one("Synthetic state.", {"q": {"type": "noul"}}, "m")
     ```
@@ -40,7 +40,7 @@ from collections.abc import Iterator
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 
 import anyio
-import httpx
+import httpx2
 import pytest
 
 from judgevet.adapters.outbound.http import (
@@ -74,7 +74,7 @@ pytestmark = pytest.mark.unit
 
 def test_handler_returns_valid_answers() -> None:
     """The sync adapter parses the handler's answers back to `VALID_ANSWERS`."""
-    with sync_adapter(httpx.MockTransport(answer_questions)) as adapter:
+    with sync_adapter(httpx2.MockTransport(answer_questions)) as adapter:
         response = adapter.system_one(
             "Synthetic state.", CONFORMANCE_QUESTIONS, CONFORMANCE_MODEL
         )
@@ -128,7 +128,7 @@ def _assert_request_shape(recorder: RecordingHandler) -> None:
 def test_sync_request_shape() -> None:
     """The sync adapter sends the kit's questions to the documented path."""
     recorder = RecordingHandler()
-    with sync_adapter(httpx.MockTransport(recorder)) as adapter:
+    with sync_adapter(httpx2.MockTransport(recorder)) as adapter:
         adapter.system_one(CONFORMANCE_STATE, CONFORMANCE_QUESTIONS, CONFORMANCE_MODEL)
     _assert_request_shape(recorder)
 
@@ -139,7 +139,7 @@ def test_async_request_shape() -> None:
 
     async def call() -> None:
         """Send one kit request through a scoped async adapter."""
-        async with async_adapter(httpx.MockTransport(recorder)) as adapter:
+        async with async_adapter(httpx2.MockTransport(recorder)) as adapter:
             await adapter.system_one(
                 CONFORMANCE_STATE, CONFORMANCE_QUESTIONS, CONFORMANCE_MODEL
             )
@@ -178,7 +178,7 @@ class TestHostedSyncConformance(BaseProviderConformance):
             Returns:
                 The adapter, which is its own context manager.
             """
-            return sync_adapter(httpx.MockTransport(answer_questions))
+            return sync_adapter(httpx2.MockTransport(answer_questions))
 
         return build
 
@@ -223,7 +223,7 @@ class TestHostedAsyncConformance(BaseAsyncProviderConformance):
             Returns:
                 The adapter, which is its own async context manager.
             """
-            return async_adapter(httpx.MockTransport(answer_questions))
+            return async_adapter(httpx2.MockTransport(answer_questions))
 
         return build
 

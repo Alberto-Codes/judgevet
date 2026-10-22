@@ -15,7 +15,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "httpx>=0.28",
+    "httpx2>=2.13",
     "pydantic-settings>=2.4",
     "structlog>=24.1",
     "typer>=0.12",
@@ -40,7 +40,7 @@ mcp = ["mcp>=2.2"]
 # https://github.com/Alberto-Codes/judgevet/issues/241#issuecomment-5902293909
 #
 # The async kit (`judgevet.testing._conformance_async`) imports anyio
-# directly, so the extra declares it instead of relying on httpx to carry it.
+# directly, so the extra declares it instead of relying on httpx2 to carry it.
 # Floor is 4.15.1 because 4.15.1 is the anyio release uv.lock resolves and the
 # kit's own tests run on. Source: https://deptry.com/rules-violations/.
 # Decision: https://github.com/Alberto-Codes/judgevet/issues/253#issuecomment-5904100904
@@ -248,7 +248,7 @@ forbidden_modules = [
     "os",
     "io",
     "logging",
-    "httpx",
+    "httpx2",
     "typer",
     "mcp",
     "structlog",
@@ -260,7 +260,7 @@ forbidden_modules = [
 name = "Response translation is transport-neutral"
 type = "forbidden"
 source_modules = ["judgevet.adapters.outbound.response_translation"]
-forbidden_modules = ["httpx", "httpcore"]
+forbidden_modules = ["httpx2", "httpcore2"]
 
 [[tool.importlinter.contracts]]
 # The MCP runtime is an optional extra. Nothing outside its own adapter may
@@ -324,7 +324,7 @@ forbidden_modules = [
     "os",
     "io",
     "logging",
-    "httpx",
+    "httpx2",
     "typer",
     "mcp",
     "structlog",

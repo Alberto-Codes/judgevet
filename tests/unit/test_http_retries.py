@@ -2,7 +2,7 @@
 
 import asyncio
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet import JevBudgetExceededError, RetryPolicy, SpendCap
@@ -21,9 +21,9 @@ from judgevet.domain.errors import (
 from tests.unit.test_audit_sink import RecordingSink
 
 
-def success() -> httpx.Response:
+def success() -> httpx2.Response:
     """Return a synthetic successful judgment."""
-    return httpx.Response(
+    return httpx2.Response(
         200,
         json={
             "model": "jev-1.13.0",
@@ -46,15 +46,15 @@ def no_sleep(monkeypatch) -> list[float]:
     return delays
 
 
-def unavailable_then_success() -> tuple[list[httpx.Request], httpx.MockTransport]:
+def unavailable_then_success() -> tuple[list[httpx2.Request], httpx2.MockTransport]:
     """Answer 503 on the first request and a valid judgment afterwards."""
-    calls: list[httpx.Request] = []
+    calls: list[httpx2.Request] = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(503) if len(calls) == 1 else success()
+        return httpx2.Response(503) if len(calls) == 1 else success()
 
-    return calls, httpx.MockTransport(handle)
+    return calls, httpx2.MockTransport(handle)
 
 
 def test_default_policy_has_three_attempts() -> None:
@@ -124,13 +124,13 @@ def test_retryable_status_recovers(status: int) -> None:
     """Retry an HTTP failure and return the later successful answer."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(status) if len(calls) == 1 else success()
+        return httpx2.Response(status) if len(calls) == 1 else success()
 
     with HTTPSystemOneAdapter(
         api_key="synthetic",
-        transport=httpx.MockTransport(handle),
+        transport=httpx2.MockTransport(handle),
         retry=RetryPolicy(max_attempts=3, retry_base_delay=0),
     ) as adapter:
         answer = adapter.system_one("synthetic", {"q": {"type": "noul"}})
@@ -143,14 +143,14 @@ def test_auth_never_retries() -> None:
     """Do not repeat a non-retryable authentication failure."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(401)
+        return httpx2.Response(401)
 
     with (
         HTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(max_attempts=3, retry_base_delay=0),
         ) as adapter,
         pytest.raises(JevAuthError),
@@ -163,21 +163,21 @@ def test_exhaustion_raises_last_error() -> None:
     """Bound attempts and retain the final HTTP failure as the cause."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(429, json={"detail": {"message": str(len(calls))}})
+        return httpx2.Response(429, json={"detail": {"message": str(len(calls))}})
 
     with (
         HTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(max_attempts=3, retry_base_delay=0),
         ) as adapter,
         pytest.raises(JevRateLimitError) as caught,
     ):
         adapter.system_one("synthetic", {})
     assert len(calls) == 3
-    assert isinstance(caught.value.__cause__, httpx.HTTPStatusError)
+    assert isinstance(caught.value.__cause__, httpx2.HTTPStatusError)
     assert caught.value.__cause__.response.json()["detail"]["message"] == "3"
 
 
@@ -186,14 +186,14 @@ def test_transport_requires_opt_in(enabled: bool, expected: int) -> None:
     """Replay transport errors only with explicit authorization."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        raise httpx.ReadTimeout("synthetic", request=request)
+        raise httpx2.ReadTimeout("synthetic", request=request)
 
     with (
         HTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(
                 max_attempts=3, retry_base_delay=0, retry_transport=enabled
             ),
@@ -208,14 +208,14 @@ def test_default_makes_three_attempts(no_sleep) -> None:
     """Exhaust three attempts on a persistent 429 without configuration."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(429)
+        return httpx2.Response(429)
 
     with (
         HTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
         ) as adapter,
         pytest.raises(JevRateLimitError),
     ):
@@ -227,14 +227,14 @@ def test_async_retry_recovers() -> None:
     """Apply the attempt budget to asynchronous calls too."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(429) if len(calls) == 1 else success()
+        return httpx2.Response(429) if len(calls) == 1 else success()
 
     async def run() -> None:
         async with AsyncHTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(max_attempts=3, retry_base_delay=0),
         ) as adapter:
             answer = await adapter.system_one("synthetic", {})
@@ -249,20 +249,20 @@ def test_async_exhaustion_and_classification(status: int, attempts: int) -> None
     """Apply identical retry classification and exhaustion to async requests."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(status)
+        return httpx2.Response(status)
 
     async def run() -> None:
         async with AsyncHTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(max_attempts=3, retry_base_delay=0),
         ) as adapter:
             with pytest.raises(JevError) as caught:
                 await adapter.system_one("synthetic", {})
             assert caught.value.status_code == status
-            assert isinstance(caught.value.__cause__, httpx.HTTPStatusError)
+            assert isinstance(caught.value.__cause__, httpx2.HTTPStatusError)
 
     asyncio.run(run())
     assert len(calls) == attempts
@@ -273,14 +273,14 @@ def test_async_transport_opt_in(enabled: bool, expected: int) -> None:
     """Require separate transport authorization on the async path."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        raise httpx.ReadTimeout("synthetic", request=request)
+        raise httpx2.ReadTimeout("synthetic", request=request)
 
     async def run() -> None:
         async with AsyncHTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(
                 max_attempts=3, retry_base_delay=0, retry_transport=enabled
             ),
@@ -296,14 +296,14 @@ def test_async_request_cancellation() -> None:
     """Cancellation from the transport is never translated or retried."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
         raise asyncio.CancelledError
 
     async def run() -> None:
         async with AsyncHTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(max_attempts=3, retry_base_delay=0, retry_transport=True),
         ) as adapter:
             with pytest.raises(asyncio.CancelledError):

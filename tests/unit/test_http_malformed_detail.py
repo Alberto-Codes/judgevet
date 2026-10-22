@@ -14,7 +14,7 @@ See Also:
 
 import asyncio
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet.adapters.outbound.http import (
@@ -70,10 +70,10 @@ def translated(detail: object, status: int, asynchronous: bool) -> str:
         Safe rendered error text.
     """
 
-    def respond(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(status, json={"detail": detail, "input": CANARY})
+    def respond(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(status, json={"detail": detail, "input": CANARY})
 
-    transport = httpx.MockTransport(respond)
+    transport = httpx2.MockTransport(respond)
 
     async def call_async() -> None:
         async with AsyncHTTPSystemOneAdapter(

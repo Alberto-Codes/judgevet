@@ -2,10 +2,10 @@
 
 import asyncio
 
-import httpx
+import httpx2
 import pytest
 
-from judgevet import RetryPolicy
+from judgevet import JevError, RetryPolicy
 from judgevet.adapters.inbound.settings import Settings
 from judgevet.adapters.outbound import retries
 from judgevet.adapters.outbound.http import (
@@ -38,7 +38,7 @@ def test_invalid_delay(name, value) -> None:
     [
         (422, JevRequestError),
         (408, JevRequestError),
-        (302, httpx.HTTPStatusError),
+        (302, JevError),
         (200, JevResponseError),
     ],
 )
@@ -46,14 +46,14 @@ def test_unretryable_outcomes(status, error) -> None:
     """Never replay invalid requests, redirects, or invalid successful bodies."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(status, content=b"not-json")
+        return httpx2.Response(status, content=b"not-json")
 
     with (
         HTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(max_attempts=3, retry_base_delay=0),
         ) as adapter,
         pytest.raises(error),
@@ -71,7 +71,7 @@ def test_exponential_jitter_and_cap(monkeypatch, fraction) -> None:
     with (
         HTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(lambda _: httpx.Response(429)),
+            transport=httpx2.MockTransport(lambda _: httpx2.Response(429)),
             retry=RetryPolicy(max_attempts=5, retry_base_delay=2, retry_max_delay=5),
         ) as adapter,
         pytest.raises(JevRateLimitError),
@@ -84,9 +84,9 @@ def test_async_cancel_during_backoff(monkeypatch) -> None:
     """Propagate cancellation from an awaited delay without another request."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
-        return httpx.Response(429)
+        return httpx2.Response(429)
 
     async def cancel(delay: float) -> None:
         raise asyncio.CancelledError
@@ -94,7 +94,7 @@ def test_async_cancel_during_backoff(monkeypatch) -> None:
     async def run() -> None:
         async with AsyncHTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(handle),
+            transport=httpx2.MockTransport(handle),
             retry=RetryPolicy(max_attempts=3),
         ) as adapter:
             with pytest.raises(asyncio.CancelledError):

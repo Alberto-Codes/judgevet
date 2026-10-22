@@ -111,9 +111,9 @@ class JevError(ProviderError):
     hierarchy. A ProviderError is not a JevError.
 
     This is the parent of the service-error hierarchy, not local policy errors
-    or every HTTPX exception. The one local error under it is
+    or every Python exception. The one local error under it is
     JevBudgetExceededError, which a caller's spend cap raises.
-    Redirects can propagate raw HTTPX status errors.
+    The HTTP adapters wrap status failures and retain the transport error as cause.
     The base class always reports retryable=False; subclasses override it.
 
     Attributes:

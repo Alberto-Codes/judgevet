@@ -115,7 +115,7 @@ retains release-runner behavior; CLI examples have a 60-second deadline.
 The explicit workflow selection is in `scripts/doc_cli_prepare.py`. The same
 check runs both tutorial shell continuations against their exact saved Python
 programs. It compares policy tutorial output literally and judgment output with
-synthetic fixture values. A temporary startup helper routes tutorial HTTPX
+synthetic fixture values. A temporary startup helper routes tutorial HTTPX2
 clients to loopback. The staged-review continuation uses the three checkout
 example files in a temporary Git repository and checks clean, met and unmet
 outcomes. A wrong tutorial filename fails with its source page and fence line.

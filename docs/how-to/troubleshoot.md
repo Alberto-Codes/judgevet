@@ -23,7 +23,7 @@ share unreviewed service error text. These steps assume the
 | CLI exit 3 | Read the policy report and returned answers. | Treat it as an unmet policy, not an installation failure. |
 
 The CLI/MCP credential precedence and direct-library differences are documented
-in [SECURITY](../../SECURITY.md#credentials). HTTPX proxy and certificate behavior
+in [SECURITY](../../SECURITY.md#credentials). HTTPX2 proxy and certificate behavior
 is described under [transport](../../SECURITY.md#transport-and-certificates).
 For library categories, see [error handling](handle-errors.md).
 

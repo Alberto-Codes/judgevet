@@ -1,7 +1,7 @@
 """Prepare question wire forms and opt-in redacted state before serialization.
 
 Redaction sees a deep copy of ordinary JSON state. The immutable serialized body
-is reused across retries. The unconfigured path retains HTTPX JSON handling.
+is reused across retries. The unconfigured path retains HTTPX2 JSON handling.
 The options also carry the caller-held key for the audit record's fingerprint.
 Wire payload fields follow https://docs.typesafe.ai/api.
 

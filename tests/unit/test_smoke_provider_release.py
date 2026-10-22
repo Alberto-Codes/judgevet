@@ -103,7 +103,7 @@ def _dists(graph: Mapping[str, list[str]]) -> dict[str, dict[str, object]]:
 
 
 _KIT_REQUIRES = [
-    "httpx",
+    "httpx2",
     'pytest>=9.1.1; extra == "conformance"',
     'anyio>=4.15.1; extra == "conformance"',
 ]
@@ -117,7 +117,7 @@ def _identity(purelib: Path, **changes: object) -> dict[str, object]:
         "py_typed": True,
         "purelib": str(purelib),
         "origins": {"judgevet": str(purelib / "judgevet" / "__init__.py")},
-        "distributions": _dists({"judgevet": _KIT_REQUIRES, "httpx": [], "pip": []}),
+        "distributions": _dists({"judgevet": _KIT_REQUIRES, "httpx2": [], "pip": []}),
         "environment": LINUX,
         "mcp_spec": False,
         "network": BLOCKED,
@@ -144,13 +144,13 @@ def test_identity_accepts_isolated_receipt(tmp_path: Path) -> None:
         {"mcp_spec": True},
         {"origins": {}},
         {"origins": {"judgevet": str(ROOT / "src" / "judgevet" / "__init__.py")}},
-        {"distributions": _dists({"httpx": []})},
-        {"distributions": _dists({"judgevet": ["httpx"]})},
+        {"distributions": _dists({"httpx2": []})},
+        {"distributions": _dists({"judgevet": ["httpx2"]})},
         {"network": {"errors": [None, None]}},
         {"preimport": ["judgevet"]},
         {
             "distributions": _dists(
-                {"judgevet": ["httpx", "pytest"], "httpx": [], "pytest": []}
+                {"judgevet": ["httpx2", "pytest"], "httpx2": [], "pytest": []}
             )
         },
     ],
@@ -315,19 +315,19 @@ def test_main_reports_failure_status(
     assert "FAIL" in capsys.readouterr().out
 
 
-_JUDGEVET = ["httpx>=0.27", "typer", 'mcp>=2.2; extra == "mcp"']
+_JUDGEVET = ["httpx2>=0.27", "typer", 'mcp>=2.2; extra == "mcp"']
 _COMPOUND = '(extra == "mcp" or extra == "all") and python_version >= "3.12"'
 
 
 @pytest.mark.parametrize(
     ("graph", "extra"),
     [
-        ({"judgevet": ["httpx>=0.27", "typer"], "typer": []}, False),
-        ({"judgevet": _JUDGEVET, "httpx": [], "typer": [], "pywin32": []}, False),
+        ({"judgevet": ["httpx2>=0.27", "typer"], "typer": []}, False),
+        ({"judgevet": _JUDGEVET, "httpx2": [], "typer": [], "pywin32": []}, False),
         (
             {
                 "judgevet": [*_JUDGEVET, 'pywin32; sys_platform == "win32"'],
-                "httpx": [],
+                "httpx2": [],
                 "typer": [],
                 "pywin32": [],
             },
@@ -336,7 +336,7 @@ _COMPOUND = '(extra == "mcp" or extra == "all") and python_version >= "3.12"'
         (
             {
                 "judgevet": [*_JUDGEVET, 'tomli; python_version < "3.11"'],
-                "httpx": [],
+                "httpx2": [],
                 "typer": [],
                 "tomli": [],
             },
@@ -345,18 +345,18 @@ _COMPOUND = '(extra == "mcp" or extra == "all") and python_version >= "3.12"'
         (
             {
                 "judgevet": [*_JUDGEVET, 'legacy; extra != "mcp"'],
-                "httpx": [],
+                "httpx2": [],
                 "typer": [],
                 "mcp": [],
                 "legacy": [],
             },
             True,
         ),
-        ({"judgevet": _JUDGEVET, "httpx": [], "typer": []}, True),
+        ({"judgevet": _JUDGEVET, "httpx2": [], "typer": []}, True),
         (
             {
                 "judgevet": [*_JUDGEVET, f"compound; {_COMPOUND}"],
-                "httpx": [],
+                "httpx2": [],
                 "typer": [],
                 "mcp": [],
             },
@@ -387,13 +387,13 @@ _RUNTIME = "An inference runtime is installed"
     ("graph", "extra"),
     [
         (
-            {"judgevet": [*_JUDGEVET, "torch"], "httpx": [], "typer": [], "torch": []},
+            {"judgevet": [*_JUDGEVET, "torch"], "httpx2": [], "typer": [], "torch": []},
             False,
         ),
         (
             {
                 "judgevet": [*_JUDGEVET, 'torch; extra == "mcp"'],
-                "httpx": [],
+                "httpx2": [],
                 "typer": [],
                 "mcp": [],
                 "torch": [],
@@ -420,7 +420,7 @@ def test_inventory_accepts_marker_closures() -> None:
     ]
     base = {
         "judgevet": requires,
-        "httpx": ['anyio; python_version >= "3.8"', "absent; os_name == 'nt'"],
+        "httpx2": ['anyio; python_version >= "3.8"', "absent; os_name == 'nt'"],
         "anyio": [],
         "typer": [],
         "legacy": [],
@@ -562,13 +562,13 @@ _EXTRA = "conformance extra adds"
 @pytest.mark.parametrize(
     ("requires", "match"),
     [
-        (["httpx", "pytest>=9.1.1", _KIT_ANYIO], _BASE),
-        (["httpx", _KIT_PYTEST, "anyio>=4.15.1"], _BASE),
-        (["httpx"], _EXTRA),
-        (["httpx", _KIT_PYTEST], _EXTRA),
-        (["httpx", _KIT_ANYIO], _EXTRA),
-        (["httpx", *_KIT, 'torch; extra == "conformance"'], _EXTRA),
-        (["httpx", 'pytest; extra == "mcp"', 'anyio; extra == "mcp"'], _EXTRA),
+        (["httpx2", "pytest>=9.1.1", _KIT_ANYIO], _BASE),
+        (["httpx2", _KIT_PYTEST, "anyio>=4.15.1"], _BASE),
+        (["httpx2"], _EXTRA),
+        (["httpx2", _KIT_PYTEST], _EXTRA),
+        (["httpx2", _KIT_ANYIO], _EXTRA),
+        (["httpx2", *_KIT, 'torch; extra == "conformance"'], _EXTRA),
+        (["httpx2", 'pytest; extra == "mcp"', 'anyio; extra == "mcp"'], _EXTRA),
     ],
     ids=[
         "unconditional-pytest",
@@ -588,13 +588,13 @@ def test_conformance_metadata_rejects_misplaced_kit_requirements(
 
 
 def test_conformance_metadata_accepts_pytest_and_anyio_behind_extra() -> None:
-    requires = ["httpx", 'mcp>=2.2; extra == "mcp"', *_KIT]
+    requires = ["httpx2", 'mcp>=2.2; extra == "mcp"', *_KIT]
     assert runner.check_conformance_metadata(requires, LINUX) is None
 
 
 _KIT_GRAPH = {
-    "judgevet": ["httpx", 'mcp>=2.2; extra == "mcp"', *_KIT],
-    "httpx": [],
+    "judgevet": ["httpx2", 'mcp>=2.2; extra == "mcp"', *_KIT],
+    "httpx2": [],
     "pytest": ["iniconfig>=1"],
     "iniconfig": [],
     "anyio": [],
@@ -623,8 +623,8 @@ _EXTRA_INSTALL = "does not match its extra"
         ({k: v for k, v in _KIT_GRAPH.items() if k != "anyio"}, _CLOSURE),
         (
             {
-                "judgevet": ["httpx", _KIT_PYTEST],
-                "httpx": [],
+                "judgevet": ["httpx2", _KIT_PYTEST],
+                "httpx2": [],
                 "pytest": ["iniconfig>=1"],
                 "iniconfig": [],
                 "pip": [],
@@ -632,7 +632,7 @@ _EXTRA_INSTALL = "does not match its extra"
             _EXTRA_INSTALL,
         ),
         (
-            {"judgevet": ["httpx", _KIT_ANYIO], "httpx": [], "anyio": [], "pip": []},
+            {"judgevet": ["httpx2", _KIT_ANYIO], "httpx2": [], "anyio": [], "pip": []},
             _EXTRA_INSTALL,
         ),
         (

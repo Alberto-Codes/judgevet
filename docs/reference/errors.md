@@ -45,7 +45,7 @@ exception is `JevMaxTokensExceededError`, which inherits from `JevRequestError`.
 | `JevRequestError` | `JevRequestError(message, status_code)` | Other 400–499 statuses, excluding 429 | `False` |
 | `JevMaxTokensExceededError` | `JevMaxTokensExceededError(message, status_code)` | A 400–499 body whose `detail.error_type` is `max_tokens_exceeded` | `False` |
 | `JevRateLimitError` | `JevRateLimitError(message, status_code)` | 429 | `True` |
-| `JevServiceError` | `JevServiceError(message, status_code=None)` | 500–599, or HTTPX `RequestError` such as a timeout | `True` |
+| `JevServiceError` | `JevServiceError(message, status_code=None)` | 500–599, or HTTPX2 `RequestError` such as a timeout | `True` |
 | `JevResponseError` | `JevResponseError(message, status_code)` | Successful 200–299 answer that cannot be parsed | `False` |
 | `JevBudgetExceededError` | `JevBudgetExceededError(limit, cap, spent)` | No HTTP status; an opt-in `SpendCap` refused the attempt before sending | `False` |
 
@@ -112,8 +112,13 @@ assert transport.retryable is True
 [the retry module](../../src/judgevet/adapters/outbound/retries.py).
 The adapter does not honor `Retry-After` headers. A read timeout does not prove the service stopped processing.
 
-`except JevError` does not catch every HTTPX or Python exception. Redirects are
-disabled and can propagate raw `httpx.HTTPStatusError`. Missing constructor keys,
+The adapters wrap non-success HTTP statuses in `JevError` subclasses and retain
+`httpx2.HTTPStatusError` as the cause. Redirects stay disabled; a redirect status
+raises the generic `JevError`. This mapping has synthetic test evidence and does
+not establish that the live service returns redirects.
+Source: https://pydantic.dev/docs/httpx2/api/exceptions/.
+
+`except JevError` does not catch every Python exception. Missing constructor keys,
 invalid arguments, serialization failures and application errors can raise other
 types. Keep those visible without publishing an arbitrary traceback. See the
 [handling recipe](../how-to/handle-errors.md).

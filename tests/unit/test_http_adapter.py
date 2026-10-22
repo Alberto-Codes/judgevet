@@ -3,12 +3,13 @@
 import json
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet.adapters.outbound.http import HTTPSystemOneAdapter
 from judgevet.domain.errors import (
     JevAuthError,
+    JevError,
     JevRateLimitError,
     JevRequestError,
     JevResponseError,
@@ -78,7 +79,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 401
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Unauthorized",
                 request=MagicMock(),
                 response=mock_response,
@@ -96,7 +97,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 403
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Forbidden",
                 request=MagicMock(),
                 response=mock_response,
@@ -114,7 +115,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 400
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Bad Request",
                 request=MagicMock(),
                 response=mock_response,
@@ -132,7 +133,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 500
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Internal Server Error",
                 request=MagicMock(),
                 response=mock_response,
@@ -149,7 +150,7 @@ class TestHTTPSystemOneAdapter:
         adapter = HTTPSystemOneAdapter(api_key="test-key")
 
         with patch.object(adapter._client, "post") as mock_post:
-            mock_post.side_effect = httpx.RequestError(
+            mock_post.side_effect = httpx2.RequestError(
                 message="Connection timeout",
                 request=MagicMock(),
             )
@@ -168,7 +169,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 401
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Unauthorized",
                 request=MagicMock(),
                 response=mock_response,
@@ -192,7 +193,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 403
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Forbidden",
                 request=MagicMock(),
                 response=mock_response,
@@ -216,7 +217,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 400
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Bad Request",
                 request=MagicMock(),
                 response=mock_response,
@@ -240,7 +241,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 500
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Internal Server Error",
                 request=MagicMock(),
                 response=mock_response,
@@ -261,7 +262,7 @@ class TestHTTPSystemOneAdapter:
         adapter = HTTPSystemOneAdapter(api_key=fake_key)
 
         with patch.object(adapter._client, "post") as mock_post:
-            mock_post.side_effect = httpx.RequestError(
+            mock_post.side_effect = httpx2.RequestError(
                 message="Connection timeout",
                 request=MagicMock(),
             )
@@ -302,7 +303,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 429
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Rate limit exceeded",
                 request=MagicMock(),
                 response=mock_response,
@@ -326,7 +327,7 @@ class TestHTTPSystemOneAdapter:
             mock_response = MagicMock()
             mock_response.content = b""
             mock_response.status_code = 529
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.raise_for_status.side_effect = httpx2.HTTPStatusError(
                 message="Service overloaded",
                 request=MagicMock(),
                 response=mock_response,
@@ -345,12 +346,12 @@ class TestHTTPSystemOneAdapter:
     def test_system_one_translates_read_timeout_to_jev_service_error(self) -> None:
         """Test that a ReadTimeout is translated to JevServiceError."""
 
-        def handler(request: httpx.Request) -> httpx.Response:
-            raise httpx.ReadTimeout("read timed out", request=request)
+        def handler(request: httpx2.Request) -> httpx2.Response:
+            raise httpx2.ReadTimeout("read timed out", request=request)
 
         adapter = HTTPSystemOneAdapter(
             api_key="test-key",
-            transport=httpx.MockTransport(handler),
+            transport=httpx2.MockTransport(handler),
         )
         with pytest.raises(JevServiceError) as exc_info:
             adapter.system_one(state="test", questions={})
@@ -363,12 +364,12 @@ class TestHTTPSystemOneAdapter:
     def test_default_timeout_reaches_client(self) -> None:
         """Test that the default 30 s read / 5 s connect timeout reaches the client."""
         adapter = HTTPSystemOneAdapter(api_key="test-key")
-        assert adapter._client._timeout == httpx.Timeout(30.0, connect=5.0)
+        assert adapter._client._timeout == httpx2.Timeout(30.0, connect=5.0)
 
     def test_explicit_timeout_reaches_client(self) -> None:
         """Test that an explicit timeout_seconds reaches the client."""
         adapter = HTTPSystemOneAdapter(api_key="test-key", timeout_seconds=90.0)
-        assert adapter._client._timeout == httpx.Timeout(90.0, connect=5.0)
+        assert adapter._client._timeout == httpx2.Timeout(90.0, connect=5.0)
 
     def test_init_raises_on_zero_timeout(self) -> None:
         """Test that a zero timeout raises ValueError."""
@@ -384,30 +385,14 @@ class TestHTTPSystemOneAdapter:
         "status_code",
         [301, 302, 304, 308],
     )
-    def test_system_one_3xx_fallthrough_preserves_httpx_exception(
+    def test_system_one_3xx_wraps_status_error(
         self,
         status_code: int,
     ) -> None:
-        """Test that 3xx status codes propagate httpx.HTTPStatusError unchanged.
+        """Keep redirects disabled and preserve the HTTP status error as cause."""
 
-        3xx responses are unhandled by translate_status and return None,
-        which causes the original httpx.HTTPStatusError to be raised without
-        wrapping or chaining. This test verifies:
-
-        1. The raw httpx.HTTPStatusError type is raised (not a Jev* subclass);
-        2. __cause__ is None (no explicit chaining with 'raise X from Y');
-        3. __context__ is None (no implicit chaining from except blocks).
-
-        These attributes are set only when exceptions are re-raised explicitly
-        (cause) or when a new exception is raised inside an active except block
-        (context). A bare 'raise' in the except handler preserves both as None.
-
-        The test drives the adapter with MockTransport to ensure a 3xx response
-        reaches raise_for_status() and propagates to translate_status.
-        """
-
-        def handler(request: httpx.Request) -> httpx.Response:
-            return httpx.Response(
+        def handler(request: httpx2.Request) -> httpx2.Response:
+            return httpx2.Response(
                 status_code,
                 request=request,
                 headers={"Location": "https://example.com/redirect"},
@@ -415,15 +400,15 @@ class TestHTTPSystemOneAdapter:
 
         adapter = HTTPSystemOneAdapter(
             api_key="test-key",
-            transport=httpx.MockTransport(handler),
+            transport=httpx2.MockTransport(handler),
         )
 
         assert adapter._client.follow_redirects is False
 
-        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        with pytest.raises(JevError) as exc_info:
             adapter.system_one(state="test", questions={})
 
         exc = exc_info.value
-        assert exc.__cause__ is None
-        assert exc.__context__ is None
-        assert exc.response.status_code == status_code
+        assert isinstance(exc.__cause__, httpx2.HTTPStatusError)
+        assert exc.status_code == status_code
+        assert exc.__cause__.response.status_code == status_code

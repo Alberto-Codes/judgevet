@@ -3,7 +3,7 @@
 from typing import assert_type
 
 import anyio
-import httpx
+import httpx2
 
 from judgevet import (
     Answer,
@@ -37,13 +37,13 @@ def _assert_answer_types(response: SystemOneResponse) -> None:
     assert response.nouls["noul"].noul == 0.42
 
 
-def _reply(request: httpx.Request) -> httpx.Response:
-    return httpx.Response(200, json=SUCCESS)
+def _reply(request: httpx2.Request) -> httpx2.Response:
+    return httpx2.Response(200, json=SUCCESS)
 
 
 def test_sync_root_typed_caller() -> None:
     with HTTPSystemOneAdapter(
-        api_key="test-key", transport=httpx.MockTransport(_reply)
+        api_key="test-key", transport=httpx2.MockTransport(_reply)
     ) as adapter:
         _assert_answer_types(_call(adapter))
 
@@ -51,7 +51,7 @@ def test_sync_root_typed_caller() -> None:
 def test_async_root_typed_caller() -> None:
     async def exercise() -> None:
         async with AsyncHTTPSystemOneAdapter(
-            api_key="test-key", transport=httpx.MockTransport(_reply)
+            api_key="test-key", transport=httpx2.MockTransport(_reply)
         ) as adapter:
             _assert_answer_types(await _call_async(adapter))
 

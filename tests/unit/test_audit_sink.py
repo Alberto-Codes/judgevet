@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterator
 from datetime import UTC, timedelta
 from types import MappingProxyType
 
-import httpx
+import httpx2
 import pytest
 import structlog
 from structlog.testing import capture_logs
@@ -81,21 +81,21 @@ class FailingSink:
 Outcome = SystemOneResponse | JevRequestError
 
 
-def replies(*responses: httpx.Response) -> Callable[[httpx.Request], httpx.Response]:
+def replies(*responses: httpx2.Response) -> Callable[[httpx2.Request], httpx2.Response]:
     """Return a handler that answers each attempt with the next response."""
     queue = list(responses)
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         return queue.pop(0)
 
     return handle
 
 
 def sync_adapter(
-    sink: AuditSink | None, *responses: httpx.Response
+    sink: AuditSink | None, *responses: httpx2.Response
 ) -> HTTPSystemOneAdapter:
     """Build a sync adapter, passing the sink only when one is given."""
-    transport = httpx.MockTransport(replies(*responses))
+    transport = httpx2.MockTransport(replies(*responses))
     if sink is None:
         return HTTPSystemOneAdapter(
             api_key="synthetic", transport=transport, retry=RETRY
@@ -105,7 +105,7 @@ def sync_adapter(
     )
 
 
-def sync_call(sink: AuditSink | None, *responses: httpx.Response) -> Outcome:
+def sync_call(sink: AuditSink | None, *responses: httpx2.Response) -> Outcome:
     """Run one sync call over a mock transport and return its result or error."""
     with sync_adapter(sink, *responses) as adapter:
         try:
@@ -114,13 +114,13 @@ def sync_call(sink: AuditSink | None, *responses: httpx.Response) -> Outcome:
             return exc
 
 
-def async_call(sink: AuditSink, *responses: httpx.Response) -> Outcome:
+def async_call(sink: AuditSink, *responses: httpx2.Response) -> Outcome:
     """Run one async call over a mock transport and return its result or error."""
 
     async def run() -> Outcome:
         async with AsyncHTTPSystemOneAdapter(
             api_key="synthetic",
-            transport=httpx.MockTransport(replies(*responses)),
+            transport=httpx2.MockTransport(replies(*responses)),
             retry=RETRY,
             audit=sink,
         ) as adapter:
@@ -166,7 +166,7 @@ def assert_success_record(record: JudgmentRecord) -> None:
 def test_success_writes_one_complete_record(caller) -> None:
     """A successful call writes exactly one record with the typed answers."""
     sink = RecordingSink()
-    answer = answered(caller(sink, httpx.Response(200, json=SUCCESS)))
+    answer = answered(caller(sink, httpx2.Response(200, json=SUCCESS)))
     assert answer.model == "jev-1.13.0"
     assert len(sink.records) == 1
     assert_success_record(sink.records[0])
@@ -175,7 +175,7 @@ def test_success_writes_one_complete_record(caller) -> None:
 def test_retried_call_writes_one_record() -> None:
     """A rate limit followed by success writes one record, not one per attempt."""
     sink = RecordingSink()
-    sync_call(sink, httpx.Response(429), httpx.Response(200, json=SUCCESS))
+    sync_call(sink, httpx2.Response(429), httpx2.Response(200, json=SUCCESS))
     assert len(sink.records) == 1
     assert_success_record(sink.records[0])
 
@@ -184,7 +184,7 @@ def test_retried_call_writes_one_record() -> None:
 def test_rejected_call_writes_one_error_record(caller) -> None:
     """A 422 writes one error record with the class name and no answers."""
     sink = RecordingSink()
-    error = caller(sink, httpx.Response(422, json=INVALID))
+    error = caller(sink, httpx2.Response(422, json=INVALID))
     assert isinstance(error, JevRequestError)
     assert len(sink.records) == 1
     record = sink.records[0]
@@ -198,9 +198,9 @@ def test_rejected_call_writes_one_error_record(caller) -> None:
 
 @pytest.mark.parametrize(
     "response",
-    [httpx.Response(200, json=SUCCESS), httpx.Response(422, json=INVALID)],
+    [httpx2.Response(200, json=SUCCESS), httpx2.Response(422, json=INVALID)],
 )
-def test_state_never_enters_the_record(response: httpx.Response) -> None:
+def test_state_never_enters_the_record(response: httpx2.Response) -> None:
     """The state sentinel appears in no field and not in the representation."""
     sink = RecordingSink()
     sync_call(sink, response)
@@ -213,7 +213,7 @@ def test_state_never_enters_the_record(response: httpx.Response) -> None:
 def test_record_is_frozen() -> None:
     """A written record cannot be reassigned or have its mappings edited."""
     sink = RecordingSink()
-    sync_call(sink, httpx.Response(200, json=SUCCESS))
+    sync_call(sink, httpx2.Response(200, json=SUCCESS))
     record = sink.records[0]
     field = "outcome"
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -241,7 +241,7 @@ def stream() -> Iterator[io.StringIO]:
 @CALLERS
 def test_failing_sink_keeps_the_answer_and_reports(caller, stream) -> None:
     """A sink failure returns the answer and the rendered event names the failure."""
-    answer = answered(caller(FailingSink(), httpx.Response(200, json=SUCCESS)))
+    answer = answered(caller(FailingSink(), httpx2.Response(200, json=SUCCESS)))
     assert answer.model == "jev-1.13.0"
     line = stream.getvalue().splitlines()[-1]
     event = json.loads(line)
@@ -253,7 +253,7 @@ def test_failing_sink_keeps_the_answer_and_reports(caller, stream) -> None:
 
 def test_failing_sink_keeps_the_original_error(stream) -> None:
     """A sink failure after a rejected call re-raises the original error."""
-    error = sync_call(FailingSink(), httpx.Response(422, json=INVALID))
+    error = sync_call(FailingSink(), httpx2.Response(422, json=INVALID))
     assert isinstance(error, JevRequestError)
     event = json.loads(stream.getvalue().splitlines()[-1])
     assert event["audit_error"] == "OSError"
@@ -261,7 +261,7 @@ def test_failing_sink_keeps_the_original_error(stream) -> None:
 
 def test_without_audit_nothing_is_written(stream) -> None:
     """Omitting the option leaves the answer and the event unchanged."""
-    answer = answered(sync_call(None, httpx.Response(200, json=SUCCESS)))
+    answer = answered(sync_call(None, httpx2.Response(200, json=SUCCESS)))
     assert answer.model == "jev-1.13.0"
     event = json.loads(stream.getvalue().splitlines()[-1])
     assert "audit_error" not in event
@@ -277,7 +277,7 @@ def test_failing_sink_is_logged_once_with_its_traceback() -> None:
             cache_logger_on_first_use=False,
         )
         with capture_logs() as events:
-            sync_call(FailingSink(), httpx.Response(200, json=SUCCESS))
+            sync_call(FailingSink(), httpx2.Response(200, json=SUCCESS))
     finally:
         if was_configured:
             structlog.configure(**previous)

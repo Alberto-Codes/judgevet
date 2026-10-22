@@ -36,8 +36,8 @@ The root `__all__` declares these supported names:
 Re-exports retain the original objects. Existing domain, port and adapter deep
 imports remain valid. There are no wrapper classes or implicit adapter owners.
 The [API reference](api.md) documents service fields and observed versus inferred
-errors. Not every possible Python or HTTP exception is a `JevError`; existing
-raw redirect errors, for example, retain their prior behavior.
+errors. Not every possible Python exception is a `JevError`.
+The HTTPX2 migration below changes injected transports and redirect errors.
 
 `judgevet.policy` supports `NoulRule`, `ChoiceRule`, `ScoreRule`, `Rule`, `Policy`,
 `ValidatedPolicy`, `RuleReport`, `PolicyReport`, `validate_policy`,
@@ -51,6 +51,30 @@ The [typed policy guide](../how-to/use-policy-library.md) gives runnable example
 constructor invariants, strict answer checks, immutable snapshots, error handling
 and explicit sync/async lifecycle ownership. Public policy errors are local
 `ValueError` subclasses, separate from the Jev service-error hierarchy.
+
+## HTTPX2 migration
+
+This breaking change replaces the HTTP client dependency with `httpx2>=2.13`.
+The public judgevet imports and port protocols stay unchanged. Callers that
+inject HTTP transports must migrate those objects together with the adapter.
+
+| Surface | Change | Migration |
+|---|---|---|
+| Injected transports | `transport=` takes HTTPX2 base transports | Replace `httpx` imports and transport objects with `httpx2`. Objects from the two libraries do not interoperate. |
+| Status errors | Redirects now raise `JevError`, with `httpx2.HTTPStatusError` as the cause | Catch `JevError` at the library boundary. Inspect `__cause__` only when transport details are needed. |
+| TLS defaults | The default context uses the OS trust store through `truststore` | Install CA roots in the deployment environment or use `NetworkConfig(ca_bundle=...)`. |
+
+An existing `except httpx.HTTPStatusError` no longer handles redirect failures.
+Mapped authentication, request, rate-limit and service errors retain their
+typed classes. Retries, explicit proxy settings and CA overrides retain their
+existing behavior. There is no legacy transport shim.
+
+Source: https://pydantic.dev/docs/httpx2/get-started/migration/.
+Source: https://pydantic.dev/docs/httpx2/advanced/ssl/.
+
+Offline sync and async tests prove the context type, CA overrides and synthetic
+redirect wrapping. They do not verify a new live-service response or promote
+the verification ledger's historical observations.
 
 ## Neutral error base
 

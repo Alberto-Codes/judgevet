@@ -28,7 +28,7 @@ class TestNormalize:
 
     def test_simple_name(self) -> None:
         """A simple name is lowercased."""
-        assert _normalize("httpx") == "httpx"
+        assert _normalize("httpx2") == "httpx2"
 
     def test_underscore_to_dash(self) -> None:
         """Underscores become dashes."""
@@ -52,28 +52,29 @@ class TestExtractName:
 
     def test_simple_name(self) -> None:
         """A simple name is normalized."""
-        assert _extract_name("httpx") == "httpx"
+        assert _extract_name("httpx2") == "httpx2"
 
     def test_with_extras(self) -> None:
         """Extras are stripped."""
-        assert _extract_name("httpx[http2]") == "httpx"
+        assert _extract_name("httpx2[http2]") == "httpx2"
 
     def test_with_specifier(self) -> None:
         """Specifiers are stripped."""
-        assert _extract_name("httpx>=0.28") == "httpx"
+        assert _extract_name("httpx2>=0.28") == "httpx2"
 
     def test_with_complex_specifier(self) -> None:
         """Complex specifiers are stripped."""
-        assert _extract_name("httpx>=0.28,<1.0") == "httpx"
+        assert _extract_name("httpx2>=0.28,<1.0") == "httpx2"
 
     def test_with_marker(self) -> None:
         """Markers are stripped."""
-        assert _extract_name('httpx; python_version < "3.12"') == "httpx"
+        assert _extract_name('httpx2; python_version < "3.12"') == "httpx2"
 
     def test_with_all_modifiers(self) -> None:
         """Extras, specifiers, and markers are all stripped."""
         assert (
-            _extract_name('httpx[http2]>=0.28,<1.0; python_version < "3.12"') == "httpx"
+            _extract_name('httpx2[http2]>=0.28,<1.0; python_version < "3.12"')
+            == "httpx2"
         )
 
     def test_pydantic_settings_normalized(self) -> None:
@@ -111,17 +112,17 @@ class TestParseRuntimeNames:
     def test_single_dependency(self) -> None:
         """A single dependency is parsed and normalized."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[project]\ndependencies = ["httpx>=0.28"]\n')
+            f.write('[project]\ndependencies = ["httpx2>=0.28"]\n')
             f.flush()
             names = parse_runtime_names(Path(f.name))
-        assert names == {"httpx"}
+        assert names == {"httpx2"}
 
     def test_multiple_dependencies(self) -> None:
         """Multiple dependencies are parsed and normalized."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
                 "[project]\ndependencies = [\n"
-                '    "httpx>=0.28",\n'
+                '    "httpx2>=0.28",\n'
                 '    "pydantic-settings>=2.4",\n'
                 '    "structlog>=24.1",\n'
                 '    "typer>=0.12",\n'
@@ -129,7 +130,7 @@ class TestParseRuntimeNames:
             )
             f.flush()
             names = parse_runtime_names(Path(f.name))
-        assert names == {"httpx", "pydantic-settings", "structlog", "typer"}
+        assert names == {"httpx2", "pydantic-settings", "structlog", "typer"}
 
     def test_complex_dependency(self) -> None:
         """A dependency with extras, specifiers, and markers is parsed."""
@@ -138,19 +139,19 @@ class TestParseRuntimeNames:
             f.write(
                 """[project]
 dependencies = [
-    "httpx[http2]>=0.28,<1.0",
+    "httpx2[http2]>=0.28,<1.0",
     "Pydantic_Settings>=2.4; python_version >= '3.12'",
 ]
 """
             )
             f.flush()
             names = parse_runtime_names(Path(f.name))
-        assert names == {"httpx", "pydantic-settings"}
+        assert names == {"httpx2", "pydantic-settings"}
 
     def test_current_pyproject_toml(self) -> None:
         """The real pyproject.toml parses to the expected set."""
         names = parse_runtime_names(Path("pyproject.toml"))
-        assert names == {"httpx", "pydantic-settings", "structlog", "typer"}
+        assert names == {"httpx2", "pydantic-settings", "structlog", "typer"}
 
 
 class TestCheckDependencies:
@@ -159,9 +160,9 @@ class TestCheckDependencies:
     def test_exact_match_returns_empty(self) -> None:
         """An exact match returns (empty, empty)."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[project]\ndependencies = ["httpx>=0.28"]\n')
+            f.write('[project]\ndependencies = ["httpx2>=0.28"]\n')
             f.flush()
-            unpinned, missing = check_dependencies(Path(f.name), {"httpx"})
+            unpinned, missing = check_dependencies(Path(f.name), {"httpx2"})
         assert unpinned == []
         assert missing == []
 
@@ -169,19 +170,19 @@ class TestCheckDependencies:
         """A dependency not in the allowed set is in unpinned."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write(
-                '[project]\ndependencies = ["pytest-asyncio>=1.0", "httpx>=0.28"]\n'
+                '[project]\ndependencies = ["pytest-asyncio>=1.0", "httpx2>=0.28"]\n'
             )
             f.flush()
-            unpinned, missing = check_dependencies(Path(f.name), {"httpx"})
+            unpinned, missing = check_dependencies(Path(f.name), {"httpx2"})
         assert unpinned == ["pytest-asyncio"]
         assert missing == []
 
     def test_missing_dependency(self) -> None:
         """A missing dependency is in missing."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
-            f.write('[project]\ndependencies = ["httpx>=0.28"]\n')
+            f.write('[project]\ndependencies = ["httpx2>=0.28"]\n')
             f.flush()
-            unpinned, missing = check_dependencies(Path(f.name), {"httpx", "typer"})
+            unpinned, missing = check_dependencies(Path(f.name), {"httpx2", "typer"})
         assert unpinned == []
         assert missing == ["typer"]
 
@@ -190,20 +191,20 @@ class TestCheckDependencies:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             f.write('[project]\ndependencies = ["pytest-asyncio>=1.0", "rich>=13"]\n')
             f.flush()
-            unpinned, missing = check_dependencies(Path(f.name), {"httpx", "typer"})
+            unpinned, missing = check_dependencies(Path(f.name), {"httpx2", "typer"})
         assert unpinned == ["pytest-asyncio", "rich"]
-        assert missing == ["httpx", "typer"]
+        assert missing == ["httpx2", "typer"]
 
     def test_normalization_holds(self) -> None:
         """Normalization is applied before comparison."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             # Use a name that normalizes to pydantic-settings but with different casing
             f.write(
-                '[project]\ndependencies = ["Pydantic_Settings>=2.4", "httpx>=0.28"]\n'
+                '[project]\ndependencies = ["Pydantic_Settings>=2.4", "httpx2>=0.28"]\n'
             )
             f.flush()
             unpinned, missing = check_dependencies(
-                Path(f.name), {"httpx", "pydantic-settings"}
+                Path(f.name), {"httpx2", "pydantic-settings"}
             )
         assert unpinned == []
         assert missing == []
@@ -213,7 +214,7 @@ class TestCheckDependencies:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".toml", delete=False) as f:
             # Add rich to the existing dependencies
             f.write("[project]\ndependencies = [\n")
-            f.write('    "httpx>=0.28",\n')
+            f.write('    "httpx2>=0.28",\n')
             f.write('    "pydantic-settings>=2.4",\n')
             f.write('    "structlog>=24.1",\n')
             f.write('    "typer>=0.12",\n')
@@ -238,7 +239,7 @@ class TestMain:
             pyproject = tmpdir_path / "pyproject.toml"
             pyproject.write_text(
                 "[project]\ndependencies = [\n"
-                '    "httpx>=0.28",\n'
+                '    "httpx2>=0.28",\n'
                 '    "pydantic-settings>=2.4",\n'
                 '    "structlog>=24.1",\n'
                 '    "typer>=0.12",\n'
@@ -258,7 +259,7 @@ class TestMain:
             pyproject = tmpdir_path / "pyproject.toml"
             pyproject.write_text(
                 "[project]\ndependencies = [\n"
-                '    "httpx>=0.28",\n'
+                '    "httpx2>=0.28",\n'
                 '    "pydantic-settings>=2.4",\n'
                 '    "structlog>=24.1",\n'
                 '    "typer>=0.12",\n'
@@ -280,7 +281,7 @@ class TestMain:
             pyproject = tmpdir_path / "pyproject.toml"
             pyproject.write_text(
                 "[project]\ndependencies = [\n"
-                '    "httpx>=0.28",\n'
+                '    "httpx2>=0.28",\n'
                 '    "pytest-asyncio[dev]>=1.4.0",\n'
                 "]\n"
             )
@@ -300,7 +301,7 @@ class TestMain:
             pyproject = tmpdir_path / "pyproject.toml"
             pyproject.write_text(
                 "[project]\ndependencies = [\n"
-                '    "httpx>=0.28",\n'
+                '    "httpx2>=0.28",\n'
                 '    "pytest-asyncio[dev]>=1.4.0",\n'
                 "]\n"
             )
@@ -318,7 +319,7 @@ class TestMain:
             pyproject = tmpdir_path / "pyproject.toml"
             pyproject.write_text(
                 "[project]\ndependencies = [\n"
-                '    "httpx>=0.28",\n'
+                '    "httpx2>=0.28",\n'
                 '    "pydantic-settings>=2.4",\n'
                 '    "structlog>=24.1",\n'
                 "]\n"
@@ -337,7 +338,7 @@ class TestMain:
             pyproject = tmpdir_path / "pyproject.toml"
             pyproject.write_text(
                 "[project]\ndependencies = [\n"
-                '    "httpx>=0.28",\n'
+                '    "httpx2>=0.28",\n'
                 '    "pydantic-settings>=2.4",\n'
                 '    "structlog>=24.1",\n'
                 "]\n"
@@ -357,7 +358,7 @@ class TestMain:
             tmpdir_path = Path(tmpdir)
             pyproject = tmpdir_path / "pyproject.toml"
             pyproject.write_text(
-                '[project]\ndependencies = [\n    "httpx>=0.28",\n    "rich>=13",\n]\n'
+                '[project]\ndependencies = [\n    "httpx2>=0.28",\n    "rich>=13",\n]\n'
             )
 
             result = main([str(pyproject)])
@@ -405,7 +406,7 @@ revision = 1
 requires-python = ">=3.12"
 
 [[package]]
-name = "httpx"
+name = "httpx2"
 version = "0.28.0"
 """
         )
@@ -425,18 +426,18 @@ class TestFindPackageInLock:
         """A package in the lock is returned."""
         lock_data = {
             "package": [
-                {"name": "httpx", "version": "0.28.0"},
+                {"name": "httpx2", "version": "0.28.0"},
                 {"name": "pydantic", "version": "2.4.0"},
             ]
         }
-        result = _find_package_in_lock(lock_data, "httpx")
-        assert result == {"name": "httpx", "version": "0.28.0"}
+        result = _find_package_in_lock(lock_data, "httpx2")
+        assert result == {"name": "httpx2", "version": "0.28.0"}
 
     def test_not_found_package(self) -> None:
         """A package not in the lock returns None."""
         lock_data = {
             "package": [
-                {"name": "httpx", "version": "0.28.0"},
+                {"name": "httpx2", "version": "0.28.0"},
             ]
         }
         result = _find_package_in_lock(lock_data, "nonexistent")
@@ -445,7 +446,7 @@ class TestFindPackageInLock:
     def test_empty_lock(self) -> None:
         """An empty lock returns None for any package."""
         lock_data: dict = {}
-        result = _find_package_in_lock(lock_data, "httpx")
+        result = _find_package_in_lock(lock_data, "httpx2")
         assert result is None
 
 
@@ -475,7 +476,7 @@ class TestGetRequestedExtras:
     def test_without_extras(self) -> None:
         """A requirement without extras returns an empty list."""
         requirement = {
-            "name": "httpx",
+            "name": "httpx2",
             "version": "0.28.0",
         }
         result = _get_requested_extras(requirement)
@@ -501,7 +502,7 @@ class TestGetAvailableExtras:
     def test_without_optional_dependencies(self) -> None:
         """A package without optional-dependencies returns an empty set."""
         package_entry = {
-            "name": "httpx",
+            "name": "httpx2",
             "version": "0.28.0",
         }
         result = _get_available_extras(package_entry)
@@ -510,7 +511,7 @@ class TestGetAvailableExtras:
     def test_empty_optional_dependencies(self) -> None:
         """An empty optional-dependencies dict returns an empty set."""
         package_entry = {
-            "name": "httpx",
+            "name": "httpx2",
             "version": "0.28.0",
             "optional-dependencies": {},
         }
@@ -526,13 +527,13 @@ class TestParsePyprojectDependencies:
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
             "[project]\ndependencies = [\n"
-            '    "httpx>=0.28",\n'
+            '    "httpx2>=0.28",\n'
             '    "pydantic-settings>=2.4",\n'
             "]\n"
         )
         result = _parse_pyproject_dependencies(pyproject)
         assert result == [
-            ("httpx", [], "requires-dist"),
+            ("httpx2", [], "requires-dist"),
             ("pydantic-settings", [], "requires-dist"),
         ]
 
@@ -542,26 +543,26 @@ class TestParsePyprojectDependencies:
         pyproject.write_text(
             "[project]\ndependencies = [\n"
             '    "pyjwt[crypto]>=2.0",\n'
-            '    "httpx>=0.28",\n'
+            '    "httpx2>=0.28",\n'
             "]\n"
         )
         result = _parse_pyproject_dependencies(pyproject)
         assert result == [
             ("pyjwt", ["crypto"], "requires-dist"),
-            ("httpx", [], "requires-dist"),
+            ("httpx2", [], "requires-dist"),
         ]
 
     def test_dev_dependencies(self, tmp_path: Path) -> None:
         """Dev dependencies are parsed with their group."""
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
-            '[project]\ndependencies = ["httpx>=0.28"]\n'
+            '[project]\ndependencies = ["httpx2>=0.28"]\n'
             "[dependency-groups]\n"
             'dev = ["pytest>=7.0", "pyjwt[auth]>=2.0"]\n'
         )
         result = _parse_pyproject_dependencies(pyproject)
         assert result == [
-            ("httpx", [], "requires-dist"),
+            ("httpx2", [], "requires-dist"),
             ("pytest", [], "requires-dev.dev"),
             ("pyjwt", ["auth"], "requires-dev.dev"),
         ]
@@ -640,7 +641,7 @@ crypto = [
         """A dev-group extra is checked and names its table."""
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
-            '[project]\ndependencies = ["httpx>=0.28"]\n'
+            '[project]\ndependencies = ["httpx2>=0.28"]\n'
             "[dependency-groups]\n"
             'dev = ["pyjwt[definitelynotanextra]>=2.0"]\n'
         )
@@ -652,7 +653,7 @@ revision = 1
 requires-python = ">=3.12"
 
 [[package]]
-name = "httpx"
+name = "httpx2"
 version = "0.28.0"
 
 [[package]]
@@ -683,7 +684,7 @@ revision = 1
 requires-python = ">=3.12"
 
 [[package]]
-name = "httpx"
+name = "httpx2"
 version = "0.28.0"
 """
         )
@@ -756,7 +757,7 @@ class TestCheckExtrasPureFunctions:
         """Parse dev dependencies with extras."""
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
-            '[project]\ndependencies = ["httpx>=0.28"]\n'
+            '[project]\ndependencies = ["httpx2>=0.28"]\n'
             "[dependency-groups]\n"
             'test = ["pytest[dist]", "pyjwt[crypto]>=2.0"]\n'
         )

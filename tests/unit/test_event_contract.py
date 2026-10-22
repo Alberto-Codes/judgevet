@@ -5,7 +5,7 @@ import json
 import logging
 from collections.abc import Iterator
 
-import httpx
+import httpx2
 import pytest
 import structlog
 
@@ -49,13 +49,13 @@ def call(model: str = "jev-latest", resolved: str = "jev-1.13.0") -> None:
     payload = {**SUCCESS, "model": resolved}
     requests = []
 
-    def respond(request: httpx.Request) -> httpx.Response:
+    def respond(request: httpx2.Request) -> httpx2.Response:
         requests.append(json.loads(request.content))
-        return httpx.Response(200, json=payload)
+        return httpx2.Response(200, json=payload)
 
     with judgevet.HTTPSystemOneAdapter(
         api_key="credential-canary",
-        transport=httpx.MockTransport(respond),
+        transport=httpx2.MockTransport(respond),
     ) as adapter:
         response = adapter.system_one(
             "state-canary",
@@ -130,8 +130,8 @@ def test_missing_usage_is_null(stream) -> None:
     with (
         judgevet.HTTPSystemOneAdapter(
             api_key="credential-canary",
-            transport=httpx.MockTransport(
-                lambda request: httpx.Response(200, json=payload)
+            transport=httpx2.MockTransport(
+                lambda request: httpx2.Response(200, json=payload)
             ),
         ) as adapter,
         pytest.raises(judgevet.JevResponseError),

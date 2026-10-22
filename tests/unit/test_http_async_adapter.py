@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import anyio
-import httpx
+import httpx2
 import pytest
 
 from judgevet.adapters.outbound.http import AsyncHTTPSystemOneAdapter
@@ -16,9 +16,9 @@ from judgevet.domain.usage import Usage
 from judgevet.ports import AsyncSystemOnePort
 
 
-def _mock_handler_success(request: httpx.Request) -> httpx.Response:
+def _mock_handler_success(request: httpx2.Request) -> httpx2.Response:
     """Return a mock 200 response with valid JSON."""
-    return httpx.Response(
+    return httpx2.Response(
         status_code=200,
         json={
             "model": "jev-latest",
@@ -30,9 +30,9 @@ def _mock_handler_success(request: httpx.Request) -> httpx.Response:
     )
 
 
-def _mock_handler_401(request: httpx.Request) -> httpx.Response:
+def _mock_handler_401(request: httpx2.Request) -> httpx2.Response:
     """Return a mock 401 response."""
-    return httpx.Response(
+    return httpx2.Response(
         status_code=401,
         json={
             "error_type": "authentication_error",
@@ -41,17 +41,17 @@ def _mock_handler_401(request: httpx.Request) -> httpx.Response:
     )
 
 
-def _mock_handler_302(request: httpx.Request) -> httpx.Response:
+def _mock_handler_302(request: httpx2.Request) -> httpx2.Response:
     """Return a mock 302 response."""
-    return httpx.Response(
+    return httpx2.Response(
         status_code=302,
         headers={"Location": "https://example.com"},
     )
 
 
-def _mock_handler_transport_error(request: httpx.Request) -> httpx.Response:
+def _mock_handler_transport_error(request: httpx2.Request) -> httpx2.Response:
     """Raise a transport error."""
-    raise httpx.NetworkError("Network error")
+    raise httpx2.NetworkError("Network error")
 
 
 class FakeAsyncPort(AsyncSystemOnePort):
@@ -101,7 +101,7 @@ class TestAsyncAdapterSuccess:
 
     def test_system_one_returns_parsed_response(self) -> None:
         """Test that system_one parses a successful response."""
-        transport = httpx.MockTransport(_mock_handler_success)
+        transport = httpx2.MockTransport(_mock_handler_success)
         adapter = AsyncHTTPSystemOneAdapter(
             api_key="test-key",
             transport=transport,
@@ -125,7 +125,7 @@ class TestAsyncAdapterSuccess:
 
     def test_aclose_closes_client(self) -> None:
         """Test that aclose properly closes the async client."""
-        transport = httpx.MockTransport(_mock_handler_success)
+        transport = httpx2.MockTransport(_mock_handler_success)
         adapter = AsyncHTTPSystemOneAdapter(
             api_key="test-key",
             transport=transport,
@@ -140,7 +140,7 @@ class TestAsyncAdapterSuccess:
 
     def test_async_context_manager(self) -> None:
         """Test that async context manager works correctly."""
-        transport = httpx.MockTransport(_mock_handler_success)
+        transport = httpx2.MockTransport(_mock_handler_success)
 
         async def run_test() -> Any:
             async with AsyncHTTPSystemOneAdapter(
@@ -183,7 +183,7 @@ class TestAsyncAdapterErrorPaths:
 
     def test_401_raises_jev_auth_error(self) -> None:
         """Test that 401 response raises JevAuthError."""
-        transport = httpx.MockTransport(_mock_handler_401)
+        transport = httpx2.MockTransport(_mock_handler_401)
         adapter = AsyncHTTPSystemOneAdapter(
             api_key="invalid-key",
             transport=transport,
@@ -203,9 +203,9 @@ class TestAsyncAdapterErrorPaths:
         # The 401 should be translated to JevAuthError
         assert exc_info.value.status_code == 401
 
-    def test_3xx_raises_without_cause(self) -> None:
-        """Test that 3xx response raises without chaining."""
-        transport = httpx.MockTransport(_mock_handler_302)
+    def test_3xx_wraps_status_error(self) -> None:
+        """Test that 3xx responses preserve the status error as cause."""
+        transport = httpx2.MockTransport(_mock_handler_302)
         adapter = AsyncHTTPSystemOneAdapter(
             api_key="test-key",
             transport=transport,
@@ -218,17 +218,16 @@ class TestAsyncAdapterErrorPaths:
                 model="jev-latest",
             )
 
-        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        with pytest.raises(JevError) as exc_info:
             anyio.run(run_test)
 
-        # 3xx returns None from translate_status, so it's re-raised
-        # The spec says: assert __cause__ is None and __context__ is None
-        assert exc_info.value.__cause__ is None
-        assert exc_info.value.__context__ is None
+        assert exc_info.value.status_code == 302
+        assert isinstance(exc_info.value.__cause__, httpx2.HTTPStatusError)
+        assert exc_info.value.__cause__.response.status_code == 302
 
     def test_transport_error_raises_jev_service_error(self) -> None:
         """Test that transport errors raise JevServiceError with status_code=None."""
-        transport = httpx.MockTransport(_mock_handler_transport_error)
+        transport = httpx2.MockTransport(_mock_handler_transport_error)
         adapter = AsyncHTTPSystemOneAdapter(
             api_key="test-key",
             transport=transport,
@@ -270,7 +269,7 @@ class TestAsyncPortStructural:
 
     def test_structural_port_with_real_adapter(self) -> None:
         """Test that AsyncHTTPSystemOneAdapter satisfies AsyncSystemOnePort."""
-        transport = httpx.MockTransport(_mock_handler_success)
+        transport = httpx2.MockTransport(_mock_handler_success)
         adapter = AsyncHTTPSystemOneAdapter(
             api_key="test-key",
             transport=transport,

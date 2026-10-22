@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import anyio
-import httpx
+import httpx2
 import pytest
 
 from judgevet import RetryPolicy
@@ -43,27 +43,27 @@ class _Sink:
         self.records.append(record)
 
 
-def _counting_transport() -> tuple[list[httpx.Request], httpx.MockTransport]:
+def _counting_transport() -> tuple[list[httpx2.Request], httpx2.MockTransport]:
     """Return a request list and a transport that answers one Noul.
 
     Returns:
         The list each request is appended to, and the mock transport.
     """
-    seen: list[httpx.Request] = []
+    seen: list[httpx2.Request] = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         seen.append(request)
         body = {
             "model": "nimble",
             "usage": {"input_tokens": 3, "output_tokens": 1},
             "answers": {"q1": {"type": "noul", "noul": 0.5, "confidence": 0.5}},
         }
-        return httpx.Response(200, json=body)
+        return httpx2.Response(200, json=body)
 
-    return seen, httpx.MockTransport(handler)
+    return seen, httpx2.MockTransport(handler)
 
 
-def _sync(transport: httpx.MockTransport, **kwargs: Any) -> HTTPSystemOneAdapter:
+def _sync(transport: httpx2.MockTransport, **kwargs: Any) -> HTTPSystemOneAdapter:
     """Build a sync adapter with one attempt over the transport.
 
     Args:
@@ -81,7 +81,7 @@ def _sync(transport: httpx.MockTransport, **kwargs: Any) -> HTTPSystemOneAdapter
     )
 
 
-def _async(transport: httpx.MockTransport, **kwargs: Any) -> AsyncHTTPSystemOneAdapter:
+def _async(transport: httpx2.MockTransport, **kwargs: Any) -> AsyncHTTPSystemOneAdapter:
     """Build an async adapter with one attempt over the transport.
 
     Args:

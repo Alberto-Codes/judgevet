@@ -17,13 +17,14 @@ and is deliberately excluded from error messages to avoid leaking user data.
 
 Examples:
     ```python
+    from judgevet import JevError
     from judgevet.adapters.outbound.response_translation import (
         parse_success,
         translate_status,
     )
 
     error = translate_status(302, b"", "Found")
-    assert error is None
+    assert isinstance(error, JevError)
 
     body = (
         b'{"model": "jev-1.13.0", "answers": {}, '
@@ -43,6 +44,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
+from http import HTTPStatus
 from typing import Any
 
 from judgevet.domain.choice_options import check_choice_options
@@ -183,8 +185,11 @@ def translate_status(status_code: int, content: bytes, message: str) -> JevError
         message: The status line the error message starts with.
 
     Returns:
-        A JevError subclass instance for status codes 429, 401, 403, 4xx, or 5xx.
-        None for unhandled status codes (e.g., 3xx).
+        A JevError instance for every non-success status, with specialized
+        subclasses for the mapped errors. None for successful 200-299 statuses.
+
+    HTTP status classes follow RFC 9110.
+    Source: https://www.rfc-editor.org/rfc/rfc9110.html#section-15.
     """
     error_message, error_type = _read_error_detail(content, message)
 
@@ -201,5 +206,8 @@ def translate_status(status_code: int, content: bytes, message: str) -> JevError
         return JevRequestError(error_message, status_code)
     elif status_code >= JevError.HTTP_STATUS_500_MIN:
         return JevServiceError(error_message, status_code)
-    # Unhandled status code (e.g., 3xx)
-    return None
+    return (
+        None
+        if HTTPStatus.OK <= status_code < HTTPStatus.MULTIPLE_CHOICES
+        else JevError(error_message, status_code)
+    )

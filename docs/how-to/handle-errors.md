@@ -39,9 +39,10 @@ not set a failing process exit code. Add your application's exit or recovery
 policy where appropriate.
 
 `JevError` covers the supported service-error hierarchy. It does not catch a
-missing environment variable, invalid constructor arguments, every HTTPX
-exception or every programming error. In particular, redirects can propagate
-raw `httpx.HTTPStatusError`. Keep unexpected failures visible to your application
+missing environment variable, invalid constructor arguments or every programming
+error. The adapters wrap HTTP status errors, including redirects, in `JevError`
+subclasses and retain the HTTPX2 exception as the cause.
+Keep unexpected failures visible to your application
 without publishing arbitrary traceback contents. See
 [error reference](../reference/errors.md).
 

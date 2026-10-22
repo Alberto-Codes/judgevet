@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from contextlib import ExitStack
 from types import MappingProxyType
 
-import httpx
+import httpx2
 import pytest
 import structlog
 
@@ -98,10 +98,10 @@ def test_retry_correlation_is_captured_once(asynchronous) -> None:
     with ExitStack() as stack:
         stack.enter_context(bind_request_id("original"))
 
-        def handler(request: httpx.Request) -> httpx.Response:
+        def handler(request: httpx2.Request) -> httpx2.Response:
             recorded.append(request.headers["example-request"])
             stack.enter_context(bind_request_id("changed"))
-            return httpx.Response(503 if len(recorded) == 1 else 200, json=SUCCESS)
+            return httpx2.Response(503 if len(recorded) == 1 else 200, json=SUCCESS)
 
         gateway = GatewayConfig(request_id_header="Example-Request")
         if asynchronous:
@@ -110,10 +110,12 @@ def test_retry_correlation_is_captured_once(asynchronous) -> None:
                 # Keep context tokens in the same task that acquired them.
                 with ExitStack() as local:
 
-                    def asynchronous_handler(request: httpx.Request) -> httpx.Response:
+                    def asynchronous_handler(
+                        request: httpx2.Request,
+                    ) -> httpx2.Response:
                         recorded.append(request.headers["example-request"])
                         local.enter_context(bind_request_id("changed"))
-                        return httpx.Response(
+                        return httpx2.Response(
                             503 if len(recorded) == 1 else 200, json=SUCCESS
                         )
 
@@ -121,7 +123,7 @@ def test_retry_correlation_is_captured_once(asynchronous) -> None:
                         api_key="dummy",
                         gateway=gateway,
                         retry=RetryPolicy(2, 0, 0),
-                        transport=httpx.MockTransport(asynchronous_handler),
+                        transport=httpx2.MockTransport(asynchronous_handler),
                     ) as adapter:
                         await adapter.system_one("synthetic", {})
 
@@ -131,7 +133,7 @@ def test_retry_correlation_is_captured_once(asynchronous) -> None:
                 api_key="dummy",
                 gateway=gateway,
                 retry=RetryPolicy(2, 0, 0),
-                transport=httpx.MockTransport(handler),
+                transport=httpx2.MockTransport(handler),
             ) as adapter:
                 adapter.system_one("synthetic", {})
     assert recorded == ["original", "original"]

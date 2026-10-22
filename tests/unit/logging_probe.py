@@ -12,7 +12,7 @@ See Also:
 import asyncio
 import sys
 
-import httpx
+import httpx2
 
 from judgevet.adapters.inbound.logs import LogSettings, configure
 from judgevet.adapters.outbound.http import (
@@ -34,16 +34,16 @@ def main() -> None:
     if len(sys.argv) == 3:
         configure(LogSettings(level="debug", format="json"))
 
-    def respond(request: httpx.Request) -> httpx.Response:
+    def respond(request: httpx2.Request) -> httpx2.Response:
         if outcome == "transport":
-            raise httpx.ConnectError(CANARY, request=request)
+            raise httpx2.ConnectError(CANARY, request=request)
         if outcome == "parse":
-            return httpx.Response(200, json={"input": CANARY})
+            return httpx2.Response(200, json={"input": CANARY})
         if outcome == "success":
-            return httpx.Response(200, json=SUCCESS)
-        return httpx.Response(int(outcome), json={"detail": {"message": CANARY}})
+            return httpx2.Response(200, json=SUCCESS)
+        return httpx2.Response(int(outcome), json={"detail": {"message": CANARY}})
 
-    transport = httpx.MockTransport(respond)
+    transport = httpx2.MockTransport(respond)
     questions = {CANARY: {"type": "noul", "instructions": CANARY}}
 
     async def call() -> None:

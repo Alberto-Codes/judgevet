@@ -16,7 +16,7 @@ from tests.unit.test_cli_rate_limit import arguments
 
 @pytest.fixture(autouse=True)
 def clean_environment(monkeypatch) -> None:
-    """Isolate settings and HTTPX environment defaults from caller credentials."""
+    """Isolate settings and HTTPX2 environment defaults from caller credentials."""
     for name in os.environ:
         if name.startswith(("JEV_", "TYPESAFE_")) or name.upper() in {
             "HTTP_PROXY",

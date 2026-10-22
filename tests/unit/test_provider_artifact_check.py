@@ -30,7 +30,7 @@ def test_marker_environment_matches_packaging() -> None:
 def test_inventory_reports_requirements_and_versions() -> None:
     graph = check.inventory()
     assert graph["judgevet"]["requires"]
-    assert isinstance(graph["httpx"]["version"], str)
+    assert isinstance(graph["httpx2"]["version"], str)
 
 
 def test_importing_helpers_installs_no_guard_or_package(tmp_path: Path) -> None:

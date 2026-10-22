@@ -14,6 +14,7 @@ from judgevet.adapters.outbound.response_translation import (
 from judgevet.domain.answers import ChoiceAnswer, NoulAnswer, ScoreAnswer
 from judgevet.domain.errors import (
     JevAuthError,
+    JevError,
     JevMaxTokensExceededError,
     JevRequestError,
     JevResponseError,
@@ -96,9 +97,16 @@ def test_400_without_marker_stays_a_request_error() -> None:
     assert str(error) == "Bad Request (status 400)"
 
 
-def test_3xx_status_is_left_untranslated() -> None:
-    """A 3xx status returns None so the caller re-raises the transport error."""
-    assert translate_status(302, b"", "Found") is None
+def test_3xx_status_becomes_typed_error() -> None:
+    """A synthetic redirect becomes the generic typed error."""
+    error = translate_status(302, b"", "Found")
+    assert type(error) is JevError
+    assert error.status_code == 302
+
+
+def test_success_status_needs_no_error_translation() -> None:
+    """Successful responses retain the separate parsing path."""
+    assert translate_status(200, b"", "OK") is None
 
 
 def test_invalid_json_200_body_raises_response_error() -> None:

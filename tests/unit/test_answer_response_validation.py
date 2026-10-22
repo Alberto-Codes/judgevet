@@ -22,7 +22,7 @@ import re
 import traceback
 from typing import Any
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet import Answer, JevResponseError, NoulAnswer, RetryPolicy
@@ -71,15 +71,15 @@ def test_parser_preserves_valid_answers(kind: str, field: str, value: float) -> 
 def test_http_rejects_invalid_answers_without_retry(
     raw: dict[str, Any], asynchronous: bool
 ) -> None:
-    calls: list[httpx.Request] = []
+    calls: list[httpx2.Request] = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
         # Raw bytes allow synthetic NaN/Infinity to reach the response decoder.
-        return httpx.Response(200, content=json.dumps(response_payload(raw)))
+        return httpx2.Response(200, content=json.dumps(response_payload(raw)))
 
     retry = RetryPolicy(max_attempts=3, retry_base_delay=0, retry_transport=True)
-    transport = httpx.MockTransport(handle)
+    transport = httpx2.MockTransport(handle)
 
     async def run() -> None:
         async with AsyncHTTPSystemOneAdapter(
@@ -108,10 +108,10 @@ def test_http_preserves_valid_mixed_answers(asynchronous: bool) -> None:
     answers = {kind: answer_payload(kind) for kind in ("noul", "choice", "score")}
     raw = dict(response_payload(answer_payload("noul")), answers=answers)
 
-    def handle(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json=raw)
+    def handle(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, json=raw)
 
-    transport = httpx.MockTransport(handle)
+    transport = httpx2.MockTransport(handle)
 
     async def run() -> dict[str, Answer]:
         async with AsyncHTTPSystemOneAdapter(

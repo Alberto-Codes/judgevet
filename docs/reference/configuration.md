@@ -19,17 +19,17 @@ arguments. Neither reads judgevet environment settings or installs logging.
 | `default_model` | `"jev-latest"` | Used when `system_one` receives no model or an empty model string. |
 | `gateway` | `None` | Optional `GatewayConfig`; omission retains direct authentication and no metadata. |
 | `redactor` | `None` | Optional synchronous `StateRedactor`; transforms a private state copy before transmission. |
-| `network` | `None` | Optional `NetworkConfig`; omission retains HTTPX proxy and TLS defaults. |
+| `network` | `None` | Optional `NetworkConfig`; omission retains HTTPX2 proxy and TLS defaults. |
 | `retry` | `None` | Optional `RetryPolicy`; omission uses `RetryPolicy()`, three attempts. |
 | `spend_cap` | `None` | Optional `SpendCap`; omission sends every attempt the retry policy permits. See [spend cap](#spend-cap). |
 | `audit` | `None` | Optional `AuditSink`; omission writes no record. See [audit records](#audit-records). |
 | `fingerprint_key` | `None` | Optional `bytes` key; omission leaves `state_fingerprint` as `None`. See [state fingerprint](#state-fingerprint). |
-| `transport` | `None` | Optional HTTPX transport; use the sync or async transport type appropriate to the adapter. |
-| `timeout_seconds` | `30.0` | HTTPX read, write and pool timeout in seconds; connect timeout is fixed at 5 seconds. Values at or below zero raise `ValueError`. |
+| `transport` | `None` | Optional HTTPX2 transport; use the sync or async transport type appropriate to the adapter. |
+| `timeout_seconds` | `30.0` | HTTPX2 read, write and pool timeout in seconds; connect timeout is fixed at 5 seconds. Values at or below zero raise `ValueError`. |
 
 These are judgevet defaults from the [HTTP adapter](../../src/judgevet/adapters/outbound/http.py).
 The service host and endpoint are documented by [TypeSafe](https://api.typesafe.ai/docs).
-Timeouts apply to HTTPX operations, not a guaranteed total wall-clock deadline.
+Timeouts apply to HTTPX2 operations, not a guaranteed total wall-clock deadline.
 Retries are on by default: three attempts on a rate limit or a 5xx status.
 See [retry limits](#retry-limits) for the opt-out.
 A timed-out request may still be running at the service.
@@ -40,7 +40,7 @@ have exercised; the [verification ledger](verification-ledger.md) records it. Pa
 `model`; the choice between the latest and the verified model belongs to the caller.
 
 Direct constructors do not apply the CLI/MCP settings URL validator. Callers own
-URL selection and credential disclosure. HTTPX environment proxy and certificate
+URL selection and credential disclosure. HTTPX2 environment proxy and certificate
 settings can still affect transport; see [transport limits](../../SECURITY.md#transport-and-certificates).
 Use [sync](../how-to/use-library.md) or [async](../how-to/use-async-library.md)
 context managers to release the client. Changing the process environment does
@@ -110,7 +110,7 @@ The nested settings use the `JEV_` prefix and `__` separator.
 | `JEV_API__AUTH_SCHEME` | None | `Bearer` | Prefix token; empty sends the bare credential. |
 | `JEV_API__HEADERS` | None | `{}` | JSON map of explicit string metadata. Values are literal. |
 | `JEV_API__REQUEST_ID_HEADER` | None | Unset | Opt into forwarding the scoped request ID under this field. |
-| `JEV_API__PROXY` | None | Unset | Explicit HTTPX proxy URL; overrides standard proxy routing. |
+| `JEV_API__PROXY` | None | Unset | Explicit HTTPX2 proxy URL; overrides standard proxy routing. |
 | `JEV_API__CA_BUNDLE` | None | Unset | PEM file replacing default trust roots; must load successfully. |
 | `JEV_API__VERIFY` | None | `true` | Verify certificate chains and hostnames. Disable only in controlled tests. |
 | `JEV_API__MAX_ATTEMPTS` | None | `3` | Total requests per call; must be a positive integer. `1` disables retries. |
@@ -210,7 +210,7 @@ redirects do not trigger retries. The existing HTTP 408 mapping remains a
 non-retryable request error. One terminal diagnostic describes the final
 attempt of the logical call.
 
-These limits bound attempts and backoff, not total wall-clock duration. HTTPX
+These limits bound attempts and backoff, not total wall-clock duration. HTTPX2
 operation timeouts still apply to each attempt. Account for all attempts and
 waits when choosing a platform request deadline.
 
@@ -466,14 +466,15 @@ Import `NetworkConfig` from `judgevet` and pass it as `network=` to either
 adapter. Its defaults are `proxy=None`, `ca_bundle=None`, and `verify=True`.
 The [sync recipe](../how-to/use-library.md) shows explicit optional CA selection.
 
-With no explicit proxy, HTTPX retains its standard `HTTP_PROXY`, `HTTPS_PROXY`,
+With no explicit proxy, HTTPX2 retains its standard `HTTP_PROXY`, `HTTPS_PROXY`,
 `ALL_PROXY`, and `NO_PROXY` behavior. An explicit proxy selects routing even
-when `NO_PROXY` would bypass an environment proxy. HTTPX often requires an
+when `NO_PROXY` would bypass an environment proxy. HTTPX2 often requires an
 `http://` proxy URL for an HTTPS destination; the destination TLS connection
-then runs through a CONNECT tunnel. See [HTTPX proxies](https://www.python-httpx.org/advanced/proxies/)
-and [environment variables](https://www.python-httpx.org/environment_variables/).
+then runs through a CONNECT tunnel. See [HTTPX2 proxies](https://pydantic.dev/docs/httpx2/advanced/proxies/)
+and [environment variables](https://pydantic.dev/docs/httpx2/api/environment_variables/).
 
-By default, HTTPX verifies certificates and hostnames using certifi roots.
+By default, HTTPX2 verifies certificates and hostnames using OS roots through
+`truststore`.
 `SSL_CERT_FILE` or `SSL_CERT_DIR` can replace those roots. An explicit
 `ca_bundle` takes precedence and creates a verifying Python SSL context.
 It replaces the default roots; include every required root in that PEM file.
@@ -483,10 +484,10 @@ The adapter never disables verification after a CA loading error.
 `verify=False` disables both chain and hostname checks. Use it only for
 controlled tests with synthetic data. Supplying a CA bundle together with
 `verify=False` raises `ValueError`. The default remains secure on the sync,
-async, CLI, policy CLI and MCP paths. See [HTTPX TLS configuration](https://www.python-httpx.org/advanced/ssl/).
+async, CLI, policy CLI and MCP paths. See [HTTPX2 TLS configuration](https://pydantic.dev/docs/httpx2/advanced/ssl/).
 
-The current HTTPX client does not switch to the OS trust store automatically.
-An MCP SDK transport change does not change this outbound client's trust roots.
+Containers use their own configured trust roots, not the host's store.
+Install the required CA roots in the image or select an explicit CA bundle.
 Caller-supplied transports own their own network and TLS behavior. Prefer the
 default transport when using these settings. Review
 [transport and certificate limits](../../SECURITY.md#transport-and-certificates)
@@ -706,7 +707,7 @@ callbacks shared across concurrent calls. Do not mutate inputs concurrently
 with preparation. A callback that changes external references or performs IO
 remains caller-owned code; copying is not a sandbox.
 
-Omitting `redactor`, or passing `None`, preserves the existing state and HTTPX
+Omitting `redactor`, or passing `None`, preserves the existing state and HTTPX2
 serialization path without copying. Gateway authentication, metadata and
 correlation remain independent. State redaction does not redact question text
 or header values. The [egress contract](../../SECURITY.md#data-sent-to-the-service)

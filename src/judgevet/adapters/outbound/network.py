@@ -1,8 +1,8 @@
-"""Configure HTTPX proxy routing and certificate verification explicitly.
+"""Configure HTTPX2 proxy routing and certificate verification explicitly.
 
-HTTPX defaults and environment behavior are documented at
-https://www.python-httpx.org/advanced/ssl/ and
-https://www.python-httpx.org/environment_variables/.
+HTTPX2 defaults and environment behavior are documented at
+https://pydantic.dev/docs/httpx2/advanced/ssl/ and
+https://pydantic.dev/docs/httpx2/api/environment_variables/.
 
 Examples:
     ```python
@@ -25,7 +25,7 @@ class NetworkConfig:
     """Select explicit network options while retaining secure defaults.
 
     Attributes:
-        proxy (str | None): Explicit HTTPX proxy URL, omitted from representation.
+        proxy (str | None): Explicit HTTPX2 proxy URL, omitted from representation.
         ca_bundle (str | None): PEM trust bundle replacing default CA roots.
         verify (bool): Verify certificate chains and hostnames by default.
 
@@ -53,7 +53,7 @@ class NetworkConfig:
             raise ValueError("ca_bundle requires verify=True")
 
     def verification(self) -> ssl.SSLContext | bool:
-        """Build explicit trust roots or retain HTTPX verification behavior.
+        """Build explicit trust roots or retain HTTPX2 verification behavior.
 
         Returns:
             A verifying context for an explicit CA bundle, otherwise verify.

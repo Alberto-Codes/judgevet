@@ -1,4 +1,4 @@
-"""Redirect tutorial HTTPX clients to the executor's synthetic loopback service.
+"""Redirect tutorial HTTPX2 clients to the executor's synthetic loopback service.
 
 Examples:
     Run through the parent, which prepares the isolated environment:
@@ -15,10 +15,10 @@ import os
 from typing import Any
 from unittest.mock import patch
 
-import httpx
+import httpx2
 
 
-class FixtureClient(httpx.Client):
+class FixtureClient(httpx2.Client):
     """Use the fixture endpoint while retaining real adapter serialization.
 
     Attributes:
@@ -29,11 +29,11 @@ class FixtureClient(httpx.Client):
         """Select the controlled endpoint before constructing the HTTP client.
 
         Args:
-            kwargs: Original HTTPX constructor arguments from the adapter.
+            kwargs: Original HTTPX2 constructor arguments from the adapter.
         """
         kwargs["base_url"] = os.environ["JEV_API__BASE_URL"]
         super().__init__(**kwargs)
 
 
-_client_patch = patch.object(httpx, "Client", FixtureClient)
+_client_patch = patch.object(httpx2, "Client", FixtureClient)
 _client_patch.start()

@@ -15,7 +15,7 @@ See Also:
 
 import asyncio
 
-import httpx
+import httpx2
 import pytest
 
 from judgevet.adapters.outbound.http import (
@@ -29,7 +29,7 @@ QUESTIONS = {"q": {"type": "noul"}}
 STATE = "Synthetic state."
 
 
-def reply_413(request: httpx.Request) -> httpx.Response:
+def reply_413(request: httpx2.Request) -> httpx2.Response:
     """Return Ollama's documented 413 body for every request.
 
     Args:
@@ -38,14 +38,14 @@ def reply_413(request: httpx.Request) -> httpx.Response:
     Returns:
         A 413 response carrying a string `error` field.
     """
-    return httpx.Response(413, json={"error": OLLAMA_413_TEXT})
+    return httpx2.Response(413, json={"error": OLLAMA_413_TEXT})
 
 
 @pytest.mark.unit
 def test_sync_adapter_surfaces_ollama_error_text() -> None:
-    """The sync adapter appends the `error` string after the httpx message."""
+    """The sync adapter appends the `error` string after the httpx2 message."""
     adapter = HTTPSystemOneAdapter(
-        api_key="synthetic", transport=httpx.MockTransport(reply_413)
+        api_key="synthetic", transport=httpx2.MockTransport(reply_413)
     )
     with pytest.raises(JevRequestError) as caught:
         adapter.system_one(STATE, QUESTIONS, "nimble")
@@ -56,12 +56,12 @@ def test_sync_adapter_surfaces_ollama_error_text() -> None:
 
 @pytest.mark.unit
 def test_async_adapter_surfaces_ollama_error_text() -> None:
-    """The async adapter appends the `error` string after the httpx message."""
+    """The async adapter appends the `error` string after the httpx2 message."""
 
     async def call() -> None:
         """Run one failing judgment on a scoped async adapter."""
         async with AsyncHTTPSystemOneAdapter(
-            api_key="synthetic", transport=httpx.MockTransport(reply_413)
+            api_key="synthetic", transport=httpx2.MockTransport(reply_413)
         ) as adapter:
             await adapter.system_one(STATE, QUESTIONS, "nimble")
 

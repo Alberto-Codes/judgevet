@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from typing import Any
 
-import httpx
+import httpx2
 import pytest
 import structlog
 from structlog.testing import capture_logs
@@ -62,9 +62,9 @@ class ReplacingRedactor:
         return "redacted"
 
 
-def _transport() -> httpx.MockTransport:
+def _transport() -> httpx2.MockTransport:
     """Answer every attempt with the same success body."""
-    return httpx.MockTransport(lambda request: httpx.Response(200, json=SUCCESS))
+    return httpx2.MockTransport(lambda request: httpx2.Response(200, json=SUCCESS))
 
 
 def sync_record(state: Any, **options: Any) -> JudgmentRecord:

@@ -1,6 +1,6 @@
 """Check terminal retry diagnostics without customer content."""
 
-import httpx
+import httpx2
 import pytest
 import structlog
 from structlog.testing import capture_logs
@@ -14,12 +14,12 @@ def test_one_terminal_event(transport_failure: bool) -> None:
     """Report only the final attempt status after a recovered HTTP failure."""
     calls = []
 
-    def handle(request: httpx.Request) -> httpx.Response:
+    def handle(request: httpx2.Request) -> httpx2.Response:
         calls.append(request)
         if len(calls) == 1:
-            return httpx.Response(429)
+            return httpx2.Response(429)
         if transport_failure:
-            raise httpx.ReadTimeout("diagnostic-canary", request=request)
+            raise httpx2.ReadTimeout("diagnostic-canary", request=request)
         return success()
 
     previous = structlog.get_config()
@@ -33,7 +33,7 @@ def test_one_terminal_event(transport_failure: bool) -> None:
             capture_logs() as events,
             HTTPSystemOneAdapter(
                 api_key="credential-canary",
-                transport=httpx.MockTransport(handle),
+                transport=httpx2.MockTransport(handle),
                 retry=RetryPolicy(max_attempts=3, retry_base_delay=0),
             ) as adapter,
         ):

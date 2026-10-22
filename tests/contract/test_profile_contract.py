@@ -11,7 +11,7 @@ from collections.abc import Callable
 from typing import Any
 
 import anyio
-import httpx
+import httpx2
 import pytest
 
 from judgevet import RetryPolicy
@@ -52,13 +52,13 @@ def _message(call: Callable[[], object]) -> str:
 def test_fake_and_adapters_refuse_alike(name: str) -> None:
     """Fake, sync and async raise equal messages and send no request."""
     questions = BREACHES[name]
-    seen: list[httpx.Request] = []
+    seen: list[httpx2.Request] = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         seen.append(request)
-        return httpx.Response(500)
+        return httpx2.Response(500)
 
-    transport = httpx.MockTransport(handler)
+    transport = httpx2.MockTransport(handler)
     once = RetryPolicy(max_attempts=1)
     fake = FakeSystemOnePort(profile=OLLAMA_PROFILE)
     async_fake = AsyncFakeSystemOnePort(profile=OLLAMA_PROFILE)
