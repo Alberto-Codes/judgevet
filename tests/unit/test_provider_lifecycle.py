@@ -9,6 +9,7 @@ import pytest
 from judgevet import Noul, NoulAnswer, Question, SystemOneResponse, Usage
 from judgevet.domain.errors import JevError, JudgevetError
 from judgevet.providers import (
+    ProviderBusyError,
     ProviderCapabilityError,
     ProviderError,
     ProviderRequestError,
@@ -215,6 +216,7 @@ def test_factory_cannot_suppress_body_failure() -> None:
     [
         ProviderError,
         ProviderUnavailableError,
+        ProviderBusyError,
         ProviderRequestError,
         ProviderCapabilityError,
         ProviderTransportError,

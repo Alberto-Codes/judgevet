@@ -97,6 +97,9 @@ It also holds the question keys, answers, model and latency in milliseconds.
 The answers use the `judgevet --json` answer shape.
 A timeout, a provider error or unreadable input adds an `error` field.
 That field holds the error type only.
+A provider can refuse because another model holds the backend.
+That provider raises `ProviderBusyError`, so the record names it.
+No judgment ran for that record.
 The record never holds the state, an error message or an environment value.
 
 ## Recipe: Bash command risk
@@ -120,6 +123,8 @@ Source: https://code.claude.com/docs/en/hooks.
 Claude Code does not enforce `timeout` on a running async hook.
 Source: https://code.claude.com/docs/en/hooks.
 The script `--timeout` option therefore bounds the call.
+A timeout alone cannot tell a slow judgment from a backend that another model holds.
+`ProviderBusyError` is the record for the second case.
 In `claude -p` mode, Claude Code cancels an async hook that still runs at teardown.
 Source: https://code.claude.com/docs/en/hooks.
 That run then writes no record.
@@ -177,6 +182,8 @@ The labels follow these rules:
 It prints the exact agreement, Cohen's kappa and recall on `destructive`.
 It also prints the confusion matrix and the p50 and p95 latency.
 The predicted level is the level with the highest probability.
+`measure_bash_risk.py` and `measure_injection.py` print `contention=N` for `ProviderBusyError` rows.
+Both scripts leave those rows out of agreement.
 
 ```bash
 uv run --with my-app examples/agent-hooks/measure_bash_risk.py --provider my_app.judge:provider --model my-model --fixtures tests/fixtures/agent_hooks/bash_risk_commands.jsonl

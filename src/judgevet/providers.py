@@ -4,6 +4,7 @@ There is no default provider, discovery or fallback in this module.
 Source: https://github.com/Alberto-Codes/judgevet/issues/201#issuecomment-5850529268.
 `provider_scope` and `ProviderFactory` serve a synchronous port.
 `async_provider_scope` and `AsyncProviderFactory` serve an asynchronous port.
+`ProviderBusyError` marks a backend that another model or caller holds.
 Source: https://github.com/Alberto-Codes/judgevet/issues/251.
 
 Examples:
@@ -29,6 +30,7 @@ from contextlib import (
 from typing import Protocol
 
 from judgevet.domain.provider_errors import (
+    ProviderBusyError,
     ProviderCapabilityError,
     ProviderError,
     ProviderRequestError,
@@ -40,6 +42,7 @@ from judgevet.ports import AsyncSystemOnePort, SystemOnePort
 
 __all__ = [
     "AsyncProviderFactory",
+    "ProviderBusyError",
     "ProviderCapabilityError",
     "ProviderError",
     "ProviderFactory",

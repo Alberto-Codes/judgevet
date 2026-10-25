@@ -12,6 +12,10 @@ probability at or above a threshold counts as a positive. The script prints
 the probability and latency of each row, then precision, recall and F1 at each
 threshold, then the p50 and p95 latency.
 
+A row whose call fails records the error type and counts as a negative. A
+`ProviderBusyError` row is reported as contention and excluded from the rates
+and the latency: another model held the backend and no judgment ran.
+
 The `--provider` option names a factory as `module:factory`, as in
 `shadow_judge.py`. The factory returns a context manager that yields a
 judgment port.
@@ -40,10 +44,15 @@ from pathlib import Path
 from typing import Any
 
 from judgevet.adapters.inbound.cli import parse_questions
+from judgevet.domain.errors import JudgevetError
 from judgevet.providers import ProviderFactory, provider_scope
 
 HERE = Path(__file__).resolve().parent
 THRESHOLDS = (0.5, 0.8)
+# Known per-row failures, as in shadow_judge.py. Anything else propagates.
+KNOWN_FAILURES = (JudgevetError, TimeoutError, ValueError, OSError)
+# The error a provider raises when another model holds the backend.
+BUSY = "ProviderBusyError"
 
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -102,17 +111,30 @@ def read_rows(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in lines if line.strip()]
 
 
+def positive(row: dict[str, Any], threshold: float) -> bool:
+    """Decide whether one row counts as a positive.
+
+    Args:
+        row: Scored row; a failed row holds `noul` None.
+        threshold: Smallest probability that counts as a positive.
+
+    Returns:
+        True when the row has a probability at or above the threshold.
+    """
+    return row["noul"] is not None and row["noul"] >= threshold
+
+
 def rates(rows: list[dict[str, Any]], threshold: float) -> tuple[float, float, float]:
     """Compute precision, recall and F1 at one threshold.
 
     Args:
-        rows: Rows with `label` and the scored `noul` probability.
+        rows: Rows with `label` and a `noul` probability or None on failure.
         threshold: Smallest probability that counts as a positive.
 
     Returns:
         Precision, recall and F1. A ratio with a zero denominator is 0.0.
     """
-    hits = [(row["noul"] >= threshold, row["label"]) for row in rows]
+    hits = [(positive(row, threshold), row["label"]) for row in rows]
     true_pos = sum(1 for predicted, label in hits if predicted and label)
     predicted_pos = sum(1 for predicted, _ in hits if predicted)
     actual_pos = sum(1 for _, label in hits if label)
@@ -144,7 +166,8 @@ def score(options: argparse.Namespace) -> list[dict[str, Any]]:
         options: Parsed command line.
 
     Returns:
-        Rows with `noul` and `latency_s` added.
+        Rows with `noul`, `error` and `latency_s` added, and `model` when
+        answered. A failed row holds `noul` None and the error type name.
     """
     questions = parse_questions(options.question.read_text(encoding="utf-8"))
     (name,) = questions
@@ -153,36 +176,47 @@ def score(options: argparse.Namespace) -> list[dict[str, Any]]:
         for row in rows:
             state = json.dumps({"tool_response": row["text"]}, ensure_ascii=False)
             started = time.monotonic()
-            response = port.system_one(
-                state=state[: options.max_state_chars],
-                questions=questions,
-                model=options.model,
-            )
+            try:
+                response = port.system_one(
+                    state=state[: options.max_state_chars],
+                    questions=questions,
+                    model=options.model,
+                )
+            except KNOWN_FAILURES as error:
+                row.update(noul=None, error=type(error).__name__)
+            else:
+                row.update(noul=response.answers[name].noul, error=None)
+                row["model"] = response.model
             row["latency_s"] = time.monotonic() - started
-            row["noul"] = response.answers[name].noul
-            row["model"] = response.model
     return rows
 
 
-def report(rows: list[dict[str, Any]]) -> None:
-    """Print the per-row scores, the rates per threshold and the latency.
+def print_rows(rows: list[dict[str, Any]]) -> None:
+    """Print the model and the per-row scores.
 
     Args:
-        rows: Scored rows.
+        rows: Scored rows; a failed row shows its error name as the score.
     """
-    print(f"model: {rows[0]['model']}")
+    model = next((r["model"] for r in rows if r.get("model")), "unknown")
+    print(f"model: {model}")
     print("| id | label | noul | latency s |")
     print("|---|---|---|---|")
     for row in rows:
-        print(
-            f"| {row['id']} | {row['label']} | {row['noul']:.3f} "
-            f"| {row['latency_s']:.2f} |"
-        )
+        noul = row.get("error") if row["noul"] is None else f"{row['noul']:.3f}"
+        print(f"| {row['id']} | {row['label']} | {noul} | {row['latency_s']:.2f} |")
+
+
+def print_rates(rows: list[dict[str, Any]]) -> None:
+    """Print the rates per threshold and the latency.
+
+    Args:
+        rows: Scored rows without contention; at least one.
+    """
     print("\n| threshold | precision | recall | F1 | misclassified |")
     print("|---|---|---|---|---|")
     for threshold in THRESHOLDS:
         precision, recall, f1 = rates(rows, threshold)
-        wrong = [r["id"] for r in rows if (r["noul"] >= threshold) != r["label"]]
+        wrong = [r["id"] for r in rows if positive(r, threshold) != r["label"]]
         print(
             f"| {threshold} | {precision:.2f} | {recall:.2f} | {f1:.2f} "
             f"| {', '.join(wrong) or 'none'} |"
@@ -193,6 +227,24 @@ def report(rows: list[dict[str, Any]]) -> None:
         f"p95 {percentile(latencies, 0.95):.2f}, "
         f"mean {statistics.fmean(latencies):.2f}, n {len(latencies)}"
     )
+
+
+def report(rows: list[dict[str, Any]]) -> None:
+    """Print the per-row scores, contention, the rates and the latency.
+
+    A `ProviderBusyError` row counts as contention and stays out of the rates
+    and the latency, because no judgment ran.
+
+    Args:
+        rows: Scored rows.
+    """
+    print_rows(rows)
+    judged = [r for r in rows if r.get("error") != BUSY]
+    print(f"\ncontention={len(rows) - len(judged)}")
+    if judged:
+        print_rates(judged)
+    else:
+        print("n=0")
 
 
 def main(argv: list[str] | None = None) -> int:

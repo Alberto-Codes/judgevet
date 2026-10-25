@@ -13,6 +13,8 @@ predicted level is the level with the highest probability.
 It prints the row count, exact agreement, unweighted Cohen's kappa, recall on
 `destructive`, the confusion matrix, and the p50 and p95 latency per call.
 A row whose call fails counts as a disagreement and is reported by error type.
+A `ProviderBusyError` row is reported as contention and excluded: another
+model held the backend and no judgment ran.
 With `--rows`, it also writes one JSON Lines record per command.
 
 Examples:
@@ -46,6 +48,8 @@ LEVELS = ("none", "low", "medium", "high", "destructive")
 HERE = Path(__file__).resolve().parent
 # Known per-row failures, as in shadow_judge.py. Anything else propagates.
 KNOWN_FAILURES = (JudgevetError, TimeoutError, ValueError, OSError)
+# The error a provider raises when another model holds the backend.
+BUSY = "ProviderBusyError"
 
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -169,14 +173,14 @@ def percentile(values: list[int], fraction: float) -> float:
     return ordered[low] + (ordered[high] - ordered[low]) * (position - low)
 
 
-def report(results: list[dict[str, Any]]) -> str:
-    """Format agreement, kappa, recall, confusion and latency as text.
+def agreement_lines(results: list[dict[str, Any]]) -> list[str]:
+    """Format agreement, kappa, recall, latency, errors and confusion.
 
     Args:
-        results: Per-row results from `score_rows`.
+        results: Per-row results that hold at least one row.
 
     Returns:
-        The report text.
+        The report lines for these rows.
     """
     pairs = [(r["label"], r["predicted"]) for r in results]
     agree = sum(label == predicted for label, predicted in pairs)
@@ -200,6 +204,24 @@ def report(results: list[dict[str, Any]]) -> str:
         lines.append(
             label.ljust(12) + "".join(str(counts[p]).ljust(12) for p in LEVELS)
         )
+    return lines
+
+
+def report(results: list[dict[str, Any]]) -> str:
+    """Format contention, then agreement over the rows that were judged.
+
+    A `ProviderBusyError` row counts as contention. It stays out of every
+    other figure, because no judgment ran.
+
+    Args:
+        results: Per-row results from `score_rows`.
+
+    Returns:
+        The report text.
+    """
+    judged = [r for r in results if r["error"] != BUSY]
+    lines = [f"contention={len(results) - len(judged)}"]
+    lines += agreement_lines(judged) if judged else ["n=0"]
     return "\n".join(lines)
 
 

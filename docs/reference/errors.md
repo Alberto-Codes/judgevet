@@ -26,7 +26,10 @@ Declared provider failures share one spine:
 `ProviderError` is the base the [conformance kit](../how-to/use-a-self-hosted-provider.md#check-the-provider-with-the-conformance-kit)
 requires from a failing port. A hosted Jev failure is a `JevError`, so it also
 satisfies `ProviderError`. `except ProviderError` catches Jev errors and the
-five neutral provider errors. A neutral provider error is not a `JevError`.
+six neutral provider errors. A neutral provider error is not a `JevError`.
+`ProviderBusyError` is a `ProviderUnavailableError`: the provider is up, but
+another model or caller holds the backend, and no judgment ran.
+Source: https://github.com/Alberto-Codes/typevet/issues/461.
 Local policy errors derive from `JudgevetError`, not from `ProviderError`.
 Source: https://github.com/Alberto-Codes/judgevet/issues/259#issuecomment-5910551186.
 

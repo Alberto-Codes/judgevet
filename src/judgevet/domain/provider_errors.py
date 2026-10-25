@@ -3,6 +3,8 @@
 Applications map known backend failures to these classes using safe messages.
 Unexpected exceptions retain their original types. These errors add no HTTP
 status or retry guarantees. MissingEvidenceError distinguishes absent required images.
+ProviderBusyError marks a provider that is up while another model or caller holds
+the backend, so no judgment ran.
 Source: https://github.com/Alberto-Codes/judgevet/issues/200#issuecomment-5850335591.
 
 `ProviderError` is defined in `judgevet.domain.errors`, because `JevError`
@@ -26,6 +28,7 @@ from judgevet.domain.errors import ProviderError
 
 __all__ = [
     "MissingEvidenceError",
+    "ProviderBusyError",
     "ProviderCapabilityError",
     "ProviderError",
     "ProviderRequestError",
@@ -47,6 +50,26 @@ class ProviderUnavailableError(ProviderError):
 
         error = ProviderUnavailableError("Synthetic provider failure")
         assert str(error) == "Synthetic provider failure"
+        ```
+    """
+
+
+class ProviderBusyError(ProviderUnavailableError):
+    """The provider is up, but another model or caller holds the backend.
+
+    No judgment ran. A shared router that refuses to load the requested model
+    while another model holds it maps to this class.
+    Source: https://github.com/Alberto-Codes/typevet/issues/461.
+
+    Attributes:
+        args (tuple): Standard exception arguments containing a safe message.
+
+    Examples:
+        ```python
+        from judgevet.providers import ProviderBusyError, ProviderUnavailableError
+
+        error = ProviderBusyError("Another model holds the backend")
+        assert isinstance(error, ProviderUnavailableError)
         ```
     """
 
