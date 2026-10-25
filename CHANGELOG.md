@@ -3,6 +3,13 @@
 Maintained by [release-please](https://github.com/googleapis/release-please)
 from conventional commit messages. Do not edit entries by hand.
 
+## [0.23.0](https://github.com/Alberto-Codes/judgevet/compare/v0.22.0...v0.23.0) (2026-10-25)
+
+
+### Features
+
+* **agent-hooks:** record backend contention apart from a judgment timeout ([7248f62](https://github.com/Alberto-Codes/judgevet/commit/7248f62b3d2d43d7acae2f4d27b72779e27e1fb4)), references [#352](https://github.com/Alberto-Codes/judgevet/issues/352)
+
 ## [0.22.0](https://github.com/Alberto-Codes/judgevet/compare/v0.21.0...v0.22.0) (2026-10-22)
 
 
